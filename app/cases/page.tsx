@@ -144,7 +144,7 @@ export default function CasesPage() {
       >
         <div className={`flex items-center gap-2 ${isRightAlign ? 'justify-end' : ''}`}>
           {label}
-          <span className={`text-[10px] ${isActive ? 'text-[#00e5ff]' : 'text-slate-600'}`}>
+          <span className={`text-[10px] ${isActive ? 'text-white' : 'text-slate-600'}`}>
             {isActive ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '↕'}
           </span>
         </div>
@@ -198,9 +198,9 @@ export default function CasesPage() {
           {isLoading ? (
             <div className="flex justify-center py-24">
               <div className="relative">
-                <div className="animate-spin h-12 w-12 border-4 border-slate-700/30 rounded-full border-t-[#00e5ff]"></div>
+                <div className="animate-spin h-12 w-12 border-4 border-slate-700/30 rounded-full border-t-white"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-4 w-4 bg-[#00e5ff]/20 rounded-full blur-md"></div>
+                  <div className="h-4 w-4 bg-white/10 rounded-full blur-md"></div>
                 </div>
               </div>
             </div>
@@ -231,7 +231,7 @@ export default function CasesPage() {
                         <td className="px-6 py-4">
                           <Link
                             href={`/cases/${c.id}`}
-                            className="text-white font-bold text-lg hover:text-[#00e5ff] transition-colors inline-block truncate max-w-[200px]"
+                            className="text-white font-bold text-lg hover:text-white transition-colors inline-block truncate max-w-[200px]"
                           >
                             {c.full_name}
                           </Link>
@@ -255,7 +255,7 @@ export default function CasesPage() {
                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Link
                                 href={`/cases/${c.id}/edit`}
-                                className="p-2 bg-slate-800 hover:bg-[#00e5ff]/20 text-slate-400 hover:text-[#00e5ff] rounded-lg transition-colors"
+                                className="p-2 bg-slate-800 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-colors"
                                 title="編集"
                               >
                                 ✎
@@ -300,7 +300,7 @@ function StatusBadge({ status }: { status: string }) {
     styles = "bg-yellow-500/10 text-yellow-400 border-yellow-500/30";
     label = "承認待ち";
   } else if (status === "approved") {
-    styles = "bg-[#00e5ff]/10 text-[#00e5ff] border-slate-700/30";
+    styles = "bg-white/10 text-white border-slate-700/30";
     label = "承認済み";
   } else if (status === "rejected") {
     styles = "bg-red-500/10 text-red-400 border-red-500/30";

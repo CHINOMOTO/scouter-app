@@ -177,7 +177,7 @@ export default function EditCasePage() {
         return (
             <RequireAdmin>
                 <div className="min-h-screen flex items-center justify-center">
-                    <div className="animate-spin h-10 w-10 border-4 border-[#00e5ff] rounded-full border-t-transparent"></div>
+                    <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent"></div>
                 </div>
             </RequireAdmin>
         );
@@ -313,7 +313,7 @@ export default function EditCasePage() {
                                     {/* Existing Files */}
                                     {existingFiles.length > 0 && (
                                         <div className="mb-4 space-y-2">
-                                            <p className="text-xs text-[#00e5ff] font-bold mb-2">登録済みファイル:</p>
+                                            <p className="text-xs text-white font-bold mb-2">登録済みファイル:</p>
                                             {existingFiles.map((file) => (
                                                 <div key={file.path} className="flex items-center justify-between bg-slate-800/80 p-3 rounded-lg border border-slate-600">
                                                     <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-cyan-300 hover:underline truncate max-w-[80%] flex items-center gap-2">
@@ -412,7 +412,7 @@ export default function EditCasePage() {
 function Section({ title, children }: { title: string, children: React.ReactNode }) {
     return (
         <div className="space-y-4">
-            <h3 className="text-sm font-bold text-[#00e5ff] uppercase tracking-widest border-b border-slate-700/30 pb-2">
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest border-b border-slate-700/30 pb-2">
                 {title}
             </h3>
             {children}
@@ -425,7 +425,7 @@ function Label({ children, required }: { children: React.ReactNode, required?: b
         <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
             {children}
             {required ? (
-                <span className="text-[#00e5ff] text-[10px] border border-slate-700/30 bg-[#00e5ff]/10 px-1.5 py-0.5 rounded">
+                <span className="text-white text-[10px] border border-slate-700/30 bg-white/5 px-1.5 py-0.5 rounded">
                     必須
                 </span>
             ) : (

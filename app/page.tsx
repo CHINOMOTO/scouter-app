@@ -49,97 +49,116 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Decor */}
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-[#090d16]">
+      {/* Background Subtle Gradient */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00e5ff]/5 rounded-full blur-[100px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#00e5ff]/5 rounded-full blur-[100px]"></div>
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-white/[0.02] rounded-full blur-[120px]"></div>
       </div>
 
-      <main className="w-full max-w-2xl flex flex-col items-center justify-center relative z-10 animate-fade-in">
+      <main className="w-full max-w-xl flex flex-col items-center justify-center relative z-10 py-12">
 
-        {/* Logo & Tagline */}
-        <div className="text-center mb-6 md:mb-10">
-          <div className="mb-2 md:mb-4 inline-block relative group">
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white font-[family-name:var(--font-orbitron)] -[0_0_25px_rgba(0,229,255,0.6)]">
-              SCOUTER
-            </h1>
-            <div className="absolute -inset-2 bg-[#00e5ff]/20 blur-xl rounded-full opacity-50 group-hover:opacity-75 transition-opacity duration-500 -z-10"></div>
-          </div>
-          <h2 className="text-base md:text-2xl font-bold text-white mb-3 md:mb-4 tracking-wider">
-            リスクを未然に防ぐ、人材管理システム
-          </h2>
-          <p className="text-slate-400 text-xs md:text-base font-medium leading-relaxed max-w-md mx-auto">
-            過去のトラブルや注意情報を一元管理し、<br />
-            同じリスクを繰り返さない
+        {/* Brand Header */}
+        <div className="text-center mb-10 space-y-3">
+          <p className="text-[11px] font-mono tracking-[0.25em] text-slate-400 uppercase">
+            TALENT RISK MANAGEMENT
           </p>
+
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#090d16] font-black text-xl tracking-tighter shadow-md">
+              M
+            </div>
+            <div className="text-left">
+              <h1 className="text-4xl md:text-5xl font-black tracking-wider text-white leading-none">
+                MIERIS
+              </h1>
+              <span className="text-[11px] text-slate-400 tracking-[0.2em] font-medium leading-none block mt-1">
+                ミエリス
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+              採る前に、事実を知る。
+            </h2>
+            <p className="text-slate-400 text-xs md:text-sm leading-relaxed max-w-md mx-auto mt-2">
+              就業実績を、本人同意のもとで利用企業間に共有する仕組みです。<br className="hidden sm:block" />
+              履歴書と30分の面接では見抜けなかったことを、採る前に。
+            </p>
+            <span className="inline-block mt-3 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[11px] text-slate-300 font-medium">
+              雑工・荷揚げ・警備・運送 就業情報共有システム
+            </span>
+          </div>
         </div>
 
         {/* Login Form Container */}
-        <div className="w-full max-w-md glass-panel rounded-2xl md:rounded-3xl p-6 md:p-8 border border-slate-700/30 backdrop-blur-xl relative overflow-hidden">
-          {/* Decorative decorative line */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00e5ff] to-transparent opacity-50"></div>
-
-          <div className="mb-6 md:mb-8 text-center">
-            <h2 className="text-xl font-bold text-[#00e5ff] tracking-widest uppercase mb-1">
+        <div className="w-full max-w-md glass-panel p-8 border border-white/10 shadow-2xl relative">
+          <div className="mb-6 text-center">
+            <h3 className="text-base font-bold text-white tracking-wide">
               ログイン
-            </h2>
-            <p className="text-xs text-slate-500">アカウント情報を入力してください</p>
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">登録済みのメールアドレスとパスワードを入力してください</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div className="input-group">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  メールアドレス
+                </label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/80 focus:ring-1 focus:ring-[#00e5ff]/40 transition-all font-mono text-sm"
-                  placeholder="メールアドレス"
+                  className="input-field"
+                  placeholder="example@company.com"
                 />
               </div>
-              <div className="input-group">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  パスワード
+                </label>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/80 focus:ring-1 focus:ring-[#00e5ff]/40 transition-all font-mono text-sm"
-                  placeholder="パスワード"
+                  className="input-field"
+                  placeholder="••••••••"
                 />
               </div>
             </div>
 
             {errorMsg && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-start gap-2 animate-fade-in">
-                <span className="text-red-400 text-sm">⚠️</span>
-                <p className="text-xs text-red-200 pt-0.5">{errorMsg}</p>
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-start gap-2 text-red-300 text-xs">
+                <span>⚠️</span>
+                <p className="pt-0.5">{errorMsg}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 px-4 rounded-xl text-white font-bold bg-gradient-to-r from-[#008299] to-[#00e5ff] hover:from-[#00e5ff] hover:to-[#00e5ff] shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_30px_rgba(0,229,255,0.5)] transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed hover:text-black tracking-widest uppercase text-sm"
+              className="btn-primary w-full py-3.5 mt-2"
             >
-              {isLoading ? "AUTHENTICATING..." : "LOGIN"}
+              {isLoading ? "ログイン中..." : "ログインする"}
             </button>
           </form>
 
-          <div className="text-center mt-8 border-t border-white/5 pt-6 flex flex-col gap-3">
-            <Link href="/forgot-password" className="text-xs text-slate-400 hover:text-[#00e5ff] transition-colors">
+          <div className="text-center mt-6 border-t border-white/10 pt-5 flex flex-col gap-2.5 text-xs">
+            <Link href="/forgot-password" className="text-slate-400 hover:text-white transition-colors">
               パスワードをお忘れの方はこちら
             </Link>
-            <Link href="/signup" className="text-xs text-slate-500 hover:text-[#00e5ff] transition-colors">
-              &gt;&gt; 新規アカウント作成はこちら
+            <Link href="/signup" className="text-slate-400 hover:text-white font-medium transition-colors">
+              新規利用のお申し込み（アカウント登録）はこちら →
             </Link>
           </div>
         </div>
       </main>
 
-      <footer className="absolute bottom-4 w-full text-center text-slate-700 text-xs font-mono">
-        <p>&copy; {new Date().getFullYear()} SCOUTER SYSTEM. ALL RIGHTS RESERVED.</p>
+      <footer className="w-full text-center text-slate-600 text-xs py-4">
+        <p>&copy; 2026 MIERIS. 株式会社ミヤエモン / 株式会社宇井建設</p>
       </footer>
     </div>
   );

@@ -40,8 +40,8 @@ export default function ForgotPasswordPage() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
             <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00e5ff]/5 rounded-full blur-[100px]"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#00e5ff]/5 rounded-full blur-[100px]"></div>
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-white/[0.03] rounded-full blur-[100px]"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-white/[0.03] rounded-full blur-[100px]"></div>
             </div>
 
             <main className="w-full max-w-lg flex flex-col items-center justify-center relative z-10 animate-fade-in">
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/80 focus:ring-1 focus:ring-[#00e5ff]/40 transition-all font-mono text-sm"
+                                    className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/80 focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
                                     placeholder="name@company.com"
                                 />
                             </div>
@@ -103,7 +103,7 @@ export default function ForgotPasswordPage() {
                     )}
 
                     <div className="text-center mt-8 pt-4 border-t border-white/5">
-                        <Link href="/" className="text-xs text-slate-500 hover:text-[#00e5ff] transition-colors">
+                        <Link href="/" className="text-xs text-slate-500 hover:text-white transition-colors">
                             キャンセルして戻る
                         </Link>
                     </div>

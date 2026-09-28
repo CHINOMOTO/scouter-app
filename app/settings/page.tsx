@@ -114,7 +114,7 @@ export default function SettingsPage() {
         return (
             <RequireAuth>
                 <div className="min-h-screen flex items-center justify-center p-4">
-                    <div className="animate-spin h-10 w-10 border-4 border-[#00e5ff] rounded-full border-t-transparent mx-auto"></div>
+                    <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent mx-auto"></div>
                 </div>
             </RequireAuth>
         );
@@ -139,7 +139,7 @@ export default function SettingsPage() {
                         {/* 基本情報設定 */}
                         <div className="glass-panel p-6 md:p-8 rounded-3xl border border-slate-700/30 relative overflow-hidden">
                             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                <span className="text-[#00e5ff]">👤</span> 基本情報
+                                <span className="text-white">👤</span> 基本情報
                             </h2>
 
                             <form onSubmit={handleUpdateProfile} className="space-y-5">
@@ -177,7 +177,7 @@ export default function SettingsPage() {
                                         required
                                         value={displayName}
                                         onChange={(e) => setDisplayName(e.target.value)}
-                                        className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 focus:border-slate-700/30 focus:ring-1 focus:ring-[#00e5ff]/40 transition-all text-sm"
+                                        className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 focus:border-slate-700/30 focus:ring-1 focus:ring-white/30 transition-all text-sm"
                                     />
                                 </div>
 
@@ -203,7 +203,7 @@ export default function SettingsPage() {
                         {/* パスワード設定 */}
                         <div className="glass-panel p-6 md:p-8 rounded-3xl border border-slate-700/30 relative overflow-hidden">
                             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                <span className="text-[#00e5ff]">🔒</span> パスワード変更
+                                <span className="text-white">🔒</span> パスワード変更
                             </h2>
 
                             <form onSubmit={handleUpdatePassword} className="space-y-5">
@@ -218,7 +218,7 @@ export default function SettingsPage() {
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
                                         placeholder="8文字以上"
-                                        className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 focus:border-slate-700/30 focus:ring-1 focus:ring-[#00e5ff]/40 transition-all font-mono text-sm"
+                                        className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 focus:border-slate-700/30 focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
                                     />
                                 </div>
                                 
@@ -233,7 +233,7 @@ export default function SettingsPage() {
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="もう一度入力してください"
-                                        className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 focus:border-slate-700/30 focus:ring-1 focus:ring-[#00e5ff]/40 transition-all font-mono text-sm"
+                                        className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 focus:border-slate-700/30 focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
                                     />
                                 </div>
 

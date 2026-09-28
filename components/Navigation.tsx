@@ -136,7 +136,7 @@ export default function Navigation() {
     if (!session) return null;
 
     return (
-        <nav className="fixed top-0 w-full z-50 border-b border-slate-700/30 bg-black/90 backdrop-blur-sm">
+        <nav className="fixed top-0 w-full z-50 border-b border-slate-800/80 bg-[#090d16]/95 backdrop-blur-md">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center justify-between w-full md:w-auto">
@@ -150,7 +150,7 @@ export default function Navigation() {
                             <div className="flex md:hidden">
                                 <button
                                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                                    className="p-2 rounded-md text-[#00e5ff] hover:bg-[#00e5ff]/10 focus:outline-none"
+                                    className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-white/10 focus:outline-none"
                                 >
                                     <span className="sr-only">Open main menu</span>
                                     {isMobileMenuOpen ? (
@@ -189,7 +189,7 @@ export default function Navigation() {
                                     <div className="relative inline-block">
                                         <Link
                                             href="/admin"
-                                            className={`ml-2 px-3 py-1.5 rounded-none text-sm font-bold border transition-all uppercase tracking-wider whitespace-nowrap ${pathname.startsWith("/admin") ? "bg-[#00e5ff]/20 border-[#00e5ff] text-[#00e5ff] shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "border-slate-700/30 text-[#00e5ff]/70 hover:bg-[#00e5ff]/10 hover:text-[#00e5ff]" }`}
+                                            className={`ml-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all uppercase tracking-wider whitespace-nowrap ${pathname.startsWith("/admin") ? "bg-white text-slate-900 border-white shadow-sm" : "border-slate-700 text-slate-300 hover:bg-white/5 hover:text-white"}`}
                                         >
                                             管理メニュー
                                         </Link>
@@ -209,7 +209,7 @@ export default function Navigation() {
                             {session && userName && (
                                 <Link
                                     href="/profile"
-                                    className="text-xs text-[#00e5ff]/80 bg-[#00e5ff]/10 px-3 py-1 border border-slate-700/30 font-mono tracking-wider hover:bg-[#00e5ff]/20 hover:border-slate-700/30 transition-all cursor-pointer whitespace-nowrap max-w-[200px] truncate"
+                                    className="text-xs text-slate-300 bg-white/5 px-3 py-1.5 rounded-lg border border-slate-800 tracking-wide hover:bg-white/10 hover:text-white transition-all cursor-pointer whitespace-nowrap max-w-[200px] truncate font-medium"
                                 >
                                     <span className="font-bold">{userName}</span>
                                 </Link>
@@ -217,7 +217,7 @@ export default function Navigation() {
                             {session && (
                                 <button
                                     onClick={handleLogout}
-                                    className="text-[#00e5ff]/70 hover:text-[#00e5ff] text-xs px-3 py-1.5 border border-transparent hover:border-slate-700/30 hover:bg-[#00e5ff]/10 transition-all tracking-wider uppercase"
+                                    className="text-slate-400 hover:text-white text-xs px-3 py-1.5 rounded-lg border border-transparent hover:border-slate-800 hover:bg-white/5 transition-all tracking-wide"
                                 >
                                     ログアウト
                                 </button>

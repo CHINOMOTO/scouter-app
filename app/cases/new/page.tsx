@@ -212,10 +212,10 @@ export default function NewCasePage() {
     return (
       <RequireAuth>
         <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center justify-center">
-          <div className="max-w-xl w-full text-center glass-panel p-10 rounded-3xl animate-fade-in border-t-4 border-t-[#00e5ff] relative overflow-hidden">
+          <div className="max-w-xl w-full text-center glass-panel p-10 rounded-3xl animate-fade-in border-t-4 border-t-white relative overflow-hidden">
 
             {/* Background Effect */}
-            <div className="absolute inset-0 bg-[#00e5ff]/5 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-white/[0.03] pointer-events-none"></div>
 
             <h2 className="text-2xl font-bold text-white mb-6 tracking-wider">
               登録申請完了
@@ -453,7 +453,7 @@ export default function NewCasePage() {
                                 type="button"
                                 onClick={() => handleOCR(file)}
                                 disabled={isAnalyzing}
-                                className="text-xs text-[#00e5ff] hover:text-[#00e5ff] border border-slate-700/30 bg-[#00e5ff]/10 px-2 py-1 rounded transition-colors"
+                                className="text-xs text-white hover:text-white border border-slate-700/30 bg-white/5 px-2 py-1 rounded transition-colors"
                               >
                                 {isAnalyzing ? "解析中..." : "文字認識(OCR)"}
                               </button>
@@ -503,7 +503,7 @@ export default function NewCasePage() {
 function Section({ title, children }: { title: string, children: React.ReactNode }) {
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-bold text-[#00e5ff] uppercase tracking-widest border-b border-slate-700/30 pb-2">
+      <h3 className="text-sm font-bold text-white uppercase tracking-widest border-b border-slate-700/30 pb-2">
         {title}
       </h3>
       {children}
@@ -516,7 +516,7 @@ function Label({ children, required }: { children: React.ReactNode, required?: b
     <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
       {children}
       {required ? (
-        <span className="text-[#00e5ff] text-[10px] border border-slate-700/30 bg-[#00e5ff]/10 px-1.5 py-0.5 rounded">
+        <span className="text-white text-[10px] border border-slate-700/30 bg-white/5 px-1.5 py-0.5 rounded">
           必須
         </span>
       ) : (

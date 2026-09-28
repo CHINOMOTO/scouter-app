@@ -81,9 +81,9 @@ export default function AdminCompaniesPage() {
                 {loading ? (
                     <div className="flex justify-center py-24">
                         <div className="relative">
-                            <div className="animate-spin h-12 w-12 border-4 border-slate-700/30 rounded-full border-t-[#00e5ff]"></div>
+                            <div className="animate-spin h-12 w-12 border-4 border-slate-700/30 rounded-full border-t-white"></div>
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="h-4 w-4 bg-[#00e5ff]/20 rounded-full blur-md"></div>
+                                <div className="h-4 w-4 bg-white/10 rounded-full blur-md"></div>
                             </div>
                         </div>
                     </div>
@@ -105,12 +105,12 @@ export default function AdminCompaniesPage() {
                                         🏢
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-white group-hover:text-[#00e5ff] transition-colors">
+                                        <h3 className="text-lg font-bold text-white group-hover:text-white transition-colors">
                                             {company.name}
                                         </h3>
                                         <div className="flex items-center gap-3 mt-1.5">
                                             {company.is_main && (
-                                                <span className="text-[10px] bg-[#00e5ff]/10 text-[#00e5ff] px-2.5 py-0.5 rounded-full border border-slate-700/30 font-bold tracking-widest">
+                                                <span className="text-[10px] bg-white/10 text-white px-2.5 py-0.5 rounded-full border border-slate-700/30 font-bold tracking-widest">
                                                     HQ / MAIN
                                                 </span>
                                             )}
@@ -123,7 +123,7 @@ export default function AdminCompaniesPage() {
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Link
                                         href={`/admin/companies/${company.id}`}
-                                        className="p-2 bg-slate-800 hover:bg-[#00e5ff]/20 text-slate-400 hover:text-[#00e5ff] rounded-lg transition-colors"
+                                        className="p-2 bg-slate-800 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-colors"
                                         title="編集"
                                     >
                                         ✎

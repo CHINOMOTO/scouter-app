@@ -150,7 +150,7 @@ export default function ContactPage() {
                     <div className="glass-panel rounded-3xl p-6 md:p-10 animate-fade-in border border-slate-700/30">
                         {isLoading ? (
                             <div className="flex items-center justify-center py-12">
-                                <div className="animate-spin h-8 w-8 border-4 border-[#00e5ff] rounded-full border-t-transparent"></div>
+                                <div className="animate-spin h-8 w-8 border-4 border-white/40 rounded-full border-t-transparent"></div>
                             </div>
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-6">

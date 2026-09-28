@@ -171,14 +171,14 @@ export default function SignUpPage() {
                             {/* Display Name */}
                             <div className="input-group group space-y-1.5">
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                                    氏名（表示名） <span className="text-[#00e5ff]">*</span>
+                                    氏名（表示名） <span className="text-white">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     required
                                     value={displayName}
                                     onChange={(e) => setDisplayName(e.target.value)}
-                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-[#00e5ff]/10 transition-all duration-300"
+                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-white/30 transition-all duration-300"
                                     placeholder="例: 山田 太郎"
                                 />
                             </div>
@@ -186,14 +186,14 @@ export default function SignUpPage() {
                             {/* Company Name */}
                             <div className="input-group group space-y-1.5">
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                                    会社名 <span className="text-[#00e5ff]">*</span>
+                                    会社名 <span className="text-white">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     required
                                     value={companyName}
                                     onChange={(e) => setCompanyName(e.target.value)}
-                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-[#00e5ff]/10 transition-all duration-300"
+                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-white/30 transition-all duration-300"
                                     placeholder="例: 株式会社〇〇建設"
                                 />
                                 <p className="text-[10px] text-slate-500 pl-1">
@@ -204,14 +204,14 @@ export default function SignUpPage() {
                             {/* Email */}
                             <div className="input-group group space-y-1.5">
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                                    メールアドレス <span className="text-[#00e5ff]">*</span>
+                                    メールアドレス <span className="text-white">*</span>
                                 </label>
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-[#00e5ff]/10 transition-all duration-300"
+                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-white/30 transition-all duration-300"
                                     placeholder="name@company.com"
                                 />
                             </div>
@@ -219,7 +219,7 @@ export default function SignUpPage() {
                             {/* Password */}
                             <div className="input-group group space-y-1.5">
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                                    パスワード <span className="text-[#00e5ff]">*</span>
+                                    パスワード <span className="text-white">*</span>
                                 </label>
                                 <input
                                     type="password"
@@ -227,7 +227,7 @@ export default function SignUpPage() {
                                     minLength={8}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-[#00e5ff]/10 transition-all duration-300"
+                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-white/30 transition-all duration-300"
                                     placeholder="8文字以上で設定"
                                 />
                             </div>
@@ -245,7 +245,7 @@ export default function SignUpPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-[#00e5ff]/80 to-[#00e5ff] hover:from-[#00e5ff] hover:to-[#00e5ff] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00e5ff] transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 mt-6"
+                            className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-[#00e5ff]/80 to-[#00e5ff] hover:from-[#00e5ff] hover:to-[#00e5ff] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/30 transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 mt-6"
                         >
                             {isLoading ? (
                                 <div className="flex items-center gap-2">
@@ -263,7 +263,7 @@ export default function SignUpPage() {
 
                     <p className="mt-8 text-xs text-slate-500 text-center leading-relaxed">
                         登録申請後、管理者による承認が必要です。<br />
-                        <Link href="/" className="text-[#00e5ff] hover:text-[#00e5ff] underline underline-offset-2 ml-1">
+                        <Link href="/" className="text-white hover:text-white underline underline-offset-2 ml-1">
                             すでにアカウントをお持ちの方はこちら
                         </Link>
                     </p>

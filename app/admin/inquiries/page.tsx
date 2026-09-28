@@ -87,7 +87,7 @@ export default function AdminInquiriesPage() {
 
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
-                            <div className="animate-spin h-10 w-10 border-4 border-[#00e5ff] rounded-full border-t-transparent"></div>
+                            <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent"></div>
                         </div>
                     ) : inquiries.length === 0 ? (
                         <div className="glass-panel rounded-3xl p-10 text-center animate-fade-in border border-slate-700/30">
@@ -177,8 +177,8 @@ export default function AdminInquiriesPage() {
                                     <div className="flex items-center justify-between">
                                         <p className="text-sm text-slate-200 font-mono">{selectedInquiry.email}</p>
                                         <a 
-                                            href={`mailto:${selectedInquiry.email}?subject=【SCOUTER】お問い合わせの件について&body=${selectedInquiry.company_name}%0D%0A${selectedInquiry.user_name} 様%0D%0A%0D%0Aお問い合わせありがとうございます。%0D%0A%0D%0A%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A【お問い合わせ内容】%0D%0A${selectedInquiry.message}%0D%0A%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%0D%0A`}
-                                            className="px-3 py-1 bg-[#00e5ff]/10 text-[#00e5ff] text-xs font-bold rounded hover:bg-[#00e5ff]/20 transition-colors border border-[#00e5ff]/30 flex items-center gap-1"
+                                            href={`mailto:${selectedInquiry.email}?subject=【MIERIS】お問い合わせの件について&body=${selectedInquiry.company_name}%0D%0A${selectedInquiry.user_name} 様%0D%0A%0D%0Aお問い合わせありがとうございます。%0D%0A%0D%0A%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A【お問い合わせ内容】%0D%0A${selectedInquiry.message}%0D%0A%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%0D%0A`}
+                                            className="px-3 py-1 bg-white/10 text-white text-xs font-bold rounded hover:bg-white/10 transition-colors border border-white/40/30 flex items-center gap-1"
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                                             メールで返信

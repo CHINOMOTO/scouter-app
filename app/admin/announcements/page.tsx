@@ -93,7 +93,7 @@ export default function AdminAnnouncements() {
             <div className="min-h-screen pt-24 pb-12 px-4">
                 <div className="max-w-4xl mx-auto space-y-8">
                     <div className="flex items-center gap-4 mb-8">
-                        <div className="p-3 rounded-2xl bg-[#00e5ff]/10 text-[#00e5ff]">
+                        <div className="p-3 rounded-2xl bg-white/10 text-white">
                             <Bell className="w-8 h-8" strokeWidth={1.5} />
                         </div>
                         <div>
@@ -103,10 +103,10 @@ export default function AdminAnnouncements() {
                     </div>
 
                     <div className="glass-panel p-6 rounded-3xl relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-[#00e5ff]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                         <div className="relative z-10">
                             <h2 className="text-xl font-bold text-slate-100 mb-4 flex items-center gap-2">
-                                <Plus className="w-5 h-5 text-[#00e5ff]" />
+                                <Plus className="w-5 h-5 text-white" />
                                 新規お知らせ作成
                             </h2>
                             <form onSubmit={handleCreate} className="space-y-4">

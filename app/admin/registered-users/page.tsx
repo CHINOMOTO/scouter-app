@@ -89,7 +89,7 @@ export default function RegisteredUsersPage() {
 
                     {loading ? (
                         <div className="flex justify-center py-20">
-                            <div className="animate-spin h-10 w-10 border-4 border-[#00e5ff] rounded-full border-t-transparent"></div>
+                            <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent"></div>
                         </div>
                     ) : users.length === 0 ? (
                         <div className="glass-panel p-10 text-center rounded-2xl animate-fade-in">

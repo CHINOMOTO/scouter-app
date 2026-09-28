@@ -65,7 +65,7 @@ export default function EditCompanyPage() {
         return (
             <RequireAdmin>
                 <div className="min-h-screen flex items-center justify-center">
-                    <div className="animate-spin h-10 w-10 border-4 border-[#00e5ff] rounded-full border-t-transparent"></div>
+                    <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent"></div>
                 </div>
             </RequireAdmin>
         );
@@ -87,7 +87,7 @@ export default function EditCompanyPage() {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-slate-300">
-                                    会社名 <span className="text-[#00e5ff]">*</span>
+                                    会社名 <span className="text-white">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -105,7 +105,7 @@ export default function EditCompanyPage() {
                                     id="isMain"
                                     checked={isMain}
                                     onChange={(e) => setIsMain(e.target.checked)}
-                                    className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-[#00e5ff] focus:ring-[#00e5ff]/50"
+                                    className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-white focus:ring-white/30"
                                 />
                                 <label htmlFor="isMain" className="cursor-pointer">
                                     <span className="block text-sm font-semibold text-slate-200">メイン会社として登録</span>

@@ -261,7 +261,7 @@ export default function AdminCaseDetailPage() {
               <div className="mb-4">
                 <Link
                   href="/admin/cases"
-                  className="text-sm text-[#00e5ff] hover:text-[#00e5ff] transition-colors inline-block mb-2"
+                  className="text-sm text-white hover:text-white transition-colors inline-block mb-2"
                 >
                   一覧へ戻る
                 </Link>
@@ -279,7 +279,7 @@ export default function AdminCaseDetailPage() {
 
               <div className="space-y-4 mb-8">
                 <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700">
-                  <h2 className="text-sm font-bold text-[#00e5ff] uppercase tracking-widest mb-4 border-b border-slate-700/30 pb-2">基本情報</h2>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-4 border-b border-slate-700/30 pb-2">基本情報</h2>
                   <div className="space-y-2 text-sm">
                     <div className="grid grid-cols-[140px_1fr]">
                       <span className="text-slate-400">氏名：</span>
@@ -325,7 +325,7 @@ export default function AdminCaseDetailPage() {
                 </div>
 
                 <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700">
-                  <h2 className="text-sm font-bold text-[#00e5ff] uppercase tracking-widest mb-4 border-b border-slate-700/30 pb-2">トラブル詳細・理由</h2>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-4 border-b border-slate-700/30 pb-2">トラブル詳細・理由</h2>
                   <div className="text-sm text-slate-100 whitespace-pre-wrap leading-relaxed">
                     {caseDetail.reason_text}
                   </div>
@@ -333,7 +333,7 @@ export default function AdminCaseDetailPage() {
 
                 {/* 証拠ファイルセクション */}
                 <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700">
-                  <h2 className="text-sm font-bold text-[#00e5ff] uppercase tracking-widest mb-4 border-b border-slate-700/30 pb-2">添付資料</h2>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-4 border-b border-slate-700/30 pb-2">添付資料</h2>
                   {evidenceFiles.length === 0 ? (
                     <p className="text-sm text-slate-500">証拠ファイルはありません。</p>
                   ) : (
@@ -346,12 +346,12 @@ export default function AdminCaseDetailPage() {
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={file.signedUrl} alt={file.name} className="max-w-full max-h-full object-contain" />
                               </div>
-                              <div className="p-2 text-xs text-slate-300 truncate text-center group-hover:text-[#00e5ff] bg-slate-900/80 absolute bottom-0 w-full backdrop-blur-sm">
+                              <div className="p-2 text-xs text-slate-300 truncate text-center group-hover:text-white bg-slate-900/80 absolute bottom-0 w-full backdrop-blur-sm">
                                 {file.name}
                               </div>
                             </a>
                           ) : (
-                            <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="block outline-none h-full p-4 flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-[#00e5ff]">
+                            <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="block outline-none h-full p-4 flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-white">
                               <span className="text-3xl">📄</span>
                               <span className="text-xs truncate w-full text-center">{file.name}</span>
                             </a>
@@ -393,7 +393,7 @@ export default function AdminCaseDetailPage() {
           {/* Approve Confirmation Modal */}
           {showApproveModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-900 border border-[#00e5ff] p-8 rounded-2xl max-w-sm w-full shadow-[0_0_30px_rgba(0,229,255,0.3)]">
+              <div className="bg-slate-900 border border-white/40 p-8 rounded-2xl max-w-sm w-full shadow-[0_0_30px_rgba(0,229,255,0.3)]">
                 <h3 className="text-xl font-bold text-white mb-4">承認の確認</h3>
                 <p className="text-slate-300 mb-8">
                   この申請を承認しますか？<br />
@@ -464,7 +464,7 @@ export default function AdminCaseDetailPage() {
           {/* Success Modal */}
           {showSuccessModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
-              <div className={`p-10 rounded-3xl max-w-sm w-full text-center border-t-4 ${showSuccessModal.type === 'approved' ? 'border-[#00e5ff] shadow-[0_0_50px_rgba(0,229,255,0.2)]' : 'border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.2)]'}`}>
+              <div className={`p-10 rounded-3xl max-w-sm w-full text-center border-t-4 ${showSuccessModal.type === 'approved' ? 'border-white/40 shadow-[0_0_50px_rgba(0,229,255,0.2)]' : 'border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.2)]'}`}>
                 <h3 className="text-xl font-bold text-white mb-8">
                   {showSuccessModal.type === 'approved' ? '申請が承認されました。' : '申請が却下されました。'}
                 </h3>

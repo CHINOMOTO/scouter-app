@@ -106,21 +106,21 @@ function DashboardCard({
       className="group relative text-left p-8 rounded-3xl border border-slate-400/30 transition-all duration-300 glass-panel hover:-translate-y-2 flex flex-col h-full overflow-hidden hover:border-slate-300/50 hover:bg-slate-800/20"
     >
       {/* Background Hover Glow */}
-      <div className="absolute inset-0 bg-[#00e5ff]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
       <div className="relative z-10 flex flex-col h-full">
         <div className="flex items-start justify-between mb-6 w-full">
-          <div className="p-3 rounded-2xl transition-transform duration-300 group-hover:scale-110 bg-[#00e5ff]/10 text-[#00e5ff]">
+          <div className="p-3 rounded-2xl transition-transform duration-300 group-hover:scale-110 bg-white/10 text-white">
             {icon}
           </div>
           {isAdmin && (
-            <span className="px-3 py-1 bg-[#00e5ff]/20 text-[#00e5ff] text-xs font-bold rounded-lg border border-slate-700/30 uppercase tracking-wider shadow-sm">
+            <span className="px-3 py-1 bg-white/10 text-slate-200 text-xs font-bold rounded-lg border border-slate-700/30 uppercase tracking-wider shadow-sm">
               Admin Only
             </span>
           )}
         </div>
 
-        <h3 className={`text-2xl font-bold text-slate-100 mb-2 transition-colors duration-300 group-hover:text-[#00e5ff] ${isAdmin ? 'text-[#00e5ff]' : ''}`}>
+        <h3 className={`text-2xl font-bold text-slate-100 mb-2 transition-colors duration-300 group-hover:text-white ${isAdmin ? 'text-white' : ''}`}>
           {title}
         </h3>
         <p className="text-sm text-slate-400 leading-relaxed mt-auto group-hover:text-slate-200 transition-colors duration-300">

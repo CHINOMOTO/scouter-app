@@ -80,7 +80,7 @@ export default function ProfilePage() {
                     <div className="glass-panel rounded-2xl p-8 animate-fade-in delay-100">
                         {loading ? (
                             <div className="flex justify-center py-12">
-                                <span className="w-8 h-8 border-4 border-[#00e5ff] border-t-transparent rounded-full animate-spin"></span>
+                                <span className="w-8 h-8 border-4 border-white/40 border-t-transparent rounded-full animate-spin"></span>
                             </div>
                         ) : !profile ? (
                             <p className="text-slate-400 text-center py-8">プロフィール情報を取得できませんでした。</p>
@@ -88,18 +88,18 @@ export default function ProfilePage() {
                             <div className="space-y-8">
                                 {/* Header */}
                                 <div className="text-center pb-6 border-b border-white/10">
-                                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#00e5ff]/10 border-2 border-slate-700/30 flex items-center justify-center">
+                                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 border-2 border-slate-700/30 flex items-center justify-center">
                                         <span className="text-3xl">👤</span>
                                     </div>
                                     <h1 className="text-2xl font-bold text-white mb-1">{profile.displayName}</h1>
                                     {profile.companyName && (
-                                        <p className="text-[#00e5ff]/70 font-medium">{profile.companyName}</p>
+                                        <p className="text-white/70 font-medium">{profile.companyName}</p>
                                     )}
                                 </div>
 
                                 {/* Info */}
                                 <div className="space-y-1">
-                                    <h2 className="text-sm font-bold text-[#00e5ff] uppercase tracking-widest border-b border-slate-700/30 pb-2 mb-4">
+                                    <h2 className="text-sm font-bold text-white uppercase tracking-widest border-b border-slate-700/30 pb-2 mb-4">
                                         アカウント情報
                                     </h2>
                                     <dl className="space-y-4 text-sm">
@@ -118,7 +118,7 @@ export default function ProfilePage() {
                                         <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-slate-900/40 border border-white/5">
                                             <dt className="text-slate-400 font-medium">権限</dt>
                                             <dd>
-                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${ profile.role === "admin" ? "bg-[#00e5ff]/10 text-[#00e5ff] border-slate-700/30" : "bg-slate-800 text-slate-300 border-slate-600" }`}>
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${ profile.role === "admin" ? "bg-white/10 text-white border-slate-700/30" : "bg-slate-800 text-slate-300 border-slate-600" }`}>
                                                     {roleLabel(profile.role)}
                                                 </span>
                                             </dd>

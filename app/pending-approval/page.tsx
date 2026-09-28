@@ -15,7 +15,7 @@ export default function PendingApprovalPage() {
         <div className="min-h-screen flex items-center justify-center p-4">
             <div className="relative w-full max-w-lg glass-panel rounded-2xl p-10 text-center animate-fade-in border-t border-slate-600/50">
 
-                <div className="w-20 h-20 bg-[#00e5ff]/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-1 ring-[#00e5ff]/30">
+                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 ring-1 ring-[#00e5ff]/30">
                     <span className="text-4xl">⏳</span>
                 </div>
 
@@ -29,7 +29,7 @@ export default function PendingApprovalPage() {
                 </p>
 
                 <div className="bg-slate-900/40 rounded-xl p-6 text-left mb-8 border border-slate-700/50">
-                    <h3 className="text-xs font-bold text-[#00e5ff] mb-2 uppercase tracking-widest">Next Steps</h3>
+                    <h3 className="text-xs font-bold text-white mb-2 uppercase tracking-widest">Next Steps</h3>
                     <ul className="text-sm text-slate-400 space-y-2 list-disc list-inside">
                         <li>管理者があなたの所属情報を確認します</li>
                         <li>確認メールが送られましたので、認証リンクをクリックしてください</li>

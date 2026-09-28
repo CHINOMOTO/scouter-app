@@ -179,7 +179,7 @@ export default function SearchPage() {
                     type="text"
                     value={nameQuery}
                     onChange={(e) => setNameQuery(e.target.value)}
-                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-[#00e5ff]/10 transition-all duration-300"
+                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-white/30 transition-all duration-300"
                     placeholder="例: 山田 太郎"
                   />
                 </div>
@@ -200,7 +200,7 @@ export default function SearchPage() {
                     maxLength={4}
                     value={searchYear}
                     onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchYear(e.target.value); }}
-                    className="w-20 bg-slate-900/40 border border-slate-700/50 rounded-xl px-3 py-3.5 text-slate-100 focus:outline-none focus:border-slate-700/30 focus:ring-4 focus:ring-[#00e5ff]/10 transition-all duration-300 text-center"
+                    className="w-20 bg-slate-900/40 border border-slate-700/50 rounded-xl px-3 py-3.5 text-slate-100 focus:outline-none focus:border-slate-700/30 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center"
                     placeholder="0000"
                   />
                   <span className="text-slate-400">年</span>
@@ -210,7 +210,7 @@ export default function SearchPage() {
                     maxLength={2}
                     value={searchMonth}
                     onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchMonth(e.target.value); }}
-                    className="w-14 bg-slate-900/40 border border-slate-700/50 rounded-xl px-3 py-3.5 text-slate-100 focus:outline-none focus:border-slate-700/30 focus:ring-4 focus:ring-[#00e5ff]/10 transition-all duration-300 text-center"
+                    className="w-14 bg-slate-900/40 border border-slate-700/50 rounded-xl px-3 py-3.5 text-slate-100 focus:outline-none focus:border-slate-700/30 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center"
                     placeholder="00"
                   />
                   <span className="text-slate-400">月</span>
@@ -220,7 +220,7 @@ export default function SearchPage() {
                     maxLength={2}
                     value={searchDay}
                     onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchDay(e.target.value); }}
-                    className="w-14 bg-slate-900/40 border border-slate-700/50 rounded-xl px-3 py-3.5 text-slate-100 focus:outline-none focus:border-slate-700/30 focus:ring-4 focus:ring-[#00e5ff]/10 transition-all duration-300 text-center"
+                    className="w-14 bg-slate-900/40 border border-slate-700/50 rounded-xl px-3 py-3.5 text-slate-100 focus:outline-none focus:border-slate-700/30 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center"
                     placeholder="00"
                   />
                   <span className="text-slate-400">日</span>
@@ -229,7 +229,7 @@ export default function SearchPage() {
 
               <div className="flex items-center justify-between pt-2">
                 <p className="text-xs text-slate-500">
-                  ※氏名または生年月日の<span className="text-[#00e5ff] font-bold">どちらか一方は必須</span>です
+                  ※氏名または生年月日の<span className="text-white font-bold">どちらか一方は必須</span>です
                 </p>
                 <button
                   type="submit"
@@ -259,7 +259,7 @@ export default function SearchPage() {
             <div className="animate-fade-in delay-200">
               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
                 検索結果
-                <span className="text-xs font-bold text-[#00e5ff] bg-[#00e5ff]/10 border border-slate-700/30 px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-bold text-white bg-white/5 border border-slate-700/30 px-2.5 py-0.5 rounded-full">
                   {results.length} 件
                 </span>
               </h2>
@@ -282,7 +282,7 @@ export default function SearchPage() {
                         <div className="flex-1">
                           <div className="flex items-start gap-4 mb-3">
                             <div className="flex-1">
-                              <h3 className="text-xl font-bold text-white group-hover:text-[#00e5ff] transition-colors">
+                              <h3 className="text-xl font-bold text-white group-hover:text-white transition-colors">
                                 {item.full_name}
                               </h3>
                               <p className="text-sm text-slate-500 font-medium">
@@ -317,7 +317,7 @@ export default function SearchPage() {
 
                           <Link
                             href={`/cases/${item.id}`} // 詳細ページができたら飛ぶ想定（なければ#）
-                            className="mt-4 text-xs text-[#00e5ff] hover:text-[#00e5ff] font-bold hover:underline decoration-[#00e5ff]/30 underline-offset-4 transition-all"
+                            className="mt-4 text-xs text-white hover:text-white font-bold hover:underline decoration-[#00e5ff]/30 underline-offset-4 transition-all"
                           >
                             詳細を見る
                           </Link>

@@ -14,7 +14,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: true, skipped: true });
         }
 
-        let messageText = "【SCOUTER システム通知】";
+        let messageText = "【MIERIS システム通知】";
 
         if (type === 'signup') {
             messageText += `\n\n🔔 新規アカウントの登録申請がありました。\n\n👤 氏名: ${data.name || "不明"}\n🏢 会社: ${data.company || "不明"}\n✉️ Email: ${data.email || "不明"}\n\n管理画面にログインして承認・拒否を行ってください。`;
