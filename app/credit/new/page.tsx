@@ -135,11 +135,14 @@ export default function NewCreditCasePage() {
                             <ArrowLeft className="w-4 h-4" />
                             <span>未払い企業一覧へ戻る</span>
                         </Link>
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-900 text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-[11px] font-extrabold text-blue-600 uppercase tracking-widest font-mono">
                                 MIERIS CREDIT
                             </span>
-                            <span className="text-xs text-slate-500 font-medium">事実のみを記録する安全な運用</span>
+                            <span className="text-slate-300 text-xs">|</span>
+                            <span className="text-xs text-slate-500 font-semibold tracking-wide">
+                                未払い・支払遅延企業の登録申請
+                            </span>
                         </div>
                         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                             未払い・支払遅延企業の登録申請
@@ -150,7 +153,7 @@ export default function NewCreditCasePage() {
                     </div>
 
                     {/* コンプライアンス遵守ボックス */}
-                    <div className="bg-slate-900 text-slate-100 p-6 sm:p-7 rounded-3xl mb-8 shadow-md animate-fade-in">
+                    <div className="bg-slate-900 text-slate-100 p-6 sm:p-7 rounded-xl mb-6 shadow-xs animate-fade-in">
                         <div className="flex items-center gap-2 mb-3">
                             <ShieldAlert className="w-5 h-5 text-blue-400" />
                             <h3 className="text-sm font-bold tracking-widest text-white uppercase">
@@ -167,7 +170,7 @@ export default function NewCreditCasePage() {
                     </div>
 
                     {/* 申請フォーム */}
-                    <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-slate-200 bg-white shadow-xl animate-fade-in delay-100">
+                    <div className="bg-white p-7 sm:p-9 rounded-xl border border-slate-200 shadow-2xs animate-fade-in">
                         <form onSubmit={handleSubmit} className="space-y-6">
 
                             {/* 対象企業名 */}

@@ -175,7 +175,7 @@ export default function CreditCaseDetailPage() {
                     </div>
 
                     {/* メインカード */}
-                    <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-slate-200 bg-white shadow-xl">
+                    <div className="bg-white p-7 sm:p-9 rounded-xl border border-slate-200 shadow-2xs">
 
                         {/* ヘッダー情報 */}
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-slate-100">
@@ -205,7 +205,7 @@ export default function CreditCaseDetailPage() {
                             {/* 入金ステータスバッジ */}
                             <div>
                                 {isResolved ? (
-                                    <div className="px-4 py-2.5 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-center flex flex-col items-center">
+                                    <div className="px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-center flex flex-col items-center">
                                         <div className="flex items-center gap-1.5 text-xs font-bold">
                                             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                                             <span>解決済み（入金完了）</span>
@@ -215,7 +215,7 @@ export default function CreditCaseDetailPage() {
                                         ) : null}
                                     </div>
                                 ) : (
-                                    <div className="px-4 py-2.5 rounded-2xl bg-rose-50 text-rose-800 border border-rose-200 text-center flex flex-col items-center">
+                                    <div className="px-4 py-2.5 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 text-center flex flex-col items-center">
                                         <div className="flex items-center gap-1.5 text-xs font-extrabold">
                                             <AlertTriangle className="w-4 h-4 text-rose-600" />
                                             <span>未払い・支払遅延中</span>
@@ -227,7 +227,7 @@ export default function CreditCaseDetailPage() {
                         </div>
 
                         {/* 請求・未払い金額ハイライト */}
-                        <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 my-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="p-6 bg-slate-50 rounded-xl border border-slate-200 my-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <div>
                                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">
                                     未払い金額（税込）
@@ -275,7 +275,7 @@ export default function CreditCaseDetailPage() {
                         </div>
 
                         {/* 相手方の主張 */}
-                        <div className="mt-6 p-5 bg-amber-50/60 rounded-2xl border border-amber-200/80">
+                        <div className="mt-6 p-5 bg-amber-50/60 rounded-xl border border-amber-200/80">
                             <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                                 <Scale className="w-4 h-4 text-amber-700" />
                                 <span>相手方の主張（反論・理由）</span>
@@ -299,7 +299,7 @@ export default function CreditCaseDetailPage() {
                 {/* 解決報告モーダル */}
                 {showResolveModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-                        <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-200">
+                        <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl border border-slate-200">
                             <h3 className="text-xl font-bold text-slate-900 mb-2">
                                 入金完了（解決）の報告
                             </h3>

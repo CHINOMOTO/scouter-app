@@ -171,9 +171,9 @@ export default function AdminCreditCasesPage() {
                             <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                         </div>
                     ) : filteredCases.length === 0 ? (
-                        <div className="bg-white p-12 text-center rounded-3xl border border-slate-200 shadow-sm animate-fade-in">
-                            <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                                <FileText className="w-8 h-8" />
+                        <div className="bg-white p-10 text-center rounded-xl border border-slate-200 shadow-2xs animate-fade-in">
+                            <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <FileText className="w-6 h-6" />
                             </div>
                             <p className="text-slate-700 font-bold text-base mb-1">対象の審査申請はありません</p>
                             <p className="text-xs text-slate-500">現在、審査待ち・ステータスに該当する企業データはありません。</p>
@@ -183,7 +183,7 @@ export default function AdminCreditCasesPage() {
                             {filteredCases.map((c) => (
                                 <div
                                     key={c.id}
-                                    className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
+                                    className="bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
                                 >
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-2">
