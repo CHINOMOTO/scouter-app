@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { UploadCloud, X, FileText, AlertCircle } from "lucide-react";
+import { UploadCloud, X, FileText, AlertCircle, ArrowLeft } from "lucide-react";
 import { RequireAdmin } from "@/components/RequireAdmin";
 
 export default function EditCasePage() {
@@ -194,7 +194,7 @@ export default function EditCasePage() {
                         <p className="text-slate-600">登録データの編集（管理者のみ）</p>
                     </div>
 
-                    <div className="glass-panel rounded-2xl p-6 md:p-10 animate-fade-in delay-100">
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-2xs p-6 md:p-10 animate-fade-in delay-100">
                         <form onSubmit={handleSubmit} className="space-y-8">
 
                             {/* 基本情報 */}

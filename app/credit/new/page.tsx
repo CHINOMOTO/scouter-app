@@ -130,41 +130,48 @@ export default function NewCreditCasePage() {
                 <div className="max-w-3xl w-full">
 
                     {/* ヘッダー */}
-                    <div className="mb-8 animate-fade-in">
-                        <Link href="/credit" className="text-slate-600 hover:text-slate-900 text-sm flex items-center gap-1.5 mb-4 font-medium transition-colors">
-                            <ArrowLeft className="w-4 h-4" />
-                            <span>未払い企業一覧へ戻る</span>
-                        </Link>
-                        <div className="flex items-center gap-2 mb-1.5">
-                            <span className="text-[11px] font-extrabold text-blue-600 uppercase tracking-widest font-mono">
-                                MIERIS CREDIT
-                            </span>
-                            <span className="text-slate-300 text-xs">|</span>
-                            <span className="text-xs text-slate-500 font-semibold tracking-wide">
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 animate-fade-in">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <span className="text-[11px] font-extrabold text-blue-600 uppercase tracking-widest font-mono">
+                                    MIERIS CREDIT
+                                </span>
+                                <span className="text-slate-300 text-xs">|</span>
+                                <span className="text-xs text-slate-500 font-semibold tracking-wide">
+                                    取引先信用情報共有システム
+                                </span>
+                            </div>
+                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                                 未払い・支払遅延企業の登録申請
-                            </span>
+                            </h1>
+                            <p className="text-slate-600 text-sm mt-1">
+                                客観的な請求事実と裏付け資料に基づき、未払い・支払遅延の事実を記録・申請します。
+                            </p>
                         </div>
-                        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                            未払い・支払遅延企業の登録申請
-                        </h1>
-                        <p className="text-slate-600 text-sm mt-1">
-                            客観的な請求事実と裏付け資料に基づき、未払い・支払遅延の事実を記録・申請します。
-                        </p>
+                        <div className="shrink-0">
+                            <Link 
+                                href="/credit" 
+                                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap"
+                            >
+                                <ArrowLeft className="w-3.5 h-3.5" />
+                                <span>未払い企業一覧へ戻る</span>
+                            </Link>
+                        </div>
                     </div>
 
-                    {/* コンプライアンス遵守ボックス */}
-                    <div className="bg-slate-900 text-slate-100 p-6 sm:p-7 rounded-xl mb-6 shadow-xs animate-fade-in">
-                        <div className="flex items-center gap-2 mb-3">
-                            <ShieldAlert className="w-5 h-5 text-blue-400" />
-                            <h3 className="text-sm font-bold tracking-widest text-white uppercase">
+                    {/* コンプライアンス遵守ボックス（確実に視認可能なコントラスト設計） */}
+                    <div className="bg-slate-900 text-slate-100 p-6 rounded-xl mb-6 shadow-2xs border border-slate-800 animate-fade-in">
+                        <div className="flex items-center gap-2.5 mb-3 border-b border-slate-800 pb-3">
+                            <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+                            <span className="text-sm font-bold tracking-wide text-white">
                                 「晒す」仕組みにしないための6つの運用ルール
-                            </h3>
+                            </span>
                         </div>
                         <ul className="text-xs space-y-2 text-slate-300 list-disc list-inside leading-relaxed">
-                            <li><strong className="text-white">同意書のない相手は登録できません</strong>（取引開始時に署名を得た同意書が必要です）</li>
-                            <li><strong className="text-white">評価・推測・伝聞は禁止</strong>（「悪質」「危ない」といった主観的表現は審査で却下されます）</li>
-                            <li><strong className="text-white">相手の言い分（反論・保留理由）を必ず併記</strong>してください</li>
-                            <li><strong className="text-white">入金されたら5営業日以内に更新</strong>（「解決済み（遅延○日）」と表示更新されます）</li>
+                            <li><strong className="text-white font-bold">同意書のない相手は登録できません</strong>（取引開始時に署名を得た同意書が必要です）</li>
+                            <li><strong className="text-white font-bold">評価・推測・伝聞は禁止</strong>（「悪質」「危ない」といった主観的表現は審査で却下されます）</li>
+                            <li><strong className="text-white font-bold">相手の言い分（反論・保留理由）を必ず併記</strong>してください</li>
+                            <li><strong className="text-white font-bold">入金されたら5営業日以内に更新</strong>（「解決済み（遅延○日）」と表示更新されます）</li>
                             <li>全件、運営管理者の厳格なエビデンス審査を経てから共有されます</li>
                         </ul>
                     </div>

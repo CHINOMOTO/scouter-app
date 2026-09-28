@@ -135,16 +135,23 @@ export default function NewUserPage() {
         <RequireAdmin>
             <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
                 <div className="max-w-2xl w-full">
-                    <div className="mb-8 animate-fade-in">
-                        <Link href="/admin/registered-users" className="text-slate-600 hover:text-slate-900 text-sm inline-flex items-center gap-1.5 mb-4 transition-colors font-medium">
-                            <ArrowLeft className="w-4 h-4" />
-                            <span>ユーザー一覧へ戻る</span>
-                        </Link>
-                        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">アカウント新規発行</h1>
-                        <p className="text-slate-600">お申し込み企業のアカウントを発行し、プラン権限を割り当てます</p>
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 animate-fade-in">
+                        <div>
+                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">アカウント新規発行</h1>
+                            <p className="text-slate-600 text-sm mt-1">お申し込み企業のアカウントを発行し、プラン権限を割り当てます</p>
+                        </div>
+                        <div className="shrink-0">
+                            <Link 
+                                href="/admin/registered-users" 
+                                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap"
+                            >
+                                <ArrowLeft className="w-3.5 h-3.5" />
+                                <span>ユーザー一覧へ戻る</span>
+                            </Link>
+                        </div>
                     </div>
 
-                    <div className="glass-panel p-8 rounded-2xl animate-fade-in delay-100">
+                    <div className="bg-white p-7 sm:p-9 rounded-xl border border-slate-200 shadow-2xs animate-fade-in delay-100">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* 所属会社の選択 */}
                             <div className="space-y-2">

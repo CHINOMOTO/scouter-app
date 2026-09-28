@@ -159,16 +159,19 @@ export default function CreditCaseDetailPage() {
 
                     {/* ナビゲーション */}
                     <div className="flex items-center justify-between mb-8">
-                        <Link href="/credit" className="text-slate-600 hover:text-slate-900 text-sm flex items-center gap-2 font-medium transition-colors">
-                            <ArrowLeft className="w-4 h-4" />
+                        <Link 
+                            href="/credit" 
+                            className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+                        >
+                            <ArrowLeft className="w-3.5 h-3.5" />
                             <span>未払い企業一覧へ戻る</span>
                         </Link>
                         {isOwner && !isResolved && (
                             <button
                                 onClick={() => setShowResolveModal(true)}
-                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
+                                className="inline-flex items-center gap-1.5 px-4 h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-xs transition-all"
                             >
-                                <Check className="w-4 h-4" />
+                                <Check className="w-3.5 h-3.5" />
                                 <span>入金完了（解決）を報告する</span>
                             </button>
                         )}

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { FileText, AlertCircle } from "lucide-react";
+import { FileText, AlertCircle, ArrowLeft } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 
 type CaseDetail = {
@@ -223,7 +223,7 @@ export default function CaseDetailPage() {
                         </Link>
                     </div>
 
-                    <div className="glass-panel rounded-2xl p-8 animate-fade-in delay-100">
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-2xs p-8 animate-fade-in delay-100">
                         {loading ? (
                             <div className="flex justify-center py-12">
                                 <span className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></span>
