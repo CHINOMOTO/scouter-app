@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 
 const CATEGORIES = [
@@ -106,7 +107,7 @@ export default function ContactPage() {
                 <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
                     <div className="max-w-2xl w-full relative z-10">
                         <div className="glass-panel rounded-3xl p-10 text-center animate-fade-in border border-slate-200">
-                            <div className="text-5xl mb-6">✅</div>
+                            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600"><CheckCircle2 className="w-10 h-10" /></div>
                             <h2 className="text-2xl font-bold text-slate-900 mb-4">
                                 お問い合わせを送信しました
                             </h2>
@@ -183,7 +184,7 @@ export default function ContactPage() {
                                 {/* お問い合わせ種類 */}
                                 <div className="space-y-2">
                                     <label className="block text-sm font-bold text-slate-700">
-                                        お問い合わせ種類 <span className="text-red-400">*</span>
+                                        お問い合わせ種類 <span className="text-rose-600">*</span>
                                     </label>
                                     <select
                                         value={category}
@@ -202,7 +203,7 @@ export default function ContactPage() {
                                 {/* お問い合わせ内容 */}
                                 <div className="space-y-2">
                                     <label className="block text-sm font-bold text-slate-700">
-                                        お問い合わせ内容 <span className="text-red-400">*</span>
+                                        お問い合わせ内容 <span className="text-rose-600">*</span>
                                     </label>
                                     <textarea
                                         value={message}
@@ -212,7 +213,7 @@ export default function ContactPage() {
                                         maxLength={MAX_MESSAGE_LENGTH}
                                         className="input-field w-full resize-none"
                                     />
-                                    <p className="text-xs text-slate-9000 text-right">
+                                    <p className="text-xs text-slate-500 text-right">
                                         {message.length} / {MAX_MESSAGE_LENGTH}
                                     </p>
                                 </div>
@@ -220,7 +221,7 @@ export default function ContactPage() {
                                 {/* エラーメッセージ */}
                                 {error && (
                                     <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-                                        <span className="text-red-400 text-lg">⚠️</span>
+                                        <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
                                         <p className="text-sm text-red-700 leading-snug pt-0.5">{error}</p>
                                     </div>
                                 )}

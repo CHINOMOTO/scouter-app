@@ -3,6 +3,7 @@
 import { useEffect, useState, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { AlertCircle } from "lucide-react";
 
 type RequireAuthProps = {
     children: ReactNode;
@@ -102,8 +103,8 @@ export function RequireAuth({ children }: RequireAuthProps) {
         return (
             <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center flex-col gap-4">
                 <div className="animate-spin h-8 w-8 border-4 border-slate-300 rounded-full border-t-slate-900"></div>
-                <p className="text-sm text-slate-300">認証情報を確認して(Token)...</p>
-                <p className="text-xs text-slate-9000 font-mono animate-pulse">{statusMessage}</p>
+                <p className="text-sm text-slate-600 font-medium">認証情報を確認して(Token)...</p>
+                <p className="text-xs text-slate-500 font-mono animate-pulse">{statusMessage}</p>
             </div>
         );
     }
@@ -112,7 +113,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
         return (
             <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center p-4">
                 <div className="bg-red-950/30 border border-red-500/50 rounded-lg p-6 max-w-md w-full text-center">
-                    <div className="text-3xl mb-4">⚠️</div>
+                    <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4"><AlertCircle className="w-6 h-6" /></div>
                     <h2 className="text-xl font-bold text-red-700 mb-2">認証エラー</h2>
                     <p className="text-sm text-red-700 mb-6">{authError}</p>
                     <div className="flex flex-col gap-3">
@@ -125,7 +126,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
                         >
                             一度ログアウトする（推奨）
                         </button>
-                        <p className="text-xs text-slate-400">※権限情報を更新するため、再ログインしてください</p>
+                        <p className="text-xs text-slate-500">※権限情報を更新するため、再ログインしてください</p>
                     </div>
                 </div>
             </div>

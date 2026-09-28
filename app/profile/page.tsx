@@ -89,7 +89,7 @@ export default function ProfilePage() {
                                 {/* Header */}
                                 <div className="text-center pb-6 border-b border-slate-200">
                                     <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-50 border-2 border-slate-200 flex items-center justify-center">
-                                        <span className="text-3xl">👤</span>
+                                        <User className="w-8 h-8 text-slate-600" />
                                     </div>
                                     <h1 className="text-2xl font-bold text-slate-900 mb-1">{profile.displayName}</h1>
                                     {profile.companyName && (

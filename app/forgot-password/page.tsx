@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { Mail, AlertCircle } from "lucide-react";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -60,7 +61,7 @@ export default function ForgotPasswordPage() {
                     {successMsg ? (
                         <div className="text-center">
                             <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
-                                <span className="text-2xl">✉️</span>
+                                <Mail className="w-8 h-8 text-blue-600" />
                             </div>
                             <p className="text-slate-800 leading-relaxed text-sm mb-6">
                                 {successMsg}
@@ -87,7 +88,7 @@ export default function ForgotPasswordPage() {
 
                             {errorMsg && (
                                 <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-start gap-2 animate-fade-in">
-                                    <span className="text-red-400 text-sm">⚠️</span>
+                                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
                                     <p className="text-xs text-red-700 pt-0.5">{errorMsg}</p>
                                 </div>
                             )}
@@ -103,7 +104,7 @@ export default function ForgotPasswordPage() {
                     )}
 
                     <div className="text-center mt-8 pt-4 border-t border-slate-200">
-                        <Link href="/" className="text-xs text-slate-9000 hover:text-slate-900 transition-colors">
+                        <Link href="/" className="text-xs text-slate-500 hover:text-slate-900 transition-colors">
                             キャンセルして戻る
                         </Link>
                     </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { AlertCircle } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -105,7 +106,7 @@ export default function Home() {
 
             {errorMsg && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 flex items-start gap-2.5 text-red-700 text-sm">
-                <span className="text-base">⚠️</span>
+                <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
                 <p className="pt-0.5 leading-snug">{errorMsg}</p>
               </div>
             )}

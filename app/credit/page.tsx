@@ -2,6 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { 
+    Banknote, 
+    AlertTriangle, 
+    CheckCircle2, 
+    ShieldCheck, 
+    Search, 
+    Plus, 
+    ArrowRight, 
+    Lock,
+    Building2,
+    Calendar,
+    Coins
+} from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
 
@@ -86,7 +99,7 @@ export default function CreditSearchPage() {
                 <div className="max-w-6xl w-full">
 
                     {/* ヘッダーエリア */}
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 animate-fade-in">
                         <div>
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-900 text-white tracking-widest uppercase">
@@ -105,22 +118,23 @@ export default function CreditSearchPage() {
                         </div>
                         <div className="flex items-center gap-3">
                             <Link href="/dashboard" className="btn-secondary text-xs h-10 px-4 flex items-center">
-                                ダッシュボードへ
+                                戻る
                             </Link>
                             <Link
                                 href="/credit/new"
-                                className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all"
+                                className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm hover:-translate-y-0.5 transition-all shadow-sm"
                             >
-                                <span>+</span> 未払い企業を新規登録
+                                <Plus className="w-4 h-4" />
+                                <span>未払い企業を新規登録</span>
                             </Link>
                         </div>
                     </div>
 
                     {/* プラン制限の場合の案内 */}
                     {planRestricted ? (
-                        <div className="glass-panel p-12 rounded-3xl border border-slate-200 text-center max-w-2xl mx-auto my-12 shadow-xl bg-white">
-                            <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl text-amber-600">
-                                🔒
+                        <div className="glass-panel p-12 rounded-3xl border border-slate-200 text-center max-w-2xl mx-auto my-12 shadow-xl bg-white animate-fade-in">
+                            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-amber-600">
+                                <Lock className="w-8 h-8" />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-900 mb-2">
                                 ミエリスクレジット 未加入プランです
@@ -129,10 +143,12 @@ export default function CreditSearchPage() {
                                 現在のアカウントは「就業情報プラン」のため、未払い企業情報の照会・登録をご利用いただけません。<br />
                                 「ミエリスクレジット」または「両方セットプラン」へのアップグレードで、全データをご利用いただけます。
                             </p>
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-700 max-w-md mx-auto mb-6">
-                                <div className="font-bold text-slate-900 mb-1">【プラン変更のご案内】</div>
-                                <div>・ミエリスクレジット単体: 月額 15,000円</div>
-                                <div>・就業情報 ＋ クレジット 両方セット: 月額 30,000円（おすすめ）</div>
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-700 max-w-md mx-auto mb-6 text-left">
+                                <div className="font-bold text-slate-900 mb-1.5">【プラン変更のご案内】</div>
+                                <div className="space-y-1">
+                                    <div>・ミエリスクレジット単体: 月額 15,000円</div>
+                                    <div>・就業情報 ＋ クレジット 両方セット: 月額 30,000円（おすすめ）</div>
+                                </div>
                             </div>
                             <Link href="/contact" className="btn-primary px-8 py-3 rounded-xl font-bold text-sm inline-block">
                                 プラン変更をお問い合わせ
@@ -141,7 +157,7 @@ export default function CreditSearchPage() {
                     ) : (
                         <>
                             {/* 統計サマリーカード */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-fade-in">
                                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                                     <div>
                                         <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
@@ -151,7 +167,9 @@ export default function CreditSearchPage() {
                                             ¥{totalAmount.toLocaleString()}
                                         </div>
                                     </div>
-                                    <span className="p-3 bg-rose-50 text-rose-600 rounded-xl text-xl">💴</span>
+                                    <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100">
+                                        <Coins className="w-7 h-7" strokeWidth={1.5} />
+                                    </div>
                                 </div>
                                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                                     <div>
@@ -162,7 +180,9 @@ export default function CreditSearchPage() {
                                             {unpaidCount} <span className="text-sm font-normal text-slate-500">社</span>
                                         </div>
                                     </div>
-                                    <span className="p-3 bg-amber-50 text-amber-600 rounded-xl text-xl">⚠️</span>
+                                    <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100">
+                                        <AlertTriangle className="w-7 h-7" strokeWidth={1.5} />
+                                    </div>
                                 </div>
                                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                                     <div>
@@ -173,15 +193,17 @@ export default function CreditSearchPage() {
                                             {resolvedCount} <span className="text-sm font-normal text-slate-500">件</span>
                                         </div>
                                     </div>
-                                    <span className="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xl">✓</span>
+                                    <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100">
+                                        <CheckCircle2 className="w-7 h-7" strokeWidth={1.5} />
+                                    </div>
                                 </div>
                             </div>
 
                             {/* 検索フィルターバー */}
-                            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8">
+                            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8 animate-fade-in delay-100">
                                 <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 items-center">
                                     <div className="flex-1 w-full">
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                                        <label className="block text-xs font-bold text-slate-700 mb-1.5">
                                             企業名・商号 または 所在地
                                         </label>
                                         <input
@@ -193,14 +215,14 @@ export default function CreditSearchPage() {
                                         />
                                     </div>
                                     <div className="w-full md:w-64">
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                                        <label className="block text-xs font-bold text-slate-700 mb-1.5">
                                             法人番号（13桁）
                                         </label>
                                         <input
                                             type="text"
                                             value={corpFilter}
                                             onChange={(e) => setCorpFilter(e.target.value)}
-                                            placeholder="13桁数字で完全一致照会"
+                                            placeholder="13桁数字で照会"
                                             className="input-field font-mono"
                                         />
                                     </div>
@@ -208,9 +230,10 @@ export default function CreditSearchPage() {
                                         <button
                                             type="submit"
                                             disabled={loading}
-                                            className="btn-primary w-full md:w-auto px-8 py-3 text-sm font-bold rounded-xl"
+                                            className="btn-primary w-full md:w-auto px-8 py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2"
                                         >
-                                            {loading ? "照会中..." : "照会・検索"}
+                                            <Search className="w-4 h-4" />
+                                            <span>{loading ? "照会中..." : "照会・検索"}</span>
                                         </button>
                                     </div>
                                 </form>
@@ -222,15 +245,17 @@ export default function CreditSearchPage() {
                                     <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                                 </div>
                             ) : cases.length === 0 ? (
-                                <div className="bg-white p-12 text-center rounded-3xl border border-slate-200 shadow-sm">
-                                    <span className="text-4xl mb-3 block">🛡️</span>
+                                <div className="bg-white p-12 text-center rounded-3xl border border-slate-200 shadow-sm animate-fade-in">
+                                    <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                                        <ShieldCheck className="w-8 h-8" />
+                                    </div>
                                     <h3 className="text-lg font-bold text-slate-900 mb-1">照会条件に該当する未払い企業はありません</h3>
                                     <p className="text-xs text-slate-500">
                                         登録がないことは安心材料のひとつです。取引前に同意書を取得し、支払遅延が生じた場合はご登録ください。
                                     </p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in">
                                     {cases.map((c) => {
                                         const isResolved = c.payment_status === "resolved";
                                         return (
@@ -252,12 +277,14 @@ export default function CreditSearchPage() {
                                                             )}
                                                         </div>
                                                         {isResolved ? (
-                                                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                                解決済み {c.resolved_delay_days ? `(遅延${c.resolved_delay_days}日)` : ""}
+                                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                                                <span>解決済み {c.resolved_delay_days ? `(遅延${c.resolved_delay_days}日)` : ""}</span>
                                                             </span>
                                                         ) : (
-                                                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 animate-pulse">
-                                                                未払い
+                                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                                <AlertTriangle className="w-3.5 h-3.5" />
+                                                                <span>未払い</span>
                                                             </span>
                                                         )}
                                                     </div>
@@ -284,8 +311,8 @@ export default function CreditSearchPage() {
                                                     </div>
 
                                                     {c.counterparty_claim && (
-                                                        <div className="text-xs text-slate-600 line-clamp-2 mb-3 bg-amber-50/50 p-2.5 rounded-lg border border-amber-100">
-                                                            <span className="font-bold text-amber-900">【相手方の主張】</span>
+                                                        <div className="text-xs text-slate-600 line-clamp-2 mb-3 bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/60">
+                                                            <span className="font-bold text-amber-900 mr-1">【相手方の主張】</span>
                                                             {c.counterparty_claim}
                                                         </div>
                                                     )}
@@ -293,8 +320,9 @@ export default function CreditSearchPage() {
 
                                                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                                                     <span>登録日: {new Date(c.created_at).toLocaleDateString()}</span>
-                                                    <span className="text-blue-600 font-bold group-hover:translate-x-1 transition-transform">
-                                                        事実詳細を見る →
+                                                    <span className="text-blue-600 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                                        <span>事実詳細を見る</span>
+                                                        <ArrowRight className="w-3.5 h-3.5" />
                                                     </span>
                                                 </div>
                                             </Link>

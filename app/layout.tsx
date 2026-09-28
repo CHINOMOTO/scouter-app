@@ -37,7 +37,7 @@ export default function RootLayout({
               ただいま定期メンテナンスおよびシステムの機能更新を行っております。<br />
               終了まで今しばらくお待ちくださいますようお願い申し上げます。
             </p>
-            <div className="inline-block px-4 py-2 border border-slate-300 bg-white rounded-lg text-xs text-slate-9000 font-mono shadow-sm">
+            <div className="inline-block px-4 py-2 border border-slate-300 bg-white rounded-lg text-xs text-slate-500 font-mono shadow-sm">
               MIERIS SYSTEM MAINTENANCE
             </div>
           </div>
@@ -56,10 +56,10 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 overflow-x-hidden min-h-screen selection:bg-slate-900 selection:text-white flex flex-col">
         <Navigation />
         <main className="relative z-10 flex-grow">{children}</main>
-        <footer className="relative z-10 py-10 text-center text-slate-9000 text-xs border-t border-slate-200 bg-white mt-16">
+        <footer className="relative z-10 py-10 text-center text-slate-500 text-xs border-t border-slate-200 bg-white mt-16">
           <div className="max-w-7xl mx-auto px-4 space-y-2">
             <p className="font-bold text-slate-700">MIERIS - 雑工・荷揚げ・警備・運送 就業情報共有システム</p>
-            <p className="text-slate-9000">運営: 株式会社ミヤエモン / 開発: 株式会社宇井建設</p>
+            <p className="text-slate-500">運営: 株式会社ミヤエモン / 開発: 株式会社宇井建設</p>
             <p className="text-slate-600 font-mono text-[11px]">&copy; 2026 MIERIS. ALL RIGHTS RESERVED.</p>
           </div>
         </footer>

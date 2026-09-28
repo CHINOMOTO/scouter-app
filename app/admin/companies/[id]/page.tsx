@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 
 export default function EditCompanyPage() {
     const router = useRouter();
@@ -103,8 +104,9 @@ export default function EditCompanyPage() {
             <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
                 <div className="max-w-2xl w-full">
                     <div className="mb-8 animate-fade-in">
-                        <Link href="/admin/companies" className="text-slate-600 hover:text-slate-900 text-sm flex items-center gap-1 mb-4">
-                            ← キャンセルして一覧へ戻る
+                        <Link href="/admin/companies" className="text-slate-600 hover:text-slate-900 text-sm inline-flex items-center gap-1.5 mb-4 transition-colors font-medium">
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>キャンセルして一覧へ戻る</span>
                         </Link>
                         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">会社情報の編集</h1>
                         <p className="text-slate-600">登録済みの会社情報・契約プランを更新します</p>
@@ -212,7 +214,7 @@ export default function EditCompanyPage() {
 
                             {error && (
                                 <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-start gap-2">
-                                    <span>⚠️</span>
+                                    <AlertCircle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
                                     <span>{error}</span>
                                 </div>
                             )}

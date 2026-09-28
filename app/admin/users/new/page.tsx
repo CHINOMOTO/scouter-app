@@ -5,6 +5,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
+import { 
+    ArrowLeft, 
+    RefreshCw, 
+    AlertCircle, 
+    CheckCircle2, 
+    Copy, 
+    Check, 
+    Plus,
+    UserCheck
+} from "lucide-react";
 
 type Company = {
     id: string;
@@ -126,8 +136,9 @@ export default function NewUserPage() {
             <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
                 <div className="max-w-2xl w-full">
                     <div className="mb-8 animate-fade-in">
-                        <Link href="/admin/registered-users" className="text-slate-600 hover:text-slate-900 text-sm flex items-center gap-1 mb-4">
-                            ← ユーザー一覧へ戻る
+                        <Link href="/admin/registered-users" className="text-slate-600 hover:text-slate-900 text-sm inline-flex items-center gap-1.5 mb-4 transition-colors font-medium">
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>ユーザー一覧へ戻る</span>
                         </Link>
                         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">アカウント新規発行</h1>
                         <p className="text-slate-600">お申し込み企業のアカウントを発行し、プラン権限を割り当てます</p>
@@ -141,8 +152,9 @@ export default function NewUserPage() {
                                     <label className="text-sm font-bold text-slate-800">
                                         所属会社 <span className="text-red-500">*</span>
                                     </label>
-                                    <Link href="/admin/companies/new" className="text-xs text-blue-600 hover:underline">
-                                        + 新しい会社を追加
+                                    <Link href="/admin/companies/new" className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1">
+                                        <Plus className="w-3.5 h-3.5" />
+                                        <span>新しい会社を追加</span>
                                     </Link>
                                 </div>
                                 {loadingCompanies ? (
@@ -206,9 +218,10 @@ export default function NewUserPage() {
                                     <button
                                         type="button"
                                         onClick={generateRandomPassword}
-                                        className="text-xs text-blue-600 hover:underline font-semibold"
+                                        className="text-xs text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1 transition-colors"
                                     >
-                                        ⚡ パスワード再生成
+                                        <RefreshCw className="w-3.5 h-3.5" />
+                                        <span>パスワード再生成</span>
                                     </button>
                                 </div>
                                 <input
@@ -289,7 +302,7 @@ export default function NewUserPage() {
 
                             {error && (
                                 <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-start gap-2">
-                                    <span>⚠️</span>
+                                    <AlertCircle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
                                     <span>{error}</span>
                                 </div>
                             )}
@@ -311,8 +324,8 @@ export default function NewUserPage() {
                 {createdUser && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
                         <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-200">
-                            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl text-emerald-600">
-                                ✓
+                            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
+                                <CheckCircle2 className="w-8 h-8" />
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 text-center mb-1">
                                 アカウントを発行しました
@@ -331,9 +344,19 @@ export default function NewUserPage() {
                             <div className="space-y-3">
                                 <button
                                     onClick={copyCredentials}
-                                    className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                                    className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-sm"
                                 >
-                                    {copied ? "✓ 案内用テキストをコピーしました！" : "📋 案内テキストをコピー"}
+                                    {copied ? (
+                                        <>
+                                            <Check className="w-4 h-4 text-emerald-400" />
+                                            <span>案内用テキストをコピーしました！</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="w-4 h-4" />
+                                            <span>案内テキストをコピー</span>
+                                        </>
+                                    )}
                                 </button>
                                 <button
                                     onClick={() => {

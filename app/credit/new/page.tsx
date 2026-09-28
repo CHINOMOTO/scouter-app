@@ -3,6 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { 
+    ShieldAlert, 
+    ArrowLeft, 
+    Upload, 
+    AlertCircle, 
+    Check, 
+    FileText,
+    Building2,
+    Calendar,
+    Coins
+} from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
 
@@ -120,8 +131,9 @@ export default function NewCreditCasePage() {
 
                     {/* ヘッダー */}
                     <div className="mb-8 animate-fade-in">
-                        <Link href="/credit" className="text-slate-600 hover:text-slate-900 text-sm flex items-center gap-1 mb-4">
-                            ← 未払い企業一覧へ戻る
+                        <Link href="/credit" className="text-slate-600 hover:text-slate-900 text-sm flex items-center gap-1.5 mb-4 font-medium transition-colors">
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>未払い企業一覧へ戻る</span>
                         </Link>
                         <div className="flex items-center gap-2 mb-2">
                             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-900 text-white uppercase tracking-wider">
@@ -138,10 +150,13 @@ export default function NewCreditCasePage() {
                     </div>
 
                     {/* コンプライアンス遵守ボックス */}
-                    <div className="bg-slate-900 text-slate-100 p-6 rounded-3xl mb-8 shadow-md">
-                        <h3 className="text-sm font-bold tracking-widest text-slate-300 uppercase mb-3">
-                            【重要】「晒す」仕組みにしないための6つの運用ルール
-                        </h3>
+                    <div className="bg-slate-900 text-slate-100 p-6 sm:p-7 rounded-3xl mb-8 shadow-md animate-fade-in">
+                        <div className="flex items-center gap-2 mb-3">
+                            <ShieldAlert className="w-5 h-5 text-blue-400" />
+                            <h3 className="text-sm font-bold tracking-widest text-white uppercase">
+                                「晒す」仕組みにしないための6つの運用ルール
+                            </h3>
+                        </div>
                         <ul className="text-xs space-y-2 text-slate-300 list-disc list-inside leading-relaxed">
                             <li><strong className="text-white">同意書のない相手は登録できません</strong>（取引開始時に署名を得た同意書が必要です）</li>
                             <li><strong className="text-white">評価・推測・伝聞は禁止</strong>（「悪質」「危ない」といった主観的表現は審査で却下されます）</li>
@@ -152,13 +167,13 @@ export default function NewCreditCasePage() {
                     </div>
 
                     {/* 申請フォーム */}
-                    <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-slate-200 bg-white shadow-xl">
+                    <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-slate-200 bg-white shadow-xl animate-fade-in delay-100">
                         <form onSubmit={handleSubmit} className="space-y-6">
 
                             {/* 対象企業名 */}
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-800">
-                                    対象企業名（商号） <span className="text-red-500">*</span>
+                                <label className="text-sm font-bold text-slate-800 flex items-center justify-between">
+                                    <span>対象企業名（商号） <span className="text-red-500">*</span></span>
                                 </label>
                                 <input
                                     type="text"
@@ -252,7 +267,9 @@ export default function NewCreditCasePage() {
                                     <label className="text-sm font-bold text-slate-800">
                                         相手方の主張（反論・理由）
                                     </label>
-                                    <span className="text-xs text-amber-700 font-bold">※公平性の担保のため必ず記入</span>
+                                    <span className="text-xs text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                        ※公平性担保のため必須推奨
+                                    </span>
                                 </div>
                                 <textarea
                                     rows={3}
@@ -265,19 +282,22 @@ export default function NewCreditCasePage() {
 
                             {/* エビデンス添付 */}
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-800">
-                                    裏付け資料の添付（請求書、督促状、同意書等） <span className="text-red-500">*</span>
+                                <label className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                                    <FileText className="w-4 h-4 text-slate-600" />
+                                    <span>裏付け資料の添付（請求書、督促状、同意書等） <span className="text-red-500">*</span></span>
                                 </label>
-                                <input
-                                    type="file"
-                                    multiple
-                                    required
-                                    onChange={handleFileChange}
-                                    className="block w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 cursor-pointer border border-slate-200 rounded-xl p-2 bg-slate-50"
-                                />
-                                <p className="text-[11px] text-slate-500">
-                                    ※PDFまたは画像ファイルを添付してください。管理者の審査時にエビデンスとして確認されます。
-                                </p>
+                                <div className="border-2 border-dashed border-slate-200 rounded-2xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                                    <input
+                                        type="file"
+                                        multiple
+                                        required
+                                        onChange={handleFileChange}
+                                        className="block w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 cursor-pointer"
+                                    />
+                                    <p className="text-[11px] text-slate-500 mt-2">
+                                        ※PDFまたは画像ファイルを添付してください。管理者の審査時にエビデンスとして確認されます。
+                                    </p>
+                                </div>
                             </div>
 
                             {/* 同意チェックボックス */}
@@ -286,46 +306,46 @@ export default function NewCreditCasePage() {
                                     登録に関する宣誓・同意
                                 </div>
                                 
-                                <label className="flex items-start gap-3 cursor-pointer">
+                                <label className="flex items-start gap-3 cursor-pointer group">
                                     <input
                                         type="checkbox"
                                         checked={agreedRule1}
                                         onChange={(e) => setAgreedRule1(e.target.checked)}
                                         className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                     />
-                                    <span className="text-xs text-slate-700">
+                                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
                                         取引開始時に所定の同意書を取得済みであり、エビデンス資料を添付しています。
                                     </span>
                                 </label>
 
-                                <label className="flex items-start gap-3 cursor-pointer">
+                                <label className="flex items-start gap-3 cursor-pointer group">
                                     <input
                                         type="checkbox"
                                         checked={agreedRule2}
                                         onChange={(e) => setAgreedRule2(e.target.checked)}
                                         className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                     />
-                                    <span className="text-xs text-slate-700">
+                                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
                                         主観的な評価や誹謗中傷は含まず、客観的な請求・支払遅延の事実のみを記録しています。
                                     </span>
                                 </label>
 
-                                <label className="flex items-start gap-3 cursor-pointer">
+                                <label className="flex items-start gap-3 cursor-pointer group">
                                     <input
                                         type="checkbox"
                                         checked={agreedRule3}
                                         onChange={(e) => setAgreedRule3(e.target.checked)}
                                         className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                     />
-                                    <span className="text-xs text-slate-700">
+                                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
                                         相手方から代金の支払いがあった場合は、5営業日以内に「解決済み（入金完了）」へ更新します。
                                     </span>
                                 </label>
                             </div>
 
                             {errorMsg && (
-                                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-start gap-2">
-                                    <span>⚠️</span>
+                                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-start gap-2.5">
+                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                                     <span>{errorMsg}</span>
                                 </div>
                             )}
@@ -334,9 +354,16 @@ export default function NewCreditCasePage() {
                                 <button
                                     type="submit"
                                     disabled={uploading}
-                                    className="btn-primary w-full py-4 text-base font-bold shadow-md hover:shadow-lg transition-all"
+                                    className="btn-primary w-full py-4 text-base font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
                                 >
-                                    {uploading ? "エビデンス送信中..." : "未払い企業情報を審査申請する"}
+                                    {uploading ? (
+                                        <>
+                                            <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div>
+                                            <span>エビデンス送信中...</span>
+                                        </>
+                                    ) : (
+                                        <span>未払い企業情報を審査申請する</span>
+                                    )}
                                 </button>
                             </div>
                         </form>

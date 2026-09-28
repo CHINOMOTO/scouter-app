@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { FileText, AlertCircle } from "lucide-react";
 import { RequireAdmin } from "@/components/RequireAdmin";
 
 type CaseDetail = {
@@ -251,7 +252,7 @@ export default function AdminCaseDetailPage() {
           {loading ? (
             <p className="text-sm text-slate-800 text-center py-10">読み込み中です...</p>
           ) : fetchError ? (
-            <p className="text-sm text-red-400 bg-red-950/40 border border-red-700 rounded-md px-3 py-2">
+            <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
               {fetchError}
             </p>
           ) : !caseDetail ? (
@@ -273,7 +274,7 @@ export default function AdminCaseDetailPage() {
               {/* Inline Error for Ops */}
               {formError && !showRejectModal && (
                 <div className="mb-4 p-3 rounded bg-red-500/10 border border-red-500/30 text-red-700 text-xs">
-                  ⚠️ {formError}
+                  <span className="inline-flex items-center gap-1.5"><AlertCircle className="w-4 h-4 shrink-0" /><span>{formError}</span></span>
                 </div>
               )}
 
@@ -335,7 +336,7 @@ export default function AdminCaseDetailPage() {
                 <div className="bg-white p-6 rounded-xl border border-slate-200">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">添付資料</h2>
                   {evidenceFiles.length === 0 ? (
-                    <p className="text-sm text-slate-9000">証拠ファイルはありません。</p>
+                    <p className="text-sm text-slate-500">証拠ファイルはありません。</p>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {evidenceFiles.map((file, i) => (
@@ -352,7 +353,7 @@ export default function AdminCaseDetailPage() {
                             </a>
                           ) : (
                             <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="block outline-none h-full p-4 flex flex-col items-center justify-center gap-2 text-slate-600 hover:text-slate-900">
-                              <span className="text-3xl">📄</span>
+                              <FileText className="w-8 h-8 text-slate-500" />
                               <span className="text-xs truncate w-full text-center">{file.name}</span>
                             </a>
                           )}
@@ -397,7 +398,7 @@ export default function AdminCaseDetailPage() {
                 <h3 className="text-xl font-bold text-slate-900 mb-4">承認の確認</h3>
                 <p className="text-slate-700 mb-8">
                   この申請を承認しますか？<br />
-                  <span className="text-xs text-slate-9000">承認すると、すべてのユーザーがこのデータを閲覧できるようになります。</span>
+                  <span className="text-xs text-slate-500">承認すると、すべてのユーザーがこのデータを閲覧できるようになります。</span>
                 </p>
                 <div className="flex gap-4">
                   <button
@@ -425,7 +426,7 @@ export default function AdminCaseDetailPage() {
                 <h3 className="text-xl font-bold text-slate-900 mb-4">却下の確認</h3>
                 <p className="text-slate-700 mb-4">
                   この申請を却下しますか？<br />
-                  <span className="text-xs text-slate-9000">却下理由を入力してください。申請ユーザーには通知されませんが、記録として残ります。</span>
+                  <span className="text-xs text-slate-500">却下理由を入力してください。申請ユーザーには通知されませんが、記録として残ります。</span>
                 </p>
 
                 <textarea
@@ -436,7 +437,7 @@ export default function AdminCaseDetailPage() {
                   placeholder="例: 情報不足のため、本人確認が取れないため等"
                 />
                 {formError && (
-                  <div className="mb-4 text-xs text-red-400">⚠️ {formError}</div>
+                  <div className="mb-4 text-xs text-red-600 font-medium"><span className="inline-flex items-center gap-1.5"><AlertCircle className="w-4 h-4 shrink-0" /><span>{formError}</span></span></div>
                 )}
 
                 <div className="flex gap-4">

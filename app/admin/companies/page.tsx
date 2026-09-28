@@ -4,6 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
+import { 
+    ArrowLeft, 
+    Plus, 
+    Building2, 
+    Pencil, 
+    Trash2, 
+    ShieldCheck 
+} from "lucide-react";
 
 type Company = {
     id: string;
@@ -83,17 +91,19 @@ export default function AdminCompaniesPage() {
         <RequireAdmin>
             <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
                 <div className="max-w-4xl w-full relative z-10">
-                    <div className="flex items-center justify-between mb-8 animate-fade-in">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in">
                         <div>
                             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">利用会社管理</h1>
                             <p className="text-slate-600 font-medium">登録されている加盟企業（法人番号・契約プラン）の一覧です</p>
                         </div>
                         <div className="flex gap-3 items-center">
-                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center">
-                                管理メニューへ戻る
+                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center gap-1.5 transition-colors">
+                                <ArrowLeft className="w-4 h-4" />
+                                <span>管理メニューへ戻る</span>
                             </Link>
-                            <Link href="/admin/companies/new" className="btn-primary flex items-center gap-2 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm">
-                                <span>+</span> 新規会社追加
+                            <Link href="/admin/companies/new" className="btn-primary flex items-center gap-1.5 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm">
+                                <Plus className="w-4 h-4" />
+                                <span>新規会社追加</span>
                             </Link>
                         </div>
                     </div>
@@ -104,21 +114,23 @@ export default function AdminCompaniesPage() {
                         <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                     </div>
                 ) : companies.length === 0 ? (
-                    <div className="glass-panel p-12 text-center rounded-3xl border-slate-200 bg-white/30 animate-fade-in max-w-4xl w-full">
-                        <span className="text-4xl mb-4 block opacity-30">🏢</span>
-                        <p className="text-slate-600 font-medium">登録されている会社はありません。</p>
-                        <p className="text-slate-500 text-sm mt-2">右上のボタンから新規追加してください。</p>
+                    <div className="bg-white p-12 text-center rounded-3xl border border-slate-200 shadow-sm animate-fade-in max-w-4xl w-full">
+                        <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <Building2 className="w-8 h-8" />
+                        </div>
+                        <p className="text-slate-700 font-bold text-base mb-1">登録されている会社はありません</p>
+                        <p className="text-slate-500 text-sm mt-1">右上のボタンから新規追加してください。</p>
                     </div>
                 ) : (
                     <div className="grid gap-4 animate-fade-in delay-100 max-w-4xl w-full">
                         {companies.map((company) => (
                             <div
                                 key={company.id}
-                                className="glass-panel p-6 rounded-2xl flex items-center justify-between hover:bg-slate-50 transition-all border border-slate-200 hover:border-slate-300 group"
+                                className="bg-white p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-slate-300 transition-all border border-slate-200 shadow-sm group"
                             >
                                 <div className="flex items-center gap-5">
-                                    <div className="h-14 w-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl group-hover:bg-slate-900 group-hover:text-white transition-all">
-                                        🏢
+                                    <div className="h-14 w-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
+                                        <Building2 className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-3">
@@ -141,27 +153,28 @@ export default function AdminCompaniesPage() {
                                                     法人番号: {company.corporate_number}
                                                 </span>
                                             ) : (
-                                                <span className="text-xs text-slate-400 bg-slate-50 px-2 py-0.5 rounded font-mono">
+                                                <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-md font-mono border border-slate-200">
                                                     法人番号未登録
                                                 </span>
                                             )}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                                <div className="flex gap-2 items-center self-end sm:self-center">
                                     <Link
                                         href={`/admin/companies/${company.id}`}
-                                        className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors text-sm"
+                                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors text-xs font-bold"
                                         title="詳細・編集"
                                     >
-                                        ✎ 編集
+                                        <Pencil className="w-3.5 h-3.5" />
+                                        <span>編集</span>
                                     </Link>
                                     <button
                                         onClick={() => handleDelete(company.id, company.name)}
-                                        className="p-2 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-lg transition-colors text-sm"
+                                        className="inline-flex items-center justify-center p-2 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-lg transition-colors text-xs"
                                         title="削除"
                                     >
-                                        🗑️
+                                        <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { FileText, AlertCircle } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 
 type CaseDetail = {
@@ -229,7 +230,7 @@ export default function CaseDetailPage() {
                             </div>
                         ) : errorMsg ? (
                             <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 text-sm">
-                                ⚠️ {errorMsg}
+                                <span className="inline-flex items-center gap-1.5"><AlertCircle className="w-4 h-4 shrink-0" /><span>{errorMsg}</span></span>
                             </div>
                         ) : !caseDetail ? (
                             <p className="text-slate-600 text-center py-8">データが見つかりません。</p>
@@ -312,7 +313,7 @@ export default function CaseDetailPage() {
                                 <div className="space-y-4">
                                     <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2">添付資料</h2>
                                     {evidenceFiles.length === 0 ? (
-                                        <p className="text-sm text-slate-9000">証拠ファイルはありません。</p>
+                                        <p className="text-sm text-slate-500">証拠ファイルはありません。</p>
                                     ) : (
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                             {evidenceFiles.map((file, i) => (
@@ -329,7 +330,7 @@ export default function CaseDetailPage() {
                                                         </a>
                                                     ) : (
                                                         <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="block outline-none h-full p-4 flex flex-col items-center justify-center gap-2 text-slate-600 hover:text-slate-900 aspect-square">
-                                                            <span className="text-3xl">📄</span>
+                                                            <FileText className="w-8 h-8 text-slate-500" />
                                                             <span className="text-xs truncate w-full text-center">{file.name}</span>
                                                         </a>
                                                     )}

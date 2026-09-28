@@ -149,7 +149,7 @@ export default function AdminAnnouncements() {
                                     <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold ${item.is_active ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-600'}`}>
+                                                <span className={`px-2 py-1 rounded text-xs font-bold ${item.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-700 text-slate-600'}`}>
                                                     {item.is_active ? '公開中' : '非公開'}
                                                 </span>
                                                 <span className="text-slate-600 text-sm">
@@ -162,7 +162,7 @@ export default function AdminAnnouncements() {
                                         <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
                                             <button 
                                                 onClick={() => toggleStatus(item.id, item.is_active)}
-                                                className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${item.is_active ? 'border-amber-500/30 text-amber-500 hover:bg-amber-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'}`}
+                                                className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${item.is_active ? 'border-amber-300 text-amber-700 hover:bg-amber-50' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'}`}
                                             >
                                                 {item.is_active ? '非公開にする' : '公開にする'}
                                             </button>

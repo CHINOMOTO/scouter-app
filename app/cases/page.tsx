@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import { FolderOpen } from "lucide-react";
+import { FolderOpen, Search, Plus, AlertCircle, Pencil, Trash2, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -167,14 +167,14 @@ export default function CasesPage() {
                 戻る
               </Link>
               <Link href="/cases/new" className="btn-primary flex items-center gap-2 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm">
-                <span>+</span> 新規登録
+                <Plus className="w-4 h-4 mr-1" /><span>新規登録</span>
               </Link>
             </div>
           </div>
 
           {errorMSG && (
             <div className="p-4 mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 text-sm flex items-start gap-3 animate-fade-in">
-              <span className="text-lg">⚠️</span>
+              <AlertCircle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
               <span className="pt-0.5">{errorMSG}</span>
             </div>
           )}
@@ -183,7 +183,7 @@ export default function CasesPage() {
           {!isLoading && cases.length > 0 && (
             <div className="flex gap-4 mb-6 animate-fade-in delay-100">
               <div className="flex-1 relative max-w-md">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600">🔍</span>
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   placeholder="氏名や登録理由で絞り込み..."
@@ -221,7 +221,7 @@ export default function CasesPage() {
                   <tbody className="divide-y divide-slate-200 bg-white">
                     {filteredAndSortedCases.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-slate-9000">
+                        <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                           データが見つかりません
                         </td>
                       </tr>
@@ -247,26 +247,14 @@ export default function CasesPage() {
                         <td className="px-6 py-4">
                           <StatusBadge status={c.status} />
                         </td>
-                        <td className="px-6 py-4 text-xs text-slate-9000 text-right font-mono">
+                        <td className="px-6 py-4 text-xs text-slate-500 text-right font-mono">
                           {new Date(c.created_at).toLocaleDateString()}
                         </td>
                         {isAdmin && (
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Link
-                                href={`/cases/${c.id}/edit`}
-                                className="p-2 bg-slate-100 hover:bg-slate-100 text-slate-600 hover:text-slate-900 rounded-lg transition-colors"
-                                title="編集"
-                              >
-                                ✎
-                              </Link>
-                              <button
-                                onClick={() => handleDelete(c.id)}
-                                className="p-2 bg-slate-100 hover:bg-red-500/20 text-slate-600 hover:text-red-400 rounded-lg transition-colors"
-                                title="削除"
-                              >
-                                🗑️
-                              </button>
+                              <Link href={`/cases/${c.id}/edit`} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-lg transition-colors flex items-center justify-center" title="編集"><Pencil className="w-3.5 h-3.5" /></Link>
+                              <button onClick={() => handleDelete(c.id)} className="p-2 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-lg transition-colors flex items-center justify-center" title="削除"><Trash2 className="w-3.5 h-3.5" /></button>
                             </div>
                           </td>
                         )}
@@ -275,8 +263,8 @@ export default function CasesPage() {
                     )}
                     {cases.length === 0 && searchTerm === "" && (
                       <tr>
-                        <td colSpan={isAdmin ? 6 : 5} className="px-6 py-20 text-center text-slate-9000">
-                          <FolderOpen className="w-12 h-12 mx-auto mb-3 text-slate-9000 opacity-50" strokeWidth={1} />
+                        <td colSpan={isAdmin ? 6 : 5} className="px-6 py-20 text-center text-slate-500">
+                          <FolderOpen className="w-12 h-12 mx-auto mb-3 text-slate-500 opacity-50" strokeWidth={1} />
                           <p>データがまだありません</p>
                         </td>
                       </tr>

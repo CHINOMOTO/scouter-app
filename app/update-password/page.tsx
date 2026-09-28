@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function UpdatePasswordPage() {
     const router = useRouter();
@@ -96,9 +97,9 @@ export default function UpdatePasswordPage() {
                     {successMsg ? (
                         <div className="text-center">
                             <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
-                                <span className="text-2xl">✅</span>
+                                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
                             </div>
-                            <p className="text-emerald-400 font-bold mb-2">更新完了</p>
+                            <p className="text-emerald-700 font-bold mb-2">更新完了</p>
                             <p className="text-slate-700 text-sm">{successMsg}</p>
                         </div>
                     ) : (
@@ -135,7 +136,7 @@ export default function UpdatePasswordPage() {
 
                             {errorMsg && (
                                 <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-start gap-2 animate-fade-in">
-                                    <span className="text-red-400 text-sm">⚠️</span>
+                                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
                                     <p className="text-xs text-red-700 pt-0.5">{errorMsg}</p>
                                 </div>
                             )}

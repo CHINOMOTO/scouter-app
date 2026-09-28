@@ -5,6 +5,17 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
+import { 
+    ArrowLeft, 
+    CheckCircle2, 
+    AlertTriangle, 
+    Scale, 
+    Building2, 
+    Calendar, 
+    ShieldCheck, 
+    Check,
+    Clock
+} from "lucide-react";
 
 type CreditCaseDetail = {
     id: string;
@@ -148,15 +159,17 @@ export default function CreditCaseDetailPage() {
 
                     {/* ナビゲーション */}
                     <div className="flex items-center justify-between mb-8">
-                        <Link href="/credit" className="text-slate-600 hover:text-slate-900 text-sm flex items-center gap-1 font-medium">
-                            ← 未払い企業一覧へ戻る
+                        <Link href="/credit" className="text-slate-600 hover:text-slate-900 text-sm flex items-center gap-2 font-medium transition-colors">
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>未払い企業一覧へ戻る</span>
                         </Link>
                         {isOwner && !isResolved && (
                             <button
                                 onClick={() => setShowResolveModal(true)}
-                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
+                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
                             >
-                                ✓ 入金完了（解決）を報告する
+                                <Check className="w-4 h-4" />
+                                <span>入金完了（解決）を報告する</span>
                             </button>
                         )}
                     </div>
@@ -172,16 +185,18 @@ export default function CreditCaseDetailPage() {
                                         CASE ID: {caseData.id.slice(0, 8)}
                                     </span>
                                     {caseData.status === "pending" && (
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
-                                            審査待ち
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                                            <Clock className="w-3 h-3" />
+                                            <span>審査待ち</span>
                                         </span>
                                     )}
                                 </div>
-                                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                                    {caseData.company_name}
+                                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                                    <Building2 className="w-7 h-7 text-slate-700" />
+                                    <span>{caseData.company_name}</span>
                                 </h1>
                                 {caseData.corporate_number && (
-                                    <p className="text-xs text-slate-500 font-mono mt-1">
+                                    <p className="text-xs text-slate-500 font-mono mt-1 ml-9">
                                         法人番号: {caseData.corporate_number}
                                     </p>
                                 )}
@@ -190,15 +205,21 @@ export default function CreditCaseDetailPage() {
                             {/* 入金ステータスバッジ */}
                             <div>
                                 {isResolved ? (
-                                    <div className="px-4 py-2 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-center">
-                                        <div className="text-xs font-bold">解決済み（入金完了）</div>
+                                    <div className="px-4 py-2.5 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-center flex flex-col items-center">
+                                        <div className="flex items-center gap-1.5 text-xs font-bold">
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                            <span>解決済み（入金完了）</span>
+                                        </div>
                                         {caseData.resolved_delay_days ? (
                                             <div className="text-[11px] text-emerald-700 mt-0.5 font-medium">遅延 {caseData.resolved_delay_days} 日</div>
                                         ) : null}
                                     </div>
                                 ) : (
-                                    <div className="px-4 py-2 rounded-2xl bg-rose-50 text-rose-800 border border-rose-200 text-center animate-pulse">
-                                        <div className="text-xs font-extrabold">未払い・支払遅延中</div>
+                                    <div className="px-4 py-2.5 rounded-2xl bg-rose-50 text-rose-800 border border-rose-200 text-center flex flex-col items-center">
+                                        <div className="flex items-center gap-1.5 text-xs font-extrabold">
+                                            <AlertTriangle className="w-4 h-4 text-rose-600" />
+                                            <span>未払い・支払遅延中</span>
+                                        </div>
                                         <div className="text-[11px] text-rose-600 mt-0.5">未入金</div>
                                     </div>
                                 )}
@@ -243,7 +264,9 @@ export default function CreditCaseDetailPage() {
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">入金の有無</span>
-                                <span className="font-bold">{isResolved ? "解決済み" : "未払い"}</span>
+                                <span className={`font-bold ${isResolved ? "text-emerald-700" : "text-rose-700"}`}>
+                                    {isResolved ? "解決済み" : "未払い"}
+                                </span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">登録元企業</span>
@@ -254,7 +277,8 @@ export default function CreditCaseDetailPage() {
                         {/* 相手方の主張 */}
                         <div className="mt-6 p-5 bg-amber-50/60 rounded-2xl border border-amber-200/80">
                             <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <span>⚖️</span> 相手方の主張（反論・理由）
+                                <Scale className="w-4 h-4 text-amber-700" />
+                                <span>相手方の主張（反論・理由）</span>
                             </h3>
                             <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
                                 {caseData.counterparty_claim || "相手方からの特段の主張・反論の申立はありません。"}
@@ -262,9 +286,12 @@ export default function CreditCaseDetailPage() {
                         </div>
 
                         {/* 登録日 */}
-                        <div className="mt-8 pt-4 border-t border-slate-100 text-xs text-slate-400 flex justify-between">
+                        <div className="mt-8 pt-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between items-center">
                             <span>システム登録日: {new Date(caseData.created_at).toLocaleString()}</span>
-                            <span>運営管理者承認済み</span>
+                            <span className="flex items-center gap-1 font-semibold text-emerald-700">
+                                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                <span>運営管理者承認済み</span>
+                            </span>
                         </div>
                     </div>
                 </div>

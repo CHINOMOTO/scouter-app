@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { Search, AlertCircle } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 
 type BlacklistCase = {
@@ -228,7 +229,7 @@ export default function SearchPage() {
               </div>
 
               <div className="flex items-center justify-between pt-2">
-                <p className="text-xs text-slate-9000">
+                <p className="text-xs text-slate-500">
                   ※氏名または生年月日の<span className="text-slate-900 font-bold">どちらか一方は必須</span>です
                 </p>
                 <button
@@ -248,7 +249,7 @@ export default function SearchPage() {
 
               {errorMsg && (
                 <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 text-sm flex items-start gap-3 animate-fade-in">
-                  <span className="text-lg">⚠️</span>
+                  <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
                   <span className="pt-0.5">{errorMsg}</span>
                 </div>
               )}
@@ -266,9 +267,9 @@ export default function SearchPage() {
 
               {results.length === 0 ? (
                 <div className="glass-panel p-12 text-center rounded-3xl border-slate-200 bg-white/30">
-                  <div className="text-4xl mb-4 opacity-50">🔍</div>
+                  <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-4"><Search className="w-8 h-8" /></div>
                   <p className="text-slate-600 font-medium">該当するデータは見つかりませんでした。</p>
-                  <p className="text-slate-9000 text-sm mt-2">条件を変更して再度検索してください。</p>
+                  <p className="text-slate-500 text-sm mt-2">条件を変更して再度検索してください。</p>
                 </div>
               ) : (
                 <div className="grid gap-5">
@@ -285,7 +286,7 @@ export default function SearchPage() {
                               <h3 className="text-xl font-bold text-slate-900 group-hover:text-slate-900 transition-colors">
                                 {item.full_name}
                               </h3>
-                              <p className="text-sm text-slate-9000 font-medium">
+                              <p className="text-sm text-slate-500 font-medium">
                                 {item.full_name_kana}
                               </p>
                             </div>
@@ -306,12 +307,12 @@ export default function SearchPage() {
 
                         <div className="flex flex-col justify-between items-end min-w-[140px] text-right">
                           <div className="space-y-1">
-                            <p className="text-xs text-slate-9000 uppercase tracking-wider">生年月日</p>
+                            <p className="text-xs text-slate-500 uppercase tracking-wider">生年月日</p>
                             <p className="text-sm text-slate-800 font-mono font-bold">{item.birth_date}</p>
                           </div>
 
                           <div className="space-y-1 mt-4">
-                            <p className="text-xs text-slate-9000 uppercase tracking-wider">発生日</p>
+                            <p className="text-xs text-slate-500 uppercase tracking-wider">発生日</p>
                             <p className="text-sm text-red-700 font-mono font-medium">{item.occurrence_date}</p>
                           </div>
 

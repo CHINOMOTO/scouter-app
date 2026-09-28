@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { UploadCloud, X, AlertCircle } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 import { recognizeText } from "@/lib/ocr";
 
@@ -436,9 +437,9 @@ export default function NewCasePage() {
                       accept="image/*,application/pdf"
                     />
                     <div className="pointer-events-none">
-                      <span className="text-2xl block mb-2">📁</span>
+                      <UploadCloud className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                       <p className="text-sm text-slate-600">クリックまたはドラッグ＆ドロップでファイルを追加</p>
-                      <p className="text-xs text-slate-9000 mt-1">（画像、PDFなど複数可）</p>
+                      <p className="text-xs text-slate-500 mt-1">（画像、PDFなど複数可）</p>
                     </div>
                   </div>
 
@@ -461,9 +462,9 @@ export default function NewCasePage() {
                             <button
                               type="button"
                               onClick={() => removeFile(index)}
-                              className="text-red-400 hover:text-red-700 hover:bg-red-500/10 p-1 rounded transition-colors"
+                              className="text-rose-600 hover:text-rose-800 hover:bg-rose-50 p-1 rounded transition-colors"
                             >
-                              ✕
+                              <X className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </li>
@@ -475,7 +476,7 @@ export default function NewCasePage() {
 
               {errorMsg && (
                 <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 text-sm">
-                  ⚠️ {errorMsg}
+                  <span className="inline-flex items-center gap-1.5"><AlertCircle className="w-4 h-4 shrink-0" /><span>{errorMsg}</span></span>
                 </div>
               )}
 
@@ -520,7 +521,7 @@ function Label({ children, required }: { children: React.ReactNode, required?: b
           必須
         </span>
       ) : (
-        <span className="text-slate-9000 text-[10px] border border-slate-200 bg-slate-100 px-1.5 py-0.5 rounded">
+        <span className="text-slate-500 text-[10px] border border-slate-200 bg-slate-100 px-1.5 py-0.5 rounded">
           任意
         </span>
       )}

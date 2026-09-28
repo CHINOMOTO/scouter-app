@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { RequireAdmin } from "@/components/RequireAdmin";
 
@@ -58,7 +59,7 @@ export default function AdminCaseList() {
 
           {errorMsg && (
             <div className="p-4 mb-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 text-sm flex items-start gap-3 animate-fade-in">
-              <span className="text-lg">⚠️</span>
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
               <span className="pt-0.5">{errorMsg}</span>
             </div>
           )}
@@ -74,9 +75,9 @@ export default function AdminCaseList() {
             </div>
           ) : cases.length === 0 ? (
             <div className="glass-panel p-12 text-center rounded-3xl border-slate-200 bg-white/30 animate-fade-in">
-              <div className="text-4xl mb-4 opacity-30">✅</div>
+              <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-4"><CheckCircle2 className="w-8 h-8 text-emerald-500" /></div>
               <p className="text-slate-600 font-medium">現在、審査中の案件はありません。</p>
-              <p className="text-slate-9000 text-sm mt-2">全ての申請が処理されました。</p>
+              <p className="text-slate-500 text-sm mt-2">全ての申請が処理されました。</p>
             </div>
           ) : (
             <div className="grid gap-4 animate-fade-in delay-100">
@@ -88,7 +89,7 @@ export default function AdminCaseList() {
                 >
                   <div className="flex items-center gap-6">
                     <div className="h-12 w-12 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                      ⚠️
+                      <AlertCircle className="w-4 h-4 shrink-0 text-amber-500 inline mr-1" />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-slate-900 group-hover:text-slate-900 transition-colors">
@@ -101,7 +102,7 @@ export default function AdminCaseList() {
                   </div>
 
                   <div className="text-right">
-                    <span className="text-[10px] uppercase font-bold text-slate-9000 tracking-wider">申請日</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">申請日</span>
                     <div className="font-mono text-slate-700 text-sm">
                       {new Date(c.created_at).toLocaleDateString()}
                     </div>

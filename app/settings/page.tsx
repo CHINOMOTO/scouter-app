@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { User, Lock, CheckCircle2, AlertCircle } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 
 export default function SettingsPage() {
@@ -139,7 +140,7 @@ export default function SettingsPage() {
                         {/* 基本情報設定 */}
                         <div className="glass-panel p-6 md:p-8 rounded-3xl border border-slate-200 relative overflow-hidden">
                             <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                                <span className="text-slate-900">👤</span> 基本情報
+                                <User className="w-4 h-4 inline mr-1 text-slate-700" /> 基本情報
                             </h2>
 
                             <form onSubmit={handleUpdateProfile} className="space-y-5">
@@ -153,7 +154,7 @@ export default function SettingsPage() {
                                         value={companyName}
                                         className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-600 cursor-not-allowed text-sm"
                                     />
-                                    <p className="text-[10px] text-slate-9000 mt-1 ml-1">※所属会社はシステム管理者のみ変更可能です。</p>
+                                    <p className="text-[10px] text-slate-500 mt-1 ml-1">※所属会社はシステム管理者のみ変更可能です。</p>
                                 </div>
                                 
                                 <div>
@@ -182,8 +183,8 @@ export default function SettingsPage() {
                                 </div>
 
                                 {profileMsg && (
-                                    <div className={`p-3 rounded-lg text-sm flex items-start gap-2 ${profileMsg.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                                        <span className="pt-0.5">{profileMsg.type === 'success' ? '✅' : '⚠️'}</span>
+                                    <div className={`p-3 rounded-lg text-sm flex items-start gap-2 ${profileMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                        <span className="pt-0.5">{profileMsg.type === "success" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-red-600" />}</span>
                                         <p>{profileMsg.text}</p>
                                     </div>
                                 )}
@@ -203,7 +204,7 @@ export default function SettingsPage() {
                         {/* パスワード設定 */}
                         <div className="glass-panel p-6 md:p-8 rounded-3xl border border-slate-200 relative overflow-hidden">
                             <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                                <span className="text-slate-900">🔒</span> パスワード変更
+                                <Lock className="w-4 h-4 inline mr-1 text-slate-700" /> パスワード変更
                             </h2>
 
                             <form onSubmit={handleUpdatePassword} className="space-y-5">
@@ -238,8 +239,8 @@ export default function SettingsPage() {
                                 </div>
 
                                 {passwordMsg && (
-                                    <div className={`p-3 rounded-lg text-sm flex items-start gap-2 ${passwordMsg.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                                        <span className="pt-0.5">{passwordMsg.type === 'success' ? '✅' : '⚠️'}</span>
+                                    <div className={`p-3 rounded-lg text-sm flex items-start gap-2 ${passwordMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                        <span className="pt-0.5">{passwordMsg.type === "success" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-red-600" />}</span>
                                         <p>{passwordMsg.text}</p>
                                     </div>
                                 )}

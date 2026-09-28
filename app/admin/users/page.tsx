@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { CheckCircle2, ArrowLeft, Plus, Clock, UserX } from "lucide-react";
 import { RequireAdmin } from "@/components/RequireAdmin";
 
 type AppUser = {
@@ -79,7 +80,7 @@ export default function AdminUsersPage() {
                                 管理メニューへ戻る
                             </Link>
                             <Link href="/admin/users/new" className="btn-primary flex items-center gap-2 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm">
-                                <span>+</span> アカウント新規発行
+                                <Plus className="w-4 h-4" /> <span>アカウント新規発行</span>
                             </Link>
                         </div>
                     </div>
@@ -90,7 +91,7 @@ export default function AdminUsersPage() {
                         </div>
                     ) : pendingUsers.length === 0 ? (
                         <div className="glass-panel p-10 text-center rounded-2xl animate-fade-in">
-                            <span className="text-4xl mb-4 block">👍</span>
+                            <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-emerald-600"><CheckCircle2 className="w-8 h-8" /></div>
                             <p className="text-slate-700">現在、未承認のユーザーはいません。</p>
                         </div>
                     ) : (
@@ -100,12 +101,12 @@ export default function AdminUsersPage() {
                                     <div className="flex-grow">
                                         <div className="flex items-center gap-3 mb-2">
                                             <h3 className="text-xl font-bold text-slate-900">{user.display_name || "名無し"}</h3>
-                                            <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded border border-yellow-500/30">
+                                            <span className="px-2 py-0.5 inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">
                                                 PENDING
                                             </span>
                                         </div>
                                         <div className="text-slate-600 text-sm flex items-center gap-2">
-                                            <span className="text-slate-9000">所属:</span>
+                                            <span className="text-slate-500">所属:</span>
                                             {user.companies?.name || "未所属"}
                                         </div>
                                     </div>
@@ -134,7 +135,7 @@ export default function AdminUsersPage() {
                                                     }
                                                 }
                                             }}
-                                            className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all text-sm font-bold whitespace-nowrap"
+                                            className="px-4 py-2 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-all text-sm font-bold whitespace-nowrap"
                                         >
                                             却下
                                         </button>

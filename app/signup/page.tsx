@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function SignUpPage() {
     const [companyName, setCompanyName] = useState("");
@@ -129,8 +130,8 @@ ${notes.trim() || "なし"}`;
                 {/* 完了画面 */}
                 {isSuccess ? (
                     <div className="w-full bg-white rounded-3xl p-8 sm:p-10 border border-slate-200 shadow-xl text-center animate-fade-in">
-                        <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl text-emerald-600">
-                            ✓
+                        <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
+                            <CheckCircle2 className="w-8 h-8" />
                         </div>
                         <h2 className="text-2xl font-bold text-slate-900 mb-2">
                             お申し込みを受け付けました
@@ -303,7 +304,7 @@ ${notes.trim() || "なし"}`;
 
                             {errorMsg && (
                                 <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2 text-red-700 text-xs">
-                                    <span>⚠️</span>
+                                    <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
                                     <span>{errorMsg}</span>
                                 </div>
                             )}
@@ -320,7 +321,7 @@ ${notes.trim() || "なし"}`;
                         </form>
 
                         <div className="text-center mt-6 border-t border-slate-100 pt-5 text-sm">
-                            <span className="text-slate-500">既にアカウントをお持ちの方は </span>
+                            <span className="text-slate-600 font-medium">既にアカウントをお持ちの方は </span>
                             <Link href="/" className="text-slate-900 hover:text-blue-600 font-bold underline underline-offset-2 ml-1">
                                 ログイン画面へ
                             </Link>
@@ -330,7 +331,7 @@ ${notes.trim() || "なし"}`;
             </main>
 
             {/* フッター */}
-            <footer className="w-full text-center text-slate-400 text-xs py-6">
+            <footer className="w-full text-center text-slate-500 text-xs py-6">
                 <p>&copy; 2026 MIERIS. 株式会社ミヤエモン / 株式会社宇井建設</p>
             </footer>
         </div>

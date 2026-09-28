@@ -111,7 +111,7 @@ export default function RegisteredUsersPage() {
                                                 <h3 className="text-slate-900 font-bold text-base truncate">
                                                     {user.display_name || "未設定"}
                                                 </h3>
-                                                <span className={`shrink-0 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin' ? "bg-purple-500/20 text-purple-400 border border-purple-500/30" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" }`}>
+                                                <span className={`shrink-0 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin' ? "bg-purple-50 text-purple-700 border border-purple-200" : "bg-emerald-50 text-emerald-700 border border-emerald-200" }`}>
                                                     {user.role}
                                                 </span>
                                             </div>
@@ -166,7 +166,7 @@ export default function RegisteredUsersPage() {
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(user.id)}
-                                                className="whitespace-nowrap text-xs text-red-400 hover:text-white border border-red-500/30 hover:bg-red-500 px-3 py-1.5 rounded-lg transition-colors font-bold"
+                                                className="whitespace-nowrap text-xs text-rose-600 hover:text-white border border-rose-200 hover:bg-rose-600 px-3 py-1.5 rounded-lg transition-colors font-bold"
                                             >
                                                 削除
                                             </button>

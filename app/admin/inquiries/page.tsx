@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { Inbox } from "lucide-react";
 import { RequireAdmin } from "@/components/RequireAdmin";
 
 type Inquiry = {
@@ -25,9 +26,9 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-    unread: { label: "未読", className: "bg-red-500/20 text-red-400 border-red-500/30" },
-    in_progress: { label: "対応中", className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-    resolved: { label: "対応済み", className: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
+    unread: { label: "未読", className: "bg-red-50 text-red-700 border-red-200 font-bold" },
+    in_progress: { label: "対応中", className: "bg-amber-50 text-amber-800 border-amber-200 font-bold" },
+    resolved: { label: "対応済み", className: "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold" },
 };
 
 export default function AdminInquiriesPage() {
@@ -91,7 +92,7 @@ export default function AdminInquiriesPage() {
                         </div>
                     ) : inquiries.length === 0 ? (
                         <div className="glass-panel rounded-3xl p-10 text-center animate-fade-in border border-slate-200">
-                            <div className="text-4xl mb-4 opacity-30">📭</div>
+                            <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-4"><Inbox className="w-8 h-8" /></div>
                             <p className="text-slate-600 font-medium">お問い合わせはまだありません。</p>
                         </div>
                     ) : (
@@ -107,11 +108,11 @@ export default function AdminInquiriesPage() {
                                             <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${STATUS_LABELS[inq.status]?.className || ''}`}>
                                                 {STATUS_LABELS[inq.status]?.label || inq.status}
                                             </span>
-                                            <span className="text-xs text-slate-9000 bg-slate-100 px-2 py-0.5 rounded">
+                                            <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                                                 {CATEGORY_LABELS[inq.category] || inq.category}
                                             </span>
                                         </div>
-                                        <span className="text-xs text-slate-9000 font-mono">
+                                        <span className="text-xs text-slate-500 font-mono">
                                             {new Date(inq.created_at).toLocaleString("ja-JP")}
                                         </span>
                                     </div>
@@ -144,7 +145,7 @@ export default function AdminInquiriesPage() {
                             <span className={`px-3 py-1.5 text-xs font-bold rounded-lg border ${STATUS_LABELS[selectedInquiry.status]?.className || ''}`}>
                                 {STATUS_LABELS[selectedInquiry.status]?.label || selectedInquiry.status}
                             </span>
-                            <span className="text-xs text-slate-9000 font-mono">
+                            <span className="text-xs text-slate-500 font-mono">
                                 {new Date(selectedInquiry.created_at).toLocaleString("ja-JP")}
                             </span>
                         </div>
@@ -152,28 +153,28 @@ export default function AdminInquiriesPage() {
                         {/* 情報 */}
                         <div className="space-y-4 mb-6">
                             <div>
-                                <p className="text-xs text-slate-9000 mb-1">お問い合わせ種類</p>
+                                <p className="text-xs text-slate-500 mb-1">お問い合わせ種類</p>
                                 <p className="text-sm text-slate-900 font-bold">{CATEGORY_LABELS[selectedInquiry.category] || selectedInquiry.category}</p>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
 
                                 <div>
-                                    <p className="text-xs text-slate-9000 mb-1">電話番号</p>
+                                    <p className="text-xs text-slate-500 mb-1">電話番号</p>
                                     <p className="text-sm text-slate-800 font-mono">{selectedInquiry.phone_number || "未入力"}</p>
                                 </div>
 
                                 <div>
-                                    <p className="text-xs text-slate-9000 mb-1">会社名</p>
+                                    <p className="text-xs text-slate-500 mb-1">会社名</p>
                                     <p className="text-sm text-slate-800">{selectedInquiry.company_name}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-slate-9000 mb-1">ユーザー名</p>
+                                    <p className="text-xs text-slate-500 mb-1">ユーザー名</p>
                                     <p className="text-sm text-slate-800">{selectedInquiry.user_name}</p>
                                 </div>
                             </div>
                             
                                 <div>
-                                    <p className="text-xs text-slate-9000 mb-1">メールアドレス</p>
+                                    <p className="text-xs text-slate-500 mb-1">メールアドレス</p>
                                     <div className="flex items-center justify-between">
                                         <p className="text-sm text-slate-800 font-mono">{selectedInquiry.email}</p>
                                         <a 
@@ -186,7 +187,7 @@ export default function AdminInquiriesPage() {
                                     </div>
                                 </div>
                             <div>
-                                <p className="text-xs text-slate-9000 mb-1">お問い合わせ内容</p>
+                                <p className="text-xs text-slate-500 mb-1">お問い合わせ内容</p>
                                 <div className="bg-white rounded-xl p-4 border border-slate-200">
                                     <p className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">{selectedInquiry.message}</p>
                                 </div>
@@ -195,7 +196,7 @@ export default function AdminInquiriesPage() {
 
                         {/* ステータス変更ボタン */}
                         <div className="border-t border-slate-200 pt-5">
-                            <p className="text-xs text-slate-9000 mb-3">ステータスを変更</p>
+                            <p className="text-xs text-slate-500 mb-3">ステータスを変更</p>
                             <div className="flex gap-2">
                                 {Object.entries(STATUS_LABELS).map(([key, val]) => (
                                     <button
