@@ -39,7 +39,7 @@ export default function NewCompanyPage() {
             <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
                 <div className="max-w-2xl w-full">
                     <div className="mb-8 animate-fade-in">
-                        <Link href="/admin/companies" className="text-slate-500 hover:text-slate-700 text-sm flex items-center gap-1 mb-4">
+                        <Link href="/admin/companies" className="text-slate-9000 hover:text-slate-700 text-sm flex items-center gap-1 mb-4">
                             キャンセルして一覧へ戻る
                         </Link>
                         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">新規会社登録</h1>
@@ -72,12 +72,12 @@ export default function NewCompanyPage() {
                                 />
                                 <label htmlFor="isMain" className="cursor-pointer">
                                     <span className="block text-sm font-semibold text-slate-800">メイン会社として登録</span>
-                                    <span className="block text-xs text-slate-500">※通常はチェック不要です（管理用フラグ）</span>
+                                    <span className="block text-xs text-slate-9000">※通常はチェック不要です（管理用フラグ）</span>
                                 </label>
                             </div>
 
                             {error && (
-                                <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-200 text-sm">
+                                <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-700 text-sm">
                                     ⚠️ {error}
                                 </div>
                             )}

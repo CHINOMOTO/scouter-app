@@ -136,9 +136,9 @@ export default function SearchPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
-        return { label: "登録済み", className: "bg-red-500/10 text-red-400 border-red-500/20", borderLeft: "border-l-red-500" };
+        return { label: "登録済み", className: "bg-rose-50 text-rose-700 border-rose-200", borderLeft: "border-l-red-500" };
       case "pending":
-        return { label: "審査中", className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", borderLeft: "border-l-yellow-500" };
+        return { label: "審査中", className: "bg-amber-50 text-amber-700 border-amber-200", borderLeft: "border-l-yellow-500" };
       case "rejected":
         return { label: "却下", className: "bg-slate-500/10 text-slate-600 border-slate-500/20", borderLeft: "border-l-slate-500" };
       default:
@@ -156,12 +156,12 @@ export default function SearchPage() {
               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">検索</h1>
               <p className="text-slate-600 font-medium">登録データの検索・照会を行います</p>
             </div>
-            <Link href="/dashboard" className="btn-secondary text-xs backdrop-blur-md bg-white/5 border-white/10 hover:bg-white/10">
+            <Link href="/dashboard" className="btn-secondary text-xs">
               戻る
             </Link>
           </div>
 
-          <div className="glass-panel rounded-3xl p-8 md:p-10 mb-8 animate-fade-in delay-100 border border-white/10">
+          <div className="glass-panel rounded-3xl p-8 md:p-10 mb-8 animate-fade-in delay-100 border border-slate-200">
             <form onSubmit={handleSearch} className="space-y-8">
               <div className="grid md:grid-cols-2 gap-8">
 
@@ -171,7 +171,7 @@ export default function SearchPage() {
                     <label className="text-xs font-bold text-slate-600 uppercase tracking-widest transition-colors duration-300">
                       氏名 / カナ
                     </label>
-                    <span className="text-[10px] text-slate-600 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                    <span className="text-[10px] text-slate-600 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200">
                       任意
                     </span>
                   </div>
@@ -190,7 +190,7 @@ export default function SearchPage() {
                     <label className="text-xs font-bold text-slate-600 uppercase tracking-widest transition-colors duration-300">
                       生年月日
                     </label>
-                    <span className="text-[10px] text-slate-600 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                    <span className="text-[10px] text-slate-600 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200">
                       任意
                     </span>
                   </div>
@@ -228,7 +228,7 @@ export default function SearchPage() {
               </div>
 
               <div className="flex items-center justify-between pt-2">
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-9000">
                   ※氏名または生年月日の<span className="text-slate-900 font-bold">どちらか一方は必須</span>です
                 </p>
                 <button
@@ -247,7 +247,7 @@ export default function SearchPage() {
               </div>
 
               {errorMsg && (
-                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-sm flex items-start gap-3 animate-fade-in">
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 text-sm flex items-start gap-3 animate-fade-in">
                   <span className="text-lg">⚠️</span>
                   <span className="pt-0.5">{errorMsg}</span>
                 </div>
@@ -259,16 +259,16 @@ export default function SearchPage() {
             <div className="animate-fade-in delay-200">
               <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                 検索結果
-                <span className="text-xs font-bold text-slate-900 bg-white/5 border border-slate-200 px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-bold text-slate-900 bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-full">
                   {results.length} 件
                 </span>
               </h2>
 
               {results.length === 0 ? (
-                <div className="glass-panel p-12 text-center rounded-3xl border-white/5 bg-white/30">
+                <div className="glass-panel p-12 text-center rounded-3xl border-slate-200 bg-white/30">
                   <div className="text-4xl mb-4 opacity-50">🔍</div>
                   <p className="text-slate-600 font-medium">該当するデータは見つかりませんでした。</p>
-                  <p className="text-slate-500 text-sm mt-2">条件を変更して再度検索してください。</p>
+                  <p className="text-slate-9000 text-sm mt-2">条件を変更して再度検索してください。</p>
                 </div>
               ) : (
                 <div className="grid gap-5">
@@ -285,7 +285,7 @@ export default function SearchPage() {
                               <h3 className="text-xl font-bold text-slate-900 group-hover:text-slate-900 transition-colors">
                                 {item.full_name}
                               </h3>
-                              <p className="text-sm text-slate-500 font-medium">
+                              <p className="text-sm text-slate-9000 font-medium">
                                 {item.full_name_kana}
                               </p>
                             </div>
@@ -296,7 +296,7 @@ export default function SearchPage() {
                             </div>
                           </div>
 
-                          <div className="bg-white rounded-xl p-4 border border-white/5">
+                          <div className="bg-white rounded-xl p-4 border border-slate-200">
                             <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2">登録理由</h4>
                             <p className="text-sm text-slate-700 leading-relaxed font-medium line-clamp-3">
                               {item.reason_text}
@@ -306,13 +306,13 @@ export default function SearchPage() {
 
                         <div className="flex flex-col justify-between items-end min-w-[140px] text-right">
                           <div className="space-y-1">
-                            <p className="text-xs text-slate-500 uppercase tracking-wider">生年月日</p>
+                            <p className="text-xs text-slate-9000 uppercase tracking-wider">生年月日</p>
                             <p className="text-sm text-slate-800 font-mono font-bold">{item.birth_date}</p>
                           </div>
 
                           <div className="space-y-1 mt-4">
-                            <p className="text-xs text-slate-500 uppercase tracking-wider">発生日</p>
-                            <p className="text-sm text-red-300 font-mono font-medium">{item.occurrence_date}</p>
+                            <p className="text-xs text-slate-9000 uppercase tracking-wider">発生日</p>
+                            <p className="text-sm text-red-700 font-mono font-medium">{item.occurrence_date}</p>
                           </div>
 
                           <Link

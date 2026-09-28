@@ -1,5 +1,5 @@
 /**
- * SCOUTER テストユーザー一括作成スクリプト
+ * MIERIS テストユーザー一括作成スクリプト
  * 30社 × 4アカウント = 120名を自動作成
  * 
  * 使い方:
@@ -24,7 +24,7 @@ const NUM_COMPANIES = 30;
 const USERS_PER_COMPANY = 4;
 const TEST_PASSWORD = 'TestScouter2026!';
 const COMPANY_PREFIX = 'テスト建設';
-const EMAIL_DOMAIN = 'scouter-test.local';
+const EMAIL_DOMAIN = 'mieris-test.local';
 
 // Supabase REST API ヘルパー
 async function supabaseAdmin(endpoint, method = 'GET', body = null) {
@@ -76,7 +76,7 @@ async function authAdmin(endpoint, method = 'GET', body = null) {
 // ===== 作成処理 =====
 async function createTestData() {
   console.log('');
-  console.log('⌖ SCOUTER テストデータ一括作成');
+  console.log('⌖ MIERIS テストデータ一括作成');
   console.log('================================');
   console.log(`会社数: ${NUM_COMPANIES}`);
   console.log(`1社あたりユーザー数: ${USERS_PER_COMPANY}`);
@@ -179,7 +179,7 @@ async function createTestData() {
 // ===== 削除処理 =====
 async function deleteTestData() {
   console.log('');
-  console.log('⌖ SCOUTER テストデータ一括削除');
+  console.log('⌖ MIERIS テストデータ一括削除');
   console.log('================================');
   console.log('');
 

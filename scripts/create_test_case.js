@@ -45,7 +45,7 @@ async function run() {
   const adminUserId = process.env.LINE_ADMIN_USER_ID;
 
   if (token && adminUserId) {
-    const messageText = `【SCOUTER システム通知】\n\n🚨 新規のケース情報が登録されました。\n\n👤 対象者: 悪質 テスト五郎\n\n管理画面にログインして内容の確認と承認を行ってください。`;
+    const messageText = `【MIERIS システム通知】\n\n🚨 新規のケース情報が登録されました。\n\n👤 対象者: 悪質 テスト五郎\n\n管理画面にログインして内容の確認と承認を行ってください。`;
     const res = await fetch('https://api.line.me/v2/bot/message/push', {
       method: 'POST',
       headers: {

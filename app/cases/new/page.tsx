@@ -438,7 +438,7 @@ export default function NewCasePage() {
                     <div className="pointer-events-none">
                       <span className="text-2xl block mb-2">📁</span>
                       <p className="text-sm text-slate-600">クリックまたはドラッグ＆ドロップでファイルを追加</p>
-                      <p className="text-xs text-slate-500 mt-1">（画像、PDFなど複数可）</p>
+                      <p className="text-xs text-slate-9000 mt-1">（画像、PDFなど複数可）</p>
                     </div>
                   </div>
 
@@ -453,7 +453,7 @@ export default function NewCasePage() {
                                 type="button"
                                 onClick={() => handleOCR(file)}
                                 disabled={isAnalyzing}
-                                className="text-xs text-slate-900 hover:text-slate-900 border border-slate-200 bg-white/5 px-2 py-1 rounded transition-colors"
+                                className="text-xs text-slate-900 hover:text-slate-900 border border-slate-200 bg-slate-50 px-2 py-1 rounded transition-colors"
                               >
                                 {isAnalyzing ? "解析中..." : "文字認識(OCR)"}
                               </button>
@@ -461,7 +461,7 @@ export default function NewCasePage() {
                             <button
                               type="button"
                               onClick={() => removeFile(index)}
-                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-1 rounded transition-colors"
+                              className="text-red-400 hover:text-red-700 hover:bg-red-500/10 p-1 rounded transition-colors"
                             >
                               ✕
                             </button>
@@ -474,7 +474,7 @@ export default function NewCasePage() {
               </Section>
 
               {errorMsg && (
-                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
+                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 text-sm">
                   ⚠️ {errorMsg}
                 </div>
               )}
@@ -516,11 +516,11 @@ function Label({ children, required }: { children: React.ReactNode, required?: b
     <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
       {children}
       {required ? (
-        <span className="text-slate-900 text-[10px] border border-slate-200 bg-white/5 px-1.5 py-0.5 rounded">
+        <span className="text-slate-900 text-[10px] border border-slate-200 bg-slate-50 px-1.5 py-0.5 rounded">
           必須
         </span>
       ) : (
-        <span className="text-slate-500 text-[10px] border border-slate-200 bg-slate-100 px-1.5 py-0.5 rounded">
+        <span className="text-slate-9000 text-[10px] border border-slate-200 bg-slate-100 px-1.5 py-0.5 rounded">
           任意
         </span>
       )}

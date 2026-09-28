@@ -103,27 +103,27 @@ function DashboardCard({
   return (
     <button
       onClick={onClick}
-      className="group relative text-left p-8 rounded-3xl border border-slate-400/30 transition-all duration-300 glass-panel hover:-translate-y-2 flex flex-col h-full overflow-hidden hover:border-slate-300/50 hover:bg-slate-50"
+      className="group relative text-left p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 flex flex-col h-full overflow-hidden hover:border-slate-300/50 hover:bg-slate-50"
     >
       {/* Background Hover Glow */}
       <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
       <div className="relative z-10 flex flex-col h-full">
         <div className="flex items-start justify-between mb-6 w-full">
-          <div className="p-3 rounded-2xl transition-transform duration-300 group-hover:scale-110 bg-white/10 text-slate-900">
+          <div className="p-3 rounded-2xl transition-all duration-300 group-hover:scale-110 bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white">
             {icon}
           </div>
           {isAdmin && (
-            <span className="px-3 py-1 bg-white/10 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
+            <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
               Admin Only
             </span>
           )}
         </div>
 
-        <h3 className={`text-2xl font-bold text-slate-900 mb-2 transition-colors duration-300 group-hover:text-slate-900 ${isAdmin ? 'text-slate-900' : ''}`}>
+        <h3 className={`text-2xl font-bold text-slate-900 mb-2 transition-colors duration-300 group-hover:text-blue-600 ${isAdmin ? 'text-slate-900' : ''}`}>
           {title}
         </h3>
-        <p className="text-sm text-slate-600 leading-relaxed mt-auto group-hover:text-slate-800 transition-colors duration-300">
+        <p className="text-sm text-slate-600 leading-relaxed mt-auto ">
           {description}
         </p>
       </div>

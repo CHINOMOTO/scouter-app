@@ -120,7 +120,7 @@ export default function Home() {
           </form>
 
           <div className="text-center mt-6 border-t border-slate-100 pt-5 flex flex-col gap-2.5 text-xs">
-            <Link href="/forgot-password" className="text-slate-500 hover:text-slate-900 transition-colors">
+            <Link href="/forgot-password" className="text-slate-9000 hover:text-slate-900 transition-colors">
               パスワードをお忘れの方はこちら
             </Link>
             <Link href="/signup" className="text-slate-600 hover:text-slate-900 font-semibold transition-colors">

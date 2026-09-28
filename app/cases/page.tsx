@@ -163,7 +163,7 @@ export default function CasesPage() {
               <p className="text-slate-600 font-medium">登録されている全データの一覧です</p>
             </div>
             <div className="flex items-center gap-3">
-              <Link href="/dashboard" className="btn-secondary text-xs backdrop-blur-md bg-white/5 border-white/10 hover:bg-white/10 px-4 py-2.5">
+              <Link href="/dashboard" className="btn-secondary text-xs px-4 py-2.5">
                 戻る
               </Link>
               <Link href="/cases/new" className="btn-primary flex items-center gap-2 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm">
@@ -173,7 +173,7 @@ export default function CasesPage() {
           </div>
 
           {errorMSG && (
-            <div className="p-4 mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-sm flex items-start gap-3 animate-fade-in">
+            <div className="p-4 mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 text-sm flex items-start gap-3 animate-fade-in">
               <span className="text-lg">⚠️</span>
               <span className="pt-0.5">{errorMSG}</span>
             </div>
@@ -200,7 +200,7 @@ export default function CasesPage() {
               <div className="relative">
                 <div className="animate-spin h-12 w-12 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-4 w-4 bg-white/10 rounded-full blur-md"></div>
+                  <div className="h-4 w-4 bg-slate-100 rounded-full blur-md"></div>
                 </div>
               </div>
             </div>
@@ -221,7 +221,7 @@ export default function CasesPage() {
                   <tbody className="divide-y divide-slate-200 bg-white">
                     {filteredAndSortedCases.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                        <td colSpan={6} className="px-6 py-12 text-center text-slate-9000">
                           データが見つかりません
                         </td>
                       </tr>
@@ -247,7 +247,7 @@ export default function CasesPage() {
                         <td className="px-6 py-4">
                           <StatusBadge status={c.status} />
                         </td>
-                        <td className="px-6 py-4 text-xs text-slate-500 text-right font-mono">
+                        <td className="px-6 py-4 text-xs text-slate-9000 text-right font-mono">
                           {new Date(c.created_at).toLocaleDateString()}
                         </td>
                         {isAdmin && (
@@ -255,7 +255,7 @@ export default function CasesPage() {
                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Link
                                 href={`/cases/${c.id}/edit`}
-                                className="p-2 bg-slate-100 hover:bg-white/10 text-slate-600 hover:text-slate-900 rounded-lg transition-colors"
+                                className="p-2 bg-slate-100 hover:bg-slate-100 text-slate-600 hover:text-slate-900 rounded-lg transition-colors"
                                 title="編集"
                               >
                                 ✎
@@ -275,8 +275,8 @@ export default function CasesPage() {
                     )}
                     {cases.length === 0 && searchTerm === "" && (
                       <tr>
-                        <td colSpan={isAdmin ? 6 : 5} className="px-6 py-20 text-center text-slate-500">
-                          <FolderOpen className="w-12 h-12 mx-auto mb-3 text-slate-500 opacity-50" strokeWidth={1} />
+                        <td colSpan={isAdmin ? 6 : 5} className="px-6 py-20 text-center text-slate-9000">
+                          <FolderOpen className="w-12 h-12 mx-auto mb-3 text-slate-9000 opacity-50" strokeWidth={1} />
                           <p>データがまだありません</p>
                         </td>
                       </tr>

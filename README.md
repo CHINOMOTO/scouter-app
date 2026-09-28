@@ -1,4 +1,4 @@
-# SCOUTER (Construction Industry Scouter System)
+# MIERIS (ミエリス - 就業情報共有システム)
 
 建設業界の要注意人物・トラブル情報を共有・管理するためのアプリケーションです。
 
@@ -19,4 +19,4 @@
 
 - Vercel
 
-2026 SCOUTER Project
+2026 MIERIS Project

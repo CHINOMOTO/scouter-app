@@ -44,7 +44,7 @@ export const calculateCombatPower = (text: string): number => {
     return power;
 };
 
-export const getScouterColor = (power: number): string => {
+export const getMierisColor = (power: number): string => {
     if (power >= 530000) return "text-purple-500 shadow-purple-500/50"; // ヤバい
     if (power >= 100000) return "text-red-500 shadow-red-500/50"; // 危険
     if (power >= 10000) return "text-orange-500 shadow-orange-500/50"; // 注意

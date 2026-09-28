@@ -89,7 +89,7 @@ export default function RegisteredUsersPage() {
 
                     {loading ? (
                         <div className="flex justify-center py-20">
-                            <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent"></div>
+                            <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                         </div>
                     ) : users.length === 0 ? (
                         <div className="glass-panel p-10 text-center rounded-2xl animate-fade-in">
@@ -98,7 +98,7 @@ export default function RegisteredUsersPage() {
                     ) : (
                         <div className="space-y-3 animate-fade-in delay-100">
                             {users.map((user) => (
-                                <div key={user.id} className="glass-panel rounded-2xl border border-white/10 hover:border-slate-200 transition-all p-5">
+                                <div key={user.id} className="glass-panel rounded-2xl border border-slate-200 hover:border-slate-200 transition-all p-5">
                                     <div className="flex items-center justify-between gap-4">
                                         {/* 左側：ユーザー情報 */}
                                         <div className="flex-1 min-w-0">
@@ -154,7 +154,7 @@ export default function RegisteredUsersPage() {
                                                         alert("更新に失敗しました: " + err.message);
                                                     }
                                                 }}
-                                                className="whitespace-nowrap text-xs text-slate-600 hover:text-slate-900 border border-slate-600 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-colors"
+                                                className="whitespace-nowrap text-xs text-slate-600 hover:text-slate-900 border border-slate-600 hover:bg-slate-900 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
                                                 title={user.role === 'admin' ? "一般ユーザーに降格" : "管理者に昇格"}
                                             >
                                                 権限変更

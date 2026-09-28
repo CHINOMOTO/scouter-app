@@ -141,7 +141,7 @@ export default function ContactPage() {
                                 管理者への連絡・ご相談はこちらから
                             </p>
                         </div>
-                        <Link href="/dashboard" className="btn-secondary text-xs backdrop-blur-md bg-white/5 border-white/10 hover:bg-white/10 px-4 py-2.5">
+                        <Link href="/dashboard" className="btn-secondary text-xs px-4 py-2.5">
                             戻る
                         </Link>
                     </div>
@@ -150,7 +150,7 @@ export default function ContactPage() {
                     <div className="glass-panel rounded-3xl p-6 md:p-10 animate-fade-in border border-slate-200">
                         {isLoading ? (
                             <div className="flex items-center justify-center py-12">
-                                <div className="animate-spin h-8 w-8 border-4 border-white/40 rounded-full border-t-transparent"></div>
+                                <div className="animate-spin h-8 w-8 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                             </div>
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-6">
@@ -212,7 +212,7 @@ export default function ContactPage() {
                                         maxLength={MAX_MESSAGE_LENGTH}
                                         className="input-field w-full resize-none"
                                     />
-                                    <p className="text-xs text-slate-500 text-right">
+                                    <p className="text-xs text-slate-9000 text-right">
                                         {message.length} / {MAX_MESSAGE_LENGTH}
                                     </p>
                                 </div>
@@ -221,7 +221,7 @@ export default function ContactPage() {
                                 {error && (
                                     <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
                                         <span className="text-red-400 text-lg">⚠️</span>
-                                        <p className="text-sm text-red-200 leading-snug pt-0.5">{error}</p>
+                                        <p className="text-sm text-red-700 leading-snug pt-0.5">{error}</p>
                                     </div>
                                 )}
 

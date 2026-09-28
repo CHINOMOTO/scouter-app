@@ -177,7 +177,7 @@ export default function EditCasePage() {
         return (
             <RequireAdmin>
                 <div className="min-h-screen flex items-center justify-center">
-                    <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent"></div>
+                    <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                 </div>
             </RequireAdmin>
         );
@@ -316,14 +316,14 @@ export default function EditCasePage() {
                                             <p className="text-xs text-slate-900 font-bold mb-2">登録済みファイル:</p>
                                             {existingFiles.map((file) => (
                                                 <div key={file.path} className="flex items-center justify-between bg-slate-100/80 p-3 rounded-lg border border-slate-600">
-                                                    <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-cyan-300 hover:underline truncate max-w-[80%] flex items-center gap-2">
+                                                    <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate max-w-[80%] flex items-center gap-2">
                                                         <span>📄</span>
                                                         {file.name}
                                                     </a>
                                                     <button
                                                         type="button"
                                                         onClick={() => removeExistingFile(file.path)}
-                                                        className="text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-2 py-1 rounded text-xs transition-colors"
+                                                        className="text-red-400 hover:text-red-700 bg-red-500/10 hover:bg-red-500/20 px-2 py-1 rounded text-xs transition-colors"
                                                     >
                                                         削除
                                                     </button>
@@ -344,7 +344,7 @@ export default function EditCasePage() {
                                         <div className="pointer-events-none">
                                             <span className="text-2xl block mb-2">📁</span>
                                             <p className="text-sm text-slate-600">ファイルをここに追加</p>
-                                            <p className="text-xs text-slate-500 mt-1">（クリックまたはドラッグ＆ドロップ）</p>
+                                            <p className="text-xs text-slate-9000 mt-1">（クリックまたはドラッグ＆ドロップ）</p>
                                         </div>
                                     </div>
 
@@ -358,7 +358,7 @@ export default function EditCasePage() {
                                                     <button
                                                         type="button"
                                                         onClick={() => removeNewFile(index)}
-                                                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-1 rounded transition-colors"
+                                                        className="text-red-400 hover:text-red-700 hover:bg-red-500/10 p-1 rounded transition-colors"
                                                     >
                                                         ✕
                                                     </button>
@@ -383,7 +383,7 @@ export default function EditCasePage() {
                             </Section>
 
                             {errorMsg && (
-                                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
+                                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 text-sm">
                                     ⚠️ {errorMsg}
                                 </div>
                             )}
@@ -425,11 +425,11 @@ function Label({ children, required }: { children: React.ReactNode, required?: b
         <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
             {children}
             {required ? (
-                <span className="text-slate-900 text-[10px] border border-slate-200 bg-white/5 px-1.5 py-0.5 rounded">
+                <span className="text-slate-900 text-[10px] border border-slate-200 bg-slate-50 px-1.5 py-0.5 rounded">
                     必須
                 </span>
             ) : (
-                <span className="text-slate-500 text-[10px] border border-slate-200 bg-slate-100 px-1.5 py-0.5 rounded">
+                <span className="text-slate-9000 text-[10px] border border-slate-200 bg-slate-100 px-1.5 py-0.5 rounded">
                     任意
                 </span>
             )}

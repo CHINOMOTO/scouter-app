@@ -81,7 +81,7 @@ export default function AdminUsersPage() {
 
                     {loading ? (
                         <div className="flex justify-center py-20">
-                            <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent"></div>
+                            <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                         </div>
                     ) : pendingUsers.length === 0 ? (
                         <div className="glass-panel p-10 text-center rounded-2xl animate-fade-in">
@@ -100,7 +100,7 @@ export default function AdminUsersPage() {
                                             </span>
                                         </div>
                                         <div className="text-slate-600 text-sm flex items-center gap-2">
-                                            <span className="text-slate-500">所属:</span>
+                                            <span className="text-slate-9000">所属:</span>
                                             {user.companies?.name || "未所属"}
                                         </div>
                                     </div>

@@ -93,7 +93,7 @@ export default function AdminAnnouncements() {
             <div className="min-h-screen pt-24 pb-12 px-4">
                 <div className="max-w-4xl mx-auto space-y-8">
                     <div className="flex items-center gap-4 mb-8">
-                        <div className="p-3 rounded-2xl bg-white/10 text-slate-900">
+                        <div className="p-3 rounded-2xl bg-slate-100 text-slate-900">
                             <Bell className="w-8 h-8" strokeWidth={1.5} />
                         </div>
                         <div>

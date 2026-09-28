@@ -151,10 +151,10 @@ export default function SignUpPage() {
     return (
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
             <div className="w-full max-w-lg relative z-10 my-8">
-                <div className="glass-panel rounded-3xl p-8 md:p-10 border border-white/5 animate-fade-in backdrop-blur-xl">
+                <div className="glass-panel rounded-3xl p-8 md:p-10 border border-slate-200 animate-fade-in backdrop-blur-xl">
 
                     <div className="mb-8 text-center">
-                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 mb-4 border border-white/5">
+                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 mb-4 border border-slate-200">
                             <span className="text-2xl filter">✨</span>
                         </div>
                         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
@@ -196,7 +196,7 @@ export default function SignUpPage() {
                                     className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-white/30 transition-all duration-300"
                                     placeholder="例: 株式会社〇〇建設"
                                 />
-                                <p className="text-[10px] text-slate-500 pl-1">
+                                <p className="text-[10px] text-slate-9000 pl-1">
                                     ※既存の会社がある場合は自動的に紐付けられます
                                 </p>
                             </div>
@@ -236,7 +236,7 @@ export default function SignUpPage() {
                         {errorMsg && (
                             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 animate-fade-in flex items-start gap-3 mt-4">
                                 <span className="text-red-400 text-lg">⚠️</span>
-                                <p className="text-sm text-red-200 leading-snug pt-0.5">
+                                <p className="text-sm text-red-700 leading-snug pt-0.5">
                                     {errorMsg}
                                 </p>
                             </div>
@@ -245,7 +245,7 @@ export default function SignUpPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-[#0f172a]/80 to-[#0f172a] hover:from-[#0f172a] hover:to-[#0f172a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/30 transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 mt-6"
+                            className="btn-primary w-full py-3.5 mt-6"
                         >
                             {isLoading ? (
                                 <div className="flex items-center gap-2">
@@ -261,7 +261,7 @@ export default function SignUpPage() {
                         </button>
                     </form>
 
-                    <p className="mt-8 text-xs text-slate-500 text-center leading-relaxed">
+                    <p className="mt-8 text-xs text-slate-9000 text-center leading-relaxed">
                         登録申請後、管理者による承認が必要です。<br />
                         <Link href="/" className="text-slate-700 hover:text-slate-900 underline underline-offset-2 ml-1">
                             すでにアカウントをお持ちの方はこちら
@@ -270,7 +270,7 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="text-center mt-6">
-                    <Link href="/" className="text-slate-500 hover:text-slate-700 text-xs transition-colors">
+                    <Link href="/" className="text-slate-9000 hover:text-slate-700 text-xs transition-colors">
                         トップページに戻る
                     </Link>
                 </div>

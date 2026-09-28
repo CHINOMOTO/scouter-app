@@ -15,7 +15,7 @@ export default function PendingApprovalPage() {
         <div className="min-h-screen flex items-center justify-center p-4">
             <div className="relative w-full max-w-lg glass-panel rounded-2xl p-10 text-center animate-fade-in border-t border-slate-600/50">
 
-                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 ring-1 ring-[#0f172a]/30">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 ring-1 ring-[#0f172a]/30">
                     <span className="text-4xl">⏳</span>
                 </div>
 

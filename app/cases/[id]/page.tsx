@@ -58,11 +58,11 @@ function statusLabel(status: CaseDetail["status"]) {
 function statusColor(status: CaseDetail["status"]) {
     switch (status) {
         case "approved":
-            return "text-slate-900 border-slate-200 bg-white/10";
+            return "text-emerald-700 border-emerald-200 bg-emerald-50";
         case "pending":
-            return "text-amber-400 border-amber-500/30 bg-amber-500/20";
+            return "text-amber-700 border-amber-200 bg-amber-50";
         case "rejected":
-            return "text-red-400 border-red-500/30 bg-red-500/20";
+            return "text-rose-700 border-rose-200 bg-rose-50";
     }
 }
 
@@ -225,10 +225,10 @@ export default function CaseDetailPage() {
                     <div className="glass-panel rounded-2xl p-8 animate-fade-in delay-100">
                         {loading ? (
                             <div className="flex justify-center py-12">
-                                <span className="w-8 h-8 border-4 border-white/40 border-t-transparent rounded-full animate-spin"></span>
+                                <span className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></span>
                             </div>
                         ) : errorMsg ? (
-                            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
+                            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 text-sm">
                                 ⚠️ {errorMsg}
                             </div>
                         ) : !caseDetail ? (
@@ -238,7 +238,7 @@ export default function CaseDetailPage() {
 
                                 {/* Header */}
                                 {/* Header with mieris UI */}
-                                <div className="bg-white p-6 md:p-8 rounded-xl border border-white/5 relative overflow-hidden mb-6">
+                                <div className="bg-white p-6 md:p-8 rounded-xl border border-slate-200 relative overflow-hidden mb-6">
 
                                     <div className="relative z-10 max-w-[75%]">
                                         <div className="flex items-center gap-3 mb-3">
@@ -312,7 +312,7 @@ export default function CaseDetailPage() {
                                 <div className="space-y-4">
                                     <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2">添付資料</h2>
                                     {evidenceFiles.length === 0 ? (
-                                        <p className="text-sm text-slate-500">証拠ファイルはありません。</p>
+                                        <p className="text-sm text-slate-9000">証拠ファイルはありません。</p>
                                     ) : (
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                             {evidenceFiles.map((file, i) => (

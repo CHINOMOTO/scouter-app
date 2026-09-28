@@ -114,7 +114,7 @@ export default function SettingsPage() {
         return (
             <RequireAuth>
                 <div className="min-h-screen flex items-center justify-center p-4">
-                    <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent mx-auto"></div>
+                    <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900 mx-auto"></div>
                 </div>
             </RequireAuth>
         );
@@ -130,7 +130,7 @@ export default function SettingsPage() {
                             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">アカウント設定</h1>
                             <p className="text-slate-600">登録情報やパスワードの変更を行います</p>
                         </div>
-                        <Link href="/dashboard" className="btn-secondary text-xs backdrop-blur-md bg-white/5 border-white/10 hover:bg-white/10">
+                        <Link href="/dashboard" className="btn-secondary text-xs">
                             ダッシュボードへ戻る
                         </Link>
                     </div>
@@ -153,7 +153,7 @@ export default function SettingsPage() {
                                         value={companyName}
                                         className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-600 cursor-not-allowed text-sm"
                                     />
-                                    <p className="text-[10px] text-slate-500 mt-1 ml-1">※所属会社はシステム管理者のみ変更可能です。</p>
+                                    <p className="text-[10px] text-slate-9000 mt-1 ml-1">※所属会社はシステム管理者のみ変更可能です。</p>
                                 </div>
                                 
                                 <div>

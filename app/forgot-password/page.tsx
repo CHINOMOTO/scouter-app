@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
                             {errorMsg && (
                                 <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-start gap-2 animate-fade-in">
                                     <span className="text-red-400 text-sm">⚠️</span>
-                                    <p className="text-xs text-red-200 pt-0.5">{errorMsg}</p>
+                                    <p className="text-xs text-red-700 pt-0.5">{errorMsg}</p>
                                 </div>
                             )}
 
@@ -102,8 +102,8 @@ export default function ForgotPasswordPage() {
                         </form>
                     )}
 
-                    <div className="text-center mt-8 pt-4 border-t border-white/5">
-                        <Link href="/" className="text-xs text-slate-500 hover:text-slate-900 transition-colors">
+                    <div className="text-center mt-8 pt-4 border-t border-slate-200">
+                        <Link href="/" className="text-xs text-slate-9000 hover:text-slate-900 transition-colors">
                             キャンセルして戻る
                         </Link>
                     </div>

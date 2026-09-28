@@ -66,7 +66,7 @@ export default function UpdatePasswordPage() {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
                 <div className="text-center">
-                    <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent mx-auto mb-4"></div>
+                    <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900 mx-auto mb-4"></div>
                     <p className="text-slate-600">認証情報を確認中...</p>
                 </div>
             </div>
@@ -136,7 +136,7 @@ export default function UpdatePasswordPage() {
                             {errorMsg && (
                                 <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-start gap-2 animate-fade-in">
                                     <span className="text-red-400 text-sm">⚠️</span>
-                                    <p className="text-xs text-red-200 pt-0.5">{errorMsg}</p>
+                                    <p className="text-xs text-red-700 pt-0.5">{errorMsg}</p>
                                 </div>
                             )}
 

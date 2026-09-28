@@ -80,14 +80,14 @@ export default function AdminInquiriesPage() {
                                 ユーザーからのお問い合わせを確認・管理します
                             </p>
                         </div>
-                        <Link href="/admin" className="btn-secondary text-xs backdrop-blur-md bg-white/5 border-white/10 hover:bg-white/10 px-4 py-2.5">
+                        <Link href="/admin" className="btn-secondary text-xs px-4 py-2.5">
                             管理者メニューへ戻る
                         </Link>
                     </div>
 
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
-                            <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent"></div>
+                            <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                         </div>
                     ) : inquiries.length === 0 ? (
                         <div className="glass-panel rounded-3xl p-10 text-center animate-fade-in border border-slate-200">
@@ -107,11 +107,11 @@ export default function AdminInquiriesPage() {
                                             <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${STATUS_LABELS[inq.status]?.className || ''}`}>
                                                 {STATUS_LABELS[inq.status]?.label || inq.status}
                                             </span>
-                                            <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                                            <span className="text-xs text-slate-9000 bg-slate-100 px-2 py-0.5 rounded">
                                                 {CATEGORY_LABELS[inq.category] || inq.category}
                                             </span>
                                         </div>
-                                        <span className="text-xs text-slate-500 font-mono">
+                                        <span className="text-xs text-slate-9000 font-mono">
                                             {new Date(inq.created_at).toLocaleString("ja-JP")}
                                         </span>
                                     </div>
@@ -144,7 +144,7 @@ export default function AdminInquiriesPage() {
                             <span className={`px-3 py-1.5 text-xs font-bold rounded-lg border ${STATUS_LABELS[selectedInquiry.status]?.className || ''}`}>
                                 {STATUS_LABELS[selectedInquiry.status]?.label || selectedInquiry.status}
                             </span>
-                            <span className="text-xs text-slate-500 font-mono">
+                            <span className="text-xs text-slate-9000 font-mono">
                                 {new Date(selectedInquiry.created_at).toLocaleString("ja-JP")}
                             </span>
                         </div>
@@ -152,33 +152,33 @@ export default function AdminInquiriesPage() {
                         {/* 情報 */}
                         <div className="space-y-4 mb-6">
                             <div>
-                                <p className="text-xs text-slate-500 mb-1">お問い合わせ種類</p>
+                                <p className="text-xs text-slate-9000 mb-1">お問い合わせ種類</p>
                                 <p className="text-sm text-slate-900 font-bold">{CATEGORY_LABELS[selectedInquiry.category] || selectedInquiry.category}</p>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
 
                                 <div>
-                                    <p className="text-xs text-slate-500 mb-1">電話番号</p>
+                                    <p className="text-xs text-slate-9000 mb-1">電話番号</p>
                                     <p className="text-sm text-slate-800 font-mono">{selectedInquiry.phone_number || "未入力"}</p>
                                 </div>
 
                                 <div>
-                                    <p className="text-xs text-slate-500 mb-1">会社名</p>
+                                    <p className="text-xs text-slate-9000 mb-1">会社名</p>
                                     <p className="text-sm text-slate-800">{selectedInquiry.company_name}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-slate-500 mb-1">ユーザー名</p>
+                                    <p className="text-xs text-slate-9000 mb-1">ユーザー名</p>
                                     <p className="text-sm text-slate-800">{selectedInquiry.user_name}</p>
                                 </div>
                             </div>
                             
                                 <div>
-                                    <p className="text-xs text-slate-500 mb-1">メールアドレス</p>
+                                    <p className="text-xs text-slate-9000 mb-1">メールアドレス</p>
                                     <div className="flex items-center justify-between">
                                         <p className="text-sm text-slate-800 font-mono">{selectedInquiry.email}</p>
                                         <a 
                                             href={`mailto:${selectedInquiry.email}?subject=【MIERIS】お問い合わせの件について&body=${selectedInquiry.company_name}%0D%0A${selectedInquiry.user_name} 様%0D%0A%0D%0Aお問い合わせありがとうございます。%0D%0A%0D%0A%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A【お問い合わせ内容】%0D%0A${selectedInquiry.message}%0D%0A%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%0D%0A`}
-                                            className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded hover:bg-white/10 transition-colors border border-white/40/30 flex items-center gap-1"
+                                            className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded hover:bg-slate-100 transition-colors border border-slate-300 flex items-center gap-1"
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                                             メールで返信
@@ -186,7 +186,7 @@ export default function AdminInquiriesPage() {
                                     </div>
                                 </div>
                             <div>
-                                <p className="text-xs text-slate-500 mb-1">お問い合わせ内容</p>
+                                <p className="text-xs text-slate-9000 mb-1">お問い合わせ内容</p>
                                 <div className="bg-white rounded-xl p-4 border border-slate-200">
                                     <p className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">{selectedInquiry.message}</p>
                                 </div>
@@ -195,7 +195,7 @@ export default function AdminInquiriesPage() {
 
                         {/* ステータス変更ボタン */}
                         <div className="border-t border-slate-200 pt-5">
-                            <p className="text-xs text-slate-500 mb-3">ステータスを変更</p>
+                            <p className="text-xs text-slate-9000 mb-3">ステータスを変更</p>
                             <div className="flex gap-2">
                                 {Object.entries(STATUS_LABELS).map(([key, val]) => (
                                     <button

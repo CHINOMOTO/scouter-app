@@ -272,7 +272,7 @@ export default function AdminCaseDetailPage() {
 
               {/* Inline Error for Ops */}
               {formError && !showRejectModal && (
-                <div className="mb-4 p-3 rounded bg-red-500/10 border border-red-500/30 text-red-200 text-xs">
+                <div className="mb-4 p-3 rounded bg-red-500/10 border border-red-500/30 text-red-700 text-xs">
                   ⚠️ {formError}
                 </div>
               )}
@@ -283,31 +283,31 @@ export default function AdminCaseDetailPage() {
                   <div className="space-y-2 text-sm">
                     <div className="grid grid-cols-[140px_1fr]">
                       <span className="text-slate-600">氏名：</span>
-                      <span className="text-slate-50 font-semibold">{caseDetail.full_name}</span>
+                      <span className="text-slate-900 font-semibold">{caseDetail.full_name}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
                       <span className="text-slate-600">氏名（カナ）：</span>
-                      <span className="text-slate-50">{caseDetail.full_name_kana || "-"}</span>
+                      <span className="text-slate-900">{caseDetail.full_name_kana || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
                       <span className="text-slate-600">性別：</span>
-                      <span className="text-slate-50">{genderLabel(caseDetail.gender)}</span>
+                      <span className="text-slate-900">{genderLabel(caseDetail.gender)}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
                       <span className="text-slate-600">生年月日：</span>
-                      <span className="text-slate-50">{caseDetail.birth_date?.replace(/-/g, "/")}</span>
+                      <span className="text-slate-900">{caseDetail.birth_date?.replace(/-/g, "/")}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
                       <span className="text-slate-600">電話番号（下4桁）：</span>
-                      <span className="text-slate-50">{caseDetail.phone_last4 || "-"}</span>
+                      <span className="text-slate-900">{caseDetail.phone_last4 || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
                       <span className="text-slate-600">発生日：</span>
-                      <span className="text-slate-50">{caseDetail.occurrence_date?.replace(/-/g, "/")}</span>
+                      <span className="text-slate-900">{caseDetail.occurrence_date?.replace(/-/g, "/")}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
                       <span className="text-slate-600">登録日：</span>
-                      <span className="text-slate-50">
+                      <span className="text-slate-900">
                         {caseDetail.created_at
                           ? new Date(caseDetail.created_at).toLocaleDateString()
                           : "-"}
@@ -315,11 +315,11 @@ export default function AdminCaseDetailPage() {
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
                       <span className="text-slate-600">登録元：</span>
-                      <span className="text-slate-50">{companyName || "-"}</span>
+                      <span className="text-slate-900">{companyName || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
                       <span className="text-slate-600">ステータス：</span>
-                      <span className="text-slate-50 font-bold">{statusLabel(caseDetail.status)}</span>
+                      <span className="text-slate-900 font-bold">{statusLabel(caseDetail.status)}</span>
                     </div>
                   </div>
                 </div>
@@ -335,7 +335,7 @@ export default function AdminCaseDetailPage() {
                 <div className="bg-white p-6 rounded-xl border border-slate-200">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">添付資料</h2>
                   {evidenceFiles.length === 0 ? (
-                    <p className="text-sm text-slate-500">証拠ファイルはありません。</p>
+                    <p className="text-sm text-slate-9000">証拠ファイルはありません。</p>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {evidenceFiles.map((file, i) => (
@@ -369,7 +369,7 @@ export default function AdminCaseDetailPage() {
                   type="button"
                   onClick={() => setShowApproveModal(true)}
                   disabled={isProcessing}
-                  className="flex-1 bg-[#0f172a]/80 hover:bg-[#0f172a] disabled:bg-[#0f172a]/40 text-black font-bold py-3 rounded-lg text-sm transition-all"
+                  className="flex-1 bg-[#0f172a]/80 hover:bg-[#0f172a] disabled:bg-[#0f172a]/40 text-white font-bold py-3 rounded-lg text-sm transition-all"
                 >
                   承認する
                 </button>
@@ -393,11 +393,11 @@ export default function AdminCaseDetailPage() {
           {/* Approve Confirmation Modal */}
           {showApproveModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
-              <div className="bg-white border border-white/40 p-8 rounded-2xl max-w-sm w-full shadow-md">
+              <div className="bg-white border border-slate-300 p-8 rounded-2xl max-w-sm w-full shadow-md">
                 <h3 className="text-xl font-bold text-slate-900 mb-4">承認の確認</h3>
                 <p className="text-slate-700 mb-8">
                   この申請を承認しますか？<br />
-                  <span className="text-xs text-slate-500">承認すると、すべてのユーザーがこのデータを閲覧できるようになります。</span>
+                  <span className="text-xs text-slate-9000">承認すると、すべてのユーザーがこのデータを閲覧できるようになります。</span>
                 </p>
                 <div className="flex gap-4">
                   <button
@@ -409,7 +409,7 @@ export default function AdminCaseDetailPage() {
                   <button
                     onClick={executeApprove}
                     disabled={isProcessing}
-                    className="flex-1 py-2 rounded bg-[#0f172a] text-black font-bold hover:bg-[#0f172a]/80 shadow-md"
+                    className="flex-1 py-2 rounded bg-[#0f172a] text-white font-bold hover:bg-[#0f172a]/80 shadow-md"
                   >
                     {isProcessing ? "処理中..." : "承認確定"}
                   </button>
@@ -425,7 +425,7 @@ export default function AdminCaseDetailPage() {
                 <h3 className="text-xl font-bold text-slate-900 mb-4">却下の確認</h3>
                 <p className="text-slate-700 mb-4">
                   この申請を却下しますか？<br />
-                  <span className="text-xs text-slate-500">却下理由を入力してください。申請ユーザーには通知されませんが、記録として残ります。</span>
+                  <span className="text-xs text-slate-9000">却下理由を入力してください。申請ユーザーには通知されませんが、記録として残ります。</span>
                 </p>
 
                 <textarea
@@ -464,7 +464,7 @@ export default function AdminCaseDetailPage() {
           {/* Success Modal */}
           {showSuccessModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
-              <div className={`p-10 rounded-3xl max-w-sm w-full text-center border-t-4 ${showSuccessModal.type === 'approved' ? 'border-white/40 shadow-md' : 'border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.2)]'}`}>
+              <div className={`p-10 rounded-3xl max-w-sm w-full text-center bg-white border-t-4 ${showSuccessModal.type === 'approved' ? 'border-slate-300 shadow-md' : 'border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.2)]'}`}>
                 <h3 className="text-xl font-bold text-slate-900 mb-8">
                   {showSuccessModal.type === 'approved' ? '申請が承認されました。' : '申請が却下されました。'}
                 </h3>
