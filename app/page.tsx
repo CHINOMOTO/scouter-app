@@ -52,31 +52,31 @@ export default function Home() {
     <div className="min-h-screen flex flex-col items-center justify-between p-4 bg-[#f8fafc]">
       <div className="h-6"></div>
 
-      <main className="w-full max-w-sm flex flex-col items-center justify-center py-6">
+      <main className="w-full max-w-[460px] flex flex-col items-center justify-center py-8">
 
-        {/* Brand Header - ロゴ＝タイトル統合デザイン */}
-        <div className="text-center mb-6 flex flex-col items-center">
-          <div className="w-36 md:w-40 aspect-square relative -mb-3 -mt-2">
+        {/* Brand Header - ロゴ＝タイトル統合デザイン（サイズアップ） */}
+        <div className="text-center mb-8 flex flex-col items-center">
+          <div className="w-48 md:w-56 aspect-square relative -mb-4 -mt-2">
             <img 
               src="/logo-b.jpg" 
               alt="MIERIS ミエリス" 
               className="w-full h-full object-contain mix-blend-multiply select-none pointer-events-none" 
             />
           </div>
-          <p className="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase mb-4">
+          <p className="text-xs font-bold text-slate-400 tracking-[0.35em] uppercase mb-4">
             ミエリス
           </p>
-          <h2 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
             採る前に、事実を知る。
           </h2>
         </div>
 
-        {/* Login Form Container */}
-        <div className="w-full bg-white rounded-2xl p-7 border border-slate-200/90 shadow-lg shadow-slate-200/40">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-3.5">
+        {/* Login Form Container - ゆったりとしたサイズ感 */}
+        <div className="w-full bg-white rounded-3xl p-8 sm:p-9 border border-slate-200 shadow-xl shadow-slate-200/50">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-sm font-bold text-slate-800 mb-2">
                   メールアドレス
                 </label>
                 <input
@@ -84,12 +84,12 @@ export default function Home() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input-field"
+                  className="input-field py-3 px-4 text-base rounded-xl"
                   placeholder="example@company.com"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-sm font-bold text-slate-800 mb-2">
                   パスワード
                 </label>
                 <input
@@ -97,33 +97,33 @@ export default function Home() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field"
+                  className="input-field py-3 px-4 text-base rounded-xl"
                   placeholder="••••••••"
                 />
               </div>
             </div>
 
             {errorMsg && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2 text-red-700 text-xs">
-                <span>⚠️</span>
-                <p className="pt-0.5">{errorMsg}</p>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 flex items-start gap-2.5 text-red-700 text-sm">
+                <span className="text-base">⚠️</span>
+                <p className="pt-0.5 leading-snug">{errorMsg}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-primary w-full py-3.5 mt-2"
+              className="btn-primary w-full py-4 text-base font-bold tracking-wider rounded-xl mt-3 shadow-md hover:shadow-lg transition-all"
             >
               {isLoading ? "ログイン中..." : "ログインする"}
             </button>
           </form>
 
-          <div className="text-center mt-6 border-t border-slate-100 pt-5 flex flex-col gap-2.5 text-xs">
-            <Link href="/forgot-password" className="text-slate-9000 hover:text-slate-900 transition-colors">
+          <div className="text-center mt-7 border-t border-slate-100 pt-6 flex flex-col gap-3 text-sm">
+            <Link href="/forgot-password" className="text-slate-500 hover:text-slate-900 transition-colors">
               パスワードをお忘れの方はこちら
             </Link>
-            <Link href="/signup" className="text-slate-600 hover:text-slate-900 font-semibold transition-colors">
+            <Link href="/signup" className="text-slate-700 hover:text-blue-600 font-bold transition-colors">
               新規利用のお申し込み（アカウント登録）はこちら →
             </Link>
           </div>
