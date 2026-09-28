@@ -49,59 +49,36 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-[#f8fafc]">
-      {/* Background Soft Glow */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-slate-200/50 rounded-full blur-[140px]"></div>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-between p-4 bg-[#f8fafc]">
+      <div className="h-6"></div>
 
-      <main className="w-full max-w-xl flex flex-col items-center justify-center relative z-10 py-12">
+      <main className="w-full max-w-sm flex flex-col items-center justify-center py-6">
 
-        {/* Brand Header */}
-        <div className="text-center mb-8 space-y-3">
-          <p className="text-[11px] font-mono tracking-[0.25em] text-slate-500 uppercase font-semibold">
-            TALENT RISK MANAGEMENT
-          </p>
-
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-slate-900 font-black text-2xl tracking-tighter shadow-md">
+        {/* Brand Header - 超シンプル仕様 */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-2.5 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-black text-xl tracking-tighter shadow-sm">
               M
             </div>
             <div className="text-left">
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-wider text-slate-900 leading-none">
+              <h1 className="text-3xl font-extrabold tracking-wider text-slate-900 leading-none">
                 MIERIS
               </h1>
-              <span className="text-[11px] text-slate-500 tracking-[0.2em] font-bold leading-none block mt-1">
+              <span className="text-[10px] text-slate-500 tracking-[0.2em] font-bold leading-none block mt-1">
                 ミエリス
               </span>
             </div>
           </div>
 
-          <div className="pt-2">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-              採る前に、事実を知る。
-            </h2>
-            <p className="text-slate-600 text-xs md:text-sm leading-relaxed max-w-md mx-auto mt-2">
-              就業実績を、本人同意のもとで利用企業間に共有する仕組みです。<br className="hidden sm:block" />
-              履歴書と30分の面接では見抜けなかったことを、採る前に。
-            </p>
-            <span className="inline-block mt-3 px-3 py-1 bg-white border border-slate-200 shadow-2xs rounded-full text-[11px] text-slate-600 font-semibold">
-              雑工・荷揚げ・警備・運送 就業情報共有システム
-            </span>
-          </div>
+          <h2 className="text-xl font-bold text-slate-800 tracking-tight">
+            採る前に、事実を知る。
+          </h2>
         </div>
 
         {/* Login Form Container */}
-        <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200/80 shadow-xl shadow-slate-200/50 relative">
-          <div className="mb-6 text-center">
-            <h3 className="text-base font-bold text-slate-900 tracking-wide">
-              ログイン
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">登録済みのメールアドレスとパスワードを入力してください</p>
-          </div>
-
+        <div className="w-full bg-white rounded-2xl p-7 border border-slate-200/90 shadow-lg shadow-slate-200/40">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   メールアドレス
@@ -157,7 +134,8 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="w-full text-center text-slate-600 text-xs py-4">
+      {/* フッター */}
+      <footer className="w-full text-center text-slate-400 text-xs py-6">
         <p>&copy; 2026 MIERIS. 株式会社ミヤエモン / 株式会社宇井建設</p>
       </footer>
     </div>
