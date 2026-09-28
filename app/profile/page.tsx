@@ -72,7 +72,7 @@ export default function ProfilePage() {
                 <div className="max-w-2xl w-full">
 
                     <div className="mb-6 animate-fade-in">
-                        <Link href="/dashboard" className="btn-secondary text-sm inline-flex items-center gap-2 px-4 py-2 hover:bg-slate-800 transition-colors">
+                        <Link href="/dashboard" className="btn-secondary text-sm inline-flex items-center gap-2 px-4 py-2 hover:bg-slate-100 transition-colors">
                             ← ダッシュボードへ戻る
                         </Link>
                     </div>
@@ -83,56 +83,56 @@ export default function ProfilePage() {
                                 <span className="w-8 h-8 border-4 border-white/40 border-t-transparent rounded-full animate-spin"></span>
                             </div>
                         ) : !profile ? (
-                            <p className="text-slate-400 text-center py-8">プロフィール情報を取得できませんでした。</p>
+                            <p className="text-slate-600 text-center py-8">プロフィール情報を取得できませんでした。</p>
                         ) : (
                             <div className="space-y-8">
                                 {/* Header */}
                                 <div className="text-center pb-6 border-b border-white/10">
-                                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 border-2 border-slate-700/30 flex items-center justify-center">
+                                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 border-2 border-slate-200 flex items-center justify-center">
                                         <span className="text-3xl">👤</span>
                                     </div>
-                                    <h1 className="text-2xl font-bold text-white mb-1">{profile.displayName}</h1>
+                                    <h1 className="text-2xl font-bold text-slate-900 mb-1">{profile.displayName}</h1>
                                     {profile.companyName && (
-                                        <p className="text-white/70 font-medium">{profile.companyName}</p>
+                                        <p className="text-slate-900/70 font-medium">{profile.companyName}</p>
                                     )}
                                 </div>
 
                                 {/* Info */}
                                 <div className="space-y-1">
-                                    <h2 className="text-sm font-bold text-white uppercase tracking-widest border-b border-slate-700/30 pb-2 mb-4">
+                                    <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">
                                         アカウント情報
                                     </h2>
                                     <dl className="space-y-4 text-sm">
-                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-slate-900/40 border border-white/5">
-                                            <dt className="text-slate-400 font-medium">氏名</dt>
+                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-white/5">
+                                            <dt className="text-slate-600 font-medium">氏名</dt>
                                             <dd className="text-white font-bold">{profile.displayName}</dd>
                                         </div>
-                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-slate-900/40 border border-white/5">
-                                            <dt className="text-slate-400 font-medium">メールアドレス</dt>
+                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-white/5">
+                                            <dt className="text-slate-600 font-medium">メールアドレス</dt>
                                             <dd className="text-white font-mono text-xs">{profile.email}</dd>
                                         </div>
-                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-slate-900/40 border border-white/5">
-                                            <dt className="text-slate-400 font-medium">所属会社</dt>
+                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-white/5">
+                                            <dt className="text-slate-600 font-medium">所属会社</dt>
                                             <dd className="text-white font-bold">{profile.companyName || "未設定"}</dd>
                                         </div>
-                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-slate-900/40 border border-white/5">
-                                            <dt className="text-slate-400 font-medium">権限</dt>
+                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-white/5">
+                                            <dt className="text-slate-600 font-medium">権限</dt>
                                             <dd>
-                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${ profile.role === "admin" ? "bg-white/10 text-white border-slate-700/30" : "bg-slate-800 text-slate-300 border-slate-600" }`}>
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${ profile.role === "admin" ? "bg-white/10 text-white border-slate-200" : "bg-slate-100 text-slate-700 border-slate-600" }`}>
                                                     {roleLabel(profile.role)}
                                                 </span>
                                             </dd>
                                         </div>
-                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-slate-900/40 border border-white/5">
-                                            <dt className="text-slate-400 font-medium">アカウント状態</dt>
+                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-white/5">
+                                            <dt className="text-slate-600 font-medium">アカウント状態</dt>
                                             <dd>
                                                 <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${ profile.isApproved ? "bg-green-500/10 text-green-400 border-green-500/30" : "bg-yellow-500/10 text-yellow-400 border-yellow-500/30" }`}>
                                                     {profile.isApproved ? "承認済み" : "承認待ち"}
                                                 </span>
                                             </dd>
                                         </div>
-                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-slate-900/40 border border-white/5">
-                                            <dt className="text-slate-400 font-medium">登録日</dt>
+                                        <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-white/5">
+                                            <dt className="text-slate-600 font-medium">登録日</dt>
                                             <dd className="text-white font-mono text-xs">
                                                 {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString("ja-JP", {
                                                     year: "numeric", month: "long", day: "numeric"

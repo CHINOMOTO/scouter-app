@@ -157,10 +157,10 @@ export default function SignUpPage() {
                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 mb-4 border border-white/5">
                             <span className="text-2xl filter">✨</span>
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
+                        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
                             新規アカウント作成
                         </h1>
-                        <p className="text-slate-400 text-sm">
+                        <p className="text-slate-600 text-sm">
                             アカウント情報を入力してください
                         </p>
                     </div>
@@ -170,30 +170,30 @@ export default function SignUpPage() {
                         <div className="grid grid-cols-1 gap-5">
                             {/* Display Name */}
                             <div className="input-group group space-y-1.5">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                                    氏名（表示名） <span className="text-white">*</span>
+                                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
+                                    氏名（表示名） <span className="text-slate-900">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     required
                                     value={displayName}
                                     onChange={(e) => setDisplayName(e.target.value)}
-                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-white/30 transition-all duration-300"
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-white/30 transition-all duration-300"
                                     placeholder="例: 山田 太郎"
                                 />
                             </div>
 
                             {/* Company Name */}
                             <div className="input-group group space-y-1.5">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                                    会社名 <span className="text-white">*</span>
+                                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
+                                    会社名 <span className="text-slate-900">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     required
                                     value={companyName}
                                     onChange={(e) => setCompanyName(e.target.value)}
-                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-white/30 transition-all duration-300"
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-white/30 transition-all duration-300"
                                     placeholder="例: 株式会社〇〇建設"
                                 />
                                 <p className="text-[10px] text-slate-500 pl-1">
@@ -203,23 +203,23 @@ export default function SignUpPage() {
 
                             {/* Email */}
                             <div className="input-group group space-y-1.5">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                                    メールアドレス <span className="text-white">*</span>
+                                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
+                                    メールアドレス <span className="text-slate-900">*</span>
                                 </label>
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-white/30 transition-all duration-300"
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-white/30 transition-all duration-300"
                                     placeholder="name@company.com"
                                 />
                             </div>
 
                             {/* Password */}
                             <div className="input-group group space-y-1.5">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                                    パスワード <span className="text-white">*</span>
+                                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
+                                    パスワード <span className="text-slate-900">*</span>
                                 </label>
                                 <input
                                     type="password"
@@ -227,7 +227,7 @@ export default function SignUpPage() {
                                     minLength={8}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/60 focus:ring-4 focus:ring-white/30 transition-all duration-300"
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-white/30 transition-all duration-300"
                                     placeholder="8文字以上で設定"
                                 />
                             </div>
@@ -270,7 +270,7 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="text-center mt-6">
-                    <Link href="/" className="text-slate-500 hover:text-slate-300 text-xs transition-colors">
+                    <Link href="/" className="text-slate-500 hover:text-slate-700 text-xs transition-colors">
                         トップページに戻る
                     </Link>
                 </div>

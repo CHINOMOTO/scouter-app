@@ -67,7 +67,7 @@ export default function UpdatePasswordPage() {
             <div className="min-h-screen flex items-center justify-center p-4">
                 <div className="text-center">
                     <div className="animate-spin h-10 w-10 border-4 border-white/40 rounded-full border-t-transparent mx-auto mb-4"></div>
-                    <p className="text-slate-400">認証情報を確認中...</p>
+                    <p className="text-slate-600">認証情報を確認中...</p>
                 </div>
             </div>
         );
@@ -82,15 +82,15 @@ export default function UpdatePasswordPage() {
 
             <main className="w-full max-w-lg flex flex-col items-center justify-center relative z-10 animate-fade-in">
                 <div className="mb-8 text-center">
-                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
+                    <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
                         新パスワードの設定
                     </h1>
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-slate-600 text-sm">
                         8文字以上の新しいパスワードを入力してください
                     </p>
                 </div>
 
-                <div className="w-full glass-panel rounded-2xl md:rounded-3xl p-6 md:p-8 border border-slate-700/30 backdrop-blur-xl relative overflow-hidden">
+                <div className="w-full glass-panel rounded-2xl md:rounded-3xl p-6 md:p-8 border border-slate-200 backdrop-blur-xl relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00e5ff] to-transparent opacity-50"></div>
 
                     {successMsg ? (
@@ -99,12 +99,12 @@ export default function UpdatePasswordPage() {
                                 <span className="text-2xl">✅</span>
                             </div>
                             <p className="text-emerald-400 font-bold mb-2">更新完了</p>
-                            <p className="text-slate-300 text-sm">{successMsg}</p>
+                            <p className="text-slate-700 text-sm">{successMsg}</p>
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
                                     新しいパスワード
                                 </label>
                                 <input
@@ -113,13 +113,13 @@ export default function UpdatePasswordPage() {
                                     minLength={8}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/80 focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
                                     placeholder="8文字以上"
                                 />
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
                                     新しいパスワード（確認用）
                                 </label>
                                 <input
@@ -128,7 +128,7 @@ export default function UpdatePasswordPage() {
                                     minLength={8}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-700/30 focus:bg-slate-900/80 focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
                                     placeholder="もう一度入力してください"
                                 />
                             </div>

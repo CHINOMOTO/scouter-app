@@ -245,17 +245,17 @@ export default function AdminCaseDetailPage() {
 
   return (
     <RequireAdmin>
-      <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center pt-12 pb-12">
-        <div className="max-w-3xl w-full mx-4 bg-slate-800/80 border border-slate-700 rounded-2xl p-8 relative">
+      <div className="min-h-screen bg-white text-slate-900 flex items-center justify-center pt-12 pb-12">
+        <div className="max-w-3xl w-full mx-4 bg-slate-100/80 border border-slate-200 rounded-2xl p-8 relative">
 
           {loading ? (
-            <p className="text-sm text-slate-200 text-center py-10">読み込み中です...</p>
+            <p className="text-sm text-slate-800 text-center py-10">読み込み中です...</p>
           ) : fetchError ? (
             <p className="text-sm text-red-400 bg-red-950/40 border border-red-700 rounded-md px-3 py-2">
               {fetchError}
             </p>
           ) : !caseDetail ? (
-            <p className="text-sm text-slate-300">データが見つかりません。</p>
+            <p className="text-sm text-slate-700">データが見つかりません。</p>
           ) : (
             <>
               <div className="mb-4">
@@ -265,7 +265,7 @@ export default function AdminCaseDetailPage() {
                 >
                   一覧へ戻る
                 </Link>
-                <h1 className="text-xl font-bold text-white">
+                <h1 className="text-xl font-bold text-slate-900">
                   承認・却下（詳細）
                 </h1>
               </div>
@@ -278,35 +278,35 @@ export default function AdminCaseDetailPage() {
               )}
 
               <div className="space-y-4 mb-8">
-                <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700">
-                  <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-4 border-b border-slate-700/30 pb-2">基本情報</h2>
+                <div className="bg-white p-6 rounded-xl border border-slate-200">
+                  <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">基本情報</h2>
                   <div className="space-y-2 text-sm">
                     <div className="grid grid-cols-[140px_1fr]">
-                      <span className="text-slate-400">氏名：</span>
+                      <span className="text-slate-600">氏名：</span>
                       <span className="text-slate-50 font-semibold">{caseDetail.full_name}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
-                      <span className="text-slate-400">氏名（カナ）：</span>
+                      <span className="text-slate-600">氏名（カナ）：</span>
                       <span className="text-slate-50">{caseDetail.full_name_kana || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
-                      <span className="text-slate-400">性別：</span>
+                      <span className="text-slate-600">性別：</span>
                       <span className="text-slate-50">{genderLabel(caseDetail.gender)}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
-                      <span className="text-slate-400">生年月日：</span>
+                      <span className="text-slate-600">生年月日：</span>
                       <span className="text-slate-50">{caseDetail.birth_date?.replace(/-/g, "/")}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
-                      <span className="text-slate-400">電話番号（下4桁）：</span>
+                      <span className="text-slate-600">電話番号（下4桁）：</span>
                       <span className="text-slate-50">{caseDetail.phone_last4 || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
-                      <span className="text-slate-400">発生日：</span>
+                      <span className="text-slate-600">発生日：</span>
                       <span className="text-slate-50">{caseDetail.occurrence_date?.replace(/-/g, "/")}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
-                      <span className="text-slate-400">登録日：</span>
+                      <span className="text-slate-600">登録日：</span>
                       <span className="text-slate-50">
                         {caseDetail.created_at
                           ? new Date(caseDetail.created_at).toLocaleDateString()
@@ -314,44 +314,44 @@ export default function AdminCaseDetailPage() {
                       </span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
-                      <span className="text-slate-400">登録元：</span>
+                      <span className="text-slate-600">登録元：</span>
                       <span className="text-slate-50">{companyName || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[140px_1fr]">
-                      <span className="text-slate-400">ステータス：</span>
+                      <span className="text-slate-600">ステータス：</span>
                       <span className="text-slate-50 font-bold">{statusLabel(caseDetail.status)}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700">
-                  <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-4 border-b border-slate-700/30 pb-2">トラブル詳細・理由</h2>
-                  <div className="text-sm text-slate-100 whitespace-pre-wrap leading-relaxed">
+                <div className="bg-white p-6 rounded-xl border border-slate-200">
+                  <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">トラブル詳細・理由</h2>
+                  <div className="text-sm text-slate-900 whitespace-pre-wrap leading-relaxed">
                     {caseDetail.reason_text}
                   </div>
                 </div>
 
                 {/* 証拠ファイルセクション */}
-                <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700">
-                  <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-4 border-b border-slate-700/30 pb-2">添付資料</h2>
+                <div className="bg-white p-6 rounded-xl border border-slate-200">
+                  <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">添付資料</h2>
                   {evidenceFiles.length === 0 ? (
                     <p className="text-sm text-slate-500">証拠ファイルはありません。</p>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {evidenceFiles.map((file, i) => (
-                        <div key={i} className="group relative bg-slate-800 rounded-lg overflow-hidden border border-slate-700 hover:border-slate-700/30 transition-colors">
+                        <div key={i} className="group relative bg-slate-100 rounded-lg overflow-hidden border border-slate-200 hover:border-slate-200 transition-colors">
                           {file.type === 'image' ? (
                             <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="block outline-none">
                               <div className="aspect-square relative flex items-center justify-center bg-slate-950">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={file.signedUrl} alt={file.name} className="max-w-full max-h-full object-contain" />
                               </div>
-                              <div className="p-2 text-xs text-slate-300 truncate text-center group-hover:text-white bg-slate-900/80 absolute bottom-0 w-full backdrop-blur-sm">
+                              <div className="p-2 text-xs text-slate-700 truncate text-center group-hover:text-slate-900 bg-white absolute bottom-0 w-full backdrop-blur-sm">
                                 {file.name}
                               </div>
                             </a>
                           ) : (
-                            <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="block outline-none h-full p-4 flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-white">
+                            <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="block outline-none h-full p-4 flex flex-col items-center justify-center gap-2 text-slate-600 hover:text-white">
                               <span className="text-3xl">📄</span>
                               <span className="text-xs truncate w-full text-center">{file.name}</span>
                             </a>
@@ -393,16 +393,16 @@ export default function AdminCaseDetailPage() {
           {/* Approve Confirmation Modal */}
           {showApproveModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-900 border border-white/40 p-8 rounded-2xl max-w-sm w-full shadow-[0_0_30px_rgba(0,229,255,0.3)]">
-                <h3 className="text-xl font-bold text-white mb-4">承認の確認</h3>
-                <p className="text-slate-300 mb-8">
+              <div className="bg-white border border-white/40 p-8 rounded-2xl max-w-sm w-full shadow-[0_0_30px_rgba(0,229,255,0.3)]">
+                <h3 className="text-xl font-bold text-slate-900 mb-4">承認の確認</h3>
+                <p className="text-slate-700 mb-8">
                   この申請を承認しますか？<br />
                   <span className="text-xs text-slate-500">承認すると、すべてのユーザーがこのデータを閲覧できるようになります。</span>
                 </p>
                 <div className="flex gap-4">
                   <button
                     onClick={() => setShowApproveModal(false)}
-                    className="flex-1 py-2 rounded border border-slate-600 text-slate-400 hover:bg-slate-800"
+                    className="flex-1 py-2 rounded border border-slate-600 text-slate-600 hover:bg-slate-100"
                   >
                     キャンセル
                   </button>
@@ -421,9 +421,9 @@ export default function AdminCaseDetailPage() {
           {/* Reject Input Modal */}
           {showRejectModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-900 border border-red-500 p-8 rounded-2xl max-w-md w-full shadow-[0_0_30px_rgba(239,68,68,0.3)]">
-                <h3 className="text-xl font-bold text-white mb-4">却下の確認</h3>
-                <p className="text-slate-300 mb-4">
+              <div className="bg-white border border-red-500 p-8 rounded-2xl max-w-md w-full shadow-[0_0_30px_rgba(239,68,68,0.3)]">
+                <h3 className="text-xl font-bold text-slate-900 mb-4">却下の確認</h3>
+                <p className="text-slate-700 mb-4">
                   この申請を却下しますか？<br />
                   <span className="text-xs text-slate-500">却下理由を入力してください。申請ユーザーには通知されませんが、記録として残ります。</span>
                 </p>
@@ -432,7 +432,7 @@ export default function AdminCaseDetailPage() {
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   rows={3}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-2 text-slate-100 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-all mb-4"
+                  className="w-full bg-slate-950 border border-slate-200 rounded-md px-3 py-2 text-slate-900 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-all mb-4"
                   placeholder="例: 情報不足のため、本人確認が取れないため等"
                 />
                 {formError && (
@@ -445,7 +445,7 @@ export default function AdminCaseDetailPage() {
                       setShowRejectModal(false);
                       setFormError(null);
                     }}
-                    className="flex-1 py-2 rounded border border-slate-600 text-slate-400 hover:bg-slate-800"
+                    className="flex-1 py-2 rounded border border-slate-600 text-slate-600 hover:bg-slate-100"
                   >
                     キャンセル
                   </button>
@@ -465,7 +465,7 @@ export default function AdminCaseDetailPage() {
           {showSuccessModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
               <div className={`p-10 rounded-3xl max-w-sm w-full text-center border-t-4 ${showSuccessModal.type === 'approved' ? 'border-white/40 shadow-[0_0_50px_rgba(0,229,255,0.2)]' : 'border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.2)]'}`}>
-                <h3 className="text-xl font-bold text-white mb-8">
+                <h3 className="text-xl font-bold text-slate-900 mb-8">
                   {showSuccessModal.type === 'approved' ? '申請が承認されました。' : '申請が却下されました。'}
                 </h3>
                 <button

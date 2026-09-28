@@ -76,18 +76,18 @@ export default function EditCompanyPage() {
             <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
                 <div className="max-w-2xl w-full">
                     <div className="mb-8 animate-fade-in">
-                        <Link href="/admin/companies" className="text-slate-500 hover:text-slate-300 text-sm flex items-center gap-1 mb-4">
+                        <Link href="/admin/companies" className="text-slate-500 hover:text-slate-700 text-sm flex items-center gap-1 mb-4">
                             キャンセルして一覧へ戻る
                         </Link>
-                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">会社情報の編集</h1>
-                        <p className="text-slate-400">登録済みの会社情報を更新します</p>
+                        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">会社情報の編集</h1>
+                        <p className="text-slate-600">登録済みの会社情報を更新します</p>
                     </div>
 
                     <div className="glass-panel p-8 rounded-2xl animate-fade-in delay-100">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-300">
-                                    会社名 <span className="text-white">*</span>
+                                <label className="text-sm font-semibold text-slate-700">
+                                    会社名 <span className="text-slate-900">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -99,7 +99,7 @@ export default function EditCompanyPage() {
                                 />
                             </div>
 
-                            <div className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                            <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
                                 <input
                                     type="checkbox"
                                     id="isMain"
@@ -108,7 +108,7 @@ export default function EditCompanyPage() {
                                     className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-white focus:ring-white/30"
                                 />
                                 <label htmlFor="isMain" className="cursor-pointer">
-                                    <span className="block text-sm font-semibold text-slate-200">メイン会社として登録</span>
+                                    <span className="block text-sm font-semibold text-slate-800">メイン会社として登録</span>
                                     <span className="block text-xs text-slate-500">※通常はチェック不要です（管理用フラグ）</span>
                                 </label>
                             </div>

@@ -136,7 +136,7 @@ export default function Navigation() {
     if (!session) return null;
 
     return (
-        <nav className="fixed top-0 w-full z-50 border-b border-slate-800/80 bg-[#090d16]/95 backdrop-blur-md">
+        <nav className="fixed top-0 w-full z-50 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-xs">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center justify-between w-full md:w-auto">
@@ -150,7 +150,7 @@ export default function Navigation() {
                             <div className="flex md:hidden">
                                 <button
                                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                                    className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-white/10 focus:outline-none"
+                                    className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none"
                                 >
                                     <span className="sr-only">Open main menu</span>
                                     {isMobileMenuOpen ? (
@@ -189,7 +189,7 @@ export default function Navigation() {
                                     <div className="relative inline-block">
                                         <Link
                                             href="/admin"
-                                            className={`ml-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all uppercase tracking-wider whitespace-nowrap ${pathname.startsWith("/admin") ? "bg-white text-slate-900 border-white shadow-sm" : "border-slate-700 text-slate-300 hover:bg-white/5 hover:text-white"}`}
+                                            className={`ml-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all uppercase tracking-wider whitespace-nowrap ${pathname.startsWith("/admin") ? "bg-slate-900 text-white border-slate-900 shadow-sm" : "border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900"}`}
                                         >
                                             管理メニュー
                                         </Link>
@@ -209,7 +209,7 @@ export default function Navigation() {
                             {session && userName && (
                                 <Link
                                     href="/profile"
-                                    className="text-xs text-slate-300 bg-white/5 px-3 py-1.5 rounded-lg border border-slate-800 tracking-wide hover:bg-white/10 hover:text-white transition-all cursor-pointer whitespace-nowrap max-w-[200px] truncate font-medium"
+                                    className="text-xs text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 tracking-wide hover:bg-slate-200 hover:text-slate-900 transition-all cursor-pointer whitespace-nowrap max-w-[200px] truncate font-semibold"
                                 >
                                     <span className="font-bold">{userName}</span>
                                 </Link>
@@ -217,7 +217,7 @@ export default function Navigation() {
                             {session && (
                                 <button
                                     onClick={handleLogout}
-                                    className="text-slate-400 hover:text-white text-xs px-3 py-1.5 rounded-lg border border-transparent hover:border-slate-800 hover:bg-white/5 transition-all tracking-wide"
+                                    className="text-slate-500 hover:text-red-600 text-xs px-3 py-1.5 rounded-lg border border-transparent hover:border-slate-200 hover:bg-slate-100 transition-all tracking-wide font-medium"
                                 >
                                     ログアウト
                                 </button>
@@ -229,7 +229,7 @@ export default function Navigation() {
 
             {/* Mobile menu */}
             {session && isMobileMenuOpen && (
-                <div className="md:hidden border-t border-slate-700/30 bg-black/95 backdrop-blur-xl animate-fade-in">
+                <div className="md:hidden border-t border-slate-200 bg-white/95 backdrop-blur-xl animate-fade-in shadow-lg">
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                         {userName && (
                             <Link

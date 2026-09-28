@@ -189,8 +189,8 @@ export default function EditCasePage() {
                 <div className="max-w-3xl w-full">
 
                     <div className="mb-8 text-center animate-fade-in">
-                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">登録情報の編集</h1>
-                        <p className="text-slate-400">登録データの編集（管理者のみ）</p>
+                        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">登録情報の編集</h1>
+                        <p className="text-slate-600">登録データの編集（管理者のみ）</p>
                     </div>
 
                     <div className="glass-panel rounded-2xl p-6 md:p-10 animate-fade-in delay-100">
@@ -227,15 +227,15 @@ export default function EditCasePage() {
                                             <input type="text" inputMode="numeric" maxLength={4} value={birthYear}
                                                 onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthYear(e.target.value); }}
                                                 className="input-field w-24 text-center" placeholder="0000" />
-                                            <span className="text-slate-400">年</span>
+                                            <span className="text-slate-600">年</span>
                                             <input type="text" inputMode="numeric" maxLength={2} value={birthMonth}
                                                 onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthMonth(e.target.value); }}
                                                 className="input-field w-16 text-center" placeholder="00" />
-                                            <span className="text-slate-400">月</span>
+                                            <span className="text-slate-600">月</span>
                                             <input type="text" inputMode="numeric" maxLength={2} value={birthDay}
                                                 onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthDay(e.target.value); }}
                                                 className="input-field w-16 text-center" placeholder="00" />
-                                            <span className="text-slate-400">日</span>
+                                            <span className="text-slate-600">日</span>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -283,15 +283,15 @@ export default function EditCasePage() {
                                             <input type="text" inputMode="numeric" maxLength={4} value={occurrenceYear}
                                                 onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceYear(e.target.value); }}
                                                 className="input-field w-24 text-center" placeholder="0000" />
-                                            <span className="text-slate-400">年</span>
+                                            <span className="text-slate-600">年</span>
                                             <input type="text" inputMode="numeric" maxLength={2} value={occurrenceMonth}
                                                 onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceMonth(e.target.value); }}
                                                 className="input-field w-16 text-center" placeholder="00" />
-                                            <span className="text-slate-400">月</span>
+                                            <span className="text-slate-600">月</span>
                                             <input type="text" inputMode="numeric" maxLength={2} value={occurrenceDay}
                                                 onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceDay(e.target.value); }}
                                                 className="input-field w-16 text-center" placeholder="00" />
-                                            <span className="text-slate-400">日</span>
+                                            <span className="text-slate-600">日</span>
                                         </div>
                                     </div>
                                 </div>
@@ -307,15 +307,15 @@ export default function EditCasePage() {
                                 </div>
 
                                 {/* FILE UPLOAD SECTION */}
-                                <div className="space-y-2 mt-6 border-t border-slate-700/50 pt-6">
+                                <div className="space-y-2 mt-6 border-t border-slate-200 pt-6">
                                     <Label>添付資料（画像・PDF等）</Label>
 
                                     {/* Existing Files */}
                                     {existingFiles.length > 0 && (
                                         <div className="mb-4 space-y-2">
-                                            <p className="text-xs text-white font-bold mb-2">登録済みファイル:</p>
+                                            <p className="text-xs text-slate-900 font-bold mb-2">登録済みファイル:</p>
                                             {existingFiles.map((file) => (
-                                                <div key={file.path} className="flex items-center justify-between bg-slate-800/80 p-3 rounded-lg border border-slate-600">
+                                                <div key={file.path} className="flex items-center justify-between bg-slate-100/80 p-3 rounded-lg border border-slate-600">
                                                     <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-cyan-300 hover:underline truncate max-w-[80%] flex items-center gap-2">
                                                         <span>📄</span>
                                                         {file.name}
@@ -333,7 +333,7 @@ export default function EditCasePage() {
                                     )}
 
                                     {/* New File Upload Area */}
-                                    <div className="border border-dashed border-slate-600 rounded-lg p-6 text-center hover:bg-slate-800/30 transition-colors relative">
+                                    <div className="border border-dashed border-slate-600 rounded-lg p-6 text-center hover:bg-slate-100/30 transition-colors relative">
                                         <input
                                             type="file"
                                             multiple
@@ -343,7 +343,7 @@ export default function EditCasePage() {
                                         />
                                         <div className="pointer-events-none">
                                             <span className="text-2xl block mb-2">📁</span>
-                                            <p className="text-sm text-slate-400">ファイルをここに追加</p>
+                                            <p className="text-sm text-slate-600">ファイルをここに追加</p>
                                             <p className="text-xs text-slate-500 mt-1">（クリックまたはドラッグ＆ドロップ）</p>
                                         </div>
                                     </div>
@@ -353,8 +353,8 @@ export default function EditCasePage() {
                                         <div className="mt-4 space-y-2">
                                             <p className="text-xs text-yellow-500 font-bold mb-2">追加予定ファイル:</p>
                                             {selectedFiles.map((file, index) => (
-                                                <div key={index} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg border border-slate-700 text-sm">
-                                                    <span className="truncate max-w-[80%] text-slate-300">{file.name} ({(file.size / 1024).toFixed(0)}KB)</span>
+                                                <div key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
+                                                    <span className="truncate max-w-[80%] text-slate-700">{file.name} ({(file.size / 1024).toFixed(0)}KB)</span>
                                                     <button
                                                         type="button"
                                                         onClick={() => removeNewFile(index)}
@@ -373,7 +373,7 @@ export default function EditCasePage() {
                                     <select
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value)}
-                                        className="input-field appearance-none bg-slate-800"
+                                        className="input-field appearance-none bg-slate-100"
                                     >
                                         <option value="pending">審査中 (Pending)</option>
                                         <option value="approved">承認済み (Approved)</option>
@@ -388,7 +388,7 @@ export default function EditCasePage() {
                                 </div>
                             )}
 
-                            <div className="flex gap-4 pt-4 border-t border-slate-700/50">
+                            <div className="flex gap-4 pt-4 border-t border-slate-200">
                                 <Link href="/cases" className="btn-secondary flex-1 text-center py-3">
                                     キャンセル
                                 </Link>
@@ -412,7 +412,7 @@ export default function EditCasePage() {
 function Section({ title, children }: { title: string, children: React.ReactNode }) {
     return (
         <div className="space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-widest border-b border-slate-700/30 pb-2">
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2">
                 {title}
             </h3>
             {children}
@@ -422,14 +422,14 @@ function Section({ title, children }: { title: string, children: React.ReactNode
 
 function Label({ children, required }: { children: React.ReactNode, required?: boolean }) {
     return (
-        <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+        <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
             {children}
             {required ? (
-                <span className="text-white text-[10px] border border-slate-700/30 bg-white/5 px-1.5 py-0.5 rounded">
+                <span className="text-slate-900 text-[10px] border border-slate-200 bg-white/5 px-1.5 py-0.5 rounded">
                     必須
                 </span>
             ) : (
-                <span className="text-slate-500 text-[10px] border border-slate-700 bg-slate-800 px-1.5 py-0.5 rounded">
+                <span className="text-slate-500 text-[10px] border border-slate-200 bg-slate-100 px-1.5 py-0.5 rounded">
                     任意
                 </span>
             )}

@@ -49,61 +49,61 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-[#090d16]">
-      {/* Background Subtle Gradient */}
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-[#f8fafc]">
+      {/* Background Soft Glow */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-white/[0.02] rounded-full blur-[120px]"></div>
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-slate-200/50 rounded-full blur-[140px]"></div>
       </div>
 
       <main className="w-full max-w-xl flex flex-col items-center justify-center relative z-10 py-12">
 
         {/* Brand Header */}
-        <div className="text-center mb-10 space-y-3">
-          <p className="text-[11px] font-mono tracking-[0.25em] text-slate-400 uppercase">
+        <div className="text-center mb-8 space-y-3">
+          <p className="text-[11px] font-mono tracking-[0.25em] text-slate-500 uppercase font-semibold">
             TALENT RISK MANAGEMENT
           </p>
 
           <div className="flex items-center justify-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#090d16] font-black text-xl tracking-tighter shadow-md">
+            <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-slate-900 font-black text-2xl tracking-tighter shadow-md">
               M
             </div>
             <div className="text-left">
-              <h1 className="text-4xl md:text-5xl font-black tracking-wider text-white leading-none">
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-wider text-slate-900 leading-none">
                 MIERIS
               </h1>
-              <span className="text-[11px] text-slate-400 tracking-[0.2em] font-medium leading-none block mt-1">
+              <span className="text-[11px] text-slate-500 tracking-[0.2em] font-bold leading-none block mt-1">
                 ミエリス
               </span>
             </div>
           </div>
 
           <div className="pt-2">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
               採る前に、事実を知る。
             </h2>
-            <p className="text-slate-400 text-xs md:text-sm leading-relaxed max-w-md mx-auto mt-2">
+            <p className="text-slate-600 text-xs md:text-sm leading-relaxed max-w-md mx-auto mt-2">
               就業実績を、本人同意のもとで利用企業間に共有する仕組みです。<br className="hidden sm:block" />
               履歴書と30分の面接では見抜けなかったことを、採る前に。
             </p>
-            <span className="inline-block mt-3 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[11px] text-slate-300 font-medium">
+            <span className="inline-block mt-3 px-3 py-1 bg-white border border-slate-200 shadow-2xs rounded-full text-[11px] text-slate-600 font-semibold">
               雑工・荷揚げ・警備・運送 就業情報共有システム
             </span>
           </div>
         </div>
 
         {/* Login Form Container */}
-        <div className="w-full max-w-md glass-panel p-8 border border-white/10 shadow-2xl relative">
+        <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200/80 shadow-xl shadow-slate-200/50 relative">
           <div className="mb-6 text-center">
-            <h3 className="text-base font-bold text-white tracking-wide">
+            <h3 className="text-base font-bold text-slate-900 tracking-wide">
               ログイン
             </h3>
-            <p className="text-xs text-slate-400 mt-1">登録済みのメールアドレスとパスワードを入力してください</p>
+            <p className="text-xs text-slate-500 mt-1">登録済みのメールアドレスとパスワードを入力してください</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   メールアドレス
                 </label>
                 <input
@@ -116,7 +116,7 @@ export default function Home() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   パスワード
                 </label>
                 <input
@@ -131,7 +131,7 @@ export default function Home() {
             </div>
 
             {errorMsg && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-start gap-2 text-red-300 text-xs">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2 text-red-700 text-xs">
                 <span>⚠️</span>
                 <p className="pt-0.5">{errorMsg}</p>
               </div>
@@ -146,11 +146,11 @@ export default function Home() {
             </button>
           </form>
 
-          <div className="text-center mt-6 border-t border-white/10 pt-5 flex flex-col gap-2.5 text-xs">
-            <Link href="/forgot-password" className="text-slate-400 hover:text-white transition-colors">
+          <div className="text-center mt-6 border-t border-slate-100 pt-5 flex flex-col gap-2.5 text-xs">
+            <Link href="/forgot-password" className="text-slate-500 hover:text-slate-900 transition-colors">
               パスワードをお忘れの方はこちら
             </Link>
-            <Link href="/signup" className="text-slate-400 hover:text-white font-medium transition-colors">
+            <Link href="/signup" className="text-slate-600 hover:text-slate-900 font-semibold transition-colors">
               新規利用のお申し込み（アカウント登録）はこちら →
             </Link>
           </div>

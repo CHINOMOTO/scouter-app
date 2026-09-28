@@ -93,25 +93,25 @@ export default function AdminAnnouncements() {
             <div className="min-h-screen pt-24 pb-12 px-4">
                 <div className="max-w-4xl mx-auto space-y-8">
                     <div className="flex items-center gap-4 mb-8">
-                        <div className="p-3 rounded-2xl bg-white/10 text-white">
+                        <div className="p-3 rounded-2xl bg-white/10 text-slate-900">
                             <Bell className="w-8 h-8" strokeWidth={1.5} />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold font-orbitron tracking-wider text-white">ANNOUNCEMENTS</h1>
-                            <p className="text-slate-400">お知らせ管理</p>
+                            <h1 className="text-3xl font-bold font-orbitron tracking-wider text-slate-900">ANNOUNCEMENTS</h1>
+                            <p className="text-slate-600">お知らせ管理</p>
                         </div>
                     </div>
 
                     <div className="glass-panel p-6 rounded-3xl relative overflow-hidden group">
                         <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                         <div className="relative z-10">
-                            <h2 className="text-xl font-bold text-slate-100 mb-4 flex items-center gap-2">
+                            <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
                                 <Plus className="w-5 h-5 text-white" />
                                 新規お知らせ作成
                             </h2>
                             <form onSubmit={handleCreate} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm text-slate-400 font-bold mb-2">タイトル</label>
+                                    <label className="block text-sm text-slate-600 font-bold mb-2">タイトル</label>
                                     <input 
                                         type="text" 
                                         value={title}
@@ -122,7 +122,7 @@ export default function AdminAnnouncements() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-slate-400 font-bold mb-2">本文</label>
+                                    <label className="block text-sm text-slate-600 font-bold mb-2">本文</label>
                                     <textarea 
                                         value={content}
                                         onChange={(e) => setContent(e.target.value)}
@@ -140,24 +140,24 @@ export default function AdminAnnouncements() {
 
                     <div className="space-y-4">
                         {loading ? (
-                            <p className="text-center text-slate-400 py-8">読み込み中...</p>
+                            <p className="text-center text-slate-600 py-8">読み込み中...</p>
                         ) : announcements.length === 0 ? (
-                            <p className="text-center text-slate-400 py-8">お知らせはありません。</p>
+                            <p className="text-center text-slate-600 py-8">お知らせはありません。</p>
                         ) : (
                             announcements.map((item) => (
                                 <div key={item.id} className="glass-panel p-6 rounded-3xl relative overflow-hidden">
                                     <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold ${item.is_active ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400'}`}>
+                                                <span className={`px-2 py-1 rounded text-xs font-bold ${item.is_active ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-600'}`}>
                                                     {item.is_active ? '公開中' : '非公開'}
                                                 </span>
-                                                <span className="text-slate-400 text-sm">
+                                                <span className="text-slate-600 text-sm">
                                                     {new Date(item.created_at).toLocaleString('ja-JP')}
                                                 </span>
                                             </div>
-                                            <h3 className="text-lg font-bold text-slate-100 mb-1">{item.title}</h3>
-                                            <p className="text-slate-400 text-sm whitespace-pre-wrap">{item.content}</p>
+                                            <h3 className="text-lg font-bold text-slate-900 mb-1">{item.title}</h3>
+                                            <p className="text-slate-600 text-sm whitespace-pre-wrap">{item.content}</p>
                                         </div>
                                         <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
                                             <button 

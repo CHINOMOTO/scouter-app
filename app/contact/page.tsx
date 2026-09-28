@@ -105,12 +105,12 @@ export default function ContactPage() {
             <RequireAuth>
                 <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
                     <div className="max-w-2xl w-full relative z-10">
-                        <div className="glass-panel rounded-3xl p-10 text-center animate-fade-in border border-slate-700/30">
+                        <div className="glass-panel rounded-3xl p-10 text-center animate-fade-in border border-slate-200">
                             <div className="text-5xl mb-6">✅</div>
-                            <h2 className="text-2xl font-bold text-white mb-4">
+                            <h2 className="text-2xl font-bold text-slate-900 mb-4">
                                 お問い合わせを送信しました
                             </h2>
-                            <p className="text-slate-400 mb-8 leading-relaxed">
+                            <p className="text-slate-600 mb-8 leading-relaxed">
                                 ご連絡ありがとうございます。<br />
                                 管理者が確認次第、対応いたします。
                             </p>
@@ -134,10 +134,10 @@ export default function ContactPage() {
                     {/* ヘッダー */}
                     <div className="flex items-center justify-between mb-8 animate-fade-in">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
+                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
                                 お問い合わせ
                             </h1>
-                            <p className="text-slate-400">
+                            <p className="text-slate-600">
                                 管理者への連絡・ご相談はこちらから
                             </p>
                         </div>
@@ -147,7 +147,7 @@ export default function ContactPage() {
                     </div>
 
                     {/* フォーム */}
-                    <div className="glass-panel rounded-3xl p-6 md:p-10 animate-fade-in border border-slate-700/30">
+                    <div className="glass-panel rounded-3xl p-6 md:p-10 animate-fade-in border border-slate-200">
                         {isLoading ? (
                             <div className="flex items-center justify-center py-12">
                                 <div className="animate-spin h-8 w-8 border-4 border-white/40 rounded-full border-t-transparent"></div>
@@ -156,7 +156,7 @@ export default function ContactPage() {
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* 会社名（自動入力） */}
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-slate-300">
+                                    <label className="block text-sm font-bold text-slate-700">
                                         会社名
                                     </label>
                                     <input
@@ -169,7 +169,7 @@ export default function ContactPage() {
 
                                 {/* ユーザー名（自動入力） */}
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-slate-300">
+                                    <label className="block text-sm font-bold text-slate-700">
                                         ユーザー名
                                     </label>
                                     <input
@@ -182,7 +182,7 @@ export default function ContactPage() {
 
                                 {/* お問い合わせ種類 */}
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-slate-300">
+                                    <label className="block text-sm font-bold text-slate-700">
                                         お問い合わせ種類 <span className="text-red-400">*</span>
                                     </label>
                                     <select
@@ -201,7 +201,7 @@ export default function ContactPage() {
 
                                 {/* お問い合わせ内容 */}
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-slate-300">
+                                    <label className="block text-sm font-bold text-slate-700">
                                         お問い合わせ内容 <span className="text-red-400">*</span>
                                     </label>
                                     <textarea

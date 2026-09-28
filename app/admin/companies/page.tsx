@@ -62,8 +62,8 @@ export default function AdminCompaniesPage() {
                 <div className="max-w-4xl w-full relative z-10">
                     <div className="flex items-center justify-between mb-8 animate-fade-in">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">会社管理</h1>
-                            <p className="text-slate-400 font-medium">登録されている加盟企業の一覧です</p>
+                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">会社管理</h1>
+                            <p className="text-slate-600 font-medium">登録されている加盟企業の一覧です</p>
                         </div>
                         <div className="flex gap-3 items-center">
                             <Link href="/dashboard" className="btn-secondary text-xs h-10 px-4 flex items-center">
@@ -81,16 +81,16 @@ export default function AdminCompaniesPage() {
                 {loading ? (
                     <div className="flex justify-center py-24">
                         <div className="relative">
-                            <div className="animate-spin h-12 w-12 border-4 border-slate-700/30 rounded-full border-t-white"></div>
+                            <div className="animate-spin h-12 w-12 border-4 border-slate-200 rounded-full border-t-white"></div>
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="h-4 w-4 bg-white/10 rounded-full blur-md"></div>
                             </div>
                         </div>
                     </div>
                 ) : companies.length === 0 ? (
-                    <div className="glass-panel p-12 text-center rounded-3xl border-white/5 bg-slate-900/30 animate-fade-in">
+                    <div className="glass-panel p-12 text-center rounded-3xl border-white/5 bg-white/30 animate-fade-in">
                         <span className="text-4xl mb-4 block opacity-30">🏢</span>
-                        <p className="text-slate-400 font-medium">登録されている会社はありません。</p>
+                        <p className="text-slate-600 font-medium">登録されている会社はありません。</p>
                         <p className="text-slate-500 text-sm mt-2">右上のボタンから新規追加してください。</p>
                     </div>
                 ) : (
@@ -98,23 +98,23 @@ export default function AdminCompaniesPage() {
                         {companies.map((company) => (
                             <div
                                 key={company.id}
-                                className="glass-panel p-6 rounded-2xl flex items-center justify-between hover:bg-slate-800/30 transition-all border border-white/5 hover:border-slate-700/30 group"
+                                className="glass-panel p-6 rounded-2xl flex items-center justify-between hover:bg-slate-100/30 transition-all border border-white/5 hover:border-slate-200 group"
                             >
                                 <div className="flex items-center gap-5">
                                     <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-2xl group-hover:from-[#00e5ff]/20 group-hover:to-slate-800 transition-colors">
                                         🏢
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-white group-hover:text-white transition-colors">
+                                        <h3 className="text-lg font-bold text-slate-900 group-hover:text-white transition-colors">
                                             {company.name}
                                         </h3>
                                         <div className="flex items-center gap-3 mt-1.5">
                                             {company.is_main && (
-                                                <span className="text-[10px] bg-white/10 text-white px-2.5 py-0.5 rounded-full border border-slate-700/30 font-bold tracking-widest">
+                                                <span className="text-[10px] bg-white/10 text-slate-900 px-2.5 py-0.5 rounded-full border border-slate-200 font-bold tracking-widest">
                                                     HQ / MAIN
                                                 </span>
                                             )}
-                                            <span className="text-xs text-slate-500 bg-slate-800/50 px-2 py-0.5 rounded font-mono">
+                                            <span className="text-xs text-slate-500 bg-slate-50 px-2 py-0.5 rounded font-mono">
                                                 ID: {company.id}
                                             </span>
                                         </div>
@@ -123,14 +123,14 @@ export default function AdminCompaniesPage() {
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Link
                                         href={`/admin/companies/${company.id}`}
-                                        className="p-2 bg-slate-800 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-colors"
+                                        className="p-2 bg-slate-100 hover:bg-white/10 text-slate-600 hover:text-white rounded-lg transition-colors"
                                         title="編集"
                                     >
                                         ✎
                                     </Link>
                                     <button
                                         onClick={() => handleDelete(company.id, company.name)}
-                                        className="p-2 bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-colors"
+                                        className="p-2 bg-slate-100 hover:bg-red-500/20 text-slate-600 hover:text-red-400 rounded-lg transition-colors"
                                         title="削除"
                                     >
                                         🗑️

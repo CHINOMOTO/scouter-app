@@ -217,10 +217,10 @@ export default function NewCasePage() {
             {/* Background Effect */}
             <div className="absolute inset-0 bg-white/[0.03] pointer-events-none"></div>
 
-            <h2 className="text-2xl font-bold text-white mb-6 tracking-wider">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6 tracking-wider">
               登録申請完了
             </h2>
-            <p className="text-slate-300 mb-8 leading-relaxed">
+            <p className="text-slate-700 mb-8 leading-relaxed">
               登録申請が完了しました。<br />
               管理者の承認をお待ちください。
             </p>
@@ -264,8 +264,8 @@ export default function NewCasePage() {
         <div className="max-w-3xl w-full">
 
           <div className="mb-8 text-center animate-fade-in">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">新規登録申請</h1>
-            <p className="text-slate-400">新しいデータを登録します</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">新規登録申請</h1>
+            <p className="text-slate-600">新しいデータを登録します</p>
           </div>
 
           <div className="glass-panel rounded-2xl p-6 md:p-10 animate-fade-in delay-100">
@@ -309,7 +309,7 @@ export default function NewCasePage() {
                         className="input-field w-24 text-center"
                         placeholder="0000"
                       />
-                      <span className="text-slate-400">年</span>
+                      <span className="text-slate-600">年</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -319,7 +319,7 @@ export default function NewCasePage() {
                         className="input-field w-16 text-center"
                         placeholder="00"
                       />
-                      <span className="text-slate-400">月</span>
+                      <span className="text-slate-600">月</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -329,7 +329,7 @@ export default function NewCasePage() {
                         className="input-field w-16 text-center"
                         placeholder="00"
                       />
-                      <span className="text-slate-400">日</span>
+                      <span className="text-slate-600">日</span>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -389,7 +389,7 @@ export default function NewCasePage() {
                         className="input-field w-24 text-center"
                         placeholder="0000"
                       />
-                      <span className="text-slate-400">年</span>
+                      <span className="text-slate-600">年</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -399,7 +399,7 @@ export default function NewCasePage() {
                         className="input-field w-16 text-center"
                         placeholder="00"
                       />
-                      <span className="text-slate-400">月</span>
+                      <span className="text-slate-600">月</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -409,7 +409,7 @@ export default function NewCasePage() {
                         className="input-field w-16 text-center"
                         placeholder="00"
                       />
-                      <span className="text-slate-400">日</span>
+                      <span className="text-slate-600">日</span>
                     </div>
                   </div>
                 </div>
@@ -427,7 +427,7 @@ export default function NewCasePage() {
 
                 <div className="space-y-2 mt-4">
                   <Label>添付資料（画像・PDF等）</Label>
-                  <div className="border border-dashed border-slate-600 rounded-lg p-6 text-center hover:bg-slate-800/30 transition-colors relative">
+                  <div className="border border-dashed border-slate-600 rounded-lg p-6 text-center hover:bg-slate-100/30 transition-colors relative">
                     <input
                       type="file"
                       multiple
@@ -437,7 +437,7 @@ export default function NewCasePage() {
                     />
                     <div className="pointer-events-none">
                       <span className="text-2xl block mb-2">📁</span>
-                      <p className="text-sm text-slate-400">クリックまたはドラッグ＆ドロップでファイルを追加</p>
+                      <p className="text-sm text-slate-600">クリックまたはドラッグ＆ドロップでファイルを追加</p>
                       <p className="text-xs text-slate-500 mt-1">（画像、PDFなど複数可）</p>
                     </div>
                   </div>
@@ -445,15 +445,15 @@ export default function NewCasePage() {
                   {selectedFiles.length > 0 && (
                     <ul className="mt-4 space-y-2">
                       {selectedFiles.map((file, index) => (
-                        <li key={index} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg border border-slate-700 text-sm">
-                          <span className="truncate max-w-[60%] text-slate-300">{file.name} ({(file.size / 1024).toFixed(0)}KB)</span>
+                        <li key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
+                          <span className="truncate max-w-[60%] text-slate-700">{file.name} ({(file.size / 1024).toFixed(0)}KB)</span>
                           <div className="flex items-center gap-3">
                             {file.type.startsWith('image/') && (
                               <button
                                 type="button"
                                 onClick={() => handleOCR(file)}
                                 disabled={isAnalyzing}
-                                className="text-xs text-white hover:text-white border border-slate-700/30 bg-white/5 px-2 py-1 rounded transition-colors"
+                                className="text-xs text-white hover:text-white border border-slate-200 bg-white/5 px-2 py-1 rounded transition-colors"
                               >
                                 {isAnalyzing ? "解析中..." : "文字認識(OCR)"}
                               </button>
@@ -479,7 +479,7 @@ export default function NewCasePage() {
                 </div>
               )}
 
-              <div className="flex gap-4 pt-4 border-t border-slate-700/50">
+              <div className="flex gap-4 pt-4 border-t border-slate-200">
                 <Link href="/dashboard" className="btn-secondary flex-1 text-center py-3">
                   キャンセル
                 </Link>
@@ -503,7 +503,7 @@ export default function NewCasePage() {
 function Section({ title, children }: { title: string, children: React.ReactNode }) {
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-bold text-white uppercase tracking-widest border-b border-slate-700/30 pb-2">
+      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2">
         {title}
       </h3>
       {children}
@@ -513,14 +513,14 @@ function Section({ title, children }: { title: string, children: React.ReactNode
 
 function Label({ children, required }: { children: React.ReactNode, required?: boolean }) {
   return (
-    <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
       {children}
       {required ? (
-        <span className="text-white text-[10px] border border-slate-700/30 bg-white/5 px-1.5 py-0.5 rounded">
+        <span className="text-slate-900 text-[10px] border border-slate-200 bg-white/5 px-1.5 py-0.5 rounded">
           必須
         </span>
       ) : (
-        <span className="text-slate-500 text-[10px] border border-slate-700 bg-slate-800 px-1.5 py-0.5 rounded">
+        <span className="text-slate-500 text-[10px] border border-slate-200 bg-slate-100 px-1.5 py-0.5 rounded">
           任意
         </span>
       )}

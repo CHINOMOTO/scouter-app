@@ -127,8 +127,8 @@ export default function SettingsPage() {
 
                     <div className="flex items-center justify-between mb-8 animate-fade-in">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">アカウント設定</h1>
-                            <p className="text-slate-400">登録情報やパスワードの変更を行います</p>
+                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">アカウント設定</h1>
+                            <p className="text-slate-600">登録情報やパスワードの変更を行います</p>
                         </div>
                         <Link href="/dashboard" className="btn-secondary text-xs backdrop-blur-md bg-white/5 border-white/10 hover:bg-white/10">
                             ダッシュボードへ戻る
@@ -137,39 +137,39 @@ export default function SettingsPage() {
 
                     <div className="space-y-8 animate-fade-in delay-100">
                         {/* 基本情報設定 */}
-                        <div className="glass-panel p-6 md:p-8 rounded-3xl border border-slate-700/30 relative overflow-hidden">
-                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                <span className="text-white">👤</span> 基本情報
+                        <div className="glass-panel p-6 md:p-8 rounded-3xl border border-slate-200 relative overflow-hidden">
+                            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                <span className="text-slate-900">👤</span> 基本情報
                             </h2>
 
                             <form onSubmit={handleUpdateProfile} className="space-y-5">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5 ml-1">
                                         所属会社
                                     </label>
                                     <input
                                         type="text"
                                         disabled
                                         value={companyName}
-                                        className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-400 cursor-not-allowed text-sm"
+                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-600 cursor-not-allowed text-sm"
                                     />
                                     <p className="text-[10px] text-slate-500 mt-1 ml-1">※所属会社はシステム管理者のみ変更可能です。</p>
                                 </div>
                                 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5 ml-1">
                                         メールアドレス
                                     </label>
                                     <input
                                         type="email"
                                         disabled
                                         value={email}
-                                        className="w-full bg-slate-900/40 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-400 cursor-not-allowed font-mono text-sm"
+                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-600 cursor-not-allowed font-mono text-sm"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5 ml-1">
                                         表示名（氏名）
                                     </label>
                                     <input
@@ -177,7 +177,7 @@ export default function SettingsPage() {
                                         required
                                         value={displayName}
                                         onChange={(e) => setDisplayName(e.target.value)}
-                                        className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 focus:border-slate-700/30 focus:ring-1 focus:ring-white/30 transition-all text-sm"
+                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-slate-200 focus:ring-1 focus:ring-white/30 transition-all text-sm"
                                     />
                                 </div>
 
@@ -201,14 +201,14 @@ export default function SettingsPage() {
                         </div>
 
                         {/* パスワード設定 */}
-                        <div className="glass-panel p-6 md:p-8 rounded-3xl border border-slate-700/30 relative overflow-hidden">
-                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                <span className="text-white">🔒</span> パスワード変更
+                        <div className="glass-panel p-6 md:p-8 rounded-3xl border border-slate-200 relative overflow-hidden">
+                            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                <span className="text-slate-900">🔒</span> パスワード変更
                             </h2>
 
                             <form onSubmit={handleUpdatePassword} className="space-y-5">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5 ml-1">
                                         新しいパスワード
                                     </label>
                                     <input
@@ -218,12 +218,12 @@ export default function SettingsPage() {
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
                                         placeholder="8文字以上"
-                                        className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 focus:border-slate-700/30 focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
+                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-slate-200 focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
                                     />
                                 </div>
                                 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5 ml-1">
                                         新しいパスワード（確認用）
                                     </label>
                                     <input
@@ -233,7 +233,7 @@ export default function SettingsPage() {
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="もう一度入力してください"
-                                        className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-100 focus:border-slate-700/30 focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
+                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-slate-200 focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
                                     />
                                 </div>
 

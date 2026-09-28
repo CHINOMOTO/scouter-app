@@ -71,8 +71,8 @@ export default function AdminUsersPage() {
 
                     <div className="flex items-center justify-between mb-8 animate-fade-in">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">新規ユーザー承認</h1>
-                            <p className="text-slate-400">新規利用申請の確認と承認を行います</p>
+                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">新規ユーザー承認</h1>
+                            <p className="text-slate-600">新規利用申請の確認と承認を行います</p>
                         </div>
                         <Link href="/admin" className="btn-secondary text-xs">
                             管理者メニューへ戻る
@@ -86,7 +86,7 @@ export default function AdminUsersPage() {
                     ) : pendingUsers.length === 0 ? (
                         <div className="glass-panel p-10 text-center rounded-2xl animate-fade-in">
                             <span className="text-4xl mb-4 block">👍</span>
-                            <p className="text-slate-300">現在、未承認のユーザーはいません。</p>
+                            <p className="text-slate-700">現在、未承認のユーザーはいません。</p>
                         </div>
                     ) : (
                         <div className="grid gap-4 animate-fade-in delay-100">
@@ -94,12 +94,12 @@ export default function AdminUsersPage() {
                                 <div key={user.id} className="glass-panel p-6 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6 card-hover">
                                     <div className="flex-grow">
                                         <div className="flex items-center gap-3 mb-2">
-                                            <h3 className="text-xl font-bold text-white">{user.display_name || "名無し"}</h3>
+                                            <h3 className="text-xl font-bold text-slate-900">{user.display_name || "名無し"}</h3>
                                             <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded border border-yellow-500/30">
                                                 PENDING
                                             </span>
                                         </div>
-                                        <div className="text-slate-400 text-sm flex items-center gap-2">
+                                        <div className="text-slate-600 text-sm flex items-center gap-2">
                                             <span className="text-slate-500">所属:</span>
                                             {user.companies?.name || "未所属"}
                                         </div>

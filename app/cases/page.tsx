@@ -139,7 +139,7 @@ export default function CasesPage() {
     const isActive = sortConfig.key === key;
     return (
       <th 
-        className={`px-6 py-5 tracking-widest cursor-pointer hover:bg-slate-800/50 transition-colors select-none ${isRightAlign ? 'text-right' : ''}`}
+        className={`px-6 py-5 tracking-widest cursor-pointer hover:bg-slate-50 transition-colors select-none ${isRightAlign ? 'text-right' : ''}`}
         onClick={() => handleSort(key)}
       >
         <div className={`flex items-center gap-2 ${isRightAlign ? 'justify-end' : ''}`}>
@@ -159,8 +159,8 @@ export default function CasesPage() {
 
           <div className="flex items-center justify-between mb-8 animate-fade-in">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">登録データ一覧</h1>
-              <p className="text-slate-400 font-medium">登録されている全データの一覧です</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">登録データ一覧</h1>
+              <p className="text-slate-600 font-medium">登録されている全データの一覧です</p>
             </div>
             <div className="flex items-center gap-3">
               <Link href="/dashboard" className="btn-secondary text-xs backdrop-blur-md bg-white/5 border-white/10 hover:bg-white/10 px-4 py-2.5">
@@ -183,13 +183,13 @@ export default function CasesPage() {
           {!isLoading && cases.length > 0 && (
             <div className="flex gap-4 mb-6 animate-fade-in delay-100">
               <div className="flex-1 relative max-w-md">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600">🔍</span>
                 <input
                   type="text"
                   placeholder="氏名や登録理由で絞り込み..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-slate-500 transition-colors"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-slate-500 transition-colors"
                 />
               </div>
             </div>
@@ -198,17 +198,17 @@ export default function CasesPage() {
           {isLoading ? (
             <div className="flex justify-center py-24">
               <div className="relative">
-                <div className="animate-spin h-12 w-12 border-4 border-slate-700/30 rounded-full border-t-white"></div>
+                <div className="animate-spin h-12 w-12 border-4 border-slate-200 rounded-full border-t-white"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="h-4 w-4 bg-white/10 rounded-full blur-md"></div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="glass-panel rounded-3xl overflow-hidden animate-fade-in delay-100 border border-slate-700/30 p-0">
+            <div className="glass-panel rounded-3xl overflow-hidden animate-fade-in delay-100 border border-slate-200 p-0">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-300">
-                  <thead className="bg-slate-900/60 text-xs uppercase font-bold text-slate-400">
+                <table className="w-full text-left text-sm text-slate-700">
+                  <thead className="bg-white text-xs uppercase font-bold text-slate-600">
                     <tr>
                       {renderSortableHeader("氏名", "full_name")}
                       {renderSortableHeader("生年月日", "birth_date")}
@@ -236,11 +236,11 @@ export default function CasesPage() {
                             {c.full_name}
                           </Link>
                         </td>
-                        <td className="px-6 py-4 font-mono text-slate-400">
+                        <td className="px-6 py-4 font-mono text-slate-600">
                           {c.birth_date || <span className="text-slate-600">-</span>}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="truncate max-w-xs text-slate-300 font-medium" title={c.reason_text}>
+                          <div className="truncate max-w-xs text-slate-700 font-medium" title={c.reason_text}>
                             {c.reason_text}
                           </div>
                         </td>
@@ -255,14 +255,14 @@ export default function CasesPage() {
                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Link
                                 href={`/cases/${c.id}/edit`}
-                                className="p-2 bg-slate-800 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-colors"
+                                className="p-2 bg-slate-100 hover:bg-white/10 text-slate-600 hover:text-white rounded-lg transition-colors"
                                 title="編集"
                               >
                                 ✎
                               </Link>
                               <button
                                 onClick={() => handleDelete(c.id)}
-                                className="p-2 bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-colors"
+                                className="p-2 bg-slate-100 hover:bg-red-500/20 text-slate-600 hover:text-red-400 rounded-lg transition-colors"
                                 title="削除"
                               >
                                 🗑️
@@ -293,14 +293,14 @@ export default function CasesPage() {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  let styles = "bg-slate-800 text-slate-400 border-slate-700";
+  let styles = "bg-slate-100 text-slate-600 border-slate-200";
   let label = status;
 
   if (status === "pending") {
     styles = "bg-yellow-500/10 text-yellow-400 border-yellow-500/30";
     label = "承認待ち";
   } else if (status === "approved") {
-    styles = "bg-white/10 text-white border-slate-700/30";
+    styles = "bg-white/10 text-white border-slate-200";
     label = "承認済み";
   } else if (status === "rejected") {
     styles = "bg-red-500/10 text-red-400 border-red-500/30";

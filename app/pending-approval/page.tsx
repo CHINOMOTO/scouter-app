@@ -19,18 +19,18 @@ export default function PendingApprovalPage() {
                     <span className="text-4xl">⏳</span>
                 </div>
 
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
+                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
                     承認待ちです
                 </h1>
 
-                <p className="text-slate-300 mb-8 leading-relaxed">
+                <p className="text-slate-700 mb-8 leading-relaxed">
                     アカウント登録の申請を受け付けました。<br />
                     現在、管理者による確認を行っております。
                 </p>
 
-                <div className="bg-slate-900/40 rounded-xl p-6 text-left mb-8 border border-slate-700/50">
-                    <h3 className="text-xs font-bold text-white mb-2 uppercase tracking-widest">Next Steps</h3>
-                    <ul className="text-sm text-slate-400 space-y-2 list-disc list-inside">
+                <div className="bg-white rounded-xl p-6 text-left mb-8 border border-slate-200">
+                    <h3 className="text-xs font-bold text-slate-900 mb-2 uppercase tracking-widest">Next Steps</h3>
+                    <ul className="text-sm text-slate-600 space-y-2 list-disc list-inside">
                         <li>管理者があなたの所属情報を確認します</li>
                         <li>確認メールが送られましたので、認証リンクをクリックしてください</li>
                         <li>承認後、本システムを利用可能になります</li>
