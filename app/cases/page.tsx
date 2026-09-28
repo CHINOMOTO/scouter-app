@@ -208,17 +208,17 @@ export default function CasesPage() {
             <div className="glass-panel rounded-3xl overflow-hidden animate-fade-in delay-100 border border-slate-200 p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-slate-700">
-                  <thead className="bg-white text-xs uppercase font-bold text-slate-600">
+                  <thead className="bg-slate-50 text-xs font-bold text-slate-600 border-b border-slate-200">
                     <tr>
                       {renderSortableHeader("氏名", "full_name")}
                       {renderSortableHeader("生年月日", "birth_date")}
                       {renderSortableHeader("登録理由", "reason_text")}
                       {renderSortableHeader("ステータス", "status")}
                       {renderSortableHeader("登録日", "created_at", true)}
-                      {isAdmin && <th className="px-6 py-5 tracking-widest text-right">操作</th>}
+                      <th className="px-6 py-4 tracking-wider text-right font-bold text-slate-600">詳細</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-700/30">
+                  <tbody className="divide-y divide-slate-200 bg-white">
                     {filteredAndSortedCases.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
@@ -227,7 +227,7 @@ export default function CasesPage() {
                       </tr>
                     ) : (
                       filteredAndSortedCases.map((c) => (
-                      <tr key={c.id} className="hover:bg-white/[0.03] transition-colors group">
+                      <tr key={c.id} className="hover:bg-slate-50/80 transition-colors group">
                         <td className="px-6 py-4">
                           <Link
                             href={`/cases/${c.id}`}

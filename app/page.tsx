@@ -56,15 +56,15 @@ export default function Home() {
 
         {/* Brand Header - 超シンプル仕様 */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2.5 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-black text-xl tracking-tighter shadow-sm">
-              M
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 overflow-hidden flex items-center justify-center shadow-sm p-1">
+              <img src="/logo-b.jpg" alt="MIERIS" className="w-full h-full object-contain" />
             </div>
             <div className="text-left">
-              <h1 className="text-3xl font-extrabold tracking-wider text-slate-900 leading-none">
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-wider text-slate-900 leading-none">
                 MIERIS
               </h1>
-              <span className="text-[10px] text-slate-500 tracking-[0.2em] font-bold leading-none block mt-1">
+              <span className="text-[11px] text-slate-500 tracking-[0.2em] font-bold leading-none block mt-1.5">
                 ミエリス
               </span>
             </div>
