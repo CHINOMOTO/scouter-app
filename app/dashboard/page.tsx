@@ -38,6 +38,14 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* 未払い企業照会 */}
+            <DashboardCard
+              title="未払い企業照会"
+              description="取引先企業の支払い遅延・未払い情報の照会や、事実の記録を行います。"
+              icon={<ShieldAlert className="w-10 h-10" strokeWidth={1.5} />}
+              onClick={() => router.push("/credit")}
+            />
+
             {/* 検索 */}
             <DashboardCard
               title="検索・照会"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ClipboardCheck, UserCheck, Building, Users, MessageSquare, Mail } from "lucide-react";
+import { ClipboardCheck, UserCheck, Building, Users, MessageSquare, Mail, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
 
@@ -78,6 +78,30 @@ export default function AdminDashboardPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {/* 未払い企業審査タイル */}
+                        <Link
+                            href="/admin/credit-cases"
+                            className="block group relative p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 hover:border-slate-300/50 hover:bg-slate-50 flex flex-col overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="p-3 rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
+                                        <FileSpreadsheet className="w-8 h-8" strokeWidth={1.5} />
+                                    </div>
+                                    <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
+                                        Credit Review
+                                    </span>
+                                </div>
+                                <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                                    未払い企業 審査
+                                </h2>
+                                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                                    加盟企業から申請された未払い企業・エビデンス資料の審査を行います。
+                                </p>
+                            </div>
+                        </Link>
+
                         {/* 承認待ちタイル */}
                         <Link
                             href="/admin/cases"

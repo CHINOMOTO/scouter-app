@@ -179,6 +179,9 @@ export default function Navigation() {
                                 <NavLink href="/search" active={pathname === "/search"}>
                                     検索
                                 </NavLink>
+                                <NavLink href="/credit" active={pathname.startsWith("/credit")}>
+                                    未払い企業
+                                </NavLink>
                                 <NavLink href="/cases" active={pathname.startsWith("/cases") && pathname !== "/cases/new"}>
                                     登録データ一覧
                                 </NavLink>
@@ -248,6 +251,9 @@ export default function Navigation() {
                         </MobileNavLink>
                         <MobileNavLink href="/search" active={pathname === "/search"} onClick={() => setIsMobileMenuOpen(false)}>
                             検索
+                        </MobileNavLink>
+                        <MobileNavLink href="/credit" active={pathname.startsWith("/credit")} onClick={() => setIsMobileMenuOpen(false)}>
+                            未払い企業（クレジット）
                         </MobileNavLink>
                         <MobileNavLink href="/cases" active={pathname.startsWith("/cases") && pathname !== "/cases/new"} onClick={() => setIsMobileMenuOpen(false)}>
                             登録データ一覧
