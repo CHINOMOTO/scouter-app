@@ -54,23 +54,19 @@ export default function Home() {
 
       <main className="w-full max-w-sm flex flex-col items-center justify-center py-6">
 
-        {/* Brand Header - 超シンプル仕様 */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 overflow-hidden flex items-center justify-center shadow-sm p-1">
-              <img src="/logo-b.jpg" alt="MIERIS" className="w-full h-full object-contain" />
-            </div>
-            <div className="text-left">
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-wider text-slate-900 leading-none">
-                MIERIS
-              </h1>
-              <span className="text-[11px] text-slate-500 tracking-[0.2em] font-bold leading-none block mt-1.5">
-                ミエリス
-              </span>
-            </div>
+        {/* Brand Header - 黄金比・ロゴ統合デザイン */}
+        <div className="text-center mb-6 flex flex-col items-center">
+          <div className="w-40 md:w-44 aspect-square relative mb-1 -mt-2">
+            <img 
+              src="/logo-b.jpg" 
+              alt="MIERIS ミエリス" 
+              className="w-full h-full object-contain mix-blend-multiply select-none pointer-events-none" 
+            />
           </div>
-
-          <h2 className="text-xl font-bold text-slate-800 tracking-tight">
+          <p className="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase mb-2.5">
+            ミエリス
+          </p>
+          <h2 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
             採る前に、事実を知る。
           </h2>
         </div>

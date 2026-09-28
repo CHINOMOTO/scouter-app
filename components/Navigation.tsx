@@ -140,9 +140,12 @@ export default function Navigation() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center justify-between w-full md:w-auto">
-                        <Link href={session ? "/dashboard" : "/"} className="flex-shrink-0 flex items-center gap-2 font-bold text-xl text-[#00e5ff] group tracking-widest uppercase orbitron" onClick={() => setIsMobileMenuOpen(false)}>
-                            <span className="text-2xl group-hover:rotate-45 transition-transform duration-300">⌖</span>
-                            <span className="-[0_0_5px_rgba(0,255,65,0.8)]">SCOUTER</span>
+                        <Link href={session ? "/dashboard" : "/"} className="flex-shrink-0 flex items-center gap-2.5 group" onClick={() => setIsMobileMenuOpen(false)}>
+                            <img src="/logo-b.jpg" alt="MIERIS" className="w-9 h-9 object-contain mix-blend-multiply" />
+                            <div className="flex flex-col">
+                                <span className="font-extrabold text-lg text-slate-900 tracking-wider leading-none group-hover:text-slate-700 transition-colors">MIERIS</span>
+                                <span className="text-[9px] text-slate-500 tracking-widest leading-none mt-0.5 font-bold">ミエリス</span>
+                            </div>
                         </Link>
 
                         {/* Mobile menu button */}
