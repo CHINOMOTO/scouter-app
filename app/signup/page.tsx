@@ -2,279 +2,337 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function SignUpPage() {
-    const router = useRouter();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [displayName, setDisplayName] = useState("");
     const [companyName, setCompanyName] = useState("");
+    const [corporateNumber, setCorporateNumber] = useState("");
+    const [displayName, setDisplayName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [planType, setPlanType] = useState<"full" | "employment" | "credit">("full");
+    const [notes, setNotes] = useState("");
 
-    const [isLoading, setIsLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    const handleSignup = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
+        setIsSubmitting(true);
         setErrorMsg(null);
 
+        // 電話番号のバリデーション（数字とハイフンのみ）
+        const phoneRegex = /^[0-9-]+$/;
+        if (!phoneRegex.test(phoneNumber.trim())) {
+            setErrorMsg("電話番号は半角数字とハイフンのみで入力してください。");
+            setIsSubmitting(false);
+            return;
+        }
+
+        // 法人番号のバリデーション（入力されている場合）
+        const cleanCorpNum = corporateNumber.trim().replace(/[^0-9]/g, "");
+        if (corporateNumber.trim() && cleanCorpNum.length !== 13) {
+            setErrorMsg("法人番号は13桁の半角数字で入力してください。");
+            setIsSubmitting(false);
+            return;
+        }
+
+        const planLabels: Record<string, string> = {
+            full: "両方セット（就業情報 ＋ ミエリスクレジット / 月額30,000円）",
+            employment: "就業情報プランのみ（月額18,000円）",
+            credit: "ミエリスクレジットのみ（月額15,000円）"
+        };
+
+        const inquiryMessage = `【新規利用お申し込み】
+希望プラン: ${planLabels[planType]}
+法人番号: ${cleanCorpNum || "未入力"}
+会社名: ${companyName.trim()}
+担当者名: ${displayName.trim()}
+メール: ${email.trim()}
+電話番号: ${phoneNumber.trim()}
+備考・ご質問:
+${notes.trim() || "なし"}`;
+
         try {
-            // 1. Supabase Auth Sign Up
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email,
-                password,
-            });
+            // お問い合わせ・お申し込みテーブルに保存
+            const { error: insertError } = await supabase
+                .from("contact_inquiries")
+                .insert({
+                    company_name: companyName.trim(),
+                    user_name: displayName.trim(),
+                    email: email.trim(),
+                    phone_number: phoneNumber.trim(),
+                    category: "account",
+                    message: inquiryMessage,
+                    status: "unread"
+                });
 
-            if (authError) {
-                if (authError.message.includes("User already registered")) {
-                    throw new Error("このメールアドレスは既に登録されています。ログイン画面からログインしてください。");
-                }
-                if (authError.message.includes("Password should be at least")) {
-                    throw new Error("パスワードは8文字以上で設定してください。");
-                }
-                throw new Error("アカウント登録に失敗しました: " + authError.message);
+            if (insertError) {
+                console.error("Application insert error:", insertError);
+                // テーブル保存エラーでもメールAPIやLINE通知へフォールバック
             }
 
-            if (!authData.user) {
-                throw new Error("ユーザー作成に失敗しました。時間をおいて再度お試しください。");
-            }
-
-            const userId = authData.user.id;
-
-            // 2. 会社情報の検索または作成
-            let companyId: string | null = null;
-
-            // 会社名を正規化（表記ゆれ対策）
-            const normalizeCompanyName = (name: string): string => {
-                let n = name.trim();
-                // 全角スペース・半角スペースを除去
-                n = n.replace(/[\s\u3000]+/g, '');
-                // ㈱ → 株式会社
-                n = n.replace(/㈱/g, '株式会社');
-                // ㈲ → 有限会社
-                n = n.replace(/㈲/g, '有限会社');
-                // (株) → 株式会社
-                n = n.replace(/[（(]株[）)]/g, '株式会社');
-                // (有) → 有限会社
-                n = n.replace(/[（(]有[）)]/g, '有限会社');
-                // 全角英数字を半角に変換
-                n = n.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) =>
-                    String.fromCharCode(s.charCodeAt(0) - 0xFEE0)
-                );
-                return n;
-            };
-
-            const normalizedName = normalizeCompanyName(companyName);
-
-            // 既存の会社を全件取得して正規化後の名前で比較
-            const { data: allCompanies } = await supabase
-                .from("companies")
-                .select("id, name");
-
-            const matchedCompany = (allCompanies || []).find(
-                (c) => normalizeCompanyName(c.name) === normalizedName
-            );
-
-            if (matchedCompany) {
-                companyId = matchedCompany.id;
-            } else {
-                // 新規作成（ユーザーが入力したそのままの名前で保存）
-                const { data: newCompany, error: companyError } = await supabase
-                    .from("companies")
-                    .insert([{ name: companyName.trim(), is_main: false }])
-                    .select("id")
-                    .single();
-
-                if (companyError) {
-                    throw new Error("会社情報の登録に失敗しました。管理者にお問い合わせください。");
-                }
-                companyId = newCompany.id;
-            }
-
-            if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
-                throw new Error("このメールアドレスは既に登録されています。ログイン画面からログインしてください。");
-            }
-
-            // 3. app_usersテーブルへの追加
-            // 少し待機してauth.usersの伝播を確実にする（念の為）
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            const { error: appUserError } = await supabase
-                .from("app_users")
-                .upsert([
-                    {
-                        id: userId,
-                        display_name: displayName,
-                        company_id: companyId,
-                        role: "viewer",
-                        is_approved: false
-                    }
-                ]);
-
-            if (appUserError) {
-                console.error("App User Insert Error:", appUserError);
-                if (appUserError.code === "23503") {
-                    throw new Error("このメールアドレスは既に登録されています。ログイン画面からログインしてください。");
-                }
-                throw new Error(`ユーザープロフィールの保存に失敗しました: ${appUserError.message} (Code: ${appUserError.code})`);
-            }
-
-            // LINE通知APIの呼び出し（失敗してもユーザーの画面遷移は止めない）
+            // LINE通知の送信（管理者へ通知）
             try {
-                await fetch('/api/notify/line', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                await fetch("/api/notify/line", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        type: 'signup',
+                        type: "signup",
                         data: {
-                            name: displayName,
-                            company: companyName,
-                            email: email
+                            name: `${displayName.trim()}（希望プラン: ${planType}）`,
+                            company: companyName.trim(),
+                            email: `${email.trim()} / TEL: ${phoneNumber.trim()}`
                         }
                     })
                 });
             } catch (notifyErr) {
-                console.error("Notify Error:", notifyErr);
+                console.warn("LINE notify skipped or failed:", notifyErr);
             }
 
-            router.push("/pending-approval");
+            setIsSuccess(true);
 
         } catch (err: any) {
-            setErrorMsg(err.message || "予期せぬエラーが発生しました。");
+            setErrorMsg(err.message || "お申し込みの送信に失敗しました。");
         } finally {
-            setIsLoading(false);
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-            <div className="w-full max-w-lg relative z-10 my-8">
-                <div className="glass-panel rounded-3xl p-8 md:p-10 border border-slate-200 animate-fade-in backdrop-blur-xl">
+        <div className="min-h-screen flex flex-col items-center justify-between p-4 bg-[#f8fafc]">
+            <div className="h-4"></div>
 
-                    <div className="mb-8 text-center">
-                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 mb-4 border border-slate-200">
-                            <span className="text-2xl filter">✨</span>
-                        </div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
-                            新規アカウント作成
-                        </h1>
-                        <p className="text-slate-600 text-sm">
-                            アカウント情報を入力してください
+            <main className="w-full max-w-[540px] flex flex-col items-center justify-center py-6">
+
+                {/* ヘッダーロゴ */}
+                <div className="text-center mb-6 flex flex-col items-center">
+                    <Link href="/" className="flex flex-col items-center group">
+                        <img 
+                            src="/logo-brand.png" 
+                            alt="MIERIS ミエリス" 
+                            className="w-36 h-auto object-contain select-none pointer-events-none mb-1" 
+                        />
+                        <p className="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">
+                            ミエリス
                         </p>
+                    </Link>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-3">
+                        利用お申し込み・資料請求
+                    </h1>
+                    <p className="text-xs text-slate-600 mt-1">
+                        MIERISは完全事前審査制です。お申し込み後、管理者がアカウントを発行いたします。
+                    </p>
+                </div>
+
+                {/* 完了画面 */}
+                {isSuccess ? (
+                    <div className="w-full bg-white rounded-3xl p-8 sm:p-10 border border-slate-200 shadow-xl text-center animate-fade-in">
+                        <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl text-emerald-600">
+                            ✓
+                        </div>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                            お申し込みを受け付けました
+                        </h2>
+                        <p className="text-sm text-slate-600 leading-relaxed mb-6">
+                            MIERIS（ミエリス）へのお申し込みありがとうございます。<br />
+                            運営管理者（株式会社ミヤエモン / 株式会社宇井建設）にて内容を確認の上、通常1〜2営業日以内にアカウント発行のご案内をお送りいたします。
+                        </p>
+
+                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-left text-xs text-slate-700 space-y-2 mb-8">
+                            <div className="font-bold text-slate-900 mb-1">【今後の流れ】</div>
+                            <div>1. 運営事務局にて会社情報・ご利用プランの確認</div>
+                            <div>2. 担当者様へ利用規約および初期ログイン情報（ID/PW）の送付</div>
+                            <div>3. ログイン後、すぐにご利用を開始いただけます</div>
+                        </div>
+
+                        <Link href="/" className="btn-primary w-full py-3.5 inline-block text-center font-bold">
+                            ログイン画面へ戻る
+                        </Link>
                     </div>
-
-                    <form onSubmit={handleSignup} className="space-y-5">
-
-                        <div className="grid grid-cols-1 gap-5">
-                            {/* Display Name */}
-                            <div className="input-group group space-y-1.5">
-                                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
-                                    氏名（表示名） <span className="text-slate-900">*</span>
+                ) : (
+                    /* フォーム入力画面 */
+                    <div className="w-full bg-white rounded-3xl p-8 sm:p-9 border border-slate-200 shadow-xl">
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            
+                            {/* プラン選択 */}
+                            <div className="space-y-2.5">
+                                <label className="block text-sm font-bold text-slate-800">
+                                    ご希望のプラン <span className="text-red-500">*</span>
                                 </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={displayName}
-                                    onChange={(e) => setDisplayName(e.target.value)}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-white/30 transition-all duration-300"
-                                    placeholder="例: 山田 太郎"
-                                />
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                    <label className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${planType === 'full' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>
+                                        <input
+                                            type="radio"
+                                            name="planType"
+                                            value="full"
+                                            checked={planType === 'full'}
+                                            onChange={() => setPlanType('full')}
+                                            className="sr-only"
+                                        />
+                                        <div className="font-bold text-slate-900 text-xs">両方セット</div>
+                                        <div className="text-xs font-bold text-blue-600">30,000円/月</div>
+                                        <div className="text-[10px] text-slate-500 mt-1">就業 ＋ 未払い企業</div>
+                                    </label>
+
+                                    <label className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${planType === 'employment' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>
+                                        <input
+                                            type="radio"
+                                            name="planType"
+                                            value="employment"
+                                            checked={planType === 'employment'}
+                                            onChange={() => setPlanType('employment')}
+                                            className="sr-only"
+                                        />
+                                        <div className="font-bold text-slate-900 text-xs">就業情報のみ</div>
+                                        <div className="text-xs font-bold text-slate-700">18,000円/月</div>
+                                        <div className="text-[10px] text-slate-500 mt-1">人物トラブル対策</div>
+                                    </label>
+
+                                    <label className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${planType === 'credit' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>
+                                        <input
+                                            type="radio"
+                                            name="planType"
+                                            value="credit"
+                                            checked={planType === 'credit'}
+                                            onChange={() => setPlanType('credit')}
+                                            className="sr-only"
+                                        />
+                                        <div className="font-bold text-slate-900 text-xs">クレジットのみ</div>
+                                        <div className="text-xs font-bold text-slate-700">15,000円/月</div>
+                                        <div className="text-[10px] text-slate-500 mt-1">未払い企業情報</div>
+                                    </label>
+                                </div>
                             </div>
 
-                            {/* Company Name */}
-                            <div className="input-group group space-y-1.5">
-                                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
-                                    会社名 <span className="text-slate-900">*</span>
+                            {/* 会社名 */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                                    会社名（商号） <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     required
                                     value={companyName}
                                     onChange={(e) => setCompanyName(e.target.value)}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-white/30 transition-all duration-300"
+                                    className="input-field"
                                     placeholder="例: 株式会社〇〇建設"
                                 />
-                                <p className="text-[10px] text-slate-9000 pl-1">
-                                    ※既存の会社がある場合は自動的に紐付けられます
-                                </p>
                             </div>
 
-                            {/* Email */}
-                            <div className="input-group group space-y-1.5">
-                                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
-                                    メールアドレス <span className="text-slate-900">*</span>
+                            {/* 法人番号 */}
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-sm font-bold text-slate-800">
+                                        法人番号（13桁）
+                                    </label>
+                                    <span className="text-xs text-slate-400">※任意（確認後でも可）</span>
+                                </div>
+                                <input
+                                    type="text"
+                                    maxLength={13}
+                                    value={corporateNumber}
+                                    onChange={(e) => setCorporateNumber(e.target.value.replace(/[^0-9]/g, ""))}
+                                    className="input-field font-mono"
+                                    placeholder="例: 1234567890123"
+                                />
+                            </div>
+
+                            {/* ご担当者名 */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                                    ご担当者様 氏名 <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={displayName}
+                                    onChange={(e) => setDisplayName(e.target.value)}
+                                    className="input-field"
+                                    placeholder="例: 山田 太郎"
+                                />
+                            </div>
+
+                            {/* メールアドレス */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                                    ご連絡用メールアドレス <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-white/30 transition-all duration-300"
-                                    placeholder="name@company.com"
+                                    className="input-field"
+                                    placeholder="yamada@company.co.jp"
                                 />
-                            </div>
-
-                            {/* Password */}
-                            <div className="input-group group space-y-1.5">
-                                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
-                                    パスワード <span className="text-slate-900">*</span>
-                                </label>
-                                <input
-                                    type="password"
-                                    required
-                                    minLength={8}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-white/30 transition-all duration-300"
-                                    placeholder="8文字以上で設定"
-                                />
-                            </div>
-                        </div>
-
-                        {errorMsg && (
-                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 animate-fade-in flex items-start gap-3 mt-4">
-                                <span className="text-red-400 text-lg">⚠️</span>
-                                <p className="text-sm text-red-700 leading-snug pt-0.5">
-                                    {errorMsg}
+                                <p className="text-[11px] text-slate-500 mt-1">
+                                    ※アカウント発行のご案内をこちらのアドレス宛にお送りいたします。
                                 </p>
                             </div>
-                        )}
 
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="btn-primary w-full py-3.5 mt-6"
-                        >
-                            {isLoading ? (
-                                <div className="flex items-center gap-2">
-                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span>Processing...</span>
+                            {/* 電話番号 */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                                    お電話番号 <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="tel"
+                                    required
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                    className="input-field font-mono"
+                                    placeholder="03-1234-5678"
+                                />
+                            </div>
+
+                            {/* 備考・ご質問 */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                                    ご質問・ご要望（任意）
+                                </label>
+                                <textarea
+                                    rows={3}
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    className="input-field py-2 resize-none text-sm"
+                                    placeholder="導入時期のご希望や、ご不明点等があればご記入ください。"
+                                />
+                            </div>
+
+                            {errorMsg && (
+                                <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2 text-red-700 text-xs">
+                                    <span>⚠️</span>
+                                    <span>{errorMsg}</span>
                                 </div>
-                            ) : (
-                                "アカウント作成（申請）"
                             )}
-                        </button>
-                    </form>
 
-                    <p className="mt-8 text-xs text-slate-9000 text-center leading-relaxed">
-                        登録申請後、管理者による承認が必要です。<br />
-                        <Link href="/" className="text-slate-700 hover:text-slate-900 underline underline-offset-2 ml-1">
-                            すでにアカウントをお持ちの方はこちら
-                        </Link>
-                    </p>
-                </div>
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="btn-primary w-full py-4 text-base font-bold tracking-wider rounded-xl shadow-md"
+                                >
+                                    {isSubmitting ? "送信中..." : "お申し込み内容を送信する"}
+                                </button>
+                            </div>
+                        </form>
 
-                <div className="text-center mt-6">
-                    <Link href="/" className="text-slate-9000 hover:text-slate-700 text-xs transition-colors">
-                        トップページに戻る
-                    </Link>
-                </div>
-            </div>
+                        <div className="text-center mt-6 border-t border-slate-100 pt-5 text-sm">
+                            <span className="text-slate-500">既にアカウントをお持ちの方は </span>
+                            <Link href="/" className="text-slate-900 hover:text-blue-600 font-bold underline underline-offset-2 ml-1">
+                                ログイン画面へ
+                            </Link>
+                        </div>
+                    </div>
+                )}
+            </main>
+
+            {/* フッター */}
+            <footer className="w-full text-center text-slate-400 text-xs py-6">
+                <p>&copy; 2026 MIERIS. 株式会社ミヤエモン / 株式会社宇井建設</p>
+            </footer>
         </div>
     );
 }

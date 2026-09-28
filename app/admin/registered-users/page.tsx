@@ -82,9 +82,14 @@ export default function RegisteredUsersPage() {
                             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">登録済みユーザー一覧</h1>
                             <p className="text-slate-600">現在システムに登録されているユーザーの一覧です</p>
                         </div>
-                        <Link href="/admin" className="btn-secondary text-xs">
-                            管理者メニューへ戻る
-                        </Link>
+                        <div className="flex items-center gap-3">
+                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center">
+                                管理メニューへ戻る
+                            </Link>
+                            <Link href="/admin/users/new" className="btn-primary flex items-center gap-2 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm">
+                                <span>+</span> アカウント新規発行
+                            </Link>
+                        </div>
                     </div>
 
                     {loading ? (
