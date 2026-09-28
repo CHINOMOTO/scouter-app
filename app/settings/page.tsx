@@ -192,7 +192,7 @@ export default function SettingsPage() {
                                     <button
                                         type="submit"
                                         disabled={isSavingProfile}
-                                        className="px-6 py-2.5 rounded-xl text-white font-bold bg-[#008299] hover:bg-[#00e5ff] hover:text-black transition-all text-sm shadow-[0_0_15px_rgba(0,229,255,0.2)] disabled:opacity-50"
+                                        className="btn-primary"
                                     >
                                         {isSavingProfile ? "保存中..." : "プロフィールを更新"}
                                     </button>
@@ -248,7 +248,7 @@ export default function SettingsPage() {
                                     <button
                                         type="submit"
                                         disabled={isSavingPassword}
-                                        className="px-6 py-2.5 rounded-xl text-white font-bold bg-[#008299] hover:bg-[#00e5ff] hover:text-black transition-all text-sm shadow-[0_0_15px_rgba(0,229,255,0.2)] disabled:opacity-50"
+                                        className="btn-primary"
                                     >
                                         {isSavingPassword ? "更新中..." : "パスワードを変更"}
                                     </button>

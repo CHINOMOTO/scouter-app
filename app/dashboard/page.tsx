@@ -120,7 +120,7 @@ function DashboardCard({
           )}
         </div>
 
-        <h3 className={`text-2xl font-bold text-slate-900 mb-2 transition-colors duration-300 group-hover:text-white ${isAdmin ? 'text-white' : ''}`}>
+        <h3 className={`text-2xl font-bold text-slate-900 mb-2 transition-colors duration-300 group-hover:text-slate-900 ${isAdmin ? 'text-slate-900' : ''}`}>
           {title}
         </h3>
         <p className="text-sm text-slate-600 leading-relaxed mt-auto group-hover:text-slate-800 transition-colors duration-300">

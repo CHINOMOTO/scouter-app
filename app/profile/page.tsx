@@ -105,20 +105,20 @@ export default function ProfilePage() {
                                     <dl className="space-y-4 text-sm">
                                         <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-white/5">
                                             <dt className="text-slate-600 font-medium">氏名</dt>
-                                            <dd className="text-white font-bold">{profile.displayName}</dd>
+                                            <dd className="text-slate-900 font-bold">{profile.displayName}</dd>
                                         </div>
                                         <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-white/5">
                                             <dt className="text-slate-600 font-medium">メールアドレス</dt>
-                                            <dd className="text-white font-mono text-xs">{profile.email}</dd>
+                                            <dd className="text-slate-900 font-mono text-xs">{profile.email}</dd>
                                         </div>
                                         <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-white/5">
                                             <dt className="text-slate-600 font-medium">所属会社</dt>
-                                            <dd className="text-white font-bold">{profile.companyName || "未設定"}</dd>
+                                            <dd className="text-slate-900 font-bold">{profile.companyName || "未設定"}</dd>
                                         </div>
                                         <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-white/5">
                                             <dt className="text-slate-600 font-medium">権限</dt>
                                             <dd>
-                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${ profile.role === "admin" ? "bg-white/10 text-white border-slate-200" : "bg-slate-100 text-slate-700 border-slate-600" }`}>
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${ profile.role === "admin" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-700 border-slate-600" }`}>
                                                     {roleLabel(profile.role)}
                                                 </span>
                                             </dd>
@@ -133,7 +133,7 @@ export default function ProfilePage() {
                                         </div>
                                         <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-white/5">
                                             <dt className="text-slate-600 font-medium">登録日</dt>
-                                            <dd className="text-white font-mono text-xs">
+                                            <dd className="text-slate-900 font-mono text-xs">
                                                 {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString("ja-JP", {
                                                     year: "numeric", month: "long", day: "numeric"
                                                 }) : "-"}

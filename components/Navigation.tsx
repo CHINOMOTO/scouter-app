@@ -238,9 +238,9 @@ export default function Navigation() {
                             <Link
                                 href="/profile"
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className="block px-3 py-2 text-xs font-mono tracking-wider text-[#00e5ff]/60 border-b border-slate-700/30 mb-2 hover:bg-[#00e5ff]/10 transition-colors"
+                                className="block px-3 py-2 text-xs font-mono tracking-wider text-[#0f172a]/60 border-b border-slate-700/30 mb-2 hover:bg-[#0f172a]/10 transition-colors"
                             >
-                                LOGGED IN AS: <span className="text-[#00e5ff] font-bold ml-2">{userName}</span>
+                                LOGGED IN AS: <span className="text-[#0f172a] font-bold ml-2">{userName}</span>
                             </Link>
                         )}
                         <MobileNavLink href="/dashboard" active={pathname === "/dashboard"} onClick={() => setIsMobileMenuOpen(false)}>
@@ -283,7 +283,7 @@ function NavLink({ href, children, active }: { href: string, children: React.Rea
     return (
         <Link
             href={href}
-            className={`px-3 py-2 rounded-none text-sm font-bold tracking-wider transition-all duration-200 border-b-2 whitespace-nowrap ${active ? "border-[#00e5ff] text-[#00e5ff] bg-[#00e5ff]/10 shadow-[0_0_8px_rgba(0,255,65,0.2)]" : "border-transparent text-[#00e5ff]/60 hover:text-[#00e5ff] hover:bg-[#00e5ff]/5" }`}
+            className={`px-3 py-2 rounded-none text-sm font-bold tracking-wider transition-all duration-200 border-b-2 whitespace-nowrap ${active ? "border-[#0f172a] text-[#0f172a] bg-[#0f172a]/10 shadow-[0_0_8px_rgba(0,255,65,0.2)]" : "border-transparent text-[#0f172a]/60 hover:text-[#0f172a] hover:bg-[#0f172a]/5" }`}
         >
             {children}
         </Link>
@@ -295,7 +295,7 @@ function MobileNavLink({ href, children, active, onClick, isSpecial }: { href: s
         <Link
             href={href}
             onClick={onClick}
-            className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${active ? "bg-[#00e5ff]/20 text-[#00e5ff]" : "text-slate-300 hover:bg-[#00e5ff]/10 hover:text-[#00e5ff]" } ${isSpecial ? "border border-slate-700/30 text-[#00e5ff]" : ""}`}
+            className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${active ? "bg-[#0f172a]/20 text-[#0f172a]" : "text-slate-300 hover:bg-[#0f172a]/10 hover:text-[#0f172a]" } ${isSpecial ? "border border-slate-700/30 text-[#0f172a]" : ""}`}
         >
             {children}
         </Link>

@@ -154,7 +154,7 @@ export default function RegisteredUsersPage() {
                                                         alert("更新に失敗しました: " + err.message);
                                                     }
                                                 }}
-                                                className="whitespace-nowrap text-xs text-slate-600 hover:text-white border border-slate-600 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-colors"
+                                                className="whitespace-nowrap text-xs text-slate-600 hover:text-slate-900 border border-slate-600 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-colors"
                                                 title={user.role === 'admin' ? "一般ユーザーに降格" : "管理者に昇格"}
                                             >
                                                 権限変更

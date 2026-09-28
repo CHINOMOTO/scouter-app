@@ -66,7 +66,7 @@ export default function AdminCaseList() {
           {loading ? (
             <div className="flex justify-center py-24">
               <div className="relative">
-                <div className="animate-spin h-12 w-12 border-4 border-slate-200 rounded-full border-t-white"></div>
+                <div className="animate-spin h-12 w-12 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="h-4 w-4 bg-white/10 rounded-full blur-md"></div>
                 </div>
@@ -91,7 +91,7 @@ export default function AdminCaseList() {
                       ⚠️
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-white transition-colors">
+                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-slate-900 transition-colors">
                         {c.full_name}
                       </h3>
                       <div className="flex gap-4 text-sm text-slate-600 mt-1">
@@ -105,7 +105,7 @@ export default function AdminCaseList() {
                     <div className="font-mono text-slate-700 text-sm">
                       {new Date(c.created_at).toLocaleDateString()}
                     </div>
-                    <span className="text-slate-900 text-xs mt-2 inline-block font-bold hover:underline decoration-[#00e5ff]/30 underline-offset-4 pointer-events-none">
+                    <span className="text-slate-900 text-xs mt-2 inline-block font-bold hover:underline decoration-slate-300 underline-offset-4 pointer-events-none">
                       審査詳細
                     </span>
                   </div>

@@ -261,7 +261,7 @@ export default function AdminCaseDetailPage() {
               <div className="mb-4">
                 <Link
                   href="/admin/cases"
-                  className="text-sm text-white hover:text-white transition-colors inline-block mb-2"
+                  className="text-sm text-slate-900 hover:text-slate-900 transition-colors inline-block mb-2"
                 >
                   一覧へ戻る
                 </Link>
@@ -351,7 +351,7 @@ export default function AdminCaseDetailPage() {
                               </div>
                             </a>
                           ) : (
-                            <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="block outline-none h-full p-4 flex flex-col items-center justify-center gap-2 text-slate-600 hover:text-white">
+                            <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="block outline-none h-full p-4 flex flex-col items-center justify-center gap-2 text-slate-600 hover:text-slate-900">
                               <span className="text-3xl">📄</span>
                               <span className="text-xs truncate w-full text-center">{file.name}</span>
                             </a>
@@ -369,7 +369,7 @@ export default function AdminCaseDetailPage() {
                   type="button"
                   onClick={() => setShowApproveModal(true)}
                   disabled={isProcessing}
-                  className="flex-1 bg-[#00e5ff]/80 hover:bg-[#00e5ff] disabled:bg-[#00e5ff]/40 text-black font-bold py-3 rounded-lg text-sm transition-all"
+                  className="flex-1 bg-[#0f172a]/80 hover:bg-[#0f172a] disabled:bg-[#0f172a]/40 text-black font-bold py-3 rounded-lg text-sm transition-all"
                 >
                   承認する
                 </button>
@@ -393,7 +393,7 @@ export default function AdminCaseDetailPage() {
           {/* Approve Confirmation Modal */}
           {showApproveModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
-              <div className="bg-white border border-white/40 p-8 rounded-2xl max-w-sm w-full shadow-[0_0_30px_rgba(0,229,255,0.3)]">
+              <div className="bg-white border border-white/40 p-8 rounded-2xl max-w-sm w-full shadow-md">
                 <h3 className="text-xl font-bold text-slate-900 mb-4">承認の確認</h3>
                 <p className="text-slate-700 mb-8">
                   この申請を承認しますか？<br />
@@ -409,7 +409,7 @@ export default function AdminCaseDetailPage() {
                   <button
                     onClick={executeApprove}
                     disabled={isProcessing}
-                    className="flex-1 py-2 rounded bg-[#00e5ff] text-black font-bold hover:bg-[#00e5ff]/80 shadow-[0_0_10px_rgba(0,229,255,0.5)]"
+                    className="flex-1 py-2 rounded bg-[#0f172a] text-black font-bold hover:bg-[#0f172a]/80 shadow-md"
                   >
                     {isProcessing ? "処理中..." : "承認確定"}
                   </button>
@@ -464,13 +464,13 @@ export default function AdminCaseDetailPage() {
           {/* Success Modal */}
           {showSuccessModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
-              <div className={`p-10 rounded-3xl max-w-sm w-full text-center border-t-4 ${showSuccessModal.type === 'approved' ? 'border-white/40 shadow-[0_0_50px_rgba(0,229,255,0.2)]' : 'border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.2)]'}`}>
+              <div className={`p-10 rounded-3xl max-w-sm w-full text-center border-t-4 ${showSuccessModal.type === 'approved' ? 'border-white/40 shadow-md' : 'border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.2)]'}`}>
                 <h3 className="text-xl font-bold text-slate-900 mb-8">
                   {showSuccessModal.type === 'approved' ? '申請が承認されました。' : '申請が却下されました。'}
                 </h3>
                 <button
                   onClick={() => router.push("/admin/cases")}
-                  className={`w-full py-3 rounded-lg font-bold text-black ${showSuccessModal.type === 'approved' ? 'bg-[#00e5ff] hover:bg-[#00e5ff]/80' : 'bg-red-500 hover:bg-red-400 text-white'}`}
+                  className={`w-full py-3 rounded-lg font-bold text-black ${showSuccessModal.type === 'approved' ? 'bg-[#0f172a] hover:bg-[#0f172a]/80' : 'bg-red-500 hover:bg-red-400 text-white'}`}
                 >
                   一覧へ戻る
                 </button>

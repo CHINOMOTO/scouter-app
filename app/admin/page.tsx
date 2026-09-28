@@ -149,7 +149,7 @@ export default function AdminDashboardPage() {
                                             <span className="text-2xl text-slate-600 animate-pulse">...</span>
                                         ) : (
                                             <>
-                                                <span className={pendingUserCount && pendingUserCount > 0 ? "text-white -[0_0_10px_rgba(0,229,255,0.5)]" : ""}>
+                                                <span className={pendingUserCount && pendingUserCount > 0 ? "text-slate-900 -[0_0_10px_rgba(0,229,255,0.5)]" : ""}>
                                                     {pendingUserCount ?? 0}
                                                 </span>
                                                 <span className="text-lg text-slate-500 font-normal ml-2 tracking-widest">
@@ -278,7 +278,7 @@ export default function AdminDashboardPage() {
                                             <span className="text-2xl text-slate-600 animate-pulse">...</span>
                                         ) : (
                                             <>
-                                                <span className={inquiryCount && inquiryCount > 0 ? "text-amber-400 -[0_0_10px_rgba(245,158,11,0.5)]" : "group-hover:text-white transition-colors"}>
+                                                <span className={inquiryCount && inquiryCount > 0 ? "text-amber-400 -[0_0_10px_rgba(245,158,11,0.5)]" : "group-hover:text-slate-900 transition-colors"}>
                                                     {inquiryCount ?? 0}
                                                 </span>
                                                 <span className="text-lg text-slate-500 font-normal ml-2 tracking-widest">

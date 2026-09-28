@@ -212,7 +212,7 @@ export default function NewCasePage() {
     return (
       <RequireAuth>
         <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center justify-center">
-          <div className="max-w-xl w-full text-center glass-panel p-10 rounded-3xl animate-fade-in border-t-4 border-t-white relative overflow-hidden">
+          <div className="max-w-xl w-full text-center glass-panel p-10 rounded-3xl animate-fade-in border-t-4 border-t-slate-900 relative overflow-hidden">
 
             {/* Background Effect */}
             <div className="absolute inset-0 bg-white/[0.03] pointer-events-none"></div>
@@ -453,7 +453,7 @@ export default function NewCasePage() {
                                 type="button"
                                 onClick={() => handleOCR(file)}
                                 disabled={isAnalyzing}
-                                className="text-xs text-white hover:text-white border border-slate-200 bg-white/5 px-2 py-1 rounded transition-colors"
+                                className="text-xs text-slate-900 hover:text-slate-900 border border-slate-200 bg-white/5 px-2 py-1 rounded transition-colors"
                               >
                                 {isAnalyzing ? "解析中..." : "文字認識(OCR)"}
                               </button>

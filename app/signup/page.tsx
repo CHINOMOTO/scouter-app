@@ -245,7 +245,7 @@ export default function SignUpPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-[#00e5ff]/80 to-[#00e5ff] hover:from-[#00e5ff] hover:to-[#00e5ff] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/30 transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 mt-6"
+                            className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-[#0f172a]/80 to-[#0f172a] hover:from-[#0f172a] hover:to-[#0f172a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/30 transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 mt-6"
                         >
                             {isLoading ? (
                                 <div className="flex items-center gap-2">
@@ -263,7 +263,7 @@ export default function SignUpPage() {
 
                     <p className="mt-8 text-xs text-slate-500 text-center leading-relaxed">
                         登録申請後、管理者による承認が必要です。<br />
-                        <Link href="/" className="text-white hover:text-white underline underline-offset-2 ml-1">
+                        <Link href="/" className="text-slate-700 hover:text-slate-900 underline underline-offset-2 ml-1">
                             すでにアカウントをお持ちの方はこちら
                         </Link>
                     </p>

@@ -178,7 +178,7 @@ export default function AdminInquiriesPage() {
                                         <p className="text-sm text-slate-800 font-mono">{selectedInquiry.email}</p>
                                         <a 
                                             href={`mailto:${selectedInquiry.email}?subject=【MIERIS】お問い合わせの件について&body=${selectedInquiry.company_name}%0D%0A${selectedInquiry.user_name} 様%0D%0A%0D%0Aお問い合わせありがとうございます。%0D%0A%0D%0A%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A【お問い合わせ内容】%0D%0A${selectedInquiry.message}%0D%0A%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%0D%0A`}
-                                            className="px-3 py-1 bg-white/10 text-white text-xs font-bold rounded hover:bg-white/10 transition-colors border border-white/40/30 flex items-center gap-1"
+                                            className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded hover:bg-white/10 transition-colors border border-white/40/30 flex items-center gap-1"
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                                             メールで返信
@@ -216,7 +216,7 @@ export default function AdminInquiriesPage() {
                         {/* 閉じる */}
                         <button
                             onClick={() => setSelectedInquiry(null)}
-                            className="w-full mt-5 py-3 text-sm text-slate-600 hover:text-white border border-slate-200 hover:border-slate-500 rounded-xl transition-all"
+                            className="w-full mt-5 py-3 text-sm text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-500 rounded-xl transition-all"
                         >
                             閉じる
                         </button>

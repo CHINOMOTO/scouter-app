@@ -282,7 +282,7 @@ export default function SearchPage() {
                         <div className="flex-1">
                           <div className="flex items-start gap-4 mb-3">
                             <div className="flex-1">
-                              <h3 className="text-xl font-bold text-slate-900 group-hover:text-white transition-colors">
+                              <h3 className="text-xl font-bold text-slate-900 group-hover:text-slate-900 transition-colors">
                                 {item.full_name}
                               </h3>
                               <p className="text-sm text-slate-500 font-medium">
@@ -317,7 +317,7 @@ export default function SearchPage() {
 
                           <Link
                             href={`/cases/${item.id}`} // 詳細ページができたら飛ぶ想定（なければ#）
-                            className="mt-4 text-xs text-white hover:text-white font-bold hover:underline decoration-[#00e5ff]/30 underline-offset-4 transition-all"
+                            className="mt-4 text-xs text-slate-700 hover:text-slate-900 font-bold hover:underline decoration-slate-300 underline-offset-4 transition-all"
                           >
                             詳細を見る
                           </Link>

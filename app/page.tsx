@@ -54,16 +54,16 @@ export default function Home() {
 
       <main className="w-full max-w-sm flex flex-col items-center justify-center py-6">
 
-        {/* Brand Header - 黄金比・ロゴ統合デザイン */}
+        {/* Brand Header - ロゴ＝タイトル統合デザイン */}
         <div className="text-center mb-6 flex flex-col items-center">
-          <div className="w-40 md:w-44 aspect-square relative mb-1 -mt-2">
+          <div className="w-36 md:w-40 aspect-square relative -mb-3 -mt-2">
             <img 
               src="/logo-b.jpg" 
               alt="MIERIS ミエリス" 
               className="w-full h-full object-contain mix-blend-multiply select-none pointer-events-none" 
             />
           </div>
-          <p className="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase mb-2.5">
+          <p className="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase mb-4">
             ミエリス
           </p>
           <h2 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">

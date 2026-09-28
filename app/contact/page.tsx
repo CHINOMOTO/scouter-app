@@ -116,7 +116,7 @@ export default function ContactPage() {
                             </p>
                             <Link
                                 href="/dashboard"
-                                className="inline-block px-8 py-3 bg-gradient-to-r from-[#008299] to-[#00e5ff] text-white font-bold rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_30px_rgba(0,229,255,0.5)] transition-all"
+                                className="btn-primary w-full py-3.5"
                             >
                                 ダッシュボードへ戻る
                             </Link>
@@ -229,7 +229,7 @@ export default function ContactPage() {
                                 <button
                                     type="submit"
                                     disabled={isSending}
-                                    className="w-full py-4 bg-gradient-to-r from-[#008299] to-[#00e5ff] text-white font-bold rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_30px_rgba(0,229,255,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                                    className="btn-primary w-full py-3.5"
                                 >
                                     {isSending ? (
                                         <span className="flex items-center justify-center gap-2">

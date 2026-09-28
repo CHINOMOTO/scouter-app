@@ -144,7 +144,7 @@ export default function CasesPage() {
       >
         <div className={`flex items-center gap-2 ${isRightAlign ? 'justify-end' : ''}`}>
           {label}
-          <span className={`text-[10px] ${isActive ? 'text-white' : 'text-slate-600'}`}>
+          <span className={`text-[10px] ${isActive ? 'text-slate-900' : 'text-slate-600'}`}>
             {isActive ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '↕'}
           </span>
         </div>
@@ -189,7 +189,7 @@ export default function CasesPage() {
                   placeholder="氏名や登録理由で絞り込み..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-slate-500 transition-colors"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-slate-500 transition-colors"
                 />
               </div>
             </div>
@@ -198,7 +198,7 @@ export default function CasesPage() {
           {isLoading ? (
             <div className="flex justify-center py-24">
               <div className="relative">
-                <div className="animate-spin h-12 w-12 border-4 border-slate-200 rounded-full border-t-white"></div>
+                <div className="animate-spin h-12 w-12 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="h-4 w-4 bg-white/10 rounded-full blur-md"></div>
                 </div>
@@ -231,7 +231,7 @@ export default function CasesPage() {
                         <td className="px-6 py-4">
                           <Link
                             href={`/cases/${c.id}`}
-                            className="text-white font-bold text-lg hover:text-white transition-colors inline-block truncate max-w-[200px]"
+                            className="text-slate-900 font-bold text-base hover:text-blue-600 transition-colors inline-block truncate max-w-[200px]"
                           >
                             {c.full_name}
                           </Link>
@@ -255,7 +255,7 @@ export default function CasesPage() {
                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Link
                                 href={`/cases/${c.id}/edit`}
-                                className="p-2 bg-slate-100 hover:bg-white/10 text-slate-600 hover:text-white rounded-lg transition-colors"
+                                className="p-2 bg-slate-100 hover:bg-white/10 text-slate-600 hover:text-slate-900 rounded-lg transition-colors"
                                 title="編集"
                               >
                                 ✎
@@ -297,18 +297,18 @@ function StatusBadge({ status }: { status: string }) {
   let label = status;
 
   if (status === "pending") {
-    styles = "bg-yellow-500/10 text-yellow-400 border-yellow-500/30";
+    styles = "bg-amber-50 text-amber-700 border-amber-200";
     label = "承認待ち";
   } else if (status === "approved") {
-    styles = "bg-white/10 text-white border-slate-200";
+    styles = "bg-emerald-50 text-emerald-700 border-emerald-200";
     label = "承認済み";
   } else if (status === "rejected") {
-    styles = "bg-red-500/10 text-red-400 border-red-500/30";
+    styles = "bg-rose-50 text-rose-700 border-rose-200";
     label = "却下";
   }
 
   return (
-    <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${styles}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${styles}`}>
       {label}
     </span>
   );

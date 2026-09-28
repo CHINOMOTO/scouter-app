@@ -101,7 +101,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
     if (checking) {
         return (
             <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center flex-col gap-4">
-                <div className="animate-spin h-8 w-8 border-4 border-[#00e5ff] rounded-full border-t-transparent"></div>
+                <div className="animate-spin h-8 w-8 border-4 border-[#0f172a] rounded-full border-t-transparent"></div>
                 <p className="text-sm text-slate-300">認証情報を確認して(Token)...</p>
                 <p className="text-xs text-slate-500 font-mono animate-pulse">{statusMessage}</p>
             </div>

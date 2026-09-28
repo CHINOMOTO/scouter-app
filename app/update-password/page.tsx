@@ -91,7 +91,7 @@ export default function UpdatePasswordPage() {
                 </div>
 
                 <div className="w-full glass-panel rounded-2xl md:rounded-3xl p-6 md:p-8 border border-slate-200 backdrop-blur-xl relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00e5ff] to-transparent opacity-50"></div>
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#0f172a] to-transparent opacity-50"></div>
 
                     {successMsg ? (
                         <div className="text-center">
@@ -143,7 +143,7 @@ export default function UpdatePasswordPage() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-4 px-4 rounded-xl text-white font-bold bg-gradient-to-r from-[#008299] to-[#00e5ff] hover:from-[#00e5ff] hover:to-[#00e5ff] shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_30px_rgba(0,229,255,0.5)] transition-all duration-300 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed hover:text-black tracking-widest uppercase text-sm"
+                                className="btn-primary w-full py-3.5"
                             >
                                 {isLoading ? "UPDATING..." : "パスワードを更新"}
                             </button>

@@ -58,7 +58,7 @@ function statusLabel(status: CaseDetail["status"]) {
 function statusColor(status: CaseDetail["status"]) {
     switch (status) {
         case "approved":
-            return "text-white border-slate-200 bg-white/10";
+            return "text-slate-900 border-slate-200 bg-white/10";
         case "pending":
             return "text-amber-400 border-amber-500/30 bg-amber-500/20";
         case "rejected":
@@ -237,7 +237,7 @@ export default function CaseDetailPage() {
                             <div className="space-y-8">
 
                                 {/* Header */}
-                                {/* Header with Scouter UI */}
+                                {/* Header with mieris UI */}
                                 <div className="bg-white p-6 md:p-8 rounded-xl border border-white/5 relative overflow-hidden mb-6">
 
                                     <div className="relative z-10 max-w-[75%]">
@@ -328,7 +328,7 @@ export default function CaseDetailPage() {
                                                             </div>
                                                         </a>
                                                     ) : (
-                                                        <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="block outline-none h-full p-4 flex flex-col items-center justify-center gap-2 text-slate-600 hover:text-white aspect-square">
+                                                        <a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="block outline-none h-full p-4 flex flex-col items-center justify-center gap-2 text-slate-600 hover:text-slate-900 aspect-square">
                                                             <span className="text-3xl">📄</span>
                                                             <span className="text-xs truncate w-full text-center">{file.name}</span>
                                                         </a>
