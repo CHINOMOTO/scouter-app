@@ -186,7 +186,7 @@ export default function EditCasePage() {
 
     return (
         <RequireAdmin>
-            <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+            <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-3xl w-full">
 
                     <div className="mb-8 text-center animate-fade-in">
@@ -227,15 +227,15 @@ export default function EditCasePage() {
                                         <div className="flex items-center gap-2">
                                             <input type="text" inputMode="numeric" maxLength={4} value={birthYear}
                                                 onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthYear(e.target.value); }}
-                                                className="input-field w-24 text-center" placeholder="0000" />
+                                                className="input-field w-24 text-center font-mono" placeholder="1990" />
                                             <span className="text-slate-600">年</span>
                                             <input type="text" inputMode="numeric" maxLength={2} value={birthMonth}
                                                 onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthMonth(e.target.value); }}
-                                                className="input-field w-16 text-center" placeholder="00" />
+                                                className="input-field w-16 text-center font-mono" placeholder="01" />
                                             <span className="text-slate-600">月</span>
                                             <input type="text" inputMode="numeric" maxLength={2} value={birthDay}
                                                 onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthDay(e.target.value); }}
-                                                className="input-field w-16 text-center" placeholder="00" />
+                                                className="input-field w-16 text-center font-mono" placeholder="01" />
                                             <span className="text-slate-600">日</span>
                                         </div>
                                     </div>
@@ -275,7 +275,7 @@ export default function EditCasePage() {
                                             value={city}
                                             onChange={(e) => setCity(e.target.value)}
                                             className="input-field"
-                                            placeholder="例：東京都渋谷区"
+                                            placeholder="例: 東京都渋谷区"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -426,11 +426,11 @@ function Label({ children, required }: { children: React.ReactNode, required?: b
         <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
             {children}
             {required ? (
-                <span className="text-slate-900 text-[10px] border border-slate-200 bg-slate-50 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">
                     必須
                 </span>
             ) : (
-                <span className="text-slate-500 text-[10px] border border-slate-200 bg-slate-100 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 font-medium">
                     任意
                 </span>
             )}

@@ -17,9 +17,9 @@ export async function POST(request: Request) {
         let messageText = "【MIERIS システム通知】";
 
         if (type === 'signup') {
-            messageText += `\n\n🔔 新規アカウントの登録申請がありました。\n\n👤 氏名: ${data.name || "不明"}\n🏢 会社: ${data.company || "不明"}\n✉️ Email: ${data.email || "不明"}\n\n管理画面にログインして承認・拒否を行ってください。`;
+            messageText += `\n\n新規アカウントの登録申請がありました。\n\n氏名: ${data.name || "不明"}\n会社: ${data.company || "不明"}\nEmail: ${data.email || "不明"}\n\n管理画面にログインして承認・却下を行ってください。`;
         } else if (type === 'new_case') {
-            messageText += `\n\n🚨 新規のケース情報が登録されました。\n\n👤 対象者: ${data.targetName || "不明"}\n\n管理画面にログインして内容の確認と承認を行ってください。`;
+            messageText += `\n\n新規の就業トラブル情報が登録されました。\n\n対象者: ${data.targetName || "不明"}\n\n管理画面にログインして内容の確認と審査を行ってください。`;
         } else {
             return NextResponse.json({ error: "Unknown notification type" }, { status: 400 });
         }

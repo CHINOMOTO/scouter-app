@@ -194,7 +194,7 @@ export async function POST(request: Request) {
             const adminUserId = process.env.LINE_ADMIN_USER_ID;
 
             if (lineToken && adminUserId) {
-                const messageText = `【MIERIS CREDIT 審査申請通知】\n\n🏢 未払い企業情報が新規登録されました。\n━━━━━━━━━━━━━━━\n対象企業: ${companyName.trim()}\n未払い金額: ¥${Number(amount).toLocaleString()}\n支払期日: ${dueDate}\n登録企業: ${(appUser.companies as any)?.name || '未所属'}\n担当者: ${appUser.display_name || '不明'}\n━━━━━━━━━━━━━━━\n管理画面にログインしてエビデンス等の審査を行ってください。`;
+                const messageText = `【MIERIS CREDIT 審査申請通知】\n\n未払い企業情報が新規登録されました。\n\n対象企業: ${companyName.trim()}\n未払い金額: ¥${Number(amount).toLocaleString()}\n支払期日: ${dueDate}\n登録企業: ${(appUser.companies as any)?.name || '未所属'}\n担当者: ${appUser.display_name || '不明'}\n\n管理画面にログインしてエビデンス等の審査を行ってください。`;
 
                 const targetIds = adminUserId.split(',').map((id: string) => id.trim()).filter((id: string) => id);
                 await Promise.all(targetIds.map((targetId: string) =>

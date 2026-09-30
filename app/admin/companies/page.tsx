@@ -89,17 +89,17 @@ export default function AdminCompaniesPage() {
 
     return (
         <RequireAdmin>
-            <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+            <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-4xl w-full relative z-10">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">利用会社管理</h1>
-                            <p className="text-slate-600 font-medium">登録されている加盟企業（法人番号・契約プラン）の一覧です</p>
+                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">利用会社管理</h1>
+                            <p className="text-slate-600 text-sm mt-1">登録されている加盟企業（法人番号・契約プラン）の一覧です</p>
                         </div>
-                        <div className="flex gap-3 items-center">
-                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center gap-1.5 transition-colors">
+                        <div className="flex gap-3 items-center flex-wrap sm:flex-nowrap">
+                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center gap-1.5 font-bold transition-colors">
                                 <ArrowLeft className="w-4 h-4" />
-                                <span>管理メニューへ戻る</span>
+                                <span>管理者メニューへ戻る</span>
                             </Link>
                             <Link href="/admin/companies/new" className="btn-primary flex items-center gap-1.5 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm">
                                 <Plus className="w-4 h-4" />

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Inbox } from "lucide-react";
+import { Inbox, ArrowLeft } from "lucide-react";
 import { RequireAdmin } from "@/components/RequireAdmin";
 
 type Inquiry = {
@@ -69,20 +69,21 @@ export default function AdminInquiriesPage() {
 
     return (
         <RequireAdmin>
-            <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+            <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-5xl w-full relative z-10">
                     {/* ヘッダー */}
-                    <div className="flex items-center justify-between mb-8 animate-fade-in">
+                    <div className="flex items-center justify-between mb-8 animate-fade-in flex-wrap sm:flex-nowrap gap-4">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
+                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                                 お問い合わせ管理
                             </h1>
-                            <p className="text-slate-600">
+                            <p className="text-slate-600 text-sm mt-1">
                                 ユーザーからのお問い合わせを確認・管理します
                             </p>
                         </div>
-                        <Link href="/admin" className="btn-secondary text-xs px-4 py-2.5">
-                            管理者メニューへ戻る
+                        <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center gap-1.5 font-bold transition-colors">
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>管理者メニューへ戻る</span>
                         </Link>
                     </div>
 

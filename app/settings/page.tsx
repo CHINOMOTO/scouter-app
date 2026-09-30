@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { User, Lock, CheckCircle2, AlertCircle } from "lucide-react";
+import { User, Lock, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 
 export default function SettingsPage() {
@@ -123,16 +123,17 @@ export default function SettingsPage() {
 
     return (
         <RequireAuth>
-            <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+            <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-3xl w-full relative z-10">
 
-                    <div className="flex items-center justify-between mb-8 animate-fade-in">
+                    <div className="flex items-center justify-between mb-8 animate-fade-in flex-wrap sm:flex-nowrap gap-4">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">アカウント設定</h1>
-                            <p className="text-slate-600">登録情報やパスワードの変更を行います</p>
+                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">アカウント設定</h1>
+                            <p className="text-slate-600 text-sm mt-1">登録情報やパスワードの変更を行います</p>
                         </div>
-                        <Link href="/dashboard" className="btn-secondary text-xs">
-                            ダッシュボードへ戻る
+                        <Link href="/dashboard" className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors shrink-0">
+                            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                            <span>ダッシュボードへ戻る</span>
                         </Link>
                     </div>
 

@@ -12,7 +12,8 @@ import {
     FileText,
     Building2,
     Calendar,
-    Coins
+    Coins,
+    X
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -41,8 +42,13 @@ export default function NewCreditCasePage() {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            setFiles(Array.from(e.target.files));
+            const newFiles = Array.from(e.target.files);
+            setFiles(prev => [...prev, ...newFiles]);
         }
+    };
+
+    const removeFile = (index: number) => {
+        setFiles(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -294,21 +300,44 @@ export default function NewCreditCasePage() {
 
                             {/* エビデンス添付 */}
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                                    <FileText className="w-4 h-4 text-slate-600" />
-                                    <span>裏付け資料の添付（請求書、督促状、同意書等） <span className="text-red-500">*</span></span>
+                                <label className="text-sm font-bold text-slate-800 flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        <FileText className="w-4 h-4 text-slate-600" />
+                                        <span>裏付け資料の添付（請求書、督促状、同意書等）</span>
+                                    </div>
+                                    <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">必須</span>
                                 </label>
                                 <div className="border-2 border-dashed border-slate-200 rounded-2xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
                                     <input
                                         type="file"
                                         multiple
-                                        required
+                                        required={files.length === 0}
                                         onChange={handleFileChange}
                                         className="block w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 cursor-pointer"
                                     />
                                     <p className="text-[11px] text-slate-500 mt-2">
                                         ※PDFまたは画像ファイルを添付してください。管理者の審査時にエビデンスとして確認されます。
                                     </p>
+
+                                    {files.length > 0 && (
+                                        <ul className="mt-3 space-y-1.5 pt-3 border-t border-slate-200">
+                                            {files.map((file, index) => (
+                                                <li key={index} className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 text-xs">
+                                                    <span className="truncate max-w-[70%] text-slate-700 font-medium">
+                                                        {file.name} ({(file.size / 1024).toFixed(0)}KB)
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeFile(index)}
+                                                        className="text-rose-600 hover:text-rose-800 hover:bg-rose-50 p-1 rounded-lg transition-colors flex items-center gap-1 text-[11px] font-bold"
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                        <span>削除</span>
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
                                 </div>
                             </div>
 

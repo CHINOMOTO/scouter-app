@@ -249,7 +249,7 @@ export default function CreditCaseDetailPage() {
                         {/* 7項目詳細リスト */}
                         <div className="space-y-4 py-2 text-sm">
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">商号（企業名）</span>
+                                <span className="text-slate-500 font-medium">対象企業名（商号）</span>
                                 <span className="font-bold text-slate-900">{caseData.company_name}</span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">

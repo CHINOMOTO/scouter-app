@@ -74,17 +74,17 @@ export default function RegisteredUsersPage() {
 
     return (
         <RequireAdmin>
-            <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+            <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-5xl w-full">
 
-                    <div className="flex items-center justify-between mb-8 animate-fade-in">
+                    <div className="flex items-center justify-between mb-8 animate-fade-in flex-wrap sm:flex-nowrap gap-4">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">登録済みユーザー一覧</h1>
-                            <p className="text-slate-600">現在システムに登録されているユーザーの一覧です</p>
+                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">登録済みユーザー一覧</h1>
+                            <p className="text-slate-600 text-sm mt-1">現在システムに登録されているユーザーの一覧です</p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center">
-                                管理メニューへ戻る
+                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center font-bold">
+                                管理者メニューへ戻る
                             </Link>
                             <Link href="/admin/users/new" className="btn-primary flex items-center gap-2 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm">
                                 <span>+</span> アカウント新規発行
@@ -111,7 +111,7 @@ export default function RegisteredUsersPage() {
                                                 <h3 className="text-slate-900 font-bold text-base truncate">
                                                     {user.display_name || "未設定"}
                                                 </h3>
-                                                <span className={`shrink-0 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin' ? "bg-purple-50 text-purple-700 border border-purple-200" : "bg-emerald-50 text-emerald-700 border border-emerald-200" }`}>
+                                                <span className={`shrink-0 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin' ? "bg-purple-50 text-purple-700 border border-purple-200" : "bg-slate-100 text-slate-700 border border-slate-200" }`}>
                                                     {user.role}
                                                 </span>
                                             </div>

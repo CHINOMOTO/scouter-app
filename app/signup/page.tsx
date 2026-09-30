@@ -188,7 +188,7 @@ ${notes.trim() || "なし"}`;
                                         />
                                         <div className="font-bold text-slate-900 text-xs">就業情報のみ</div>
                                         <div className="text-xs font-bold text-slate-700">18,000円/月</div>
-                                        <div className="text-[10px] text-slate-500 mt-1">人物トラブル対策</div>
+                                        <div className="text-[10px] text-slate-500 mt-1">就業トラブル対策</div>
                                     </label>
 
                                     <label className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${planType === 'credit' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>

@@ -101,7 +101,7 @@ export default function EditCompanyPage() {
 
     return (
         <RequireAdmin>
-            <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+            <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-2xl w-full">
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 animate-fade-in">
                         <div>
@@ -186,7 +186,7 @@ export default function EditCompanyPage() {
                                         />
                                         <div className="font-bold text-slate-900 text-sm mb-1">就業情報のみ</div>
                                         <div className="text-xs font-bold text-slate-700 mb-2">月額 18,000円</div>
-                                        <div className="text-[11px] text-slate-600 leading-tight">人物トラブル共有のみ</div>
+                                        <div className="text-[11px] text-slate-600 leading-tight">就業トラブル共有のみ</div>
                                     </label>
 
                                     <label className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${planType === 'credit' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>

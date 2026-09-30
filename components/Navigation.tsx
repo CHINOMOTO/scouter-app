@@ -416,7 +416,7 @@ export default function Navigation() {
                                         href="/admin/companies"
                                         active={pathname.startsWith("/admin/companies")}
                                         icon={<Building className="w-3.5 h-3.5" />}
-                                        label="所属企業管理"
+                                        label="利用会社管理"
                                     />
                                     <SubmenuLink 
                                         href="/admin/announcements"
@@ -428,7 +428,7 @@ export default function Navigation() {
                                         href="/admin/inquiries"
                                         active={pathname.startsWith("/admin/inquiries")}
                                         icon={<MessageSquare className="w-3.5 h-3.5" />}
-                                        label="お問い合わせ対応"
+                                        label="お問い合わせ管理"
                                     />
                                 </AccordionGroup>
                             </nav>

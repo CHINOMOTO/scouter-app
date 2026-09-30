@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { RequireAdmin } from "@/components/RequireAdmin";
 import { supabase } from "@/lib/supabaseClient";
-import { Bell, Plus, Trash2, Power, PowerOff } from "lucide-react";
+import { Bell, Plus, Trash2, Power, PowerOff, ArrowLeft, ShieldCheck } from "lucide-react";
 
 type Announcement = {
     id: string;
@@ -90,15 +91,32 @@ export default function AdminAnnouncements() {
 
     return (
         <RequireAdmin>
-            <div className="min-h-screen pt-24 pb-12 px-4">
-                <div className="max-w-4xl mx-auto space-y-8">
-                    <div className="flex items-center gap-4 mb-8">
-                        <div className="p-3 rounded-2xl bg-slate-100 text-slate-900">
-                            <Bell className="w-8 h-8" strokeWidth={1.5} />
-                        </div>
+            <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
+                <div className="max-w-4xl w-full space-y-8">
+                    {/* ヘッダーエリア */}
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-slate-200">
                         <div>
-                            <h1 className="text-3xl font-bold font-sans tracking-wider text-slate-900">ANNOUNCEMENTS</h1>
-                            <p className="text-slate-600">お知らせ管理</p>
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-white tracking-wider">
+                                    <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                                    ADMIN CONSOLE
+                                </span>
+                            </div>
+                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                                お知らせ管理
+                            </h1>
+                            <p className="text-slate-600 text-sm mt-1">
+                                システムメンテナンスや重要なお知らせの作成・管理を行います。
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                            <Link
+                                href="/admin"
+                                className="btn-secondary text-xs h-10 px-4 rounded-xl flex items-center gap-1.5 font-bold transition-colors whitespace-nowrap shadow-2xs"
+                            >
+                                <ArrowLeft className="w-4 h-4 shrink-0" />
+                                <span>管理者メニューへ戻る</span>
+                            </Link>
                         </div>
                     </div>
 
@@ -117,7 +135,7 @@ export default function AdminAnnouncements() {
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         className="input-field" 
-                                        placeholder="例：システムメンテナンスのお知らせ"
+                                        placeholder="例: システムメンテナンスのお知らせ"
                                         required
                                     />
                                 </div>
@@ -127,7 +145,7 @@ export default function AdminAnnouncements() {
                                         value={content}
                                         onChange={(e) => setContent(e.target.value)}
                                         className="input-field h-32 resize-none" 
-                                        placeholder="例：〇月〇日にメンテナンスを実施します..."
+                                        placeholder="例: 〇月〇日にメンテナンスを実施します..."
                                         required
                                     />
                                 </div>
@@ -140,7 +158,10 @@ export default function AdminAnnouncements() {
 
                     <div className="space-y-4">
                         {loading ? (
-                            <p className="text-center text-slate-600 py-8">読み込み中...</p>
+                            <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
+                                <p className="text-sm text-slate-600 font-medium">お知らせを読み込み中...</p>
+                            </div>
                         ) : announcements.length === 0 ? (
                             <p className="text-center text-slate-600 py-8">お知らせはありません。</p>
                         ) : (
@@ -149,7 +170,7 @@ export default function AdminAnnouncements() {
                                     <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold ${item.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-700 text-slate-600'}`}>
+                                                <span className={`px-2.5 py-0.5 rounded text-xs font-bold ${item.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
                                                     {item.is_active ? '公開中' : '非公開'}
                                                 </span>
                                                 <span className="text-slate-600 text-sm">

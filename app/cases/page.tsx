@@ -170,10 +170,10 @@ export default function CasesPage() {
                 </span>
               </div>
               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                人物登録データ一覧
+                就業トラブル 登録データ一覧
               </h1>
               <p className="text-slate-600 text-sm mt-1">
-                共有データベースに登録されているトラブル人材の一覧です。
+                共有データベースに登録されている就業トラブル情報の一覧です。
               </p>
             </div>
             <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
@@ -196,7 +196,7 @@ export default function CasesPage() {
                 className="btn-primary flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap shrink-0"
               >
                 <UserPlus className="w-4 h-4 shrink-0" />
-                <span className="whitespace-nowrap">人物を新規登録</span>
+                <span className="whitespace-nowrap">トラブル情報を新規登録</span>
               </Link>
             </div>
           </div>
@@ -234,8 +234,64 @@ export default function CasesPage() {
               </div>
             </div>
           ) : (
-            <div className="glass-panel rounded-3xl overflow-hidden animate-fade-in delay-100 border border-slate-200 p-0">
-              <div className="overflow-x-auto">
+            <div className="glass-panel rounded-2xl overflow-hidden animate-fade-in delay-100 border border-slate-200 p-0">
+              {/* モバイル表示（カードレイアウト） */}
+              <div className="block md:hidden divide-y divide-slate-200">
+                {filteredAndSortedCases.length === 0 ? (
+                  <div className="p-8 text-center text-slate-500 text-sm">
+                    {cases.length === 0 && searchTerm === "" ? (
+                      <div>
+                        <FolderOpen className="w-10 h-10 mx-auto mb-2 text-slate-400" strokeWidth={1} />
+                        <p>データがまだありません</p>
+                      </div>
+                    ) : (
+                      "データが見つかりません"
+                    )}
+                  </div>
+                ) : (
+                  filteredAndSortedCases.map((c) => (
+                    <div key={c.id} className="p-4 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <Link
+                          href={`/cases/${c.id}`}
+                          className="text-base font-bold text-slate-900 hover:text-blue-600 transition-colors"
+                        >
+                          {c.full_name}
+                        </Link>
+                        <StatusBadge status={c.status} />
+                      </div>
+                      <div className="text-xs text-slate-500 space-y-1 mb-2.5">
+                        <p><span className="font-medium text-slate-600">生年月日:</span> {c.birth_date || "—"}</p>
+                        <p><span className="font-medium text-slate-600">登録日:</span> {new Date(c.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div className="bg-slate-50 rounded-lg p-2.5 text-xs text-slate-700 line-clamp-2 mb-3">
+                        {c.reason_text}
+                      </div>
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                        <Link
+                          href={`/cases/${c.id}`}
+                          className="text-xs text-blue-600 font-bold hover:underline"
+                        >
+                          詳細を確認 →
+                        </Link>
+                        {isAdmin && (
+                          <div className="flex items-center gap-2">
+                            <Link href={`/cases/${c.id}/edit`} className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors" title="編集">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Link>
+                            <button onClick={() => handleDelete(c.id)} className="p-1.5 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-md transition-colors" title="削除">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* デスクトップ表示（テーブルレイアウト） */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-sm text-slate-700">
                   <thead className="bg-slate-50 text-xs font-bold text-slate-600 border-b border-slate-200">
                     <tr>
@@ -315,7 +371,7 @@ function StatusBadge({ status }: { status: string }) {
 
   if (status === "pending") {
     styles = "bg-amber-50 text-amber-700 border-amber-200";
-    label = "承認待ち";
+    label = "審査中";
   } else if (status === "approved") {
     styles = "bg-emerald-50 text-emerald-700 border-emerald-200";
     label = "承認済み";

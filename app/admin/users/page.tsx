@@ -67,17 +67,17 @@ export default function AdminUsersPage() {
 
     return (
         <RequireAdmin>
-            <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+            <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-5xl w-full">
 
-                    <div className="flex items-center justify-between mb-8 animate-fade-in">
+                    <div className="flex items-center justify-between mb-8 animate-fade-in flex-wrap sm:flex-nowrap gap-4">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">新規ユーザー承認</h1>
-                            <p className="text-slate-600">新規利用申請の確認と承認を行います</p>
+                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">新規ユーザー承認</h1>
+                            <p className="text-slate-600 text-sm mt-1">新規利用申請の確認と承認を行います</p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center">
-                                管理メニューへ戻る
+                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center font-bold">
+                                管理者メニューへ戻る
                             </Link>
                             <Link href="/admin/users/new" className="btn-primary flex items-center gap-2 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm">
                                 <Plus className="w-4 h-4" /> <span>アカウント新規発行</span>

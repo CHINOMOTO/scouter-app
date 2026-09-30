@@ -250,7 +250,10 @@ export default function AdminCaseDetailPage() {
         <div className="max-w-3xl w-full mx-4 bg-slate-100/80 border border-slate-200 rounded-2xl p-8 relative">
 
           {loading ? (
-            <p className="text-sm text-slate-800 text-center py-10">読み込み中です...</p>
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
+              <p className="text-sm text-slate-600 font-medium">申請詳細を読み込み中...</p>
+            </div>
           ) : fetchError ? (
             <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
               {fetchError}

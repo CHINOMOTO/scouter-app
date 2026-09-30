@@ -120,10 +120,10 @@ export default function AdminDashboardPage() {
                                 </div>
 
                                 <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
-                                    承認待ちリスト
+                                    就業トラブル 審査
                                 </h2>
                                 <p className="text-slate-600 text-sm mb-6 leading-relaxed">
-                                    新規登録された応募者属性リストの審査を行います。
+                                    加盟企業から申請された就業トラブル情報およびエビデンス資料の審査を行います。
                                 </p>
 
                                 <div className="mt-auto">

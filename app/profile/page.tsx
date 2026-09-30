@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
-import { User } from "lucide-react";
+import { User, ArrowLeft } from "lucide-react";
 
 type UserProfile = {
     email: string;
@@ -73,8 +73,12 @@ export default function ProfilePage() {
                 <div className="max-w-2xl w-full">
 
                     <div className="mb-6 animate-fade-in">
-                        <Link href="/dashboard" className="btn-secondary text-sm inline-flex items-center gap-2 px-4 py-2 hover:bg-slate-100 transition-colors">
-                            ← ダッシュボードへ戻る
+                        <Link 
+                            href="/dashboard" 
+                            className="btn-secondary text-xs h-9 px-3.5 rounded-lg inline-flex items-center gap-1.5 font-medium transition-colors"
+                        >
+                            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                            <span>ダッシュボードへ戻る</span>
                         </Link>
                     </div>
 
@@ -119,7 +123,7 @@ export default function ProfilePage() {
                                         <div className="grid grid-cols-[140px_1fr] items-center py-3 px-4 rounded-lg bg-white border border-slate-200">
                                             <dt className="text-slate-600 font-medium">権限</dt>
                                             <dd>
-                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${ profile.role === "admin" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-700 border-slate-600" }`}>
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${ profile.role === "admin" ? "bg-purple-50 text-purple-700 border-purple-200" : "bg-slate-100 text-slate-700 border-slate-200" }`}>
                                                     {roleLabel(profile.role)}
                                                 </span>
                                             </dd>
@@ -128,7 +132,7 @@ export default function ProfilePage() {
                                             <dt className="text-slate-600 font-medium">アカウント状態</dt>
                                             <dd>
                                                 <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${ profile.isApproved ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200" }`}>
-                                                    {profile.isApproved ? "承認済み" : "承認待ち"}
+                                                    {profile.isApproved ? "承認済み" : "審査中"}
                                                 </span>
                                             </dd>
                                         </div>
