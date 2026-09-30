@@ -6,6 +6,8 @@ import { FolderOpen, Search, Plus, AlertCircle, Pencil, Trash2, Clock, CheckCirc
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
+import { Pagination } from "@/components/Pagination";
+import { Toast, ToastMessage } from "@/components/Toast";
 
 type BlacklistCase = {
   id: string;
@@ -16,15 +18,19 @@ type BlacklistCase = {
   created_at: string;
 };
 
+const PAGE_SIZE = 15;
+
 export default function CasesPage() {
   const router = useRouter();
   const [cases, setCases] = useState<BlacklistCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMSG, setErrorMSG] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" }>({ key: "created_at", direction: "desc" });
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleSort = (key: string) => {
     let direction: "asc" | "desc" = "asc";
@@ -65,6 +71,13 @@ export default function CasesPage() {
 
     return result;
   }, [cases, searchTerm, sortConfig]);
+
+  const totalPages = Math.ceil(filteredAndSortedCases.length / PAGE_SIZE);
+
+  const paginatedCases = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredAndSortedCases.slice(start, start + PAGE_SIZE);
+  }, [filteredAndSortedCases, currentPage]);
 
   useEffect(() => {
     const init = async () => {
@@ -129,9 +142,9 @@ export default function CasesPage() {
       if (data.error) throw new Error(data.error);
 
       setCases(prev => prev.filter(c => c.id !== id));
-      alert("削除しました。");
+      setToast({ type: "success", text: "データを削除しました。" });
     } catch (err: any) {
-      alert("削除に失敗しました: " + err.message);
+      setToast({ type: "error", text: "削除に失敗しました: " + err.message });
     }
   };
 
@@ -154,6 +167,7 @@ export default function CasesPage() {
 
   return (
     <RequireAuth>
+      <Toast toast={toast} onClose={() => setToast(null)} />
       <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
         <div className="max-w-6xl w-full relative z-10">
 
@@ -169,9 +183,16 @@ export default function CasesPage() {
                   就業・採用トラブル情報データベース
                 </span>
               </div>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                就業トラブル 登録データ一覧
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                  就業トラブル 登録データ一覧
+                </h1>
+                {!isLoading && (
+                  <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full font-mono">
+                    全 {filteredAndSortedCases.length} 件
+                  </span>
+                )}
+              </div>
               <p className="text-slate-600 text-sm mt-1">
                 共有データベースに登録されている就業トラブル情報の一覧です。
               </p>
@@ -217,7 +238,10 @@ export default function CasesPage() {
                   type="text"
                   placeholder="氏名や登録理由で絞り込み..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-slate-500 transition-colors"
                 />
               </div>
@@ -249,7 +273,7 @@ export default function CasesPage() {
                     )}
                   </div>
                 ) : (
-                  filteredAndSortedCases.map((c) => (
+                  paginatedCases.map((c) => (
                     <div key={c.id} className="p-4 hover:bg-slate-50 transition-colors">
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <Link
@@ -311,7 +335,7 @@ export default function CasesPage() {
                         </td>
                       </tr>
                     ) : (
-                      filteredAndSortedCases.map((c) => (
+                      paginatedCases.map((c) => (
                       <tr key={c.id} className="hover:bg-slate-50/80 transition-colors group">
                         <td className="px-6 py-4">
                           <Link
@@ -357,6 +381,16 @@ export default function CasesPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* ページネーション */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filteredAndSortedCases.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setCurrentPage}
+                className="bg-white"
+              />
             </div>
           )}
         </div>

@@ -13,6 +13,7 @@ import {
     ShieldCheck 
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
+import { Pagination } from "@/components/Pagination";
 
 type Company = {
     id: string;
@@ -23,9 +24,12 @@ type Company = {
     created_at: string;
 };
 
+const PAGE_SIZE = 10;
+
 export default function AdminCompaniesPage() {
     const [companies, setCompanies] = useState<Company[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
     const [toast, setToast] = useState<ToastMessage | null>(null);
 
     const fetchCompanies = async () => {
@@ -89,6 +93,9 @@ export default function AdminCompaniesPage() {
         }
     };
 
+    const totalPages = Math.ceil(companies.length / PAGE_SIZE);
+    const paginatedCompanies = companies.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
     return (
         <RequireAdmin>
             <Toast toast={toast} onClose={() => setToast(null)} />
@@ -96,7 +103,14 @@ export default function AdminCompaniesPage() {
                 <div className="max-w-4xl w-full relative z-10">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in">
                         <div>
-                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">利用会社管理</h1>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">利用会社管理</h1>
+                                {!loading && (
+                                    <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full font-mono">
+                                        全 {companies.length} 件
+                                    </span>
+                                )}
+                            </div>
                             <p className="text-slate-600 text-sm mt-1">登録されている加盟企業（法人番号・契約プラン）の一覧です</p>
                         </div>
                         <div className="flex gap-3 items-center flex-wrap sm:flex-nowrap">
@@ -125,63 +139,74 @@ export default function AdminCompaniesPage() {
                         <p className="text-slate-500 text-sm mt-1">右上のボタンから新規追加してください。</p>
                     </div>
                 ) : (
-                    <div className="grid gap-4 animate-fade-in delay-100 max-w-4xl w-full">
-                        {companies.map((company) => (
-                            <div
-                                key={company.id}
-                                className="bg-white p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-slate-300 transition-all border border-slate-200 shadow-sm group"
-                            >
-                                <div className="flex items-center gap-5">
-                                    <div className="h-14 w-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
-                                        <Building2 className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-3">
-                                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                                                {company.name}
-                                            </h3>
-                                            {company.is_main && (
-                                                <span className="text-[10px] bg-slate-900 text-white px-2.5 py-0.5 rounded-full font-bold tracking-widest">
-                                                    運営元 / HQ
-                                                </span>
-                                            )}
+                    <div className="max-w-4xl w-full space-y-4">
+                        <div className="grid gap-4 animate-fade-in delay-100">
+                            {paginatedCompanies.map((company) => (
+                                <div
+                                    key={company.id}
+                                    className="bg-white p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-slate-300 transition-all border border-slate-200 shadow-sm group"
+                                >
+                                    <div className="flex items-center gap-5">
+                                        <div className="h-14 w-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
+                                            <Building2 className="w-6 h-6" />
                                         </div>
-                                        <div className="flex flex-wrap items-center gap-2.5 mt-2">
-                                            {/* 契約プランバッジ */}
-                                            {getPlanBadge(company.plan_type)}
+                                        <div>
+                                            <div className="flex items-center gap-3">
+                                                <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                                    {company.name}
+                                                </h3>
+                                                {company.is_main && (
+                                                    <span className="text-[10px] bg-slate-900 text-white px-2.5 py-0.5 rounded-full font-bold tracking-widest">
+                                                        運営元 / HQ
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2.5 mt-2">
+                                                {/* 契約プランバッジ */}
+                                                {getPlanBadge(company.plan_type)}
 
-                                            {/* 法人番号 */}
-                                            {company.corporate_number ? (
-                                                <span className="text-xs text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md font-mono border border-slate-200">
-                                                    法人番号: {company.corporate_number}
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-md font-mono border border-slate-200">
-                                                    法人番号未登録
-                                                </span>
-                                            )}
+                                                {/* 法人番号 */}
+                                                {company.corporate_number ? (
+                                                    <span className="text-xs text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md font-mono border border-slate-200">
+                                                        法人番号: {company.corporate_number}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-md font-mono border border-slate-200">
+                                                        法人番号未登録
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="flex gap-2 items-center self-end sm:self-center">
+                                        <Link
+                                            href={`/admin/companies/${company.id}`}
+                                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors text-xs font-bold"
+                                            title="詳細・編集"
+                                        >
+                                            <Pencil className="w-3.5 h-3.5" />
+                                            <span>編集</span>
+                                        </Link>
+                                        <button
+                                            onClick={() => handleDelete(company.id, company.name)}
+                                            className="inline-flex items-center justify-center p-2 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-lg transition-colors text-xs"
+                                            title="削除"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex gap-2 items-center self-end sm:self-center">
-                                    <Link
-                                        href={`/admin/companies/${company.id}`}
-                                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors text-xs font-bold"
-                                        title="詳細・編集"
-                                    >
-                                        <Pencil className="w-3.5 h-3.5" />
-                                        <span>編集</span>
-                                    </Link>
-                                    <button
-                                        onClick={() => handleDelete(company.id, company.name)}
-                                        className="inline-flex items-center justify-center p-2 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-lg transition-colors text-xs"
-                                        title="削除"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            totalItems={companies.length}
+                            pageSize={PAGE_SIZE}
+                            onPageChange={setCurrentPage}
+                            className="bg-white rounded-xl border border-slate-200 px-4 shadow-2xs"
+                        />
                     </div>
                 )}
             </div>

@@ -17,6 +17,7 @@ import {
     Calendar
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
+import { Pagination } from "@/components/Pagination";
 
 type CaseRowAdmin = {
     id: string;
@@ -37,10 +38,13 @@ type CaseRowAdmin = {
     } | null;
 };
 
+const PAGE_SIZE = 10;
+
 export default function AdminCaseList() {
     const [cases, setCases] = useState<CaseRowAdmin[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState<"pending" | "approved" | "rejected" | "all">("pending");
+    const [currentPage, setCurrentPage] = useState(1);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [toast, setToast] = useState<ToastMessage | null>(null);
 
@@ -123,6 +127,8 @@ export default function AdminCaseList() {
     };
 
     const filteredCases = cases.filter(c => filterStatus === "all" ? true : c.status === filterStatus);
+    const totalPages = Math.ceil(filteredCases.length / PAGE_SIZE);
+    const paginatedCases = filteredCases.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
     return (
         <RequireAdmin>
@@ -139,9 +145,16 @@ export default function AdminCaseList() {
                                     ADMIN CONSOLE
                                 </span>
                             </div>
-                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                                就業トラブル 審査管理
-                            </h1>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                                    就業トラブル 審査管理
+                                </h1>
+                                {!loading && (
+                                    <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full font-mono">
+                                        全 {filteredCases.length} 件
+                                    </span>
+                                )}
+                            </div>
                             <p className="text-slate-600 text-sm mt-1">
                                 加盟企業から申請された就業トラブル情報・エビデンス資料の審査を行います。
                             </p>
@@ -155,28 +168,40 @@ export default function AdminCaseList() {
                     {/* タブ切り替え */}
                     <div className="flex gap-2 border-b border-slate-200 pb-3 mb-6 overflow-x-auto animate-fade-in">
                         <button
-                            onClick={() => setFilterStatus("pending")}
+                            onClick={() => {
+                                setFilterStatus("pending");
+                                setCurrentPage(1);
+                            }}
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "pending" ? "bg-slate-900 text-white shadow-sm" : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"}`}
                         >
                             <Clock className="w-3.5 h-3.5" />
                             <span>審査待ち ({cases.filter(c => c.status === "pending").length})</span>
                         </button>
                         <button
-                            onClick={() => setFilterStatus("approved")}
+                            onClick={() => {
+                                setFilterStatus("approved");
+                                setCurrentPage(1);
+                            }}
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "approved" ? "bg-slate-900 text-white shadow-sm" : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"}`}
                         >
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>承認済み ({cases.filter(c => c.status === "approved").length})</span>
                         </button>
                         <button
-                            onClick={() => setFilterStatus("rejected")}
+                            onClick={() => {
+                                setFilterStatus("rejected");
+                                setCurrentPage(1);
+                            }}
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "rejected" ? "bg-slate-900 text-white shadow-sm" : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"}`}
                         >
                             <XCircle className="w-3.5 h-3.5" />
                             <span>却下 ({cases.filter(c => c.status === "rejected").length})</span>
                         </button>
                         <button
-                            onClick={() => setFilterStatus("all")}
+                            onClick={() => {
+                                setFilterStatus("all");
+                                setCurrentPage(1);
+                            }}
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${filterStatus === "all" ? "bg-slate-900 text-white shadow-sm" : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"}`}
                         >
                             すべて ({cases.length})
@@ -198,7 +223,7 @@ export default function AdminCaseList() {
                         </div>
                     ) : (
                         <div className="space-y-4 animate-fade-in">
-                            {filteredCases.map((c) => (
+                            {paginatedCases.map((c) => (
                                 <div
                                     key={c.id}
                                     className="bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
@@ -282,6 +307,15 @@ export default function AdminCaseList() {
                                     </div>
                                 </div>
                             ))}
+
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                totalItems={filteredCases.length}
+                                pageSize={PAGE_SIZE}
+                                onPageChange={setCurrentPage}
+                                className="mt-6"
+                            />
                         </div>
                     )}
                 </div>
