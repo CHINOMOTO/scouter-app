@@ -97,25 +97,6 @@ export default function DashboardPage() {
   const canViewPerson = isAdmin || allowedPlan === "full" || allowedPlan === "employment";
   const canViewCredit = isAdmin || allowedPlan === "full" || allowedPlan === "credit";
 
-  // プラン表示ラベル
-  const getPlanBadge = () => {
-    if (isAdmin) {
-      return { label: "管理者権限（全機能利用可能）", style: "bg-slate-900 text-white" };
-    }
-    switch (allowedPlan) {
-      case "full":
-        return { label: "両方セットプラン（就業＋企業信用）", style: "bg-blue-50 text-blue-700 border border-blue-200/80" };
-      case "employment":
-        return { label: "応募者・就業情報プラン", style: "bg-emerald-50 text-emerald-700 border border-emerald-200/80" };
-      case "credit":
-        return { label: "企業信用情報プラン", style: "bg-indigo-50 text-indigo-700 border border-indigo-200/80" };
-      default:
-        return { label: "スタンダードプラン", style: "bg-slate-100 text-slate-700 border border-slate-200" };
-    }
-  };
-
-  const planBadge = getPlanBadge();
-
   return (
     <RequireAuth>
       <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
@@ -124,16 +105,6 @@ export default function DashboardPage() {
           {/* ヘッダーエリア */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-6 border-b border-slate-200">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${planBadge.style}`}>
-                  {planBadge.label}
-                </span>
-                {companyName && (
-                  <span className="text-xs text-slate-500 font-medium">
-                    {companyName}
-                  </span>
-                )}
-              </div>
               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                 ダッシュボード
               </h1>
