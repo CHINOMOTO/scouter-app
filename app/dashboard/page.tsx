@@ -226,7 +226,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 {/* 企業信用照会 */}
                 <MenuCard
                   title="企業信用 照会・検索"
@@ -234,6 +234,15 @@ export default function DashboardPage() {
                   badge="信用照会"
                   icon={<Building2 className="w-5 h-5 text-blue-600" />}
                   onClick={() => router.push("/credit")}
+                />
+
+                {/* 登録データ一覧 */}
+                <MenuCard
+                  title="登録データ一覧"
+                  description="現在データベースに登録・共有されている取引先企業の遅延・未払いデータの一覧を確認します。"
+                  badge="一覧"
+                  icon={<ClipboardList className="w-5 h-5 text-slate-700" />}
+                  onClick={() => router.push("/credit/cases")}
                 />
 
                 {/* 遅延・未払いを新規登録 */}

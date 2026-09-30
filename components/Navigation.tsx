@@ -345,6 +345,12 @@ export default function Navigation() {
                                         label="企業信用 照会・検索"
                                     />
                                     <SubmenuLink 
+                                        href="/credit/cases"
+                                        active={pathname === "/credit/cases"}
+                                        icon={<FileText className="w-3.5 h-3.5" />}
+                                        label="登録データ一覧"
+                                    />
+                                    <SubmenuLink 
                                         href="/credit/new"
                                         active={pathname === "/credit/new"}
                                         icon={<FilePlus2 className="w-3.5 h-3.5" />}

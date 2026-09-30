@@ -8,6 +8,7 @@ export async function GET(request: Request) {
         const q = searchParams.get('q') || '';
         const corporateNumber = searchParams.get('corp') || '';
         const status = searchParams.get('status') || 'approved'; // 一般は承認済みのみ
+        const showAll = searchParams.get('all') === 'true'; // テスト検証用：全件表示フラグ
 
         const authHeader = request.headers.get('Authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -70,8 +71,8 @@ export async function GET(request: Request) {
             `)
             .order('created_at', { ascending: false });
 
-        // 一般ユーザーは承認済みデータ、または自社が登録したデータのみ閲覧可
-        if (!isAdmin) {
+        // 一般ユーザーは承認済みデータ、または自社が登録したデータのみ閲覧可（テスト用all=true時は全件閲覧可）
+        if (!isAdmin && !showAll) {
             query = query.or(`status.eq.approved,registered_by_company_id.eq.${appUser?.company_id}`);
         }
 
