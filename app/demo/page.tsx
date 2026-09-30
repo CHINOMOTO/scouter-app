@@ -231,6 +231,9 @@ export default function DemoLandingPage() {
                 {/* 悩み 1 */}
                 <div className="case__item cream_bg" style={{ flex: "1 1 320px", maxWidth: "360px", padding: "36px 24px 28px", borderRadius: "16px", backgroundColor: "#fbf8ee", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
+                    <div style={{ display: "inline-block", fontSize: "11px", fontWeight: "900", letterSpacing: "1.2px", color: "#3F6ECC", backgroundColor: "#EDF6FF", padding: "3px 10px", borderRadius: "20px", marginBottom: "12px", border: "1px solid #d0e4ff" }}>
+                      MIERIS WORK
+                    </div>
                     <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", lineHeight: "1.5", minHeight: "58px", color: "#202226" }}>
                       求人費をかけたのに<br className="only-pc" />当日欠勤で現場に穴が開く
                     </h4>
@@ -253,6 +256,9 @@ export default function DemoLandingPage() {
                 {/* 悩み 2 */}
                 <div className="case__item cream_bg" style={{ flex: "1 1 320px", maxWidth: "360px", padding: "36px 24px 28px", borderRadius: "16px", backgroundColor: "#fbf8ee", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
+                    <div style={{ display: "inline-block", fontSize: "11px", fontWeight: "900", letterSpacing: "1.2px", color: "#4f46e5", backgroundColor: "#EEF2FF", padding: "3px 10px", borderRadius: "20px", marginBottom: "12px", border: "1px solid #e0e7ff" }}>
+                      MIERIS CREDIT
+                    </div>
                     <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", lineHeight: "1.5", minHeight: "58px", color: "#202226" }}>
                       初めての取引先から受注<br className="only-pc" />期日を過ぎても代金未払い
                     </h4>
@@ -275,6 +281,9 @@ export default function DemoLandingPage() {
                 {/* 悩み 3 */}
                 <div className="case__item cream_bg" style={{ flex: "1 1 320px", maxWidth: "360px", padding: "36px 24px 28px", borderRadius: "16px", backgroundColor: "#fbf8ee", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
+                    <div style={{ display: "inline-block", fontSize: "11px", fontWeight: "900", letterSpacing: "1.2px", color: "#025D2C", backgroundColor: "#ECFAEC", padding: "3px 10px", borderRadius: "20px", marginBottom: "12px", border: "1px solid #cceccc" }}>
+                      COMPLIANCE RULE
+                    </div>
                     <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", lineHeight: "1.5", minHeight: "58px", color: "#202226" }}>
                       個人情報や「晒し」による<br className="only-pc" />法的なトラブル・訴訟が心配
                     </h4>
@@ -325,11 +334,12 @@ export default function DemoLandingPage() {
                   <h3 className="title" style={{ fontSize: "21px", fontWeight: "bold", lineHeight: "1.4", marginBottom: "18px", color: "#202226" }}>
                     ニーズに応じた<br />高い柔軟性
                   </h3>
-                  <div style={{ height: "130px", backgroundColor: "#EDF6FF", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px", border: "1px solid #d0d1d3" }}>
-                    <span style={{ fontSize: "15px", fontWeight: "bold", color: "#3F6ECC" }}>人物トラブル ＋ 未払い企業信用</span>
+                  <div style={{ height: "130px", backgroundColor: "#EDF6FF", borderRadius: "10px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "6px", marginBottom: "20px", border: "1px solid #d0d1d3" }}>
+                    <span style={{ fontSize: "16px", fontWeight: "900", letterSpacing: "0.5px", color: "#3F6ECC" }}>MIERIS WORK ＋ CREDIT</span>
+                    <span style={{ fontSize: "11px", fontWeight: "bold", color: "#737378" }}>就業照会 ＆ 企業信用</span>
                   </div>
                   <p className="desc" style={{ fontSize: "14px", color: "#56575b", lineHeight: "1.8" }}>
-                    人物トラブル情報プラン、未払い企業クレジットプラン、両方セットプランの3つの契約形態をご用意。現場の課題に即した導入が可能です。
+                    就業トラブルを防ぐ「MIERIS WORK」、取引先の焦げ付きを防ぐ「MIERIS CREDIT」、両方を網羅する「MIERIS FULL」の3つの契約形態をご用意。現場の課題に即した導入が可能です。
                   </p>
                 </li>
 
@@ -373,7 +383,10 @@ export default function DemoLandingPage() {
                   <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img src="/demo-assets/case-01.png" alt="就業トラブルの事前可視化" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
                   </div>
-                  <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", color: "#202226", marginBottom: "14px" }}>就業トラブルの事前可視化</h4>
+                  <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", color: "#202226", marginBottom: "14px" }}>
+                    <span style={{ display: "block", fontSize: "12px", color: "#3F6ECC", fontWeight: "900", letterSpacing: "1px", marginBottom: "4px" }}>MIERIS WORK</span>
+                    就業トラブルの事前可視化
+                  </h4>
                   <p className="case__text" style={{ fontSize: "14px", color: "#56575b", lineHeight: "1.8" }}>
                     面接前に氏名・生年月日で照会することで、過去の当日欠勤や無断不通、現場での重大トラブル実績を事前に確認できます。
                   </p>
@@ -383,7 +396,10 @@ export default function DemoLandingPage() {
                   <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img src="/demo-assets/case-02.png" alt="取引先未払いリスクの事前把握" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
                   </div>
-                  <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", color: "#202226", marginBottom: "14px" }}>取引先未払いリスクの事前把握</h4>
+                  <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", color: "#202226", marginBottom: "14px" }}>
+                    <span style={{ display: "block", fontSize: "12px", color: "#4f46e5", fontWeight: "900", letterSpacing: "1px", marginBottom: "4px" }}>MIERIS CREDIT</span>
+                    取引先未払いリスクの事前把握
+                  </h4>
                   <p className="case__text" style={{ fontSize: "14px", color: "#56575b", lineHeight: "1.8" }}>
                     初めて受注する企業について、過去に発生した支払遅延や未払い代金の有無を照会。取引条件の事前見直しに役立てられます。
                   </p>
@@ -499,7 +515,7 @@ export default function DemoLandingPage() {
                         新規取引先の遅延履歴を発見し、前受金取引で焦げ付きを回避
                       </span>
                       <br />
-                      初めて取引する会社からの急な運送依頼。ミエリスクレジットで照会したところ、他社で未払い発生の記録があり、契約条件を『事前振込』に変更。結果的に代金未払いリスクを完全にゼロに抑えられました。
+                      初めて取引する会社からの急な運送依頼。MIERIS CREDIT（ミエリスクレジット）で照会したところ、他社で未払い発生の記録があり、契約条件を『事前振込』に変更。結果的に代金未払いリスクを完全にゼロに抑えられました。
                     </h3>
                     <div className="showcase__logo" style={{ marginTop: "18px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
                       <p className="text-a" style={{ fontSize: "14px", fontWeight: "bold", color: "#56575b", margin: 0 }}>──城南建材ロジスティクス株式会社 専務取締役さま（一般貨物自動車運送業）</p>
@@ -540,17 +556,17 @@ export default function DemoLandingPage() {
                   <div className="member price">
                     <div className="estimate-set" style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
                       
-                      <div className="select-set" style={{ width: "260px", height: "52px", margin: 0, position: "relative" }}>
+                      <div className="select-set" style={{ width: "360px", maxWidth: "100%", height: "52px", margin: 0, position: "relative" }}>
                         <select
                           name="plan"
                           value={selectedPlan}
                           onChange={(e) => setSelectedPlan(e.target.value)}
                           className="member-select"
-                          style={{ fontSize: "15px", fontWeight: "bold", paddingLeft: "16px" }}
+                          style={{ fontSize: "14px", fontWeight: "bold", paddingLeft: "14px" }}
                         >
-                          <option value="full">両方セットプラン</option>
-                          <option value="employment">応募者照会プラン</option>
-                          <option value="credit">企業信用照会プラン</option>
+                          <option value="full">MIERIS FULL（就業照会＋企業信用 両用セット）</option>
+                          <option value="employment">MIERIS WORK（応募者・就業情報プラン）</option>
+                          <option value="credit">MIERIS CREDIT（企業信用情報プラン）</option>
                         </select>
                       </div>
 
@@ -593,7 +609,7 @@ export default function DemoLandingPage() {
                     <h3 className="knowhow__itemHeading--large" style={{ fontSize: "24px", fontWeight: "bold", color: "#202226", textAlign: "center", marginBottom: "22px" }}>安心安全なシステム</h3>
                     <ul className="knowhow__list" style={{ paddingLeft: "16px", lineHeight: "2.2", fontSize: "15px", color: "#45464a", margin: 0 }}>
                       <li className="knowhow__listItem">1分で照会完了する直感ユーザー画面</li>
-                      <li className="knowhow__listItem">人物トラブル・企業未払いをダブル防御</li>
+                      <li className="knowhow__listItem">MIERIS WORK ＆ CREDIT で現場と経営をダブル防御</li>
                       <li className="knowhow__listItem">セキュアに情報共有するアクセス管理</li>
                     </ul>
                   </div>
