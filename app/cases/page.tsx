@@ -176,27 +176,27 @@ export default function CasesPage() {
                 共有データベースに登録されているトラブル人材の一覧です。
               </p>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
               <Link 
                 href="/dashboard" 
-                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>戻る</span>
+                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                <span className="whitespace-nowrap">戻る</span>
               </Link>
               <Link
                 href="/search"
-                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
               >
-                <Search className="w-3.5 h-3.5" />
-                <span>検索・照会</span>
+                <Search className="w-3.5 h-3.5 shrink-0" />
+                <span className="whitespace-nowrap">検索・照会</span>
               </Link>
               <Link
                 href="/cases/new"
-                className="btn-primary flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all"
+                className="btn-primary flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap shrink-0"
               >
-                <UserPlus className="w-4 h-4" />
-                <span>人物を新規登録</span>
+                <UserPlus className="w-4 h-4 shrink-0" />
+                <span className="whitespace-nowrap">人物を新規登録</span>
               </Link>
             </div>
           </div>

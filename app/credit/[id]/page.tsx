@@ -9,7 +9,6 @@ import {
     ArrowLeft, 
     CheckCircle2, 
     AlertTriangle, 
-    Scale, 
     Building2, 
     Calendar, 
     ShieldCheck, 
@@ -158,21 +157,21 @@ export default function CreditCaseDetailPage() {
                 <div className="max-w-3xl w-full">
 
                     {/* ナビゲーション */}
-                    <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center justify-between mb-8 gap-4 flex-wrap sm:flex-nowrap">
                         <Link 
                             href="/credit" 
-                            className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+                            className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
                         >
-                            <ArrowLeft className="w-3.5 h-3.5" />
-                            <span>未払い企業一覧へ戻る</span>
+                            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                            <span className="whitespace-nowrap">未払い企業一覧へ戻る</span>
                         </Link>
                         {isOwner && !isResolved && (
                             <button
                                 onClick={() => setShowResolveModal(true)}
-                                className="inline-flex items-center gap-1.5 px-4 h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-xs transition-all"
+                                className="inline-flex items-center gap-1.5 px-4 h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-xs transition-all whitespace-nowrap shrink-0"
                             >
-                                <Check className="w-3.5 h-3.5" />
-                                <span>入金完了（解決）を報告する</span>
+                                <Check className="w-3.5 h-3.5 shrink-0" />
+                                <span className="whitespace-nowrap">入金完了（解決）を報告する</span>
                             </button>
                         )}
                     </div>
@@ -277,14 +276,13 @@ export default function CreditCaseDetailPage() {
                             </div>
                         </div>
 
-                        {/* 相手方の主張 */}
-                        <div className="mt-6 p-5 bg-amber-50/60 rounded-xl border border-amber-200/80">
-                            <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <Scale className="w-4 h-4 text-amber-700" />
-                                <span>相手方の主張（反論・理由）</span>
+                        {/* 登録理由 */}
+                        <div className="mt-6 p-5 bg-slate-50 rounded-xl border border-slate-200">
+                            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
+                                登録理由
                             </h3>
                             <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
-                                {caseData.counterparty_claim || "相手方からの特段の主張・反論の申立はありません。"}
+                                {caseData.counterparty_claim || "特段の登録理由は記載されていません。"}
                             </p>
                         </div>
 

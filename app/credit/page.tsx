@@ -153,20 +153,20 @@ export default function CreditSearchPage() {
                                 取引開始前に事実を確認し、代金未回収・支払い遅延リスクを未然に防ぎます。
                             </p>
                         </div>
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
                             <Link 
                                 href="/dashboard" 
-                                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+                                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
                             >
-                                <ArrowLeft className="w-3.5 h-3.5" />
-                                <span>戻る</span>
+                                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                                <span className="whitespace-nowrap">戻る</span>
                             </Link>
                             <Link
                                 href="/credit/new"
-                                className="btn-primary flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all"
+                                className="btn-primary flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap shrink-0"
                             >
-                                <Plus className="w-4 h-4" />
-                                <span>未払い企業を新規登録</span>
+                                <Plus className="w-4 h-4 shrink-0" />
+                                <span className="whitespace-nowrap">未払い企業を新規登録</span>
                             </Link>
                         </div>
                     </div>
@@ -407,8 +407,8 @@ export default function CreditSearchPage() {
                                                     </div>
 
                                                     {c.counterparty_claim && (
-                                                        <div className="text-xs text-slate-600 line-clamp-2 mb-3 bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/60">
-                                                            <span className="font-bold text-amber-900 mr-1">【相手方の主張】</span>
+                                                        <div className="text-xs text-slate-600 line-clamp-2 mb-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                                            <span className="font-bold text-slate-900 mr-1">【登録理由】</span>
                                                             {c.counterparty_claim}
                                                         </div>
                                                     )}

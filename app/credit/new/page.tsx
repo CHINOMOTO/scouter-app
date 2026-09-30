@@ -151,10 +151,10 @@ export default function NewCreditCasePage() {
                         <div className="shrink-0">
                             <Link 
                                 href="/credit" 
-                                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap"
+                                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
                             >
-                                <ArrowLeft className="w-3.5 h-3.5" />
-                                <span>未払い企業一覧へ戻る</span>
+                                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                                <span className="whitespace-nowrap">未払い企業一覧へ戻る</span>
                             </Link>
                         </div>
                     </div>
@@ -271,14 +271,14 @@ export default function NewCreditCasePage() {
                                 </div>
                             </div>
 
-                            {/* 相手方の主張 */}
+                            {/* 登録理由 */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <label className="text-sm font-bold text-slate-800">
-                                        相手方の主張（反論・理由）
+                                        登録理由（未払い・遅延の経緯）
                                     </label>
-                                    <span className="text-xs text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                                        ※公平性担保のため必須推奨
+                                    <span className="text-xs text-slate-600 font-semibold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                                        ※客観的な事実をご記入ください
                                     </span>
                                 </div>
                                 <textarea
@@ -286,7 +286,7 @@ export default function NewCreditCasePage() {
                                     value={counterpartyClaim}
                                     onChange={(e) => setCounterpartyClaim(e.target.value)}
                                     className="input-field py-2.5 resize-none text-sm"
-                                    placeholder="例: 「元請からの入金が遅れているため待ってほしいと言われている」「工事のやり直し箇所があり金額の協議中と主張されている」など、相手の主張を客観的に記入してください。"
+                                    placeholder="例: 「支払期日を過ぎても入金がなく、複数回の督促に対しても『社内精査中』を繰り返すのみで支払われない」「納品完了後に一方的な減額を主張され残金の支払いを拒絶されている」など、未払い・遅延に至った客観的な経緯をご記入ください。"
                                 />
                             </div>
 

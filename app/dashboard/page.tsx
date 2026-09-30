@@ -181,7 +181,7 @@ export default function DashboardPage() {
                 {/* 未払い企業照会 */}
                 <MenuCard
                   title="未払い企業 照会・検索"
-                  description="取引先企業の支払い遅延履歴や未払い金額、相手方の主張を照会し、代金未回収を防ぎます。"
+                  description="取引先企業の支払い遅延履歴や未払い金額、事故の登録理由を照会し、代金未回収を防ぎます。"
                   badge="企業照会"
                   icon={<Building2 className="w-5 h-5 text-blue-600" />}
                   onClick={() => router.push("/credit")}

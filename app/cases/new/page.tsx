@@ -283,13 +283,13 @@ export default function NewCasePage() {
                 問題行動・無断欠勤・損害等の事実を客観的根拠に基づき登録申請します。
               </p>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 shrink-0">
               <Link 
                 href="/cases" 
-                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>一覧へ戻る</span>
+                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                <span className="whitespace-nowrap">一覧へ戻る</span>
               </Link>
             </div>
           </div>

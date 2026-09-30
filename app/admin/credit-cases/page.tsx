@@ -128,9 +128,9 @@ export default function AdminCreditCasesPage() {
                                 加盟企業から申請された未払い企業情報・エビデンス資料の審査を行います。
                             </p>
                         </div>
-                        <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center gap-1.5 self-start transition-colors">
-                            <ArrowLeft className="w-4 h-4" />
-                            <span>管理者メニューへ戻る</span>
+                        <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center gap-1.5 self-start transition-colors whitespace-nowrap shrink-0">
+                            <ArrowLeft className="w-4 h-4 shrink-0" />
+                            <span className="whitespace-nowrap">管理者メニューへ戻る</span>
                         </Link>
                     </div>
 
@@ -220,8 +220,8 @@ export default function AdminCreditCasesPage() {
                                         </div>
 
                                         {c.counterparty_claim && (
-                                            <div className="text-xs text-slate-700 bg-amber-50/60 p-3 rounded-xl border border-amber-200/80 mb-2">
-                                                <span className="font-bold text-amber-900 block mb-0.5">相手方の主張:</span>
+                                            <div className="text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 mb-2">
+                                                <span className="font-bold text-slate-900 block mb-0.5">登録理由:</span>
                                                 {c.counterparty_claim}
                                             </div>
                                         )}
