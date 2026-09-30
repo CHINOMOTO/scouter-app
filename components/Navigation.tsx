@@ -206,19 +206,30 @@ export default function Navigation() {
                                 </NavLink>
 
                                 {isAdmin && (
-                                    <div className="relative inline-block">
+                                    <>
                                         <Link
-                                            href="/admin"
-                                            className={`ml-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all uppercase tracking-wider whitespace-nowrap ${pathname.startsWith("/admin") ? "bg-slate-900 text-white border-slate-900 shadow-sm" : "border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900"}`}
+                                            href="/demo"
+                                            target="_blank"
+                                            className="ml-2 px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-200 text-blue-700 bg-blue-50/70 hover:bg-blue-100 hover:text-blue-900 transition-all uppercase tracking-wider whitespace-nowrap flex items-center gap-1 shadow-2xs"
                                         >
-                                            管理メニュー
+                                            <span>デモページ</span>
+                                            <span className="text-[10px]">↗</span>
                                         </Link>
-                                        {notificationCount > 0 && (
-                                            <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white animate-pulse ring-2 ring-white shadow-sm">
-                                                {notificationCount}
-                                            </span>
-                                        )}
-                                    </div>
+
+                                        <div className="relative inline-block">
+                                            <Link
+                                                href="/admin"
+                                                className={`ml-1 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all uppercase tracking-wider whitespace-nowrap ${pathname.startsWith("/admin") ? "bg-slate-900 text-white border-slate-900 shadow-sm" : "border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900"}`}
+                                            >
+                                                管理メニュー
+                                            </Link>
+                                            {notificationCount > 0 && (
+                                                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white animate-pulse ring-2 ring-white shadow-sm">
+                                                    {notificationCount}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -281,9 +292,14 @@ export default function Navigation() {
                         </MobileNavLink>
 
                         {isAdmin && (
-                            <MobileNavLink href="/admin" active={pathname.startsWith("/admin")} onClick={() => setIsMobileMenuOpen(false)} isSpecial>
-                                管理メニュー {notificationCount > 0 && `(${notificationCount})`}
-                            </MobileNavLink>
+                            <>
+                                <MobileNavLink href="/demo" active={pathname === "/demo"} onClick={() => setIsMobileMenuOpen(false)}>
+                                    🌐 デモページ（宣伝LP）
+                                </MobileNavLink>
+                                <MobileNavLink href="/admin" active={pathname.startsWith("/admin")} onClick={() => setIsMobileMenuOpen(false)} isSpecial>
+                                    管理メニュー {notificationCount > 0 && `(${notificationCount})`}
+                                </MobileNavLink>
+                            </>
                         )}
                         <button
                             onClick={() => {
