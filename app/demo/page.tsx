@@ -159,20 +159,26 @@ export default function DemoLandingPage() {
                 <div className="company__inner">
                   <div className="no1-list">
                     
-                    <div className="item-no1 laurel">
-                      <div className="title-set">
-                        <p className="category">就業トラブル<br className="only-pc" /><small>防止</small><br />システム</p>
-                        <p className="share">
-                          <img className="pict" src="https://www.kaonavi.jp/img/top/text_shareno1_water.png" alt="シェアNo.1" /><sup>※1</sup>
+                    <div className="item-no1 laurel" style={{ width: "260px", margin: "0 6px" }}>
+                      <div className="title-set" style={{ width: "195px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                        <p className="category" style={{ flex: "0 0 auto", fontSize: "13px", fontWeight: "bold", lineHeight: "1.35", textAlign: "center", textAlignLast: "center", whiteSpace: "nowrap", color: "#202226" }}>
+                          就業トラブル<br />防止システム
+                        </p>
+                        <p className="share" style={{ margin: 0, position: "relative", flex: "0 0 96px" }}>
+                          <img className="pict" src="https://www.kaonavi.jp/img/top/text_shareno1_water.png" alt="シェアNo.1" style={{ width: "96px", height: "auto", display: "block" }} />
+                          <sup style={{ position: "absolute", top: "14px", right: "-12px", fontSize: "10px" }}>※1</sup>
                         </p>
                       </div>
                     </div>
 
-                    <div className="item-no1 laurel">
-                      <div className="title-set">
-                        <p className="category">取引先信用<br />照会システム</p>
-                        <p className="share">
-                          <img className="pict" src="https://www.kaonavi.jp/img/top/text_shareno1_water.png" alt="シェアNo.1" /><sup>※2</sup>
+                    <div className="item-no1 laurel" style={{ width: "260px", margin: "0 6px" }}>
+                      <div className="title-set" style={{ width: "195px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                        <p className="category" style={{ flex: "0 0 auto", fontSize: "13px", fontWeight: "bold", lineHeight: "1.35", textAlign: "center", textAlignLast: "center", whiteSpace: "nowrap", color: "#202226" }}>
+                          取引先信用<br />照会システム
+                        </p>
+                        <p className="share" style={{ margin: 0, position: "relative", flex: "0 0 96px" }}>
+                          <img className="pict" src="https://www.kaonavi.jp/img/top/text_shareno1_water.png" alt="シェアNo.1" style={{ width: "96px", height: "auto", display: "block" }} />
+                          <sup style={{ position: "absolute", top: "14px", right: "-12px", fontSize: "10px" }}>※2</sup>
                         </p>
                       </div>
                     </div>
@@ -543,9 +549,8 @@ export default function DemoLandingPage() {
                           style={{ fontSize: "15px", fontWeight: "bold", paddingLeft: "16px" }}
                         >
                           <option value="full">両方セットプラン</option>
-                          <option value="employment">人物情報照会プラン</option>
+                          <option value="employment">応募者照会プラン</option>
                           <option value="credit">企業信用照会プラン</option>
-                          <option value="multi">複数拠点・全社利用プラン</option>
                         </select>
                       </div>
 
@@ -623,7 +628,7 @@ export default function DemoLandingPage() {
                   資料も無料体験も、<br className="sp-block only-sp" />ぜひお試しください
                 </h2>
               </div>
-              <div className="conv-02__inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "40px", flexWrap: "wrap", maxWidth: "880px", margin: "0 auto" }}>
+              <div className="conv-02__inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "32px", flexWrap: "wrap", maxWidth: "940px", margin: "0 auto" }}>
                 
                 <div className="conv-02__box" style={{ display: "flex", gap: "16px", flex: "1 1 420px" }}>
                   <div className="conv-02__item" style={{ flex: 1 }}>
@@ -639,16 +644,20 @@ export default function DemoLandingPage() {
                   </div>
                 </div>
 
-                <div className="conv-02__phone" style={{ flex: "1 1 340px", textAlign: "center" }}>
-                  <h3 className="conv-02__phoneHeading" style={{ fontSize: "16px", fontWeight: "bold", color: "#202226", marginBottom: "8px" }}>
+                <div className="conv-02__phone" style={{ flex: "1 1 380px", textAlign: "center" }}>
+                  <h3 className="conv-02__phoneHeading" style={{ fontSize: "16px", fontWeight: "bold", color: "#202226", marginBottom: "8px", whiteSpace: "nowrap" }}>
                     お電話でも、お問い合わせいただけます
                   </h3>
-                  <div className="conv-02__phoneNum">
-                    <span className="conv-02__phoneNum--link" style={{ fontSize: "30px", fontWeight: "900", color: "#3F6ECC", fontFamily: "monospace" }}>
+                  <div className="conv-02__phoneNum" style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "nowrap" }}>
+                    <a 
+                      href="tel:08055846715"
+                      className="conv-02__phoneNum--link" 
+                      style={{ fontSize: "30px", fontWeight: "900", color: "#3F6ECC", fontFamily: "monospace", textDecoration: "none", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" }}
+                    >
                       080-5584-6715
-                    </span>
-                    <div className="conv-02__phoneTime" style={{ fontSize: "13px", color: "#56575b", marginTop: "4px" }}>
-                      <span>10:00-18:00</span> <span style={{ marginLeft: "8px" }}>土日祝除く</span>
+                    </a>
+                    <div className="conv-02__phoneTime" style={{ fontSize: "13px", color: "#56575b", whiteSpace: "nowrap" }}>
+                      <span>10:00-18:00</span> <span style={{ marginLeft: "6px" }}>土日祝除く</span>
                     </div>
                   </div>
                 </div>

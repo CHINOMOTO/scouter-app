@@ -2847,13 +2847,14 @@ body a {
   }
   .conv-02__phoneNum--link {
     margin-right: 16px;
-    font-size: 48px;
+    font-size: 32px;
+    white-space: nowrap;
   }
   .conv-02__phoneNum--link::before {
-    width: 40px;
-    height: 40px;
-    margin-right: 32px;
-    margin-left: 40px;
+    width: 32px;
+    height: 32px;
+    margin-right: 10px;
+    margin-left: 0;
   }
   .conv-02__phoneTime {
     display: -webkit-box;
