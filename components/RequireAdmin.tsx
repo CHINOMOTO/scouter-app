@@ -41,9 +41,10 @@ export function RequireAdmin({ children }: RequireAdminProps) {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center flex-col gap-3">
+        <div className="animate-spin h-8 w-8 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
         <p className="text-sm text-slate-600 font-medium">
-          権限を確認しています...
+          管理者権限を確認しています...
         </p>
       </div>
     );

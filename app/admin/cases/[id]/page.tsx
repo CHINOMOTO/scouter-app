@@ -246,7 +246,7 @@ export default function AdminCaseDetailPage() {
 
   return (
     <RequireAdmin>
-      <div className="min-h-screen bg-white text-slate-900 flex items-center justify-center pt-12 pb-12">
+      <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center pt-20 md:pt-10 pb-12">
         <div className="max-w-3xl w-full mx-4 bg-slate-100/80 border border-slate-200 rounded-2xl p-8 relative">
 
           {loading ? (

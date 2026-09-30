@@ -327,11 +327,6 @@ ${notes.trim() || "なし"}`;
                     </div>
                 )}
             </main>
-
-            {/* フッター */}
-            <footer className="w-full text-center text-slate-500 text-xs py-6">
-                <p>&copy; 2026 MIERIS. 株式会社ミヤエモン / 株式会社宇井建設</p>
-            </footer>
         </div>
     );
 }

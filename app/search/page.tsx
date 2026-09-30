@@ -146,7 +146,7 @@ export default function SearchPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
-        return { label: "登録済み", className: "bg-rose-50 text-rose-700 border-rose-200", borderLeft: "border-l-red-500" };
+        return { label: "承認済み", className: "bg-emerald-50 text-emerald-700 border-emerald-200", borderLeft: "border-l-emerald-500" };
       case "pending":
         return { label: "審査中", className: "bg-amber-50 text-amber-700 border-amber-200", borderLeft: "border-l-yellow-500" };
       case "rejected":

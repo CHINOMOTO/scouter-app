@@ -103,7 +103,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
         return (
             <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center flex-col gap-4">
                 <div className="animate-spin h-8 w-8 border-4 border-slate-300 rounded-full border-t-slate-900"></div>
-                <p className="text-sm text-slate-600 font-medium">認証情報を確認して(Token)...</p>
+                <p className="text-sm text-slate-600 font-medium">認証情報を確認しています...</p>
                 <p className="text-xs text-slate-500 font-mono animate-pulse">{statusMessage}</p>
             </div>
         );

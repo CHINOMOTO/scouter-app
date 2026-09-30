@@ -130,11 +130,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-
-      {/* フッター */}
-      <footer className="w-full text-center text-slate-400 text-xs py-6">
-        <p>&copy; 2026 MIERIS. 株式会社ミヤエモン / 株式会社宇井建設</p>
-      </footer>
     </div>
   );
 }

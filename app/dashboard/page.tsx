@@ -100,7 +100,13 @@ export default function DashboardPage() {
   return (
     <RequireAuth>
       <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
-        <div className="max-w-5xl w-full animate-fade-in relative z-10">
+        {isLoading ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-32 gap-3">
+            <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
+            <p className="text-sm text-slate-600 font-medium">ダッシュボードを読み込み中...</p>
+          </div>
+        ) : (
+          <div className="max-w-5xl w-full animate-fade-in relative z-10">
 
           {/* ヘッダーエリア */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-6 border-b border-slate-200">
@@ -341,6 +347,7 @@ export default function DashboardPage() {
           </div>
 
         </div>
+        )}
       </div>
     </RequireAuth>
   );
