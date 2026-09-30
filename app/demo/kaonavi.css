@@ -5126,4 +5126,24 @@ video.mv__video {
   }
 }
 
+/* デモページ用 追加レスポンシブ調整 */
+@media screen and (max-width: 768px) {
+  .cando.showcase .cando__item {
+    flex-direction: column !important;
+    gap: 24px !important;
+    padding: 24px 16px !important;
+  }
+  .cando.showcase .cando__image {
+    width: 100% !important;
+    max-width: 280px !important;
+    margin: 0 auto !important;
+  }
+  .cando.showcase .cando__image img {
+    height: 180px !important;
+  }
+  .case__item {
+    padding: 24px 16px !important;
+  }
+}
+
 

@@ -40,13 +40,14 @@ export default function DemoLandingPage() {
             <div className="mv__inner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "32px" }}>
               
               {/* 左側コピー */}
-              <div className="mv__content" style={{ flex: "1 1 540px", maxWidth: "620px" }}>
+              <div className="mv__content" style={{ flex: "1 1 480px", maxWidth: "520px" }}>
                 <span className="mv__bubble" style={{ fontSize: "14px", fontWeight: "bold", padding: "6px 18px" }}>
                   使いやすい就業・信用リスク管理システム
                 </span>
                 
-                <h1 className="h1-a" style={{ marginTop: "20px", fontSize: "38px", lineHeight: "1.45", letterSpacing: "-0.5px" }}>
-                  手間のかかる<strong>現場の就業・信用確認</strong>を<br className="only-pc" />
+                <h1 className="h1-a" style={{ marginTop: "20px", fontSize: "35px", lineHeight: "1.45", letterSpacing: "-0.5px" }}>
+                  手間のかかる<br />
+                  <strong>現場の就業・信用確認</strong>を<br />
                   ミエリスで<strong>システム化</strong>！
                 </h1>
 
@@ -68,7 +69,7 @@ export default function DemoLandingPage() {
               </div>
 
               {/* 右側：生成した高品質ノートPCモックアップ写真 */}
-              <div className="mv__bg" style={{ flex: "1 1 480px", maxWidth: "560px" }}>
+              <div className="mv__bg" style={{ flex: "1 1 480px", maxWidth: "540px" }}>
                 <div className="mv__bgInner" style={{ borderRadius: "20px", overflow: "hidden", backgroundColor: "#E8F0F2", boxShadow: "0 12px 30px rgba(32,34,38,0.12)" }}>
                   <img
                     src="/demo-assets/hero-laptop.jpg"
@@ -362,42 +363,60 @@ export default function DemoLandingPage() {
               </div>
               <div className="case__inner line-3" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "24px" }}>
                 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)" }}>
+                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                  <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img src="/demo-assets/case-01.png" alt="就業トラブルの事前可視化" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
+                  </div>
                   <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", color: "#202226", marginBottom: "14px" }}>就業トラブルの事前可視化</h4>
                   <p className="case__text" style={{ fontSize: "14px", color: "#56575b", lineHeight: "1.8" }}>
                     面接前に氏名・生年月日で照会することで、過去の当日欠勤や無断不通、現場での重大トラブル実績を事前に確認できます。
                   </p>
                 </div>
 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)" }}>
+                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                  <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img src="/demo-assets/case-02.png" alt="取引先未払いリスクの事前把握" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
+                  </div>
                   <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", color: "#202226", marginBottom: "14px" }}>取引先未払いリスクの事前把握</h4>
                   <p className="case__text" style={{ fontSize: "14px", color: "#56575b", lineHeight: "1.8" }}>
                     初めて受注する企業について、過去に発生した支払遅延や未払い代金の有無を照会。取引条件の事前見直しに役立てられます。
                   </p>
                 </div>
 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)" }}>
+                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                  <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img src="/demo-assets/case-03.png" alt="客観的事実の登録フロー" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
+                  </div>
                   <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", color: "#202226", marginBottom: "14px" }}>客観的事実の登録フロー</h4>
                   <p className="case__text" style={{ fontSize: "14px", color: "#56575b", lineHeight: "1.8" }}>
                     トラブルが発生した際、感情的な記述を排し「起きた客観的事実」とエビデンス資料のみを運営に申請。審査を経て共有されます。
                   </p>
                 </div>
 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)" }}>
+                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                  <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img src="/demo-assets/case-04.png" alt="本人同意書の電子管理" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
+                  </div>
                   <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", color: "#202226", marginBottom: "14px" }}>本人同意書の電子管理</h4>
                   <p className="case__text" style={{ fontSize: "14px", color: "#56575b", lineHeight: "1.8" }}>
                     面接時や取引開始時に取得した所定の同意書をPDFで保管。適法性の証拠としてセキュアに一元管理します。
                   </p>
                 </div>
 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)" }}>
+                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                  <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img src="/demo-assets/case-05.png" alt="入金完了後の解決済み更新" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
+                  </div>
                   <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", color: "#202226", marginBottom: "14px" }}>入金完了後の解決済み更新</h4>
                   <p className="case__text" style={{ fontSize: "14px", color: "#56575b", lineHeight: "1.8" }}>
                     未払いだった代金が支払われた場合は、5営業日以内に「解決済み（遅延○日）」へとステータスが更新され、公平性を担保します。
                   </p>
                 </div>
 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)" }}>
+                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                  <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img src="/demo-assets/case-06.png" alt="支店・営業所での一括運用" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
+                  </div>
                   <h4 className="case__title" style={{ fontSize: "19px", fontWeight: "bold", color: "#202226", marginBottom: "14px" }}>支店・営業所での一括運用</h4>
                   <p className="case__text" style={{ fontSize: "14px", color: "#56575b", lineHeight: "1.8" }}>
                     複数拠点を持つ企業でも、支店ごとにアカウントを追加発行して現場の内勤担当者がリアルタイムに照会・登録できます。
@@ -429,8 +448,8 @@ export default function DemoLandingPage() {
               <div className="cando__inner" style={{ display: "flex", flexDirection: "column", gap: "36px" }}>
                 
                 {/* 事例 1 */}
-                <div className="cando__item" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px" }}>
-                  <div className="cando__content balloon" style={{ flex: "1 1 auto" }}>
+                <div className="cando__item" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px", position: "relative" }}>
+                  <div className="cando__content balloon" style={{ flex: "1 1 auto", backgroundColor: "#ffffff", padding: "32px", borderRadius: "12px", border: "2px solid #EDDFBB", position: "relative" }}>
                     <h3 className="cando__title" style={{ fontSize: "16px", lineHeight: "1.85", color: "#202226" }}>
                       <span className="large-title underline" style={{ fontSize: "21px", fontWeight: "bold", color: "#3F6ECC", display: "inline-block", borderBottom: "3px solid #FFDA1B", paddingBottom: "2px", marginBottom: "12px" }}>
                         初日の当日欠勤が激減し、職長に頭を下げる日々から解放された
@@ -438,18 +457,18 @@ export default function DemoLandingPage() {
                       <br />
                       荷揚げの現場では朝1人来ないだけで作業が完全に止まります。面接前に1分照会する習慣をつけただけで、他社で直前バックレを繰り返していた人物を事前に回避できるようになり、現場の定着率が劇的に上がりました。
                     </h3>
-                    <div className="showcase__logo" style={{ marginTop: "18px" }}>
-                      <p className="text-a" style={{ fontSize: "14px", fontWeight: "bold", color: "#56575b", margin: 0 }}>──株式会社宮島建設さま（揚重・荷揚げ業）</p>
+                    <div className="showcase__logo" style={{ marginTop: "18px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+                      <p className="text-a" style={{ fontSize: "14px", fontWeight: "bold", color: "#56575b", margin: 0 }}>──株式会社宮島建設 代表取締役さま（揚重・荷揚げ業）</p>
                     </div>
                   </div>
-                  <div className="cando__image cando__image--01" style={{ flexShrink: 0 }}>
-                    <img src="https://www.kaonavi.jp/lp/img/img_showcase_01.png" alt="ご担当者さま" style={{ width: "160px", borderRadius: "10px" }} />
+                  <div className="cando__image cando__image--01" style={{ position: "relative", zIndex: 2, flex: "0 0 230px", width: "230px", borderRadius: "14px", overflow: "hidden", boxShadow: "0 8px 24px rgba(32,34,38,0.12)" }}>
+                    <img src="/demo-assets/voice-01.jpg" alt="株式会社宮島建設 代表取締役さま" style={{ width: "100%", height: "190px", objectFit: "cover", display: "block" }} />
                   </div>
                 </div>
 
                 {/* 事例 2 */}
-                <div className="cando__item" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px" }}>
-                  <div className="cando__content balloon" style={{ flex: "1 1 auto" }}>
+                <div className="cando__item" style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px", position: "relative" }}>
+                  <div className="cando__content balloon" style={{ flex: "1 1 auto", backgroundColor: "#ffffff", padding: "32px", borderRadius: "12px", border: "2px solid #EDDFBB", position: "relative" }}>
                     <h3 className="cando__title" style={{ fontSize: "16px", lineHeight: "1.85", color: "#202226" }}>
                       <span className="large-title underline" style={{ fontSize: "21px", fontWeight: "bold", color: "#3F6ECC", display: "inline-block", borderBottom: "3px solid #FFDA1B", paddingBottom: "2px", marginBottom: "12px" }}>
                         弁護士監修で同意書が必須だから、現場の採用担当も安心運用
@@ -457,18 +476,18 @@ export default function DemoLandingPage() {
                       <br />
                       ブラックリストと聞くと違法性やクレームが不安でしたが、面接時の同意書取得ルールや運営の全件審査が徹底しており、むしろ真面目に働いてくれる人にとっても安心できる仕組みだと納得して導入できました。
                     </h3>
-                    <div className="showcase__logo" style={{ marginTop: "18px" }}>
-                      <p className="text-a" style={{ fontSize: "14px", fontWeight: "bold", color: "#56575b", margin: 0 }}>──広域総合警備保障株式会社さま（交通誘導警備業）</p>
+                    <div className="showcase__logo" style={{ marginTop: "18px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+                      <p className="text-a" style={{ fontSize: "14px", fontWeight: "bold", color: "#56575b", margin: 0 }}>──広域総合警備保障株式会社 人事部長さま（交通誘導警備業）</p>
                     </div>
                   </div>
-                  <div className="cando__image cando__image--01" style={{ flexShrink: 0 }}>
-                    <img src="https://www.kaonavi.jp/lp/img/img_showcase_02.png" alt="ご担当者さま" style={{ width: "160px", borderRadius: "10px" }} />
+                  <div className="cando__image cando__image--01" style={{ position: "relative", zIndex: 2, flex: "0 0 230px", width: "230px", borderRadius: "14px", overflow: "hidden", boxShadow: "0 8px 24px rgba(32,34,38,0.12)" }}>
+                    <img src="/demo-assets/voice-02.jpg" alt="広域総合警備保障株式会社 人事部長さま" style={{ width: "100%", height: "190px", objectFit: "cover", display: "block" }} />
                   </div>
                 </div>
 
                 {/* 事例 3 */}
-                <div className="cando__item" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px" }}>
-                  <div className="cando__content balloon" style={{ flex: "1 1 auto" }}>
+                <div className="cando__item" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px", position: "relative" }}>
+                  <div className="cando__content balloon" style={{ flex: "1 1 auto", backgroundColor: "#ffffff", padding: "32px", borderRadius: "12px", border: "2px solid #EDDFBB", position: "relative" }}>
                     <h3 className="cando__title" style={{ fontSize: "16px", lineHeight: "1.85", color: "#202226" }}>
                       <span className="large-title underline" style={{ fontSize: "21px", fontWeight: "bold", color: "#3F6ECC", display: "inline-block", borderBottom: "3px solid #FFDA1B", paddingBottom: "2px", marginBottom: "12px" }}>
                         新規取引先の遅延履歴を発見し、前受金取引で焦げ付きを回避
@@ -476,12 +495,12 @@ export default function DemoLandingPage() {
                       <br />
                       初めて取引する会社からの急な運送依頼。ミエリスクレジットで照会したところ、他社で未払い発生の記録があり、契約条件を『事前振込』に変更。結果的に代金未払いリスクを完全にゼロに抑えられました。
                     </h3>
-                    <div className="showcase__logo" style={{ marginTop: "18px" }}>
-                      <p className="text-a" style={{ fontSize: "14px", fontWeight: "bold", color: "#56575b", margin: 0 }}>──城南建材ロジスティクス株式会社さま（一般貨物自動車運送業）</p>
+                    <div className="showcase__logo" style={{ marginTop: "18px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+                      <p className="text-a" style={{ fontSize: "14px", fontWeight: "bold", color: "#56575b", margin: 0 }}>──城南建材ロジスティクス株式会社 専務取締役さま（一般貨物自動車運送業）</p>
                     </div>
                   </div>
-                  <div className="cando__image cando__image--01" style={{ flexShrink: 0 }}>
-                    <img src="https://www.kaonavi.jp/wp/wp-content/uploads/bnd_2.jpg" alt="ご担当者さま" style={{ width: "160px", borderRadius: "10px" }} />
+                  <div className="cando__image cando__image--01" style={{ position: "relative", zIndex: 2, flex: "0 0 230px", width: "230px", borderRadius: "14px", overflow: "hidden", boxShadow: "0 8px 24px rgba(32,34,38,0.12)" }}>
+                    <img src="/demo-assets/voice-03.jpg" alt="城南建材ロジスティクス株式会社 専務取締役さま" style={{ width: "100%", height: "190px", objectFit: "cover", display: "block" }} />
                   </div>
                 </div>
 
