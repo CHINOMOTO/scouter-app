@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { Users, Building2 } from "lucide-react";
 
 export default function Navigation() {
     const pathname = usePathname() || "";
@@ -190,14 +191,20 @@ export default function Navigation() {
                                 {/* 人物リスト（就業・トラブル防止） */}
                                 {canViewPerson && (
                                     <NavLink href="/search" active={pathname.startsWith("/search") || pathname.startsWith("/cases")}>
-                                        👤 人物リスト
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <Users className="w-4 h-4" />
+                                            <span>人物リスト</span>
+                                        </span>
                                     </NavLink>
                                 )}
 
                                 {/* 未払い企業（取引先信用管理） */}
                                 {canViewCredit && (
                                     <NavLink href="/credit" active={pathname.startsWith("/credit")}>
-                                        🏢 未払い企業
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <Building2 className="w-4 h-4" />
+                                            <span>未払い企業</span>
+                                        </span>
                                     </NavLink>
                                 )}
 
@@ -266,13 +273,19 @@ export default function Navigation() {
 
                         {canViewPerson && (
                             <MobileNavLink href="/search" active={pathname.startsWith("/search") || pathname.startsWith("/cases")} onClick={() => setIsMobileMenuOpen(false)}>
-                                👤 人物リスト
+                                <span className="inline-flex items-center gap-2">
+                                    <Users className="w-5 h-5" />
+                                    <span>人物リスト</span>
+                                </span>
                             </MobileNavLink>
                         )}
 
                         {canViewCredit && (
                             <MobileNavLink href="/credit" active={pathname.startsWith("/credit")} onClick={() => setIsMobileMenuOpen(false)}>
-                                🏢 未払い企業
+                                <span className="inline-flex items-center gap-2">
+                                    <Building2 className="w-5 h-5" />
+                                    <span>未払い企業</span>
+                                </span>
                             </MobileNavLink>
                         )}
 
