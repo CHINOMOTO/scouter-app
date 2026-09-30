@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
+import { User } from "lucide-react";
 
 type UserProfile = {
     email: string;

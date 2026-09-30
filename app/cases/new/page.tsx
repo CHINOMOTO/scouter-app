@@ -107,7 +107,7 @@ export default function NewCasePage() {
       }
 
       // 共通の日付バリデーション関数
-      const validateDate = (y, m, d, label) => {
+      const validateDate = (y: string, m: string, d: string, label: string) => {
         if (!y && !m && !d) return; // 空ならOK
         if (!y || !m || !d) {
           throw new Error(`${label}は「年・月・日」すべてを入力するか、すべて空にしてください。`);
