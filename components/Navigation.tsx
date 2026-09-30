@@ -188,12 +188,12 @@ export default function Navigation() {
                                     ダッシュボード
                                 </NavLink>
 
-                                {/* 人物リスト（就業・トラブル防止） */}
+                                {/* 応募者照会（就業・トラブル防止） */}
                                 {canViewPerson && (
                                     <NavLink href="/search" active={pathname.startsWith("/search") || pathname.startsWith("/cases")}>
                                         <span className="inline-flex items-center gap-1.5">
                                             <Users className="w-4 h-4" />
-                                            <span>人物リスト</span>
+                                            <span>応募者照会</span>
                                         </span>
                                     </NavLink>
                                 )}
@@ -275,7 +275,7 @@ export default function Navigation() {
                             <MobileNavLink href="/search" active={pathname.startsWith("/search") || pathname.startsWith("/cases")} onClick={() => setIsMobileMenuOpen(false)}>
                                 <span className="inline-flex items-center gap-2">
                                     <Users className="w-5 h-5" />
-                                    <span>人物リスト</span>
+                                    <span>応募者照会</span>
                                 </span>
                             </MobileNavLink>
                         )}
