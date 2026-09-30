@@ -57,14 +57,23 @@ export default function SearchPage() {
     setHasSearched(false);
     setResults([]);
     setErrorMsg(null);
-
     try {
-      const dateQuery = (searchYear && searchMonth && searchDay)
-        ? `${searchYear}-${searchMonth.padStart(2, '0')}-${searchDay.padStart(2, '0')}`
-        : "";
-      if (!nameQuery && !dateQuery) {
-        throw new Error("検索条件を入力してください。");
+      if (!nameQuery.trim()) {
+        throw new Error("照会対象者の氏名（フルネーム）を入力してください。");
       }
+      if (!searchYear || !searchMonth || !searchDay) {
+        throw new Error("照会対象者の生年月日（年・月・日）をすべて入力してください。");
+      }
+
+      const yearNum = Number(searchYear);
+      const monthNum = Number(searchMonth);
+      const dayNum = Number(searchDay);
+
+      if (yearNum < 1900 || yearNum > 2100 || monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) {
+        throw new Error("有効な生年月日を入力してください。");
+      }
+
+      const dateQuery = `${searchYear.padStart(4, '0')}-${searchMonth.padStart(2, '0')}-${searchDay.padStart(2, '0')}`;
 
       // クライアントサイドフィルタリング
       let query = supabase
@@ -197,21 +206,26 @@ export default function SearchPage() {
           </div>
 
           <div className="glass-panel rounded-3xl p-8 md:p-10 mb-8 animate-fade-in delay-100 border border-slate-200">
-            <form onSubmit={handleSearch} className="space-y-8">
+            <form onSubmit={handleSearch} className="space-y-6">
+              <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 leading-relaxed">
+                ※同姓同名の別人との誤認防止および適正運用の観点から、照会には<strong>「氏名（フルネーム）」</strong>と<strong>「生年月日」</strong>の2つの入力が必須となっています。
+              </div>
+
               <div className="grid md:grid-cols-2 gap-8">
 
                 {/* 氏名検索 */}
                 <div className="input-group group space-y-2">
                   <div className="flex justify-between items-center ml-1">
-                    <label className="text-xs font-bold text-slate-600 uppercase tracking-widest transition-colors duration-300">
-                      氏名 / カナ
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-widest transition-colors duration-300">
+                      氏名（フルネーム） / カナ
                     </label>
-                    <span className="text-[10px] text-slate-600 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200">
-                      任意
+                    <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">
+                      必須
                     </span>
                   </div>
                   <input
                     type="text"
+                    required
                     value={nameQuery}
                     onChange={(e) => setNameQuery(e.target.value)}
                     className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-white/30 transition-all duration-300"
@@ -222,43 +236,48 @@ export default function SearchPage() {
                 {/* 生年月日検索 */}
                 <div className="input-group group space-y-2">
                   <div className="flex justify-between items-center ml-1">
-                    <label className="text-xs font-bold text-slate-600 uppercase tracking-widest transition-colors duration-300">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-widest transition-colors duration-300">
                       生年月日
                     </label>
-                    <span className="text-[10px] text-slate-600 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200">
-                      任意
+                    <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">
+                      必須
                     </span>
                   </div>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={4}
-                    value={searchYear}
-                    onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchYear(e.target.value); }}
-                    className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-3.5 text-slate-900 focus:outline-none focus:border-slate-200 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center"
-                    placeholder="0000"
-                  />
-                  <span className="text-slate-600">年</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={2}
-                    value={searchMonth}
-                    onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchMonth(e.target.value); }}
-                    className="w-14 bg-white border border-slate-200 rounded-xl px-3 py-3.5 text-slate-900 focus:outline-none focus:border-slate-200 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center"
-                    placeholder="00"
-                  />
-                  <span className="text-slate-600">月</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={2}
-                    value={searchDay}
-                    onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchDay(e.target.value); }}
-                    className="w-14 bg-white border border-slate-200 rounded-xl px-3 py-3.5 text-slate-900 focus:outline-none focus:border-slate-200 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center"
-                    placeholder="00"
-                  />
-                  <span className="text-slate-600">日</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      required
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={searchYear}
+                      onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchYear(e.target.value); }}
+                      className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-3.5 text-slate-900 focus:outline-none focus:border-slate-200 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center font-mono"
+                      placeholder="1990"
+                    />
+                    <span className="text-slate-600 text-xs font-bold">年</span>
+                    <input
+                      type="text"
+                      required
+                      inputMode="numeric"
+                      maxLength={2}
+                      value={searchMonth}
+                      onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchMonth(e.target.value); }}
+                      className="w-16 bg-white border border-slate-200 rounded-xl px-3 py-3.5 text-slate-900 focus:outline-none focus:border-slate-200 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center font-mono"
+                      placeholder="01"
+                    />
+                    <span className="text-slate-600 text-xs font-bold">月</span>
+                    <input
+                      type="text"
+                      required
+                      inputMode="numeric"
+                      maxLength={2}
+                      value={searchDay}
+                      onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchDay(e.target.value); }}
+                      className="w-16 bg-white border border-slate-200 rounded-xl px-3 py-3.5 text-slate-900 focus:outline-none focus:border-slate-200 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center font-mono"
+                      placeholder="01"
+                    />
+                    <span className="text-slate-600 text-xs font-bold">日</span>
+                  </div>
                 </div>
               </div>
 

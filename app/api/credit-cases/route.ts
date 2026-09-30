@@ -154,11 +154,14 @@ export async function POST(request: Request) {
         } = body;
 
         // 必須チェック
-        if (!companyName || !amount || !dueDate) {
-            return NextResponse.json({ error: '企業名・未払い金額・支払期日は必須項目です' }, { status: 400 });
+        if (!companyName || !corporateNumber || !amount || !dueDate) {
+            return NextResponse.json({ error: '企業名・法人番号・未払い金額・支払期日は必須項目です' }, { status: 400 });
         }
 
-        const cleanCorpNum = corporateNumber ? corporateNumber.replace(/[^0-9]/g, '') : null;
+        const cleanCorpNum = corporateNumber.replace(/[^0-9]/g, '');
+        if (cleanCorpNum.length !== 13) {
+            return NextResponse.json({ error: '法人番号は13桁の半角数字で入力してください' }, { status: 400 });
+        }
 
         const payload = {
             company_name: companyName.trim(),

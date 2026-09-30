@@ -21,10 +21,10 @@ export default function NewCompanyPage() {
         setLoading(true);
         setError(null);
 
-        // 法人番号のバリデーション（入力されている場合は13桁数字）
+        // 法人番号のバリデーション（必須・13桁数字）
         const cleanCorpNum = corporateNumber.trim().replace(/[^0-9]/g, "");
-        if (corporateNumber.trim() && cleanCorpNum.length !== 13) {
-            setError("法人番号は半角数字13桁で入力してください。");
+        if (!cleanCorpNum || cleanCorpNum.length !== 13) {
+            setError("法人番号（13桁の半角数字）を入力してください。");
             setLoading(false);
             return;
         }
@@ -103,12 +103,13 @@ export default function NewCompanyPage() {
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <label className="text-sm font-bold text-slate-800">
-                                        法人番号（13桁）
+                                        法人番号（13桁） <span className="text-red-500">*</span>
                                     </label>
                                     <span className="text-xs text-slate-500 font-medium">※半角数字のみ・ハイフン不要</span>
                                 </div>
                                 <input
                                     type="text"
+                                    required
                                     maxLength={13}
                                     value={corporateNumber}
                                     onChange={(e) => setCorporateNumber(e.target.value.replace(/[^0-9]/g, ""))}

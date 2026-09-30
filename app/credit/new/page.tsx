@@ -61,8 +61,8 @@ export default function NewCreditCasePage() {
         }
 
         const cleanCorpNum = corporateNumber.trim().replace(/[^0-9]/g, "");
-        if (corporateNumber.trim() && cleanCorpNum.length !== 13) {
-            setErrorMsg("法人番号は13桁の半角数字で入力してください。");
+        if (!cleanCorpNum || cleanCorpNum.length !== 13) {
+            setErrorMsg("法人番号（13桁の半角数字）を必ず入力してください。");
             return;
         }
 
@@ -200,17 +200,18 @@ export default function NewCreditCasePage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-800">
-                                        法人番号（13桁）
+                                        法人番号（13桁） <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
+                                        required
                                         maxLength={13}
                                         value={corporateNumber}
                                         onChange={(e) => setCorporateNumber(e.target.value.replace(/[^0-9]/g, ""))}
                                         className="input-field font-mono"
                                         placeholder="例: 1234567890123"
                                     />
-                                    <p className="text-[11px] text-slate-400">※同名他社との誤認防止のため推奨</p>
+                                    <p className="text-[11px] text-slate-400">※同名他社との誤認防止のため13桁の番号を入力してください</p>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-800">
