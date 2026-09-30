@@ -155,8 +155,7 @@ export default function DashboardPage() {
                   title="人物を新規登録"
                   description="就業トラブルを起こした従業員や応募者の事実を新規登録し、共有申請を行います。"
                   badge="登録申請"
-                  isPrimary
-                  icon={<UserPlus className="w-5 h-5 text-white" />}
+                  icon={<UserPlus className="w-5 h-5 text-slate-700" />}
                   onClick={() => router.push("/cases/new")}
                 />
               </div>
@@ -193,8 +192,7 @@ export default function DashboardPage() {
                   title="未払い企業を新規登録"
                   description="期日を過ぎても支払いがない取引先企業の事実を登録し、信用情報として共有申請します。"
                   badge="未払い共有"
-                  isPrimary
-                  icon={<FilePlus2 className="w-5 h-5 text-white" />}
+                  icon={<FilePlus2 className="w-5 h-5 text-slate-700" />}
                   onClick={() => router.push("/credit/new")}
                 />
               </div>
@@ -312,50 +310,32 @@ function MenuCard({
   badge,
   icon,
   onClick,
-  isPrimary = false,
 }: {
   title: string;
   description: string;
   badge: string;
   icon: React.ReactNode;
   onClick: () => void;
-  isPrimary?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`group text-left p-6 rounded-xl border transition-all duration-200 flex flex-col h-full relative cursor-pointer ${
-        isPrimary 
-          ? "bg-slate-900 text-white border-slate-900 hover:bg-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5" 
-          : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 shadow-2xs hover:shadow-xs hover:-translate-y-0.5"
-      }`}
+      className="group text-left p-6 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 transition-all duration-200 flex flex-col h-full relative cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5"
     >
       <div className="flex items-start justify-between w-full mb-4">
-        <div className={`p-2.5 rounded-lg ${
-          isPrimary ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-800 group-hover:bg-slate-200/80"
-        } transition-colors`}>
+        <div className="p-2.5 rounded-lg bg-slate-100 text-slate-800 group-hover:bg-slate-200/80 transition-colors">
           {icon}
         </div>
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-          isPrimary 
-            ? "bg-slate-800 text-slate-300 border border-slate-700" 
-            : "bg-slate-100 text-slate-600 border border-slate-200"
-        }`}>
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
           {badge}
         </span>
       </div>
 
-      <h3 className={`text-base font-bold mb-1.5 flex items-center justify-between ${
-        isPrimary ? "text-white" : "text-slate-900 group-hover:text-blue-600"
-      } transition-colors`}>
+      <h3 className="text-base font-bold mb-1.5 flex items-center justify-between text-slate-900 group-hover:text-blue-600 transition-colors">
         <span>{title}</span>
-        <ArrowRight className={`w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all ${
-          isPrimary ? "text-slate-300" : "text-blue-600"
-        }`} />
+        <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-blue-600" />
       </h3>
-      <p className={`text-xs leading-relaxed mt-auto ${
-        isPrimary ? "text-slate-300" : "text-slate-600"
-      }`}>
+      <p className="text-xs leading-relaxed mt-auto text-slate-600">
         {description}
       </p>
     </button>

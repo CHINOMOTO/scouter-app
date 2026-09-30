@@ -46,9 +46,18 @@ export default function CreditSearchPage() {
     const [corpFilter, setCorpFilter] = useState("");
     
     // サマリー用
-    const [totalAmount, setTotalAmount] = useState(0);
+    const [totalCases, setTotalCases] = useState(0);
     const [unpaidCount, setUnpaidCount] = useState(0);
     const [resolvedCount, setResolvedCount] = useState(0);
+
+    // 期日超過日数の計算
+    const calculateOverdueDays = (dueDateStr?: string | null) => {
+        if (!dueDateStr) return 0;
+        const due = new Date(dueDateStr).getTime();
+        const now = new Date().getTime();
+        const diff = Math.floor((now - due) / (1000 * 60 * 60 * 24));
+        return diff > 0 ? diff : 0;
+    };
 
     // プラン制限チェック用
     const [planRestricted, setPlanRestricted] = useState(false);
@@ -89,20 +98,18 @@ export default function CreditSearchPage() {
             setCases(fetchedCases);
 
             // 統計の計算（承認済みのみ）
-            let sum = 0;
             let unpaid = 0;
             let resolved = 0;
 
             fetchedCases.forEach((c) => {
                 if (c.payment_status === "unpaid") {
-                    sum += c.amount;
                     unpaid++;
                 } else if (c.payment_status === "resolved") {
                     resolved++;
                 }
             });
 
-            setTotalAmount(sum);
+            setTotalCases(fetchedCases.length);
             setUnpaidCount(unpaid);
             setResolvedCount(resolved);
 
@@ -188,45 +195,48 @@ export default function CreditSearchPage() {
                         </div>
                     ) : (
                         <>
-                            {/* 統計サマリーカード（脱パステル・洗練された金融ダッシュボードスタイル） */}
+                            {/* 統計サマリーカード（総額を廃止し、事故情報登録企業・未払い・遅延解決の実用指標へ） */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
                                     <div className="flex items-center justify-between text-slate-500 mb-2">
-                                        <span className="text-xs font-bold tracking-wider text-slate-600">未払い総額</span>
-                                        <Coins className="w-4 h-4 text-slate-400" />
+                                        <span className="text-xs font-bold tracking-wider text-slate-600">事故情報 登録企業</span>
+                                        <Building2 className="w-4 h-4 text-slate-400" />
                                     </div>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-xs font-bold text-slate-400 font-mono">¥</span>
                                         <span className="text-2xl font-extrabold tracking-tight text-slate-900 font-mono tabular-nums">
-                                            {totalAmount.toLocaleString()}
+                                            {totalCases}
                                         </span>
+                                        <span className="text-xs font-bold text-slate-500 ml-1">社 / 件</span>
                                     </div>
+                                    <p className="text-[11px] text-slate-500 mt-1">過去に未払い・遅延の発生が報告された企業</p>
                                 </div>
 
                                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
                                     <div className="flex items-center justify-between text-slate-500 mb-2">
-                                        <span className="text-xs font-bold tracking-wider text-slate-600">現在未払いの件数</span>
-                                        <AlertTriangle className="w-4 h-4 text-slate-400" />
+                                        <span className="text-xs font-bold tracking-wider text-rose-700">現在未払い（要注意）</span>
+                                        <AlertTriangle className="w-4 h-4 text-rose-500" />
                                     </div>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-2xl font-extrabold tracking-tight text-slate-900 font-mono tabular-nums">
+                                        <span className="text-2xl font-extrabold tracking-tight text-rose-600 font-mono tabular-nums">
                                             {unpaidCount}
                                         </span>
                                         <span className="text-xs font-bold text-slate-500 ml-1">社</span>
                                     </div>
+                                    <p className="text-[11px] text-slate-500 mt-1">現在も代金未回収・支払拒絶が継続中</p>
                                 </div>
 
                                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
                                     <div className="flex items-center justify-between text-slate-500 mb-2">
-                                        <span className="text-xs font-bold tracking-wider text-slate-600">解決済み（入金完了）</span>
-                                        <CheckCircle2 className="w-4 h-4 text-slate-400" />
+                                        <span className="text-xs font-bold tracking-wider text-emerald-700">遅延後解決（入金完了）</span>
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                                     </div>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-2xl font-extrabold tracking-tight text-slate-900 font-mono tabular-nums">
+                                        <span className="text-2xl font-extrabold tracking-tight text-emerald-600 font-mono tabular-nums">
                                             {resolvedCount}
                                         </span>
                                         <span className="text-xs font-bold text-slate-500 ml-1">件</span>
                                     </div>
+                                    <p className="text-[11px] text-slate-500 mt-1">支払遅延が発生したがその後全額回収完了</p>
                                 </div>
                             </div>
 
@@ -355,29 +365,41 @@ export default function CreditSearchPage() {
                                                         {isResolved ? (
                                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                                 <CheckCircle2 className="w-3 h-3" />
-                                                                <span>解決済み {c.resolved_delay_days ? `(遅延${c.resolved_delay_days}日)` : ""}</span>
+                                                                <span>遅延解決 {c.resolved_delay_days ? `(遅延${c.resolved_delay_days}日)` : ""}</span>
                                                             </span>
                                                         ) : (
                                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
                                                                 <AlertTriangle className="w-3 h-3" />
-                                                                <span>未払い</span>
+                                                                <span>現在未払い {calculateOverdueDays(c.due_date) > 0 ? `(超過${calculateOverdueDays(c.due_date)}日)` : ""}</span>
                                                             </span>
                                                         )}
                                                     </div>
 
                                                     <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200/80 mb-3 space-y-1.5 text-xs">
-                                                        <div className="flex justify-between">
-                                                            <span className="text-slate-500 font-medium">未払い金額</span>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-slate-500 font-medium">請求金額</span>
                                                             <strong className="text-slate-900 font-extrabold text-sm font-mono">
                                                                 ¥{c.amount.toLocaleString()}
                                                             </strong>
                                                         </div>
-                                                        <div className="flex justify-between">
+                                                        <div className="flex justify-between items-center">
                                                             <span className="text-slate-500 font-medium">当初支払期日</span>
                                                             <span className="text-slate-800 font-mono">{c.due_date}</span>
                                                         </div>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-slate-500 font-medium">事故状況</span>
+                                                            {isResolved ? (
+                                                                <span className="font-bold text-emerald-700 font-mono">
+                                                                    {c.resolved_delay_days ? `${c.resolved_delay_days}日遅れで入金完了` : "入金完了（解決済み）"}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="font-bold text-rose-600 font-mono">
+                                                                    {calculateOverdueDays(c.due_date) > 0 ? `期日より ${calculateOverdueDays(c.due_date)}日超過（未回収）` : "未払い継続中"}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         {c.location && (
-                                                            <div className="flex justify-between">
+                                                            <div className="flex justify-between items-center">
                                                                 <span className="text-slate-500 font-medium">所在地</span>
                                                                 <span className="text-slate-800 truncate max-w-[200px]">{c.location}</span>
                                                             </div>
