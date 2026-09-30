@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import { FolderOpen, Search, Plus, AlertCircle, Pencil, Trash2, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { FolderOpen, Search, Plus, AlertCircle, Pencil, Trash2, Clock, CheckCircle2, XCircle, UserPlus, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -157,17 +157,46 @@ export default function CasesPage() {
       <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
         <div className="max-w-6xl w-full relative z-10">
 
-          <div className="flex items-center justify-between mb-8 animate-fade-in">
+          {/* ヘッダーエリア */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-slate-200 animate-fade-in">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">登録データ一覧</h1>
-              <p className="text-slate-600 font-medium">登録されている全データの一覧です</p>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-widest font-mono">
+                  MIERIS WORK
+                </span>
+                <span className="text-slate-300 text-xs">|</span>
+                <span className="text-xs text-slate-500 font-semibold tracking-wide">
+                  就業・採用トラブル情報データベース
+                </span>
+              </div>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                人物登録データ一覧
+              </h1>
+              <p className="text-slate-600 text-sm mt-1">
+                共有データベースに登録されているトラブル人材の一覧です。
+              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <Link href="/dashboard" className="btn-secondary text-xs px-4 py-2.5">
-                戻る
+            <div className="flex items-center gap-2.5">
+              <Link 
+                href="/dashboard" 
+                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>戻る</span>
               </Link>
-              <Link href="/cases/new" className="btn-primary flex items-center gap-2 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm">
-                <Plus className="w-4 h-4 mr-1" /><span>新規登録</span>
+              <Link
+                href="/search"
+                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+              >
+                <Search className="w-3.5 h-3.5" />
+                <span>検索・照会</span>
+              </Link>
+              <Link
+                href="/cases/new"
+                className="btn-primary flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>人物を新規登録</span>
               </Link>
             </div>
           </div>

@@ -2,139 +2,406 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
-import { Search, ClipboardList, UserPlus, Settings, Mail, ShieldAlert } from "lucide-react";
+import { 
+  Search, 
+  ClipboardList, 
+  UserPlus, 
+  Settings, 
+  Mail, 
+  ShieldAlert, 
+  Building2, 
+  FilePlus2, 
+  ArrowRight,
+  Sparkles,
+  Lock,
+  Building
+} from "lucide-react";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [allowedPlan, setAllowedPlan] = useState<string>("full");
+  const [companyName, setCompanyName] = useState<string>("");
+  const [displayName, setDisplayName] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const loadUserData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-      if (user) {
-        // Tokenベースの判定（DBアクセスなし）
         const role = user.app_metadata?.role;
-        setIsAdmin(role === 'admin');
+        const isUserAdmin = role === "admin";
+        setIsAdmin(isUserAdmin);
+
+        const { data: appUser } = await supabase
+          .from("app_users")
+          .select("display_name, allowed_plan, company_id, companies ( name )")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (appUser) {
+          if (appUser.allowed_plan) {
+            setAllowedPlan(appUser.allowed_plan);
+          }
+          if (appUser.display_name) {
+            setDisplayName(appUser.display_name);
+          }
+          const comp = (appUser.companies as any)?.name;
+          if (comp) {
+            setCompanyName(comp);
+          }
+        }
+      } catch (e) {
+        console.error("Dashboard user fetch error:", e);
+      } finally {
+        setIsLoading(false);
       }
     };
-    checkAdmin();
+
+    loadUserData();
   }, []);
+
+  // プラン権限の判定
+  const canViewPerson = isAdmin || allowedPlan === "full" || allowedPlan === "employment";
+  const canViewCredit = isAdmin || allowedPlan === "full" || allowedPlan === "credit";
+
+  // プラン表示ラベル
+  const getPlanBadge = () => {
+    if (isAdmin) {
+      return { label: "管理者権限（全機能利用可能）", style: "bg-slate-900 text-white" };
+    }
+    switch (allowedPlan) {
+      case "full":
+        return { label: "両方セットプラン（就業＋クレジット）", style: "bg-blue-50 text-blue-700 border border-blue-200/80" };
+      case "employment":
+        return { label: "人物トラブル情報プラン", style: "bg-emerald-50 text-emerald-700 border border-emerald-200/80" };
+      case "credit":
+        return { label: "未払い企業クレジットプラン", style: "bg-indigo-50 text-indigo-700 border border-indigo-200/80" };
+      default:
+        return { label: "スタンダードプラン", style: "bg-slate-100 text-slate-700 border border-slate-200" };
+    }
+  };
+
+  const planBadge = getPlanBadge();
 
   return (
     <RequireAuth>
-      <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+      <div className="min-h-screen pt-24 pb-16 px-4 bg-[#f8fafc] flex flex-col items-center">
         <div className="max-w-5xl w-full animate-fade-in relative z-10">
 
-          <div className="mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
-              ダッシュボード
-            </h1>
-            <p className="text-slate-600 font-medium">メインメニュー</p>
+          {/* ヘッダーエリア */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-6 border-b border-slate-200">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${planBadge.style}`}>
+                  {planBadge.label}
+                </span>
+                {companyName && (
+                  <span className="text-xs text-slate-500 font-medium">
+                    {companyName}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                ダッシュボード
+              </h1>
+              <p className="text-slate-600 text-sm mt-1">
+                ご利用のプランに応じた各種照会・登録メニューをご案内します。
+              </p>
+            </div>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {/* 未払い企業照会 */}
-            <DashboardCard
-              title="未払い企業照会"
-              description="取引先企業の支払い遅延・未払い情報の照会や、事実の記録を行います。"
-              icon={<ShieldAlert className="w-10 h-10" strokeWidth={1.5} />}
-              onClick={() => router.push("/credit")}
-            />
+          {/* セクション 1: 👤 人物情報管理（就業・トラブル防止） */}
+          {canViewPerson && (
+            <div className="mb-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-1.5 h-5 bg-slate-900 rounded-full" />
+                  <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                    人物情報管理
+                  </h2>
+                  <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+                    （就業トラブル・無断欠勤・損害リスク等の照会・共有）
+                  </span>
+                </div>
+              </div>
 
-            {/* 検索 */}
-            <DashboardCard
-              title="検索・照会"
-              description="氏名やカナなどから登録データを検索します。"
-              icon={<Search className="w-10 h-10" strokeWidth={1.5} />}
-              onClick={() => router.push("/search")}
-            />
+              <div className="grid gap-4 md:grid-cols-3">
+                {/* 人物検索・照会 */}
+                <MenuCard
+                  title="人物 検索・照会"
+                  description="氏名・カナ・生年月日等から過去のトラブルや問題行動の記録を照会します。"
+                  badge="照会"
+                  icon={<Search className="w-5 h-5 text-slate-700" />}
+                  onClick={() => router.push("/search")}
+                />
 
-            {/* 一覧 */}
-            <DashboardCard
-              title="登録データ一覧"
-              description="現在登録されている全データを確認します。"
-              icon={<ClipboardList className="w-10 h-10" strokeWidth={1.5} />}
-              onClick={() => router.push("/cases")}
-            />
+                {/* 登録データ一覧 */}
+                <MenuCard
+                  title="登録データ一覧"
+                  description="現在データベースに登録・共有されているトラブル人材の一覧を確認します。"
+                  badge="一覧"
+                  icon={<ClipboardList className="w-5 h-5 text-slate-700" />}
+                  onClick={() => router.push("/cases")}
+                />
 
-            {/* 新規登録 */}
-            <DashboardCard
-              title="新規登録"
-              description="新たな対象者を登録データに追加します。"
-              icon={<UserPlus className="w-10 h-10" strokeWidth={1.5} />}
-              onClick={() => router.push("/cases/new")}
-            />
+                {/* 人物を新規登録 */}
+                <MenuCard
+                  title="人物を新規登録"
+                  description="就業トラブルを起こした従業員や応募者の事実を新規登録し、共有申請を行います。"
+                  badge="登録申請"
+                  isPrimary
+                  icon={<UserPlus className="w-5 h-5 text-white" />}
+                  onClick={() => router.push("/cases/new")}
+                />
+              </div>
+            </div>
+          )}
 
-            {/* アカウント設定 */}
-            <DashboardCard
-              title="アカウント設定"
-              description="ログインパスワードの変更や、アカウントの確認を行います。"
-              icon={<Settings className="w-10 h-10" strokeWidth={1.5} />}
-              onClick={() => router.push("/settings")}
-            />
+          {/* セクション 2: 🏢 取引先信用管理（未払い・代金未回収防止） */}
+          {canViewCredit && (
+            <div className="mb-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-1.5 h-5 bg-blue-600 rounded-full" />
+                  <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                    取引先信用管理
+                  </h2>
+                  <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+                    （MIERIS CREDIT | 支払い遅延・未払い企業の照会・共有）
+                  </span>
+                </div>
+              </div>
 
-            {/* お問い合わせ */}
-            <DashboardCard
-              title="お問い合わせ"
-              description="システムの不具合や機能要望など、管理者にご連絡いただけます。"
-              icon={<Mail className="w-10 h-10" strokeWidth={1.5} />}
-              onClick={() => router.push("/contact")}
-            />
+              <div className="grid gap-4 md:grid-cols-2">
+                {/* 未払い企業照会 */}
+                <MenuCard
+                  title="未払い企業 照会・検索"
+                  description="取引先企業の支払い遅延履歴や未払い金額、相手方の主張を照会し、代金未回収を防ぎます。"
+                  badge="企業照会"
+                  icon={<Building2 className="w-5 h-5 text-blue-600" />}
+                  onClick={() => router.push("/credit")}
+                />
 
-            {/* 管理者メニュー */}
-            {isAdmin && (
-              <DashboardCard
-                title="管理者メニュー"
-              description="新規登録申請やユーザーアカウントの承認・管理を行います。"
-                icon={<ShieldAlert className="w-10 h-10" strokeWidth={1.5} />}
-                isAdmin
-                onClick={() => router.push("/admin")}
+                {/* 未払い企業を新規登録 */}
+                <MenuCard
+                  title="未払い企業を新規登録"
+                  description="期日を過ぎても支払いがない取引先企業の事実を登録し、信用情報として共有申請します。"
+                  badge="未払い共有"
+                  isPrimary
+                  icon={<FilePlus2 className="w-5 h-5 text-white" />}
+                  onClick={() => router.push("/credit/new")}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 未契約プランのアップセル案内バナー（未契約機能がある場合のみ表示） */}
+          {!isAdmin && allowedPlan === "employment" && (
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs mb-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-bold text-blue-600 uppercase tracking-wider font-mono">
+                      PLAN UPGRADE
+                    </span>
+                    <span className="text-xs text-slate-400">|</span>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      取引先信用管理「ミエリスクレジット」を追加しませんか？
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    売掛金の未回収や支払い遅延リスクを未然に防ぐ、企業未払い情報データベースをご利用いただけます。
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/contact"
+                className="btn-secondary text-xs px-4 py-2 shrink-0 flex items-center gap-1.5 font-bold whitespace-nowrap"
+              >
+                <span>プラン追加のお問い合わせ</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          )}
+
+          {!isAdmin && allowedPlan === "credit" && (
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs mb-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 text-slate-800 border border-slate-200 flex items-center justify-center shrink-0 mt-0.5">
+                  <UserPlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono">
+                      PLAN UPGRADE
+                    </span>
+                    <span className="text-xs text-slate-400">|</span>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      採用・就業トラブル防止「人物情報プラン」を追加しませんか？
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    採用前のバックグラウンド確認や、無断欠勤・損害トラブル等の人物データベースをご利用いただけます。
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/contact"
+                className="btn-secondary text-xs px-4 py-2 shrink-0 flex items-center gap-1.5 font-bold whitespace-nowrap"
+              >
+                <span>プラン追加のお問い合わせ</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          )}
+
+          {/* セクション 3: システム設定 & サポート */}
+          <div className="border-t border-slate-200 pt-6">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+              設定 & サポート
+            </h3>
+            <div className="grid gap-3.5 sm:grid-cols-2 md:grid-cols-3">
+              {/* アカウント設定 */}
+              <UtilityCard
+                title="アカウント設定"
+                description="パスワード変更やユーザー情報の確認"
+                icon={<Settings className="w-4 h-4 text-slate-600" />}
+                onClick={() => router.push("/settings")}
               />
-            )}
+
+              {/* お問い合わせ */}
+              <UtilityCard
+                title="お問い合わせ"
+                description="システムの要望・プラン変更等のご相談"
+                icon={<Mail className="w-4 h-4 text-slate-600" />}
+                onClick={() => router.push("/contact")}
+              />
+
+              {/* 管理者メニュー */}
+              {isAdmin && (
+                <UtilityCard
+                  title="管理者メニュー"
+                  description="申請の承認・企業登録・ユーザー管理"
+                  badge="Admin"
+                  icon={<ShieldAlert className="w-4 h-4 text-slate-900" />}
+                  onClick={() => router.push("/admin")}
+                />
+              )}
+            </div>
           </div>
+
         </div>
       </div>
     </RequireAuth>
   );
 }
 
-function DashboardCard({
-  title, description, icon, onClick,  isAdmin = false
+// メインアクションカード
+function MenuCard({
+  title,
+  description,
+  badge,
+  icon,
+  onClick,
+  isPrimary = false,
 }: {
-  title: string, description: string, icon: React.ReactNode, onClick: () => void,  isAdmin?: boolean
+  title: string;
+  description: string;
+  badge: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  isPrimary?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className="group relative text-left p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 flex flex-col h-full overflow-hidden hover:border-slate-300/50 hover:bg-slate-50"
+      className={`group text-left p-6 rounded-xl border transition-all duration-200 flex flex-col h-full relative cursor-pointer ${
+        isPrimary 
+          ? "bg-slate-900 text-white border-slate-900 hover:bg-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5" 
+          : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 shadow-2xs hover:shadow-xs hover:-translate-y-0.5"
+      }`}
     >
-      {/* Background Hover Glow */}
-      <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-      <div className="relative z-10 flex flex-col h-full">
-        <div className="flex items-start justify-between mb-6 w-full">
-          <div className="p-3 rounded-2xl transition-all duration-300 group-hover:scale-110 bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white">
-            {icon}
-          </div>
-          {isAdmin && (
-            <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
-              Admin Only
-            </span>
-          )}
+      <div className="flex items-start justify-between w-full mb-4">
+        <div className={`p-2.5 rounded-lg ${
+          isPrimary ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-800 group-hover:bg-slate-200/80"
+        } transition-colors`}>
+          {icon}
         </div>
-
-        <h3 className={`text-2xl font-bold text-slate-900 mb-2 transition-colors duration-300 group-hover:text-blue-600 ${isAdmin ? 'text-slate-900' : ''}`}>
-          {title}
-        </h3>
-        <p className="text-sm text-slate-600 leading-relaxed mt-auto ">
-          {description}
-        </p>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+          isPrimary 
+            ? "bg-slate-800 text-slate-300 border border-slate-700" 
+            : "bg-slate-100 text-slate-600 border border-slate-200"
+        }`}>
+          {badge}
+        </span>
       </div>
+
+      <h3 className={`text-base font-bold mb-1.5 flex items-center justify-between ${
+        isPrimary ? "text-white" : "text-slate-900 group-hover:text-blue-600"
+      } transition-colors`}>
+        <span>{title}</span>
+        <ArrowRight className={`w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all ${
+          isPrimary ? "text-slate-300" : "text-blue-600"
+        }`} />
+      </h3>
+      <p className={`text-xs leading-relaxed mt-auto ${
+        isPrimary ? "text-slate-300" : "text-slate-600"
+      }`}>
+        {description}
+      </p>
     </button>
-  )
+  );
+}
+
+// 設定・サポート用小型カード
+function UtilityCard({
+  title,
+  description,
+  badge,
+  icon,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  badge?: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="group text-left p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-between shadow-2xs cursor-pointer"
+    >
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-slate-100 text-slate-700 group-hover:bg-slate-200 transition-colors">
+          {icon}
+        </div>
+        <div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+              {title}
+            </span>
+            {badge && (
+              <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-900 text-white">
+                {badge}
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+            {description}
+          </p>
+        </div>
+      </div>
+      <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+    </button>
+  );
 }

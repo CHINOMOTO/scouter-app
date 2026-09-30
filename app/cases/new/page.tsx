@@ -264,9 +264,34 @@ export default function NewCasePage() {
       <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
         <div className="max-w-3xl w-full">
 
-          <div className="mb-8 text-center animate-fade-in">
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">新規登録申請</h1>
-            <p className="text-slate-600">新しいデータを登録します</p>
+          {/* ヘッダーエリア */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-slate-200 animate-fade-in">
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-widest font-mono">
+                  MIERIS WORK
+                </span>
+                <span className="text-slate-300 text-xs">|</span>
+                <span className="text-xs text-slate-500 font-semibold tracking-wide">
+                  就業・採用トラブル情報登録
+                </span>
+              </div>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                人物トラブル情報 新規登録申請
+              </h1>
+              <p className="text-slate-600 text-sm mt-1">
+                問題行動・無断欠勤・損害等の事実を客観的根拠に基づき登録申請します。
+              </p>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Link 
+                href="/cases" 
+                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>一覧へ戻る</span>
+              </Link>
+            </div>
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200 shadow-2xs p-6 md:p-10 animate-fade-in delay-100">

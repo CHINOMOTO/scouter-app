@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Search, AlertCircle } from "lucide-react";
+import { Search, AlertCircle, UserPlus, ClipboardList, ArrowLeft } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 
 type BlacklistCase = {
@@ -152,14 +152,48 @@ export default function SearchPage() {
       <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
         <div className="max-w-4xl w-full relative z-10">
 
-          <div className="flex items-center justify-between mb-8 animate-fade-in">
+          {/* ヘッダーエリア */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-slate-200 animate-fade-in">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">検索</h1>
-              <p className="text-slate-600 font-medium">登録データの検索・照会を行います</p>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-widest font-mono">
+                  MIERIS WORK
+                </span>
+                <span className="text-slate-300 text-xs">|</span>
+                <span className="text-xs text-slate-500 font-semibold tracking-wide">
+                  就業・採用トラブル情報照会
+                </span>
+              </div>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                人物 検索・照会
+              </h1>
+              <p className="text-slate-600 text-sm mt-1">
+                採用や契約前に過去のトラブルや問題行動の記録を照会し、トラブルを未然に防ぎます。
+              </p>
             </div>
-            <Link href="/dashboard" className="btn-secondary text-xs">
-              戻る
-            </Link>
+            <div className="flex items-center gap-2.5">
+              <Link 
+                href="/dashboard" 
+                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>戻る</span>
+              </Link>
+              <Link
+                href="/cases"
+                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+              >
+                <ClipboardList className="w-3.5 h-3.5" />
+                <span>登録一覧</span>
+              </Link>
+              <Link
+                href="/cases/new"
+                className="btn-primary flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>人物を新規登録</span>
+              </Link>
+            </div>
           </div>
 
           <div className="glass-panel rounded-3xl p-8 md:p-10 mb-8 animate-fade-in delay-100 border border-slate-200">

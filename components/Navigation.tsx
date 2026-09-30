@@ -75,19 +75,26 @@ export default function Navigation() {
         return () => subscription.unsubscribe();
     }, [pathname]); // pathnameが変わるたびにも再チェック（通知数更新のため）
 
-    // 会社名+登録名を取得する（認証フローとは独立、ユーザーIDが変わった時だけ実行）
+    // 会社名+登録名および契約プランを取得する（認証フローとは独立、ユーザーIDが変わった時だけ実行）
+    const [allowedPlan, setAllowedPlan] = useState<string>("full");
+
     useEffect(() => {
         if (!session?.user?.id) return;
         let cancelled = false;
 
-        const fetchDisplayName = async () => {
+        const fetchUserProfile = async () => {
             try {
                 const { data: appUser } = await supabase
                     .from("app_users")
-                    .select("display_name, company_id")
+                    .select("display_name, company_id, allowed_plan")
                     .eq("id", session.user.id)
                     .maybeSingle();
                 if (cancelled || !appUser) return;
+
+                if (appUser.allowed_plan) {
+                    setAllowedPlan(appUser.allowed_plan);
+                }
+
                 const displayName = (appUser.display_name as string) || "User";
                 if (!appUser.company_id) {
                     setUserName(displayName);
@@ -102,11 +109,11 @@ export default function Navigation() {
                 const companyName = (company as { name: string } | null)?.name;
                 setUserName(companyName ? `${companyName} ${displayName}` : displayName);
             } catch {
-                // エラーが起きても何もしない（既存のdisplay_nameが表示される）
+                // エラーが起きても何もしない
             }
         };
 
-        fetchDisplayName();
+        fetchUserProfile();
         return () => { cancelled = true; };
     }, [session?.user?.id]); // ユーザーIDが変わった時のみ実行
 
@@ -121,19 +128,22 @@ export default function Navigation() {
             setIsAdmin(false);
             setUserName(null);
 
-            // 確実にログイン画面へ遷移させる（ハードリダイレクト推奨）
-            // Router.pushだとステート残存の可能性があるため
+            // 確実にログイン画面へ遷移させる
             window.location.href = "/";
         }
     };
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // ログイン・サインアップページではナビゲーションバーを表示しない（セッションがあっても非表示）
+    // ログイン・サインアップページではナビゲーションバーを表示しない
     if (pathname === "/" || pathname === "/signup" || pathname === "/login") return null;
 
     // セッションがない場合は表示しない
     if (!session) return null;
+
+    // プラン別の権限判定
+    const canViewPerson = isAdmin || allowedPlan === "full" || allowedPlan === "employment";
+    const canViewCredit = isAdmin || allowedPlan === "full" || allowedPlan === "credit";
 
     return (
         <nav className="fixed top-0 w-full z-50 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-xs">
@@ -176,21 +186,25 @@ export default function Navigation() {
                                 <NavLink href="/dashboard" active={pathname === "/dashboard"}>
                                     ダッシュボード
                                 </NavLink>
-                                <NavLink href="/search" active={pathname === "/search"}>
-                                    検索
-                                </NavLink>
-                                <NavLink href="/credit" active={pathname.startsWith("/credit")}>
-                                    未払い企業
-                                </NavLink>
-                                <NavLink href="/cases" active={pathname.startsWith("/cases") && pathname !== "/cases/new"}>
-                                    登録データ一覧
-                                </NavLink>
-                                <NavLink href="/cases/new" active={pathname === "/cases/new"}>
-                                    新規登録
-                                </NavLink>
+
+                                {/* 人物リスト（就業・トラブル防止） */}
+                                {canViewPerson && (
+                                    <NavLink href="/search" active={pathname.startsWith("/search") || pathname.startsWith("/cases")}>
+                                        👤 人物リスト
+                                    </NavLink>
+                                )}
+
+                                {/* 未払い企業（取引先信用管理） */}
+                                {canViewCredit && (
+                                    <NavLink href="/credit" active={pathname.startsWith("/credit")}>
+                                        🏢 未払い企業
+                                    </NavLink>
+                                )}
+
                                 <NavLink href="/contact" active={pathname === "/contact"}>
                                     お問い合わせ
                                 </NavLink>
+
                                 {isAdmin && (
                                     <div className="relative inline-block">
                                         <Link
@@ -249,21 +263,23 @@ export default function Navigation() {
                         <MobileNavLink href="/dashboard" active={pathname === "/dashboard"} onClick={() => setIsMobileMenuOpen(false)}>
                             ダッシュボード
                         </MobileNavLink>
-                        <MobileNavLink href="/search" active={pathname === "/search"} onClick={() => setIsMobileMenuOpen(false)}>
-                            検索
-                        </MobileNavLink>
-                        <MobileNavLink href="/credit" active={pathname.startsWith("/credit")} onClick={() => setIsMobileMenuOpen(false)}>
-                            未払い企業（クレジット）
-                        </MobileNavLink>
-                        <MobileNavLink href="/cases" active={pathname.startsWith("/cases") && pathname !== "/cases/new"} onClick={() => setIsMobileMenuOpen(false)}>
-                            登録データ一覧
-                        </MobileNavLink>
-                        <MobileNavLink href="/cases/new" active={pathname === "/cases/new"} onClick={() => setIsMobileMenuOpen(false)}>
-                            新規登録
-                        </MobileNavLink>
+
+                        {canViewPerson && (
+                            <MobileNavLink href="/search" active={pathname.startsWith("/search") || pathname.startsWith("/cases")} onClick={() => setIsMobileMenuOpen(false)}>
+                                👤 人物リスト
+                            </MobileNavLink>
+                        )}
+
+                        {canViewCredit && (
+                            <MobileNavLink href="/credit" active={pathname.startsWith("/credit")} onClick={() => setIsMobileMenuOpen(false)}>
+                                🏢 未払い企業
+                            </MobileNavLink>
+                        )}
+
                         <MobileNavLink href="/contact" active={pathname === "/contact"} onClick={() => setIsMobileMenuOpen(false)}>
                             お問い合わせ
                         </MobileNavLink>
+
                         {isAdmin && (
                             <MobileNavLink href="/admin" active={pathname.startsWith("/admin")} onClick={() => setIsMobileMenuOpen(false)} isSpecial>
                                 管理メニュー {notificationCount > 0 && `(${notificationCount})`}
