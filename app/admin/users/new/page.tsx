@@ -125,7 +125,8 @@ export default function NewUserPage() {
 
     const copyCredentials = () => {
         if (!createdUser) return;
-        const text = `【MIERIS（ミエリス）アカウント情報のご案内】\n\n会社名: ${createdUser.companyName}\nお名前: ${createdUser.name} 様\nログインURL: https://blacklist-app-nine.vercel.app/\nメールアドレス: ${createdUser.email}\n初期パスワード: ${createdUser.pass}\n\n※初回ログイン後、アカウント設定よりパスワードの変更をお願いいたします。`;
+        const origin = typeof window !== "undefined" ? window.location.origin : "https://blacklist-app-nine.vercel.app";
+        const text = `【MIERIS（ミエリス）アカウント情報のご案内】\n\n会社名: ${createdUser.companyName}\nお名前: ${createdUser.name} 様\nログインURL: ${origin}/\nメールアドレス: ${createdUser.email}\n初期パスワード: ${createdUser.pass}\n\n※初回ログイン後、アカウント設定よりパスワードの変更をお願いいたします。`;
         navigator.clipboard.writeText(text);
         setCopied(true);
         setTimeout(() => setCopied(false), 3000);

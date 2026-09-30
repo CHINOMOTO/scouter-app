@@ -12,6 +12,7 @@ import {
     Trash2, 
     ShieldCheck 
 } from "lucide-react";
+import { Toast, ToastMessage } from "@/components/Toast";
 
 type Company = {
     id: string;
@@ -25,6 +26,7 @@ type Company = {
 export default function AdminCompaniesPage() {
     const [companies, setCompanies] = useState<Company[]>([]);
     const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState<ToastMessage | null>(null);
 
     const fetchCompanies = async () => {
         setLoading(true);
@@ -56,10 +58,10 @@ export default function AdminCompaniesPage() {
 
             if (error) throw error;
 
-            alert("削除しました。");
+            setToast({ type: "success", text: "会社を削除しました。" });
             setCompanies(companies.filter(c => c.id !== id));
         } catch (err: any) {
-            alert("削除に失敗しました: " + err.message);
+            setToast({ type: "error", text: "削除に失敗しました: " + err.message });
         }
     };
 
@@ -89,6 +91,7 @@ export default function AdminCompaniesPage() {
 
     return (
         <RequireAdmin>
+            <Toast toast={toast} onClose={() => setToast(null)} />
             <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-4xl w-full relative z-10">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in">

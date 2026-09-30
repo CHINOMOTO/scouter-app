@@ -16,6 +16,7 @@ import {
     User,
     Calendar
 } from "lucide-react";
+import { Toast, ToastMessage } from "@/components/Toast";
 
 type CaseRowAdmin = {
     id: string;
@@ -41,6 +42,7 @@ export default function AdminCaseList() {
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState<"pending" | "approved" | "rejected" | "all">("pending");
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [toast, setToast] = useState<ToastMessage | null>(null);
 
     const fetchCases = async () => {
         setLoading(true);
@@ -108,13 +110,13 @@ export default function AdminCaseList() {
                 .eq("id", id);
 
             if (updateError) {
-                alert("更新失敗: " + updateError.message);
+                setToast({ type: "error", text: "更新失敗: " + updateError.message });
             } else {
-                alert(`ステータスを「${actionLabel}」に更新しました。`);
+                setToast({ type: "success", text: `ステータスを「${actionLabel}」に更新しました。` });
                 fetchCases();
             }
         } catch (err: any) {
-            alert("エラー: " + err.message);
+            setToast({ type: "error", text: "エラー: " + err.message });
         } finally {
             setActionLoading(null);
         }
@@ -124,6 +126,7 @@ export default function AdminCaseList() {
 
     return (
         <RequireAdmin>
+            <Toast toast={toast} onClose={() => setToast(null)} />
             <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-6xl w-full">
 

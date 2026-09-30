@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { CheckCircle2, ArrowLeft, Plus, Clock, UserX } from "lucide-react";
 import { RequireAdmin } from "@/components/RequireAdmin";
+import { Toast, ToastMessage } from "@/components/Toast";
 
 type AppUser = {
     id: string;
@@ -24,6 +25,7 @@ type AppUser = {
 export default function AdminUsersPage() {
     const [pendingUsers, setPendingUsers] = useState<AppUser[]>([]);
     const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState<ToastMessage | null>(null);
 
     const fetchPendingUsers = async () => {
         setLoading(true);
@@ -60,13 +62,15 @@ export default function AdminUsersPage() {
         if (!error) {
             // リストから削除して更新
             setPendingUsers((prev) => prev.filter((u) => u.id !== userId));
+            setToast({ type: "success", text: "ユーザーを承認しました。" });
         } else {
-            alert("承認に失敗しました: " + error.message);
+            setToast({ type: "error", text: "承認に失敗しました: " + error.message });
         }
     };
 
     return (
         <RequireAdmin>
+            <Toast toast={toast} onClose={() => setToast(null)} />
             <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-5xl w-full">
 
@@ -130,8 +134,9 @@ export default function AdminUsersPage() {
 
                                                     if (!error) {
                                                         setPendingUsers((prev) => prev.filter((u) => u.id !== user.id));
+                                                        setToast({ type: "success", text: "申請を却下（削除）しました。" });
                                                     } else {
-                                                        alert("却下に失敗しました: " + error.message);
+                                                        setToast({ type: "error", text: "却下に失敗しました: " + error.message });
                                                     }
                                                 }
                                             }}

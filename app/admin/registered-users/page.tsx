@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
+import { Toast, ToastMessage } from "@/components/Toast";
 
 type AppUser = {
     id: string;
@@ -21,6 +22,7 @@ type AppUser = {
 export default function RegisteredUsersPage() {
     const [users, setUsers] = useState<AppUser[]>([]);
     const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState<ToastMessage | null>(null);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -66,14 +68,15 @@ export default function RegisteredUsersPage() {
             if (data.error) throw new Error(data.error);
 
             setUsers(prev => prev.filter(u => u.id !== userId));
-            alert("ユーザーを削除しました。");
+            setToast({ type: "success", text: "ユーザーを削除しました。" });
         } catch (e: any) {
-            alert("削除に失敗しました: " + e.message);
+            setToast({ type: "error", text: "削除に失敗しました: " + e.message });
         }
     };
 
     return (
         <RequireAdmin>
+            <Toast toast={toast} onClose={() => setToast(null)} />
             <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-5xl w-full">
 
@@ -154,9 +157,9 @@ export default function RegisteredUsersPage() {
                                                         if (data.error) throw new Error(data.error);
 
                                                         setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role: newRole } : u));
-                                                        alert("権限を更新しました。");
+                                                        setToast({ type: "success", text: `権限を「${newRole === 'admin' ? '管理者' : '一般ユーザー'}」に更新しました。` });
                                                     } catch (err: any) {
-                                                        alert("更新に失敗しました: " + err.message);
+                                                        setToast({ type: "error", text: "更新に失敗しました: " + err.message });
                                                     }
                                                 }}
                                                 className="whitespace-nowrap text-xs text-slate-600 hover:text-slate-900 border border-slate-600 hover:bg-slate-900 hover:text-white px-3 py-1.5 rounded-lg transition-colors"

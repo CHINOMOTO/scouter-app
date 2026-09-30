@@ -15,6 +15,7 @@ import {
     Check,
     Clock
 } from "lucide-react";
+import { Toast, ToastMessage } from "@/components/Toast";
 
 type CreditCaseDetail = {
     id: string;
@@ -51,6 +52,7 @@ export default function CreditCaseDetailPage() {
     const [showResolveModal, setShowResolveModal] = useState(false);
     const [delayDays, setDelayDays] = useState("");
     const [resolving, setResolving] = useState(false);
+    const [toast, setToast] = useState<ToastMessage | null>(null);
 
     const fetchDetail = async () => {
         if (!id) return;
@@ -113,15 +115,15 @@ export default function CreditCaseDetailPage() {
             });
 
             if (res.ok) {
-                alert("解決状況を更新しました。");
+                setToast({ type: "success", text: "解決状況を更新しました。" });
                 setShowResolveModal(false);
                 fetchDetail();
             } else {
                 const err = await res.json();
-                alert("更新失敗: " + err.error);
+                setToast({ type: "error", text: "更新失敗: " + (err.error || "予期せぬエラー") });
             }
         } catch (err: any) {
-            alert("エラー: " + err.message);
+            setToast({ type: "error", text: "エラー: " + err.message });
         } finally {
             setResolving(false);
         }
@@ -153,6 +155,7 @@ export default function CreditCaseDetailPage() {
 
     return (
         <RequireAuth>
+            <Toast toast={toast} onClose={() => setToast(null)} />
             <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-3xl w-full">
 
