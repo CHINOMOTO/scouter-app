@@ -193,12 +193,12 @@ export default function CreditCaseDetailPage() {
                                         </span>
                                     )}
                                 </div>
-                                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-                                    <Building2 className="w-7 h-7 text-slate-700" />
-                                    <span>{caseData.company_name}</span>
+                                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-start sm:items-center gap-2.5">
+                                    <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-slate-700 shrink-0 mt-0.5 sm:mt-0" />
+                                    <span className="break-keep [word-break:keep-all]">{caseData.company_name}</span>
                                 </h1>
                                 {caseData.corporate_number && (
-                                    <p className="text-xs text-slate-500 font-mono mt-1 ml-9">
+                                    <p className="text-xs text-slate-500 font-mono mt-1 ml-8 sm:ml-9">
                                         法人番号: {caseData.corporate_number}
                                     </p>
                                 )}
@@ -279,7 +279,7 @@ export default function CreditCaseDetailPage() {
                         {/* 登録理由 */}
                         <div className="mt-6 p-5 bg-slate-50 rounded-xl border border-slate-200">
                             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
-                                登録理由
+                                登録理由（未払い・遅延の経緯）
                             </h3>
                             <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
                                 {caseData.counterparty_claim || "特段の登録理由は記載されていません。"}

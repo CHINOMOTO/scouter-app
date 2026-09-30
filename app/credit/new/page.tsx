@@ -141,8 +141,9 @@ export default function NewCreditCasePage() {
                                     取引先信用情報共有システム
                                 </span>
                             </div>
-                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                                企業信用（遅延・未払い）情報の登録申請
+                            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                                <span className="inline-block">企業信用（遅延・未払い）情報の</span>
+                                <span className="inline-block">登録申請</span>
                             </h1>
                             <p className="text-slate-600 text-sm mt-1">
                                 客観的な請求事実と裏付け資料に基づき、未払い・支払遅延の事実を記録・申請します。
@@ -170,9 +171,9 @@ export default function NewCreditCasePage() {
                         <ul className="text-xs space-y-2 text-slate-300 list-disc list-inside leading-relaxed">
                             <li><strong className="text-white font-bold">同意書のない相手は登録できません</strong>（取引開始時に署名を得た同意書が必要です）</li>
                             <li><strong className="text-white font-bold">評価・推測・伝聞は禁止</strong>（「悪質」「危ない」といった主観的表現は審査で却下されます）</li>
-                            <li><strong className="text-white font-bold">相手の言い分（反論・保留理由）を必ず併記</strong>してください</li>
+                            <li><strong className="text-white font-bold">登録理由（未払い・遅延の経緯）を必ず記録</strong>してください</li>
                             <li><strong className="text-white font-bold">入金されたら5営業日以内に更新</strong>（「解決済み（遅延○日）」と表示更新されます）</li>
-                            <li>全件、運営管理者の厳格なエビデンス審査を経てから共有されます</li>
+                            <li><strong className="text-white font-bold">全件、運営管理者の厳格なエビデンス審査</strong>を経てから共有されます</li>
                         </ul>
                     </div>
 
