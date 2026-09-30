@@ -233,7 +233,7 @@ export default function AdminCreditCasesPage() {
                                     {/* アクションボタン */}
                                     <div className="flex flex-row md:flex-col gap-2 min-w-[140px]">
                                         <Link
-                                            href={`/credit/${c.id}`}
+                                            href={`/admin/credit-cases/${c.id}`}
                                             className="btn-secondary text-xs text-center py-2.5 rounded-xl font-bold"
                                         >
                                             詳細を確認
