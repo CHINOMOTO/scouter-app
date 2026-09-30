@@ -147,7 +147,7 @@ export default function CreditSearchPage() {
                                 </span>
                             </div>
                             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                                未払い・支払遅延企業照会
+                                企業信用照会（未払い・支払遅延）
                             </h1>
                             <p className="text-slate-600 text-sm mt-1">
                                 取引開始前に事実を確認し、代金未回収・支払い遅延リスクを未然に防ぎます。
@@ -166,7 +166,7 @@ export default function CreditSearchPage() {
                                 className="btn-primary flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap shrink-0"
                             >
                                 <Plus className="w-4 h-4 shrink-0" />
-                                <span className="whitespace-nowrap">未払い企業を新規登録</span>
+                                <span className="whitespace-nowrap">遅延・未払い情報を新規登録</span>
                             </Link>
                         </div>
                     </div>
@@ -181,7 +181,7 @@ export default function CreditSearchPage() {
                                 ミエリスクレジット 未加入プランです
                             </h2>
                             <p className="text-xs text-slate-600 leading-relaxed mb-6">
-                                現在のアカウントは「就業情報プラン」のため、未払い企業情報の照会・登録をご利用いただけません。<br />
+                                現在のアカウントは「就業情報プラン」のため、企業信用情報の照会・登録をご利用いただけません。<br />
                                 「ミエリスクレジット」または「両方セットプラン」へのアップグレードで、全データをご利用いただけます。
                             </p>
                             <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs text-slate-700 max-w-md mx-auto mb-6 text-left space-y-1.5">
@@ -293,7 +293,7 @@ export default function CreditSearchPage() {
                                             <ShieldCheck className="w-5 h-5" />
                                         </div>
                                         <h3 className="text-base font-bold text-slate-900 mb-1">
-                                            照会条件に該当する未払い企業はありません
+                                            照会条件に該当する遅延・未払い企業情報はありません
                                         </h3>
                                         <p className="text-xs text-slate-500 max-w-lg mx-auto">
                                             データベース上に該当する未払い・支払遅延の記録は存在しません。安心してお取引をご検討いただけます。

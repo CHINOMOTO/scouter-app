@@ -114,7 +114,7 @@ export default function NewCreditCasePage() {
                 throw new Error(data.error || "登録申請に失敗しました");
             }
 
-            alert("未払い企業情報の登録申請を受け付けました。\n運営管理者による事実確認・審査を経てシステム全体に共有されます。");
+            alert("企業信用（遅延・未払い）情報の登録申請を受け付けました。\n運営管理者による事実確認・審査を経てシステム全体に共有されます。");
             router.push("/credit");
 
         } catch (err: any) {
@@ -142,7 +142,7 @@ export default function NewCreditCasePage() {
                                 </span>
                             </div>
                             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                                未払い・支払遅延企業の登録申請
+                                企業信用（遅延・未払い）情報の登録申請
                             </h1>
                             <p className="text-slate-600 text-sm mt-1">
                                 客観的な請求事実と裏付け資料に基づき、未払い・支払遅延の事実を記録・申請します。
@@ -154,7 +154,7 @@ export default function NewCreditCasePage() {
                                 className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
                             >
                                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                                <span className="whitespace-nowrap">未払い企業一覧へ戻る</span>
+                                <span className="whitespace-nowrap">企業信用照会へ戻る</span>
                             </Link>
                         </div>
                     </div>
@@ -372,7 +372,7 @@ export default function NewCreditCasePage() {
                                             <span>エビデンス送信中...</span>
                                         </>
                                     ) : (
-                                        <span>未払い企業情報を審査申請する</span>
+                                        <span>信用情報を審査申請する</span>
                                     )}
                                 </button>
                             </div>

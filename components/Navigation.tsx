@@ -198,12 +198,12 @@ export default function Navigation() {
                                     </NavLink>
                                 )}
 
-                                {/* 未払い企業（取引先信用管理） */}
+                                {/* 企業信用照会（取引先信用管理） */}
                                 {canViewCredit && (
                                     <NavLink href="/credit" active={pathname.startsWith("/credit")}>
                                         <span className="inline-flex items-center gap-1.5">
                                             <Building2 className="w-4 h-4" />
-                                            <span>未払い企業</span>
+                                            <span>企業信用照会</span>
                                         </span>
                                     </NavLink>
                                 )}
@@ -284,7 +284,7 @@ export default function Navigation() {
                             <MobileNavLink href="/credit" active={pathname.startsWith("/credit")} onClick={() => setIsMobileMenuOpen(false)}>
                                 <span className="inline-flex items-center gap-2">
                                     <Building2 className="w-5 h-5" />
-                                    <span>未払い企業</span>
+                                    <span>企業信用照会</span>
                                 </span>
                             </MobileNavLink>
                         )}

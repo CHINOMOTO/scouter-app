@@ -122,10 +122,10 @@ export default function AdminCreditCasesPage() {
                                 </span>
                             </div>
                             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                                未払い企業 審査管理
+                                企業信用 審査管理
                             </h1>
                             <p className="text-slate-600 text-sm mt-1">
-                                加盟企業から申請された未払い企業情報・エビデンス資料の審査を行います。
+                                加盟企業から申請された企業信用（遅延・未払い）情報・エビデンス資料の審査を行います。
                             </p>
                         </div>
                         <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center gap-1.5 self-start transition-colors whitespace-nowrap shrink-0">

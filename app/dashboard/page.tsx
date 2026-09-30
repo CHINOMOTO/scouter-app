@@ -104,11 +104,11 @@ export default function DashboardPage() {
     }
     switch (allowedPlan) {
       case "full":
-        return { label: "両方セットプラン（就業＋クレジット）", style: "bg-blue-50 text-blue-700 border border-blue-200/80" };
+        return { label: "両方セットプラン（就業＋企業信用）", style: "bg-blue-50 text-blue-700 border border-blue-200/80" };
       case "employment":
-        return { label: "人物トラブル情報プラン", style: "bg-emerald-50 text-emerald-700 border border-emerald-200/80" };
+        return { label: "応募者・就業情報プラン", style: "bg-emerald-50 text-emerald-700 border border-emerald-200/80" };
       case "credit":
-        return { label: "未払い企業クレジットプラン", style: "bg-indigo-50 text-indigo-700 border border-indigo-200/80" };
+        return { label: "企業信用情報プラン", style: "bg-indigo-50 text-indigo-700 border border-indigo-200/80" };
       default:
         return { label: "スタンダードプラン", style: "bg-slate-100 text-slate-700 border border-slate-200" };
     }
@@ -188,14 +188,14 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* セクション 1: 👤 人物情報管理（就業・トラブル防止） */}
+          {/* セクション 1: 👤 応募者照会・就業管理（トラブル防止） */}
           {canViewPerson && (
             <div className="mb-10">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">
                   <div className="w-1.5 h-5 bg-slate-900 rounded-full" />
                   <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                    人物情報管理
+                    応募者照会・就業管理
                   </h2>
                   <span className="text-xs text-slate-500 font-medium hidden sm:inline">
                     （就業トラブル・無断欠勤・損害リスク等の照会・共有）
@@ -204,9 +204,9 @@ export default function DashboardPage() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
-                {/* 人物検索・照会 */}
+                {/* 応募者検索・照会 */}
                 <MenuCard
-                  title="人物 検索・照会"
+                  title="応募者 検索・照会"
                   description="氏名・カナ・生年月日等から過去のトラブルや問題行動の記録を照会します。"
                   badge="照会"
                   icon={<Search className="w-5 h-5 text-slate-700" />}
@@ -224,7 +224,7 @@ export default function DashboardPage() {
 
                 {/* 人物を新規登録 */}
                 <MenuCard
-                  title="人物を新規登録"
+                  title="トラブル情報を新規登録"
                   description="就業トラブルを起こした従業員や応募者の事実を新規登録し、共有申請を行います。"
                   badge="登録申請"
                   icon={<UserPlus className="w-5 h-5 text-slate-700" />}
@@ -234,36 +234,36 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* セクション 2: 🏢 取引先信用管理（未払い・代金未回収防止） */}
+          {/* セクション 2: 🏢 企業信用管理（未払い・代金未回収防止） */}
           {canViewCredit && (
             <div className="mb-10">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">
                   <div className="w-1.5 h-5 bg-blue-600 rounded-full" />
                   <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                    取引先信用管理
+                    企業信用管理
                   </h2>
                   <span className="text-xs text-slate-500 font-medium hidden sm:inline">
-                    （MIERIS CREDIT | 支払い遅延・未払い企業の照会・共有）
+                    （MIERIS CREDIT | 支払い遅延・未払い情報の照会・共有）
                   </span>
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                {/* 未払い企業照会 */}
+                {/* 企業信用照会 */}
                 <MenuCard
-                  title="未払い企業 照会・検索"
+                  title="企業信用 照会・検索"
                   description="取引先企業の支払い遅延履歴や未払い金額、事故の登録理由を照会し、代金未回収を防ぎます。"
-                  badge="企業照会"
+                  badge="信用照会"
                   icon={<Building2 className="w-5 h-5 text-blue-600" />}
                   onClick={() => router.push("/credit")}
                 />
 
-                {/* 未払い企業を新規登録 */}
+                {/* 遅延・未払いを新規登録 */}
                 <MenuCard
-                  title="未払い企業を新規登録"
+                  title="遅延・未払いを新規登録"
                   description="期日を過ぎても支払いがない取引先企業の事実を登録し、信用情報として共有申請します。"
-                  badge="未払い共有"
+                  badge="情報登録"
                   icon={<FilePlus2 className="w-5 h-5 text-slate-700" />}
                   onClick={() => router.push("/credit/new")}
                 />

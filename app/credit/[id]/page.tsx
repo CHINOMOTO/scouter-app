@@ -163,7 +163,7 @@ export default function CreditCaseDetailPage() {
                             className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
                         >
                             <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                            <span className="whitespace-nowrap">未払い企業一覧へ戻る</span>
+                            <span className="whitespace-nowrap">企業信用照会へ戻る</span>
                         </Link>
                         {isOwner && !isResolved && (
                             <button
