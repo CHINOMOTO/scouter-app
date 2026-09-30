@@ -342,19 +342,19 @@ export default function Navigation() {
                                         href="/credit"
                                         active={pathname === "/credit"}
                                         icon={<Building className="w-3.5 h-3.5" />}
-                                        label="企業信用 照会・検索"
-                                    />
-                                    <SubmenuLink 
-                                        href="/credit/cases"
-                                        active={pathname === "/credit/cases"}
-                                        icon={<FileText className="w-3.5 h-3.5" />}
-                                        label="登録データ一覧"
+                                        label="企業信用 検索・照会"
                                     />
                                     <SubmenuLink 
                                         href="/credit/new"
                                         active={pathname === "/credit/new"}
                                         icon={<FilePlus2 className="w-3.5 h-3.5" />}
                                         label="遅延・未払いを新規登録"
+                                    />
+                                    <SubmenuLink 
+                                        href="/credit/cases"
+                                        active={pathname === "/credit/cases"}
+                                        icon={<FileText className="w-3.5 h-3.5" />}
+                                        label="登録データ一覧"
                                     />
                                 </AccordionGroup>
                             )}
