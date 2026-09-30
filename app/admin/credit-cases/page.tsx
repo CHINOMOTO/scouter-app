@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
@@ -15,7 +15,9 @@ import {
     FileText, 
     Building2,
     Calendar,
-    CircleDollarSign
+    CircleDollarSign,
+    Search,
+    ArrowUpDown
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { Pagination } from "@/components/Pagination";
@@ -45,9 +47,22 @@ export default function AdminCreditCasesPage() {
     const [cases, setCases] = useState<CreditCaseAdmin[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState<"pending" | "approved" | "rejected" | "all">("pending");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [sortConfig, setSortConfig] = useState<{ key: "created_at" | "company_name" | "amount" | "due_date"; direction: "asc" | "desc" }>({
+        key: "created_at",
+        direction: "desc"
+    });
     const [currentPage, setCurrentPage] = useState(1);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [toast, setToast] = useState<ToastMessage | null>(null);
+
+    const handleSort = (key: "created_at" | "company_name" | "amount" | "due_date") => {
+        let direction: "asc" | "desc" = "asc";
+        if (sortConfig.key === key && sortConfig.direction === "asc") {
+            direction = "desc";
+        }
+        setSortConfig({ key, direction });
+    };
 
     const fetchCases = async () => {
         setLoading(true);
@@ -111,9 +126,45 @@ export default function AdminCreditCasesPage() {
         }
     };
 
-    const filteredCases = cases.filter(c => filterStatus === "all" ? true : c.status === filterStatus);
-    const totalPages = Math.ceil(filteredCases.length / PAGE_SIZE);
-    const paginatedCases = filteredCases.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const filteredAndSortedCases = useMemo(() => {
+        let result = cases.filter(c => filterStatus === "all" ? true : c.status === filterStatus);
+
+        if (searchTerm.trim()) {
+            const q = searchTerm.trim().toLowerCase();
+            result = result.filter(c => {
+                const name = (c.company_name || "").toLowerCase();
+                const corpNum = (c.corporate_number || "").toLowerCase();
+                const claim = (c.counterparty_claim || "").toLowerCase();
+                const comp = (c.companies?.name || "").toLowerCase();
+                const loc = (c.location || "").toLowerCase();
+                return name.includes(q) || corpNum.includes(q) || claim.includes(q) || comp.includes(q) || loc.includes(q);
+            });
+        }
+
+        result.sort((a, b) => {
+            const dir = sortConfig.direction === "asc" ? 1 : -1;
+            switch (sortConfig.key) {
+                case "created_at":
+                    return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
+                case "company_name":
+                    return (a.company_name || "").localeCompare(b.company_name || "") * dir;
+                case "amount":
+                    return (a.amount - b.amount) * dir;
+                case "due_date":
+                    return (a.due_date || "").localeCompare(b.due_date || "") * dir;
+                default:
+                    return 0;
+            }
+        });
+
+        return result;
+    }, [cases, filterStatus, searchTerm, sortConfig]);
+
+    const totalPages = Math.ceil(filteredAndSortedCases.length / PAGE_SIZE) || 1;
+    const paginatedCases = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE;
+        return filteredAndSortedCases.slice(start, start + PAGE_SIZE);
+    }, [filteredAndSortedCases, currentPage]);
 
     return (
         <RequireAdmin>
@@ -136,7 +187,7 @@ export default function AdminCreditCasesPage() {
                                 </h1>
                                 {!loading && (
                                     <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full font-mono">
-                                        全 {filteredCases.length} 件
+                                        全 {filteredAndSortedCases.length} 件
                                     </span>
                                 )}
                             </div>
@@ -150,47 +201,92 @@ export default function AdminCreditCasesPage() {
                         </Link>
                     </div>
 
-                    {/* タブ切り替え */}
-                    <div className="flex gap-2 border-b border-slate-200 pb-3 mb-6 overflow-x-auto">
-                        <button
-                            onClick={() => {
-                                setFilterStatus("pending");
-                                setCurrentPage(1);
-                            }}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "pending" ? "bg-slate-900 text-white shadow-sm" : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"}`}
-                        >
-                            <Clock className="w-3.5 h-3.5" />
-                            <span>審査待ち ({cases.filter(c => c.status === "pending").length})</span>
-                        </button>
-                        <button
-                            onClick={() => {
-                                setFilterStatus("approved");
-                                setCurrentPage(1);
-                            }}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "approved" ? "bg-slate-900 text-white shadow-sm" : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"}`}
-                        >
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>承認済み ({cases.filter(c => c.status === "approved").length})</span>
-                        </button>
-                        <button
-                            onClick={() => {
-                                setFilterStatus("rejected");
-                                setCurrentPage(1);
-                            }}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "rejected" ? "bg-slate-900 text-white shadow-sm" : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"}`}
-                        >
-                            <XCircle className="w-3.5 h-3.5" />
-                            <span>却下 ({cases.filter(c => c.status === "rejected").length})</span>
-                        </button>
-                        <button
-                            onClick={() => {
-                                setFilterStatus("all");
-                                setCurrentPage(1);
-                            }}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${filterStatus === "all" ? "bg-slate-900 text-white shadow-sm" : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"}`}
-                        >
-                            すべて ({cases.length})
-                        </button>
+                    {/* コントロールバー（タブ & 検索 & ソート） */}
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs mb-6 space-y-4 animate-fade-in">
+                        <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
+                            
+                            {/* 検索窓 */}
+                            <div className="relative flex-1 max-w-md">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    placeholder="企業名・法人番号・申請企業名・経緯で絞り込み..."
+                                    style={{ paddingLeft: '2.5rem' }}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 focus:bg-white transition-all placeholder:text-slate-400"
+                                />
+                            </div>
+
+                            {/* ソート切り替え */}
+                            <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-xs text-slate-500 font-semibold flex items-center gap-1">
+                                    <ArrowUpDown className="w-3.5 h-3.5" />
+                                    並び順:
+                                </span>
+                                <select
+                                    value={`${sortConfig.key}-${sortConfig.direction}`}
+                                    onChange={(e) => {
+                                        const [key, direction] = e.target.value.split('-') as [any, any];
+                                        setSortConfig({ key, direction });
+                                    }}
+                                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-bold focus:outline-none"
+                                >
+                                    <option value="created_at-desc">申請日 (新しい順)</option>
+                                    <option value="created_at-asc">申請日 (古い順)</option>
+                                    <option value="amount-desc">金額 (高い順)</option>
+                                    <option value="amount-asc">金額 (低い順)</option>
+                                    <option value="company_name-asc">企業名 (五十音順)</option>
+                                    <option value="due_date-desc">期日 (新しい順)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* タブ切り替え */}
+                        <div className="flex gap-2 pt-2 border-t border-slate-100 overflow-x-auto">
+                            <button
+                                onClick={() => {
+                                    setFilterStatus("pending");
+                                    setCurrentPage(1);
+                                }}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "pending" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
+                            >
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>審査待ち ({cases.filter(c => c.status === "pending").length})</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setFilterStatus("approved");
+                                    setCurrentPage(1);
+                                }}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "approved" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
+                            >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>承認済み ({cases.filter(c => c.status === "approved").length})</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setFilterStatus("rejected");
+                                    setCurrentPage(1);
+                                }}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "rejected" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
+                            >
+                                <XCircle className="w-3.5 h-3.5" />
+                                <span>却下 ({cases.filter(c => c.status === "rejected").length})</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setFilterStatus("all");
+                                    setCurrentPage(1);
+                                }}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${filterStatus === "all" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
+                            >
+                                すべて ({cases.length})
+                            </button>
+                        </div>
                     </div>
 
                     {/* 一覧 */}
@@ -198,7 +294,7 @@ export default function AdminCreditCasesPage() {
                         <div className="flex justify-center py-24">
                             <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
                         </div>
-                    ) : filteredCases.length === 0 ? (
+                    ) : filteredAndSortedCases.length === 0 ? (
                         <div className="bg-white p-10 text-center rounded-xl border border-slate-200 shadow-2xs animate-fade-in">
                             <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-lg flex items-center justify-center mx-auto mb-3">
                                 <FileText className="w-6 h-6" />
@@ -291,7 +387,7 @@ export default function AdminCreditCasesPage() {
                             <Pagination
                                 currentPage={currentPage}
                                 totalPages={totalPages}
-                                totalItems={filteredCases.length}
+                                totalItems={filteredAndSortedCases.length}
                                 pageSize={PAGE_SIZE}
                                 onPageChange={setCurrentPage}
                                 className="mt-6"

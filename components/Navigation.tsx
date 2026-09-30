@@ -24,7 +24,8 @@ import {
     ShieldAlert,
     Bell,
     MessageSquare,
-    ExternalLink
+    ExternalLink,
+    Activity
 } from "lucide-react";
 
 export default function Navigation() {
@@ -435,6 +436,12 @@ export default function Navigation() {
                                         active={pathname.startsWith("/admin/inquiries")}
                                         icon={<MessageSquare className="w-3.5 h-3.5" />}
                                         label="お問い合わせ管理"
+                                    />
+                                    <SubmenuLink 
+                                        href="/admin/audit"
+                                        active={pathname.startsWith("/admin/audit")}
+                                        icon={<Activity className="w-3.5 h-3.5" />}
+                                        label="監査ログ・照会履歴"
                                     />
                                 </AccordionGroup>
                             </nav>

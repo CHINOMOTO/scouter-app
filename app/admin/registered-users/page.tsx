@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { Pagination } from "@/components/Pagination";
+import { Search } from "lucide-react";
 
 type AppUser = {
     id: string;
@@ -25,6 +26,7 @@ const PAGE_SIZE = 15;
 export default function RegisteredUsersPage() {
     const [users, setUsers] = useState<AppUser[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [toast, setToast] = useState<ToastMessage | null>(null);
 
@@ -78,8 +80,23 @@ export default function RegisteredUsersPage() {
         }
     };
 
-    const totalPages = Math.ceil(users.length / PAGE_SIZE);
-    const paginatedUsers = users.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const filteredUsers = useMemo(() => {
+        if (!searchTerm.trim()) return users;
+        const q = searchTerm.trim().toLowerCase();
+        return users.filter(u => {
+            const name = (u.display_name || "").toLowerCase();
+            const email = (u.email || "").toLowerCase();
+            const comp = (u.companies?.name || "").toLowerCase();
+            const role = (u.role || "").toLowerCase();
+            return name.includes(q) || email.includes(q) || comp.includes(q) || role.includes(q);
+        });
+    }, [users, searchTerm]);
+
+    const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE) || 1;
+    const paginatedUsers = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE;
+        return filteredUsers.slice(start, start + PAGE_SIZE);
+    }, [filteredUsers, currentPage]);
 
     return (
         <RequireAdmin>
@@ -93,7 +110,7 @@ export default function RegisteredUsersPage() {
                                 <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">登録済みユーザー一覧</h1>
                                 {!loading && (
                                     <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full font-mono">
-                                        全 {users.length} 件
+                                        全 {filteredUsers.length} 件
                                     </span>
                                 )}
                             </div>
@@ -106,6 +123,24 @@ export default function RegisteredUsersPage() {
                             <Link href="/admin/users/new" className="btn-primary flex items-center gap-2 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm">
                                 <span>+</span> アカウント新規発行
                             </Link>
+                        </div>
+                    </div>
+
+                    {/* 検索コントロールバー */}
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs mb-6 animate-fade-in">
+                        <div className="relative w-full max-w-md">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                placeholder="名前・メールアドレス・所属企業名で絞り込み..."
+                                style={{ paddingLeft: '2.5rem' }}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 focus:bg-white transition-all placeholder:text-slate-400"
+                            />
                         </div>
                     </div>
 
@@ -197,7 +232,7 @@ export default function RegisteredUsersPage() {
                             <Pagination
                                 currentPage={currentPage}
                                 totalPages={totalPages}
-                                totalItems={users.length}
+                                totalItems={filteredUsers.length}
                                 pageSize={PAGE_SIZE}
                                 onPageChange={setCurrentPage}
                                 className="bg-white rounded-xl border border-slate-200 px-4 shadow-2xs"

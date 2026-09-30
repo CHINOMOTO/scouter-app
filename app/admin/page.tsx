@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ClipboardCheck, UserCheck, Building, Users, MessageSquare, Mail, FileSpreadsheet } from "lucide-react";
+import { ClipboardCheck, UserCheck, Building, Users, MessageSquare, Mail, FileSpreadsheet, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
 
@@ -12,6 +12,7 @@ export default function AdminDashboardPage() {
     const [approvedUserCount, setApprovedUserCount] = useState<number | null>(null);
     const [companyCount, setCompanyCount] = useState<number | null>(null);
     const [inquiryCount, setInquiryCount] = useState<number | null>(null);
+    const [auditCount, setAuditCount] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -47,12 +48,18 @@ export default function AdminDashboardPage() {
                 .select("*", { count: "exact", head: true })
                 .eq("status", "unread");
 
-            const [casesResult, usersResult, approvedUsersResult, companiesResult, inquiriesResult] = await Promise.all([
+            // 監査ログ件数
+            const auditQuery = supabase
+                .from("audit_logs")
+                .select("*", { count: "exact", head: true });
+
+            const [casesResult, usersResult, approvedUsersResult, companiesResult, inquiriesResult, auditResult] = await Promise.all([
                 casesQuery,
                 usersQuery,
                 approvedUsersQuery,
                 companiesQuery,
-                inquiriesQuery
+                inquiriesQuery,
+                auditQuery
             ]);
 
             if (!casesResult.error) setPendingCount(casesResult.count);
@@ -60,6 +67,7 @@ export default function AdminDashboardPage() {
             if (!approvedUsersResult.error) setApprovedUserCount(approvedUsersResult.count);
             if (!companiesResult.error) setCompanyCount(companiesResult.count);
             if (!inquiriesResult.error) setInquiryCount(inquiriesResult.count);
+            if (!auditResult.error) setAuditCount(auditResult.count);
             setLoading(false);
         };
 
@@ -338,6 +346,47 @@ export default function AdminDashboardPage() {
                                 <p className="text-slate-600 text-sm mb-6 leading-relaxed">
                                     ダッシュボードに表示するお知らせの作成・公開を行います。
                                 </p>
+                            </div>
+                        </Link>
+
+                        {/* 監査ログ・照会履歴タイル */}
+                        <Link
+                            href="/admin/audit"
+                            className="block group relative p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 hover:border-slate-300/50 hover:bg-slate-50 flex flex-col overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="p-3 rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
+                                        <Activity className="w-8 h-8" strokeWidth={1.5} />
+                                    </div>
+                                    <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
+                                        Audit & Security
+                                    </span>
+                                </div>
+                                <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                                    監査ログ・照会履歴
+                                </h2>
+                                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                                    個人情報保護法遵守のため、全ユーザーの検索・照会・閲覧アクティビティを監査します。
+                                </p>
+
+                                <div className="mt-auto">
+                                    <div className="text-5xl font-bold text-slate-900">
+                                        {loading ? (
+                                            <span className="text-2xl text-slate-600 animate-pulse">...</span>
+                                        ) : (
+                                            <>
+                                                <span>
+                                                    {auditCount ?? 0}
+                                                </span>
+                                                <span className="text-lg text-slate-500 font-normal ml-2 tracking-widest">
+                                                    LOGS
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </Link>
 
