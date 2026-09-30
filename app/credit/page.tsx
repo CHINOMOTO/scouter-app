@@ -417,7 +417,7 @@ export default function CreditSearchPage() {
                                                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                                                     <span>登録日: {new Date(c.created_at).toLocaleDateString()}</span>
                                                     <span className="text-blue-600 font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                                                        <span>事実詳細を確認</span>
+                                                        <span>詳細を確認</span>
                                                         <ArrowRight className="w-3.5 h-3.5" />
                                                     </span>
                                                 </div>

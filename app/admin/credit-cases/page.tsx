@@ -233,7 +233,7 @@ export default function AdminCreditCasesPage() {
                                             href={`/credit/${c.id}`}
                                             className="btn-secondary text-xs text-center py-2.5 rounded-xl font-bold"
                                         >
-                                            事実詳細を確認
+                                            詳細を確認
                                         </Link>
 
                                         {c.status === "pending" && (
