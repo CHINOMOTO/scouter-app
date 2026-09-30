@@ -518,50 +518,38 @@ export default function DemoLandingPage() {
                 1社1アカウント。支店・営業所ごとに柔軟に追加可能。初期費用と月額費用でシンプルな料金体系。
               </p>
               
-              <div className="child-inner estimate_cta_area" style={{ maxWidth: "820px", margin: "0 auto", backgroundColor: "#ffffff", padding: "44px", borderRadius: "16px", boxShadow: "0 6px 20px rgba(115,115,120,0.08)", display: "flex", alignItems: "center", gap: "44px", flexWrap: "wrap" }}>
+              <div className="child-inner estimate_cta_area" style={{ backgroundColor: "#ffffff", padding: "50px 48px", borderRadius: "16px", boxShadow: "0 6px 24px rgba(115,115,120,0.08)", display: "flex", alignItems: "center", justifyContent: "center", gap: "48px", maxWidth: "960px", margin: "0 auto", flexWrap: "wrap" }}>
                 
-                <div className="estimate_image" style={{ flex: "1 1 240px", textAlign: "center" }}>
-                  <img src="https://www.kaonavi.jp/lp/img/price-breakdown_price.png" alt="初期費用＋月額費用" style={{ maxWidth: "230px", width: "100%" }} />
-                  <div style={{ marginTop: "14px", fontSize: "13px", color: "#737378", fontWeight: "bold" }}>初期事務手数料: 10,000円（税別）</div>
+                <div className="estimate_image" style={{ flex: "0 1 340px", textAlign: "center" }}>
+                  <img src="/demo-assets/price.png" alt="初期費用＋月額費用" style={{ width: "100%", maxWidth: "300px", height: "auto", display: "inline-block" }} />
+                  <div style={{ marginTop: "14px", fontSize: "13px", color: "#737378", fontWeight: "bold" }}>
+                    初期事務手数料: 10,000円（税別）
+                  </div>
                 </div>
 
-                <div className="estimate_cont" style={{ flex: "1 1 380px" }}>
-                  <h3 className="child-font estimate_title" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "22px", color: "#202226" }}>
+                <div className="estimate_cont" style={{ flex: "1 1 420px" }}>
+                  <h3 className="child-font estimate_title" style={{ fontSize: "23px", fontWeight: "bold", marginBottom: "22px", color: "#202226", marginTop: 0 }}>
                     まずはお気軽に、お見積りください。
                   </h3>
                   <div className="member price">
-                    <div className="estimate-set">
+                    <div className="estimate-set" style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
                       
-                      <div className="select-set" style={{ marginBottom: "16px" }}>
+                      <div className="select-set" style={{ width: "260px", height: "52px", margin: 0, position: "relative" }}>
                         <select
                           name="plan"
                           value={selectedPlan}
                           onChange={(e) => setSelectedPlan(e.target.value)}
                           className="member-select"
-                          style={{ width: "100%", padding: "13px 14px", borderRadius: "8px", border: "1px solid #dadcdf", fontSize: "14px", fontWeight: "bold", color: "#202226" }}
+                          style={{ fontSize: "15px", fontWeight: "bold", paddingLeft: "16px" }}
                         >
-                          <option value="full">両方セットプラン（月額 ¥30,000）</option>
-                          <option value="employment">人物情報プラン（月額 ¥18,000）</option>
-                          <option value="credit">未払い企業クレジット（月額 ¥15,000）</option>
+                          <option value="full">両方セットプラン</option>
+                          <option value="employment">人物情報照会プラン</option>
+                          <option value="credit">企業信用照会プラン</option>
+                          <option value="multi">複数拠点・全社利用プラン</option>
                         </select>
                       </div>
 
-                      <div className="select-set" style={{ marginBottom: "22px" }}>
-                        <select
-                          name="member"
-                          value={selectedMembers}
-                          onChange={(e) => setSelectedMembers(e.target.value)}
-                          className="member-select"
-                          style={{ width: "100%", padding: "13px 14px", borderRadius: "8px", border: "1px solid #dadcdf", fontSize: "14px", fontWeight: "bold", color: "#202226" }}
-                        >
-                          <option value="1">ご利用拠点数: 1拠点（本社のみ）</option>
-                          <option value="2">ご利用拠点数: 2拠点</option>
-                          <option value="3">ご利用拠点数: 3拠点</option>
-                          <option value="5">ご利用拠点数: 5拠点以上</option>
-                        </select>
-                      </div>
-
-                      <a href="#contact" className="button-a button-a--blue" style={{ maxWidth: "100%", padding: "16px" }}>
+                      <a href="#contact" className="button-a button-a--blue" style={{ height: "52px", padding: "0 28px", display: "inline-flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap" }}>
                         <span style={{ fontSize: "16px" }}>費用の見積りをする</span>
                       </a>
 
@@ -589,28 +577,34 @@ export default function DemoLandingPage() {
                 </p>
               </div>
 
-              <div className="knowhow__inner" style={{ display: "flex", gap: "24px", justifyContent: "center", flexWrap: "wrap" }}>
+              <div className="knowhow__inner" style={{ display: "flex", alignItems: "stretch", justifyContent: "center", gap: "32px", position: "relative", flexWrap: "wrap" }}>
                 
-                <div className="knowhow__item knowhow__item--blue" style={{ flex: "1 1 360px", maxWidth: "440px", backgroundColor: "#EDF6FF", padding: "36px", borderRadius: "16px" }}>
-                  <div className="knowhow__card">
-                    <p className="knowhow__itemHeading" style={{ fontSize: "14px", fontWeight: "bold", color: "#3F6ECC", marginBottom: "6px" }}>シンプルで柔軟</p>
-                    <h3 className="knowhow__itemHeading--large" style={{ fontSize: "23px", fontWeight: "bold", color: "#202226", marginBottom: "18px" }}>安心安全なシステム</h3>
-                    <ul className="knowhow__list" style={{ paddingLeft: "20px", lineHeight: "2.1", fontSize: "14px", color: "#56575b" }}>
+                <div className="knowhow__item knowhow__item--blue" style={{ flex: "1 1 420px", maxWidth: "490px", backgroundColor: "#ffffff", borderRadius: "16px", overflow: "hidden", boxShadow: "0 6px 20px rgba(115,115,120,0.08)", borderTop: "4px solid #3F6ECC" }}>
+                  <div className="knowhow__card" style={{ padding: "36px 32px" }}>
+                    <div className="knowhow__image" style={{ textAlign: "center", marginBottom: "20px" }}>
+                      <img src="/demo-assets/image-knowhow-01.png" alt="安心安全なシステム" style={{ width: "100%", maxWidth: "340px", height: "auto", margin: "0 auto", display: "block" }} />
+                    </div>
+                    <p className="knowhow__itemHeading" style={{ fontSize: "15px", fontWeight: "bold", color: "#3F6ECC", textAlign: "center", marginBottom: "6px" }}>シンプルで柔軟</p>
+                    <h3 className="knowhow__itemHeading--large" style={{ fontSize: "24px", fontWeight: "bold", color: "#202226", textAlign: "center", marginBottom: "22px" }}>安心安全なシステム</h3>
+                    <ul className="knowhow__list" style={{ paddingLeft: "16px", lineHeight: "2.2", fontSize: "15px", color: "#45464a", margin: 0 }}>
                       <li className="knowhow__listItem">1分で照会完了する直感ユーザー画面</li>
-                      <li className="knowhow__listItem">人物トラブルと企業未払いのダブル防御</li>
+                      <li className="knowhow__listItem">人物トラブル・企業未払いをダブル防御</li>
                       <li className="knowhow__listItem">セキュアに情報共有するアクセス管理</li>
                     </ul>
                   </div>
                 </div>
 
-                <div className="knowhow__item knowhow__item--green" style={{ flex: "1 1 360px", maxWidth: "440px", backgroundColor: "#ECFAEC", padding: "36px", borderRadius: "16px" }}>
-                  <div className="knowhow__card">
-                    <p className="knowhow__itemHeading" style={{ fontSize: "14px", fontWeight: "bold", color: "#025D2C", marginBottom: "6px" }}>120社の導入企業が</p>
-                    <h3 className="knowhow__itemHeading--large" style={{ fontSize: "23px", fontWeight: "bold", color: "#202226", marginBottom: "18px" }}>育んだノウハウ</h3>
-                    <ul className="knowhow__list" style={{ paddingLeft: "20px", lineHeight: "2.1", fontSize: "14px", color: "#56575b" }}>
+                <div className="knowhow__item knowhow__item--green" style={{ flex: "1 1 420px", maxWidth: "490px", backgroundColor: "#ffffff", borderRadius: "16px", overflow: "hidden", boxShadow: "0 6px 20px rgba(115,115,120,0.08)", borderTop: "4px solid #30a143" }}>
+                  <div className="knowhow__card" style={{ padding: "36px 32px" }}>
+                    <div className="knowhow__image" style={{ textAlign: "center", marginBottom: "20px" }}>
+                      <img src="/demo-assets/image-knowhow-02.png" alt="育んだノウハウ" style={{ width: "100%", maxWidth: "340px", height: "auto", margin: "0 auto", display: "block" }} />
+                    </div>
+                    <p className="knowhow__itemHeading" style={{ fontSize: "15px", fontWeight: "bold", color: "#30a143", textAlign: "center", marginBottom: "6px" }}>120社の導入企業が</p>
+                    <h3 className="knowhow__itemHeading--large" style={{ fontSize: "24px", fontWeight: "bold", color: "#202226", textAlign: "center", marginBottom: "22px" }}>育んだノウハウ</h3>
+                    <ul className="knowhow__list" style={{ paddingLeft: "16px", lineHeight: "2.2", fontSize: "15px", color: "#45464a", margin: 0 }}>
                       <li className="knowhow__listItem">弁護士監修の同意書・規約テンプレート完備</li>
-                      <li className="knowhow__listItem">運営管理者が全件審査する伴走サポート</li>
-                      <li className="knowhow__listItem">業界特化の導入事例データベース</li>
+                      <li className="knowhow__listItem">運営管理者による全件審査・伴走サポート</li>
+                      <li className="knowhow__listItem">業界特化のトラブル情報データベース</li>
                     </ul>
                   </div>
                 </div>
