@@ -135,35 +135,34 @@ export default function NewCreditCasePage() {
             <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-3xl w-full">
 
-                    {/* ヘッダー */}
-                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 animate-fade-in">
-                        <div>
-                            <div className="flex items-center gap-2 mb-1.5">
-                                <span className="text-[11px] font-extrabold text-blue-600 uppercase tracking-widest font-mono">
-                                    MIERIS CREDIT
-                                </span>
-                                <span className="text-slate-300 text-xs">|</span>
-                                <span className="text-xs text-slate-500 font-semibold tracking-wide">
-                                    取引先信用情報共有システム
-                                </span>
-                            </div>
-                            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                                <span className="inline-block">企業信用（遅延・未払い）情報の</span>
-                                <span className="inline-block">登録申請</span>
-                            </h1>
-                            <p className="text-slate-600 text-sm mt-1">
-                                客観的な請求事実と裏付け資料に基づき、未払い・支払遅延の事実を記録・申請します。
-                            </p>
+                    {/* ナビゲーション */}
+                    <div className="flex items-center justify-between mb-6 animate-fade-in flex-wrap gap-3">
+                        <Link 
+                            href="/credit" 
+                            className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
+                        >
+                            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                            <span className="whitespace-nowrap">企業信用照会へ戻る</span>
+                        </Link>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-extrabold text-blue-600 uppercase tracking-widest font-mono">
+                                MIERIS CREDIT
+                            </span>
+                            <span className="text-slate-300 text-xs">|</span>
+                            <span className="text-xs text-slate-500 font-semibold tracking-wide">
+                                取引先信用情報共有システム
+                            </span>
                         </div>
-                        <div className="shrink-0">
-                            <Link 
-                                href="/credit" 
-                                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
-                            >
-                                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                                <span className="whitespace-nowrap">企業信用照会へ戻る</span>
-                            </Link>
-                        </div>
+                    </div>
+
+                    {/* 見出し */}
+                    <div className="mb-8 animate-fade-in">
+                        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight sm:whitespace-nowrap">
+                            企業信用（遅延・未払い）情報の登録申請
+                        </h1>
+                        <p className="text-slate-600 text-sm mt-1">
+                            客観的な請求事実と裏付け資料に基づき、未払い・支払遅延の事実を記録・申請します。
+                        </p>
                     </div>
 
                     {/* コンプライアンス遵守ボックス（確実に視認可能なコントラスト設計） */}
