@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
+import { Toast, ToastMessage } from "@/components/Toast";
 import { 
     Search, 
     Plus, 
     ShieldCheck, 
-    Coins, 
     AlertTriangle, 
     CheckCircle2, 
     Lock, 
@@ -17,10 +17,9 @@ import {
     FileText, 
     ArrowRight,
     ArrowLeft,
-    CheckCircle,
     Info,
-    Calendar,
-    FileCheck
+    FileCheck,
+    AlertCircle
 } from "lucide-react";
 
 type CreditCase = {
@@ -42,13 +41,21 @@ export default function CreditSearchPage() {
     const router = useRouter();
     const [cases, setCases] = useState<CreditCase[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searching, setSearching] = useState(false);
+    const [hasSearched, setHasSearched] = useState(false);
+    const [searchedCorp, setSearchedCorp] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [corpFilter, setCorpFilter] = useState("");
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [toast, setToast] = useState<ToastMessage | null>(null);
     
     // サマリー用
     const [totalCases, setTotalCases] = useState(0);
     const [unpaidCount, setUnpaidCount] = useState(0);
     const [resolvedCount, setResolvedCount] = useState(0);
+
+    // プラン制限チェック用
+    const [planRestricted, setPlanRestricted] = useState(false);
 
     // 期日超過日数の計算
     const calculateOverdueDays = (dueDateStr?: string | null) => {
@@ -59,33 +66,104 @@ export default function CreditSearchPage() {
         return diff > 0 ? diff : 0;
     };
 
-    // プラン制限チェック用
-    const [planRestricted, setPlanRestricted] = useState(false);
+    // 初期化: プラン確認と統計サマリーの取得
+    useEffect(() => {
+        const init = async () => {
+            setLoading(true);
+            try {
+                const session = (await supabase.auth.getSession()).data.session;
+                if (!session) return;
 
-    const checkPlanAndFetchCases = async () => {
-        setLoading(true);
+                // ユーザーのプラン権限をチェック
+                const { data: appUser } = await supabase
+                    .from("app_users")
+                    .select("allowed_plan, role")
+                    .eq("id", session.user.id)
+                    .single();
+
+                if (appUser && appUser.allowed_plan === "employment" && appUser.role !== "admin") {
+                    setPlanRestricted(true);
+                    setLoading(false);
+                    return;
+                }
+
+                // 統計サマリーのみ取得（件数集計用）
+                const res = await fetch("/api/credit-cases", {
+                    headers: {
+                        "Authorization": `Bearer ${session.access_token}`
+                    }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const fetchedCases: CreditCase[] = data.cases || [];
+                    
+                    let unpaid = 0;
+                    let resolved = 0;
+
+                    fetchedCases.forEach((c) => {
+                        if (c.payment_status === "unpaid") {
+                            unpaid++;
+                        } else if (c.payment_status === "resolved") {
+                            resolved++;
+                        }
+                    });
+
+                    setTotalCases(fetchedCases.length);
+                    setUnpaidCount(unpaid);
+                    setResolvedCount(resolved);
+                }
+            } catch (e) {
+                console.error("Credit cases init error:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        init();
+    }, []);
+
+    // 法人番号必須の照会実行
+    const handleSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setErrorMsg(null);
+
+        // 全角数字を半角に正規化し、数字のみ抽出
+        const normalizedCorp = corpFilter
+            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+            .replace(/[^0-9]/g, "");
+
+        if (!normalizedCorp) {
+            const msg = "照会対象企業の法人番号（13桁）を入力してください。";
+            setErrorMsg(msg);
+            setToast({ type: "error", text: msg });
+            return;
+        }
+
+        if (normalizedCorp.length !== 13) {
+            const msg = "法人番号は13桁の半角数字で入力してください。";
+            setErrorMsg(msg);
+            setToast({ type: "error", text: msg });
+            return;
+        }
+
+        setSearching(true);
+        setHasSearched(false);
+        setCases([]);
+
         try {
             const session = (await supabase.auth.getSession()).data.session;
-            if (!session) return;
-
-            // ユーザーのプラン権限をチェック
-            const { data: appUser } = await supabase
-                .from("app_users")
-                .select("allowed_plan, role")
-                .eq("id", session.user.id)
-                .single();
-
-            // allowed_plan が 'employment'（就業情報のみ）かつ 管理者でない場合はクレジット機能を制限
-            if (appUser && appUser.allowed_plan === "employment" && appUser.role !== "admin") {
-                setPlanRestricted(true);
-                setLoading(false);
+            if (!session) {
+                setErrorMsg("認証セッションが見つかりません。再度ログインしてください。");
+                setSearching(false);
                 return;
             }
 
-            // API 経由で取得
             const params = new URLSearchParams();
-            if (searchQuery.trim()) params.append("q", searchQuery.trim());
-            if (corpFilter.trim()) params.append("corp", corpFilter.trim());
+            params.append("corp", normalizedCorp);
+            if (searchQuery.trim()) {
+                params.append("q", searchQuery.trim());
+            }
 
             const res = await fetch(`/api/credit-cases?${params.toString()}`, {
                 headers: {
@@ -93,48 +171,51 @@ export default function CreditSearchPage() {
                 }
             });
 
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || "データの照会に失敗しました。");
+            }
+
             const data = await res.json();
             const fetchedCases: CreditCase[] = data.cases || [];
+
             setCases(fetchedCases);
+            setHasSearched(true);
+            setSearchedCorp(normalizedCorp);
 
-            // 統計の計算（承認済みのみ）
-            let unpaid = 0;
-            let resolved = 0;
+            // 照会監査ログの保存 (POST /api/audit)
+            try {
+                await fetch("/api/audit", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        action_type: "SEARCH_CREDIT",
+                        target_id: `法人番号: ${normalizedCorp}${searchQuery.trim() ? ` (${searchQuery.trim()})` : ""}`
+                    })
+                });
+            } catch (auditErr) {
+                console.error("Audit log error:", auditErr);
+            }
 
-            fetchedCases.forEach((c) => {
-                if (c.payment_status === "unpaid") {
-                    unpaid++;
-                } else if (c.payment_status === "resolved") {
-                    resolved++;
-                }
-            });
-
-            setTotalCases(fetchedCases.length);
-            setUnpaidCount(unpaid);
-            setResolvedCount(resolved);
-
-        } catch (e) {
-            console.error("Credit cases fetch error:", e);
+        } catch (err: any) {
+            setErrorMsg(err.message || "照会中にエラーが発生しました。");
+            setToast({ type: "error", text: err.message || "照会中にエラーが発生しました。" });
         } finally {
-            setLoading(false);
+            setSearching(false);
         }
-    };
-
-    useEffect(() => {
-        checkPlanAndFetchCases();
-    }, []);
-
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        checkPlanAndFetchCases();
     };
 
     return (
         <RequireAuth>
+            <Toast toast={toast} onClose={() => setToast(null)} />
+
             <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-6xl w-full">
 
-                    {/* ヘッダーエリア（洗練された欧文サブタイトルと引き締まったアクションバー） */}
+                    {/* ヘッダーエリア */}
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                         <div>
                             <div className="flex items-center gap-2 mb-1.5">
@@ -195,7 +276,7 @@ export default function CreditSearchPage() {
                         </div>
                     ) : (
                         <>
-                            {/* 統計サマリーカード（総額を廃止し、事故情報登録企業・未払い・遅延解決の実用指標へ） */}
+                            {/* 統計サマリーカード */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
                                     <div className="flex items-center justify-between text-slate-500 mb-2">
@@ -240,62 +321,166 @@ export default function CreditSearchPage() {
                                 </div>
                             </div>
 
-                            {/* 検索フィルターバー（シャープな業務ツールバー） */}
-                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs mb-6">
-                                <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3 items-end">
-                                    <div className="flex-1 w-full">
-                                        <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                                            企業名・商号 または 所在地
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            placeholder="例: 株式会社〇〇建設、東京都中央区..."
-                                            className="input-field py-2 text-sm"
-                                        />
+                            {/* 照会条件カード（法人番号必須） */}
+                            <div className="bg-white p-6 sm:p-7 rounded-xl border border-slate-200 shadow-2xs mb-6">
+                                <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 leading-relaxed mb-5">
+                                    ※同名企業との誤認防止および信用情報の適正管理の観点から、照会には<strong>「法人番号（13桁）」</strong>の入力が必須となっています。
+                                </div>
+
+                                {errorMsg && (
+                                    <div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-start gap-3">
+                                        <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-500" />
+                                        <div className="text-xs font-semibold leading-relaxed">
+                                            {errorMsg}
+                                        </div>
                                     </div>
-                                    <div className="w-full md:w-64">
-                                        <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                                            法人番号（13桁）
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={corpFilter}
-                                            onChange={(e) => setCorpFilter(e.target.value)}
-                                            placeholder="13桁数字で照会"
-                                            className="input-field font-mono py-2 text-sm"
-                                        />
+                                )}
+
+                                <form onSubmit={handleSearch} className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* 法人番号（必須） */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1.5">
+                                                <label className="text-xs font-bold text-slate-700">
+                                                    法人番号（13桁）
+                                                </label>
+                                                <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">
+                                                    必須
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                required
+                                                maxLength={13}
+                                                inputMode="numeric"
+                                                value={corpFilter}
+                                                onChange={(e) => {
+                                                    // 数字と全角数字のみ許可
+                                                    const val = e.target.value;
+                                                    setCorpFilter(val);
+                                                }}
+                                                placeholder="例: 1234567890123 (半角数字13桁)"
+                                                className="input-field font-mono py-2.5 text-sm"
+                                            />
+                                            <p className="text-[11px] text-slate-500 mt-1">
+                                                国税庁が指定した13桁の法人番号を入力してください（ハイフン不要）
+                                            </p>
+                                        </div>
+
+                                        {/* 企業名・商号（任意） */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1.5">
+                                                <label className="text-xs font-bold text-slate-700">
+                                                    企業名・商号 または 所在地
+                                                </label>
+                                                <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
+                                                    任意
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                placeholder="例: 株式会社〇〇建設、東京都中央区..."
+                                                className="input-field py-2.5 text-sm"
+                                            />
+                                            <p className="text-[11px] text-slate-500 mt-1">
+                                                法人番号と併せて企業名で絞り込む場合に入力します
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="w-full md:w-auto">
+
+                                    <div className="pt-2 flex justify-end">
                                         <button
                                             type="submit"
-                                            disabled={loading}
-                                            className="btn-primary w-full md:w-auto px-6 h-[42px] text-xs font-bold rounded-xl flex items-center justify-center gap-1.5"
+                                            disabled={searching}
+                                            className="btn-primary w-full sm:w-auto px-8 h-[44px] text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-xs"
                                         >
-                                            <Search className="w-3.5 h-3.5" />
-                                            <span>{loading ? "照会中..." : "照会・検索"}</span>
+                                            {searching ? (
+                                                <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent" />
+                                            ) : (
+                                                <Search className="w-4 h-4" />
+                                            )}
+                                            <span>{searching ? "信用情報を照会中..." : "企業信用情報を照会する"}</span>
                                         </button>
                                     </div>
                                 </form>
                             </div>
 
-                            {/* 結果一覧エリア */}
-                            {loading ? (
-                                <div className="flex justify-center py-20">
-                                    <div className="animate-spin h-8 w-8 border-3 border-slate-200 rounded-full border-t-slate-900"></div>
+                            {/* 結果表示エリア */}
+                            {searching ? (
+                                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                                    <div className="animate-spin h-8 w-8 border-3 border-slate-200 rounded-full border-t-slate-900 mb-3"></div>
+                                    <p className="text-xs text-slate-500 font-medium">データベース照会中...</p>
                                 </div>
-                            ) : cases.length === 0 ? (
-                                /* 空状態（スカスカ感を廃止し、業務的ガイドを組み込んだ端正なレイアウト） */
+                            ) : !hasSearched ? (
+                                /* 初期状態（未検索時）のガイドカード */
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
                                     <div className="p-8 text-center border-b border-slate-100 bg-slate-50/50">
-                                        <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 mb-3 border border-emerald-200/60">
-                                            <ShieldCheck className="w-5 h-5" />
+                                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-blue-600 mb-3 border border-blue-200/60">
+                                            <Building2 className="w-6 h-6" />
                                         </div>
                                         <h3 className="text-base font-bold text-slate-900 mb-1">
-                                            照会条件に該当する遅延・未払い企業情報はありません
+                                            照会対象企業の「法人番号」を入力して照会してください
                                         </h3>
-                                        <p className="text-xs text-slate-500 max-w-lg mx-auto">
+                                        <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed">
+                                            本システムは厳格な信用情報管理のため、13桁の法人番号による特定照会を採用しています。上記の入力欄に法人番号を入力して「企業信用情報を照会する」を押してください。
+                                        </p>
+                                    </div>
+
+                                    {/* 業務サポート・安全取引ガイド */}
+                                    <div className="p-6 bg-white">
+                                        <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                                            <Info className="w-4 h-4 text-blue-600" />
+                                            <span>取引前の安全対策チェックポイント</span>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
+                                                    <FileCheck className="w-4 h-4 text-emerald-600" />
+                                                    <span>1. 同意書の事前取得</span>
+                                                </div>
+                                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                                    取引開始時に信用情報共有に関する同意書へ署名を取得しておくことで、万が一の未払い時に本システムへ登録が可能になります。
+                                                </p>
+                                            </div>
+
+                                            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
+                                                    <FileText className="w-4 h-4 text-blue-600" />
+                                                    <span>2. 客観的エビデンスの保管</span>
+                                                </div>
+                                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                                    発注書、納品書、請求書、支払期日の通知メールなど、法的・客観的に請求権を裏付ける証憑を保管してください。
+                                                </p>
+                                            </div>
+
+                                            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
+                                                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                                                    <span>3. 期日超過時の速やかな登録</span>
+                                                </div>
+                                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                                    支払期日を経過しても入金がない場合は、加盟企業全体の債権保全のため、速やかに右上の「新規登録」より申請を行ってください。
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : cases.length === 0 ? (
+                                /* 検索後・該当なし（安全・問題なし） */
+                                <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+                                    <div className="p-8 text-center border-b border-slate-100 bg-slate-50/50">
+                                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 mb-3 border border-emerald-200/60">
+                                            <ShieldCheck className="w-6 h-6" />
+                                        </div>
+                                        <h3 className="text-base font-bold text-slate-900 mb-1">
+                                            該当する遅延・未払い企業情報はありません
+                                        </h3>
+                                        <p className="text-xs text-slate-600 max-w-lg mx-auto font-mono mt-1 mb-2">
+                                            法人番号: {searchedCorp}
+                                        </p>
+                                        <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed">
                                             データベース上に該当する未払い・支払遅延の記録は存在しません。安心してお取引をご検討いただけます。
                                         </p>
                                     </div>
@@ -340,90 +525,84 @@ export default function CreditSearchPage() {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {cases.map((c) => {
-                                        const isResolved = c.payment_status === "resolved";
-                                        return (
-                                            <Link
-                                                key={c.id}
-                                                href={`/credit/${c.id}`}
-                                                className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all group flex flex-col justify-between"
-                                            >
-                                                <div>
-                                                    <div className="flex items-start justify-between gap-3 mb-3">
-                                                        <div>
-                                                            <h4 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
-                                                                <Building2 className="w-4 h-4 text-slate-500" />
-                                                                <span>{c.company_name}</span>
-                                                            </h4>
-                                                            {c.corporate_number && (
-                                                                <p className="text-xs text-slate-500 font-mono mt-0.5 ml-5.5">
-                                                                    法人番号: {c.corporate_number}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                        {isResolved ? (
-                                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                                <CheckCircle2 className="w-3 h-3" />
-                                                                <span>遅延解決 {c.resolved_delay_days ? `(遅延${c.resolved_delay_days}日)` : ""}</span>
-                                                            </span>
-                                                        ) : (
-                                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                                <AlertTriangle className="w-3 h-3" />
-                                                                <span>現在未払い {calculateOverdueDays(c.due_date) > 0 ? `(超過${calculateOverdueDays(c.due_date)}日)` : ""}</span>
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200/80 mb-3 space-y-1.5 text-xs">
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-slate-500 font-medium">請求金額</span>
-                                                            <strong className="text-slate-900 font-extrabold text-sm font-mono">
-                                                                ¥{c.amount.toLocaleString()}
-                                                            </strong>
-                                                        </div>
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-slate-500 font-medium">当初支払期日</span>
-                                                            <span className="text-slate-800 font-mono">{c.due_date}</span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-slate-500 font-medium">事故状況</span>
+                                /* 検索後・該当あり（警告・事故情報表示） */
+                                <div>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-xs font-bold text-slate-700">
+                                            照会結果: {cases.length} 件の記録が見つかりました（法人番号: <span className="font-mono">{searchedCorp}</span>）
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {cases.map((c) => {
+                                            const isResolved = c.payment_status === "resolved";
+                                            return (
+                                                <Link
+                                                    key={c.id}
+                                                    href={`/credit/${c.id}`}
+                                                    className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all group flex flex-col justify-between"
+                                                >
+                                                    <div>
+                                                        <div className="flex items-start justify-between gap-3 mb-3">
+                                                            <div>
+                                                                <h4 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
+                                                                    <Building2 className="w-4 h-4 text-slate-500" />
+                                                                    <span>{c.company_name}</span>
+                                                                </h4>
+                                                                {c.corporate_number && (
+                                                                    <p className="text-xs text-slate-500 font-mono mt-0.5 ml-5.5">
+                                                                        法人番号: {c.corporate_number}
+                                                                    </p>
+                                                                )}
+                                                            </div>
                                                             {isResolved ? (
-                                                                <span className="font-bold text-emerald-700 font-mono">
-                                                                    {c.resolved_delay_days ? `${c.resolved_delay_days}日遅れで入金完了` : "入金完了（解決済み）"}
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                    <CheckCircle2 className="w-3 h-3" />
+                                                                    <span>遅延解決 {c.resolved_delay_days ? `(遅延${c.resolved_delay_days}日)` : ""}</span>
                                                                 </span>
                                                             ) : (
-                                                                <span className="font-bold text-rose-600 font-mono">
-                                                                    {calculateOverdueDays(c.due_date) > 0 ? `期日より ${calculateOverdueDays(c.due_date)}日超過（未回収）` : "未払い継続中"}
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                                    <AlertTriangle className="w-3 h-3" />
+                                                                    <span>現在未払い {calculateOverdueDays(c.due_date) > 0 ? `(超過${calculateOverdueDays(c.due_date)}日)` : ""}</span>
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        {c.location && (
+
+                                                        <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200/80 mb-3 space-y-1.5 text-xs">
                                                             <div className="flex justify-between items-center">
-                                                                <span className="text-slate-500 font-medium">所在地</span>
-                                                                <span className="text-slate-800 truncate max-w-[200px]">{c.location}</span>
+                                                                <span className="text-slate-500 font-medium">請求金額</span>
+                                                                <span className="text-slate-900 font-extrabold text-sm">¥{c.amount.toLocaleString()}</span>
                                                             </div>
+                                                            <div className="flex justify-between items-center">
+                                                                <span className="text-slate-500 font-medium">当初支払期日</span>
+                                                                <span className="font-mono text-slate-800">{c.due_date}</span>
+                                                            </div>
+                                                            {c.location && (
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="text-slate-500 font-medium">所在地</span>
+                                                                    <span className="text-slate-800">{c.location}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {c.counterparty_claim && (
+                                                            <p className="text-xs text-slate-600 line-clamp-2 mb-4 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+                                                                <span className="font-bold text-slate-800">経緯: </span>
+                                                                {c.counterparty_claim}
+                                                            </p>
                                                         )}
                                                     </div>
 
-                                                    {c.counterparty_claim && (
-                                                        <div className="text-xs text-slate-600 line-clamp-2 mb-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                                                            <span className="font-bold text-slate-900 mr-1">【登録理由】</span>
-                                                            {c.counterparty_claim}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                                                    <span>登録日: {new Date(c.created_at).toLocaleDateString()}</span>
-                                                    <span className="text-blue-600 font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                                                        <span>詳細を確認</span>
-                                                        <ArrowRight className="w-3.5 h-3.5" />
-                                                    </span>
-                                                </div>
-                                            </Link>
-                                        );
-                                    })}
+                                                    <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
+                                                        <span>登録日: {new Date(c.created_at).toLocaleDateString()}</span>
+                                                        <span className="text-blue-600 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                                                            <span>事実詳細を確認</span>
+                                                            <ArrowRight className="w-3.5 h-3.5" />
+                                                        </span>
+                                                    </div>
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             )}
                         </>

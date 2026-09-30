@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { Search, AlertCircle, UserPlus, ClipboardList, ArrowLeft } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
+import { Toast, ToastMessage } from "@/components/Toast";
 
 type BlacklistCase = {
   id: string;
@@ -27,6 +28,7 @@ export default function SearchPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
 
@@ -58,8 +60,12 @@ export default function SearchPage() {
     setResults([]);
     setErrorMsg(null);
     try {
-      if (!nameQuery.trim()) {
+      const trimmedName = nameQuery.trim();
+      if (!trimmedName) {
         throw new Error("照会対象者の氏名（フルネーム）を入力してください。");
+      }
+      if (trimmedName.length < 2) {
+        throw new Error("照会対象者の氏名（フルネーム）は2文字以上で入力してください。");
       }
       if (!searchYear || !searchMonth || !searchDay) {
         throw new Error("照会対象者の生年月日（年・月・日）をすべて入力してください。");
@@ -69,8 +75,22 @@ export default function SearchPage() {
       const monthNum = Number(searchMonth);
       const dayNum = Number(searchDay);
 
-      if (yearNum < 1900 || yearNum > 2100 || monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) {
+      if (yearNum < 1900 || yearNum > new Date().getFullYear() || monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) {
         throw new Error("有効な生年月日を入力してください。");
+      }
+
+      // 実在する日付の検証 (うるう年・小の月)
+      const dateObj = new Date(yearNum, monthNum - 1, dayNum);
+      if (
+        dateObj.getFullYear() !== yearNum ||
+        dateObj.getMonth() !== monthNum - 1 ||
+        dateObj.getDate() !== dayNum
+      ) {
+        throw new Error("実在する正しい日付（生年月日）を入力してください。");
+      }
+
+      if (dateObj > new Date()) {
+        throw new Error("未来の日付を生年月日に指定することはできません。");
       }
 
       const dateQuery = `${searchYear.padStart(4, '0')}-${searchMonth.padStart(2, '0')}-${searchDay.padStart(2, '0')}`;
@@ -137,7 +157,9 @@ export default function SearchPage() {
       }
 
     } catch (err: any) {
-      setErrorMsg(err.message || "予期せぬエラーが発生しました。");
+      const msg = err.message || "予期せぬエラーが発生しました。";
+      setErrorMsg(msg);
+      setToast({ type: "error", text: msg });
     } finally {
       setIsLoading(false);
     }
@@ -158,6 +180,7 @@ export default function SearchPage() {
 
   return (
     <RequireAuth>
+      <Toast toast={toast} onClose={() => setToast(null)} />
       <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
         <div className="max-w-4xl w-full relative z-10">
 
@@ -283,7 +306,7 @@ export default function SearchPage() {
 
               <div className="flex items-center justify-between pt-2">
                 <p className="text-xs text-slate-500">
-                  ※氏名または生年月日の<span className="text-slate-900 font-bold">どちらか一方は必須</span>です
+                  ※適正運用の観点から、氏名（フルネーム）と生年月日は<span className="text-slate-900 font-bold">両方の入力が必須</span>です
                 </p>
                 <button
                   type="submit"
