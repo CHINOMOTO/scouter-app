@@ -17,8 +17,16 @@ import {
   ArrowRight,
   Sparkles,
   Lock,
-  Building
+  Building,
+  Bell
 } from "lucide-react";
+
+type Announcement = {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+};
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -26,6 +34,7 @@ export default function DashboardPage() {
   const [allowedPlan, setAllowedPlan] = useState<string>("full");
   const [companyName, setCompanyName] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -63,7 +72,25 @@ export default function DashboardPage() {
       }
     };
 
+    const loadAnnouncements = async () => {
+      try {
+        const { data } = await supabase
+          .from("announcements")
+          .select("id, title, content, created_at")
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        if (data) {
+          setAnnouncements(data);
+        }
+      } catch (err) {
+        console.error("Announcements fetch error:", err);
+      }
+    };
+
     loadUserData();
+    loadAnnouncements();
   }, []);
 
   // プラン権限の判定
@@ -115,6 +142,51 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
+
+          {/* お知らせ・システム通知 */}
+          {announcements.length > 0 && (
+            <div className="mb-8 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
+              <div className="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1 rounded-md bg-blue-50 text-blue-600 border border-blue-100">
+                    <Bell className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-800 tracking-wide">
+                    お知らせ・システム通知
+                  </span>
+                </div>
+                {isAdmin && (
+                  <Link
+                    href="/admin/announcements"
+                    className="text-[11px] font-bold text-slate-500 hover:text-slate-900 transition-colors whitespace-nowrap"
+                  >
+                    お知らせ管理 →
+                  </Link>
+                )}
+              </div>
+              <div className="divide-y divide-slate-100">
+                {announcements.map((item) => (
+                  <div key={item.id} className="p-5 hover:bg-slate-50/40 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                      <span className="text-xs text-slate-500 font-mono shrink-0">
+                        {new Date(item.created_at).toLocaleDateString("ja-JP", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                        })}
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-900">
+                        {item.title}
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">
+                      {item.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* セクション 1: 👤 人物情報管理（就業・トラブル防止） */}
           {canViewPerson && (
