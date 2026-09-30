@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ClipboardCheck, UserCheck, Building, Users, MessageSquare, Mail, FileSpreadsheet, ExternalLink, MonitorPlay } from "lucide-react";
+import { ClipboardCheck, UserCheck, Building, Users, MessageSquare, Mail, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
 
@@ -341,33 +341,15 @@ export default function AdminDashboardPage() {
                             </div>
                         </Link>
 
-                        {/* デモページ（宣伝・サービス紹介LP） */}
+                        {/* デモ */}
                         <Link
                             href="/demo"
                             target="_blank"
-                            className="block group relative p-8 rounded-3xl border border-blue-200 bg-blue-50/20 transition-all duration-300 glass-panel hover:-translate-y-2 hover:border-blue-400 hover:bg-blue-50/50 flex flex-col overflow-hidden shadow-xs"
+                            className="block group p-8 rounded-3xl border border-slate-200 transition-all duration-300 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center min-h-[160px]"
                         >
-                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                            <div className="relative z-10 flex flex-col h-full">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="p-3 rounded-2xl bg-blue-600 text-white group-hover:bg-blue-700 transition-all duration-300 shadow-sm shadow-blue-500/30">
-                                        <MonitorPlay className="w-8 h-8" strokeWidth={1.5} />
-                                    </div>
-                                    <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-lg border border-blue-200 uppercase tracking-wider shadow-xs">
-                                        Official LP
-                                    </span>
-                                </div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300 flex items-center gap-2">
-                                    デモページ
-                                    <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
-                                </h2>
-                                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
-                                    新規顧客・営業提案用のミエリス宣伝デモページ（カオナビ風LP）を表示します。
-                                </p>
-                                <div className="mt-auto flex items-center text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
-                                    デモページを開く（別タブ） →
-                                </div>
-                            </div>
+                            <span className="text-xl font-bold text-slate-700 group-hover:text-blue-600 transition-colors">
+                                デモ
+                            </span>
                         </Link>
 
                     </div>
