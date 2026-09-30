@@ -15,6 +15,15 @@ import {
     Menu, 
     X,
     ChevronRight,
+    ChevronDown,
+    Search,
+    UserPlus,
+    FileText,
+    Building,
+    FilePlus2,
+    ShieldAlert,
+    Bell,
+    MessageSquare,
     ExternalLink
 } from "lucide-react";
 
@@ -29,10 +38,31 @@ export default function Navigation() {
     const [allowedPlan, setAllowedPlan] = useState<string>("full");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // 画面遷移時にモバイルメニューを閉じる
+    // アコーディオンメニューの開閉ステート
+    const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
+        person: true,
+        credit: true,
+        admin: true,
+    });
+
+    // パス名変更時に該当メニューを自動展開 ＆ モバイルドロワーを閉じる
     useEffect(() => {
         setIsMobileMenuOpen(false);
+
+        if (pathname.startsWith("/search") || pathname.startsWith("/cases")) {
+            setOpenMenus(prev => ({ ...prev, person: true }));
+        }
+        if (pathname.startsWith("/credit")) {
+            setOpenMenus(prev => ({ ...prev, credit: true }));
+        }
+        if (pathname.startsWith("/admin")) {
+            setOpenMenus(prev => ({ ...prev, admin: true }));
+        }
     }, [pathname]);
+
+    const toggleMenu = (key: string) => {
+        setOpenMenus(prev => ({ ...prev, [key]: !prev[key] }));
+    };
 
     useEffect(() => {
         const fetchNotifications = async (userId: string) => {
@@ -252,43 +282,79 @@ export default function Navigation() {
                 </div>
 
                 {/* 3. ナビゲーションメニュー一覧 */}
-                <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
-                    {/* メインメニュー */}
+                <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+                    {/* メイン業務メニュー */}
                     <div>
                         <div className="px-3 mb-2 text-[10px] font-extrabold text-slate-400 tracking-wider uppercase font-mono">
                             業務メニュー
                         </div>
                         <nav className="space-y-1">
                             {/* ダッシュボード */}
-                            <SidebarLink 
+                            <SidebarSingleLink 
                                 href="/dashboard" 
                                 active={pathname === "/dashboard"}
                                 icon={<LayoutDashboard className="w-4 h-4" />}
                                 label="ダッシュボード"
                             />
 
-                            {/* 応募者照会 */}
+                            {/* 応募者照会（アコーディオン） */}
                             {canViewPerson && (
-                                <SidebarLink 
-                                    href="/search" 
-                                    active={pathname.startsWith("/search") || pathname.startsWith("/cases")}
+                                <AccordionGroup
+                                    title="応募者照会"
                                     icon={<Users className="w-4 h-4" />}
-                                    label="応募者照会"
-                                />
+                                    href="/search"
+                                    isOpen={openMenus.person}
+                                    onToggle={() => toggleMenu("person")}
+                                    isParentActive={pathname.startsWith("/search") || pathname.startsWith("/cases")}
+                                >
+                                    <SubmenuLink 
+                                        href="/search"
+                                        active={pathname === "/search"}
+                                        icon={<Search className="w-3.5 h-3.5" />}
+                                        label="応募者 検索・照会"
+                                    />
+                                    <SubmenuLink 
+                                        href="/cases/new"
+                                        active={pathname === "/cases/new"}
+                                        icon={<UserPlus className="w-3.5 h-3.5" />}
+                                        label="トラブル情報を新規登録"
+                                    />
+                                    <SubmenuLink 
+                                        href="/cases"
+                                        active={pathname === "/cases"}
+                                        icon={<FileText className="w-3.5 h-3.5" />}
+                                        label="登録データ一覧"
+                                    />
+                                </AccordionGroup>
                             )}
 
-                            {/* 企業信用照会 */}
+                            {/* 企業信用照会（アコーディオン） */}
                             {canViewCredit && (
-                                <SidebarLink 
-                                    href="/credit" 
-                                    active={pathname.startsWith("/credit")}
+                                <AccordionGroup
+                                    title="企業信用照会"
                                     icon={<Building2 className="w-4 h-4" />}
-                                    label="企業信用照会"
-                                />
+                                    href="/credit"
+                                    isOpen={openMenus.credit}
+                                    onToggle={() => toggleMenu("credit")}
+                                    isParentActive={pathname.startsWith("/credit")}
+                                >
+                                    <SubmenuLink 
+                                        href="/credit"
+                                        active={pathname === "/credit"}
+                                        icon={<Building className="w-3.5 h-3.5" />}
+                                        label="企業信用 照会・検索"
+                                    />
+                                    <SubmenuLink 
+                                        href="/credit/new"
+                                        active={pathname === "/credit/new"}
+                                        icon={<FilePlus2 className="w-3.5 h-3.5" />}
+                                        label="遅延・未払いを新規登録"
+                                    />
+                                </AccordionGroup>
                             )}
 
                             {/* お問い合わせ */}
-                            <SidebarLink 
+                            <SidebarSingleLink 
                                 href="/contact" 
                                 active={pathname === "/contact"}
                                 icon={<HelpCircle className="w-4 h-4" />}
@@ -309,14 +375,62 @@ export default function Navigation() {
                                 )}
                             </div>
                             <nav className="space-y-1">
-                                <SidebarLink 
-                                    href="/admin" 
-                                    active={pathname.startsWith("/admin")}
-                                    icon={<ShieldCheck className="w-4 h-4" />}
-                                    label="管理メニュー"
-                                    badge={notificationCount > 0 ? `${notificationCount}件` : undefined}
-                                    isSpecial
-                                />
+                                <AccordionGroup
+                                    title="管理メニュー"
+                                    icon={<ShieldCheck className="w-4 h-4 text-blue-600" />}
+                                    href="/admin"
+                                    isOpen={openMenus.admin}
+                                    onToggle={() => toggleMenu("admin")}
+                                    isParentActive={pathname.startsWith("/admin")}
+                                    badge={notificationCount > 0 ? (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold tabular-nums bg-red-500 text-white animate-pulse">
+                                            {notificationCount}件
+                                        </span>
+                                    ) : undefined}
+                                >
+                                    <SubmenuLink 
+                                        href="/admin"
+                                        active={pathname === "/admin"}
+                                        icon={<LayoutDashboard className="w-3.5 h-3.5" />}
+                                        label="管理トップ"
+                                    />
+                                    <SubmenuLink 
+                                        href="/admin/cases"
+                                        active={pathname.startsWith("/admin/cases")}
+                                        icon={<ShieldAlert className="w-3.5 h-3.5" />}
+                                        label="就業トラブル審査"
+                                    />
+                                    <SubmenuLink 
+                                        href="/admin/credit-cases"
+                                        active={pathname.startsWith("/admin/credit-cases")}
+                                        icon={<Building2 className="w-3.5 h-3.5" />}
+                                        label="企業信用審査"
+                                    />
+                                    <SubmenuLink 
+                                        href="/admin/users"
+                                        active={pathname.startsWith("/admin/users")}
+                                        icon={<Users className="w-3.5 h-3.5" />}
+                                        label="ユーザー管理"
+                                    />
+                                    <SubmenuLink 
+                                        href="/admin/companies"
+                                        active={pathname.startsWith("/admin/companies")}
+                                        icon={<Building className="w-3.5 h-3.5" />}
+                                        label="所属企業管理"
+                                    />
+                                    <SubmenuLink 
+                                        href="/admin/announcements"
+                                        active={pathname.startsWith("/admin/announcements")}
+                                        icon={<Bell className="w-3.5 h-3.5" />}
+                                        label="お知らせ管理"
+                                    />
+                                    <SubmenuLink 
+                                        href="/admin/inquiries"
+                                        active={pathname.startsWith("/admin/inquiries")}
+                                        icon={<MessageSquare className="w-3.5 h-3.5" />}
+                                        label="お問い合わせ対応"
+                                    />
+                                </AccordionGroup>
                             </nav>
                         </div>
                     )}
@@ -357,20 +471,19 @@ export default function Navigation() {
     );
 }
 
-function SidebarLink({ 
+// 単一リンク用コンポーネント
+function SidebarSingleLink({ 
     href, 
     active, 
     icon, 
     label, 
-    badge,
-    isSpecial 
+    badge 
 }: { 
     href: string; 
     active: boolean; 
     icon: React.ReactNode; 
     label: string; 
-    badge?: string;
-    isSpecial?: boolean;
+    badge?: React.ReactNode;
 }) {
     return (
         <Link
@@ -382,19 +495,117 @@ function SidebarLink({
             }`}
         >
             <div className="flex items-center gap-3 min-w-0">
-                <span className={`shrink-0 ${active ? "text-white" : isSpecial ? "text-blue-600" : "text-slate-500"}`}>
+                <span className={`shrink-0 ${active ? "text-white" : "text-slate-500"}`}>
                     {icon}
                 </span>
                 <span className="truncate">{label}</span>
             </div>
+            {badge}
+        </Link>
+    );
+}
 
-            {badge && (
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold tabular-nums shrink-0 ${
-                    active ? "bg-white/20 text-white" : "bg-red-500 text-white animate-pulse"
-                }`}>
-                    {badge}
-                </span>
+// アコーディオン親グループコンポーネント
+function AccordionGroup({
+    title,
+    icon,
+    href,
+    isOpen,
+    onToggle,
+    isParentActive,
+    badge,
+    children
+}: {
+    title: string;
+    icon: React.ReactNode;
+    href: string;
+    isOpen: boolean;
+    onToggle: () => void;
+    isParentActive: boolean;
+    badge?: React.ReactNode;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="space-y-1">
+            {/* 親メニュートグルバー */}
+            <div 
+                className={`flex items-center justify-between rounded-xl transition-all duration-150 ${
+                    isParentActive 
+                        ? "bg-slate-100 text-slate-900 font-extrabold" 
+                        : "text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 font-bold"
+                }`}
+            >
+                {/* 左側: メインページへ遷移するリンク */}
+                <Link
+                    href={href}
+                    className="flex-1 flex items-center gap-3 px-3 py-2.5 min-w-0 text-xs tracking-tight"
+                >
+                    <span className={`shrink-0 ${isParentActive ? "text-slate-900" : "text-slate-500"}`}>
+                        {icon}
+                    </span>
+                    <span className="truncate">{title}</span>
+                    {badge && <span className="ml-auto mr-1">{badge}</span>}
+                </Link>
+
+                {/* 右側: 開閉トグルボタン */}
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onToggle();
+                    }}
+                    className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-200/60 rounded-r-xl transition-colors focus:outline-none"
+                    aria-label={`${title}のサブメニューを開閉`}
+                >
+                    {isOpen ? (
+                        <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200" />
+                    ) : (
+                        <ChevronRight className="w-3.5 h-3.5 transition-transform duration-200" />
+                    )}
+                </button>
+            </div>
+
+            {/* サブメニュー展開部 */}
+            {isOpen && (
+                <div className="pl-4 ml-3 border-l-2 border-slate-200/80 space-y-1 pt-1 pb-1 animate-fade-in">
+                    {children}
+                </div>
             )}
+        </div>
+    );
+}
+
+// サブメニュー項目コンポーネント
+function SubmenuLink({
+    href,
+    active,
+    icon,
+    label,
+    badge
+}: {
+    href: string;
+    active: boolean;
+    icon?: React.ReactNode;
+    label: string;
+    badge?: React.ReactNode;
+}) {
+    return (
+        <Link
+            href={href}
+            className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all duration-150 ${
+                active 
+                    ? "bg-slate-900 text-white font-bold shadow-2xs" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold"
+            }`}
+        >
+            <div className="flex items-center gap-2 min-w-0">
+                {icon && (
+                    <span className={`shrink-0 ${active ? "text-white" : "text-slate-400"}`}>
+                        {icon}
+                    </span>
+                )}
+                <span className="truncate">{label}</span>
+            </div>
+            {badge}
         </Link>
     );
 }
