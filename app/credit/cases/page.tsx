@@ -8,6 +8,7 @@ import {
     Search, 
     Plus, 
     ArrowLeft, 
+    ArrowRight,
     AlertTriangle, 
     CheckCircle2, 
     Clock, 
@@ -53,6 +54,15 @@ export default function CreditCasesListPage() {
     });
     const [currentPage, setCurrentPage] = useState(1);
     const [toast, setToast] = useState<ToastMessage | null>(null);
+
+    // 期日超過日数の計算
+    const calculateOverdueDays = (dueDateStr?: string | null) => {
+        if (!dueDateStr) return 0;
+        const due = new Date(dueDateStr).getTime();
+        const now = new Date().getTime();
+        const diff = Math.floor((now - due) / (1000 * 60 * 60 * 24));
+        return diff > 0 ? diff : 0;
+    };
 
     const fetchCases = async () => {
         setLoading(true);
@@ -298,161 +308,91 @@ export default function CreditCasesListPage() {
                             </Link>
                         </div>
                     ) : (
-                        <div className="space-y-4 animate-fade-in delay-100">
+                        <div className="space-y-6 animate-fade-in delay-100">
                             
-                            {/* デスクトップ用テーブル (md以上) */}
-                            <div className="hidden md:block bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-50/80 border-b border-slate-200 text-xs">
-                                                <th className="py-3.5 px-4 font-bold text-slate-600">
-                                                    {renderSortableHeader("対象企業名 / 所在地", "company_name")}
-                                                </th>
-                                                <th className="py-3.5 px-4 font-bold text-slate-600">法人番号</th>
-                                                <th className="py-3.5 px-4 font-bold text-slate-600">
-                                                    {renderSortableHeader("未払い金額", "amount")}
-                                                </th>
-                                                <th className="py-3.5 px-4 font-bold text-slate-600">
-                                                    {renderSortableHeader("支払期日", "due_date")}
-                                                </th>
-                                                <th className="py-3.5 px-4 font-bold text-slate-600">
-                                                    {renderSortableHeader("状態", "payment_status")}
-                                                </th>
-                                                <th className="py-3.5 px-4 font-bold text-slate-600">登録元</th>
-                                                <th className="py-3.5 px-4 text-right font-bold text-slate-600">操作</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-                                            {paginatedCases.map((c) => {
-                                                const isResolved = c.payment_status === "resolved";
-                                                return (
-                                                    <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
-                                                        <td className="py-4 px-4">
-                                                            <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                                                                <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
-                                                                <span>{c.company_name}</span>
-                                                            </div>
-                                                            {c.location && (
-                                                                <div className="text-[11px] text-slate-500 mt-0.5 truncate max-w-xs">
-                                                                    {c.location}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td className="py-4 px-4 font-mono text-slate-700">
-                                                            {c.corporate_number || "-"}
-                                                        </td>
-                                                        <td className="py-4 px-4 font-bold font-mono text-slate-900 text-sm">
-                                                            ¥{c.amount.toLocaleString()}
-                                                        </td>
-                                                        <td className="py-4 px-4 font-mono text-slate-600">
-                                                            {c.due_date.replace(/-/g, "/")}
-                                                        </td>
-                                                        <td className="py-4 px-4 whitespace-nowrap">
-                                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                                                {isResolved ? (
-                                                                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
-                                                                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                                                        <span>解決済み</span>
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-1">
-                                                                        <AlertTriangle className="w-3 h-3 text-rose-600" />
-                                                                        <span>未払い中</span>
-                                                                    </span>
-                                                                )}
-                                                                {c.status === "pending" && (
-                                                                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1">
-                                                                        <Clock className="w-3 h-3 text-amber-600" />
-                                                                        <span>審査待ち</span>
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4 px-4 text-slate-600 truncate max-w-[120px]">
-                                                            {c.companies?.name || "加盟企業"}
-                                                        </td>
-                                                        <td className="py-4 px-4 text-right">
-                                                            <Link
-                                                                href={`/credit/${c.id}`}
-                                                                className="btn-secondary text-xs py-1.5 px-3 rounded-lg inline-flex items-center gap-1 font-bold whitespace-nowrap"
-                                                            >
-                                                                <span>詳細</span>
-                                                                <ExternalLink className="w-3 h-3" />
-                                                            </Link>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            {/* モバイル用カードリスト (md未満) */}
-                            <div className="grid gap-3 md:hidden">
+                            {/* カードグリッド (PC: 2列, スマホ: 1列) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {paginatedCases.map((c) => {
                                     const isResolved = c.payment_status === "resolved";
+                                    const overdueDays = calculateOverdueDays(c.due_date);
                                     return (
-                                        <div key={c.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
-                                            <div className="flex items-start justify-between gap-2">
-                                                <div>
-                                                    <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                                                        <Building2 className="w-4 h-4 text-slate-600 shrink-0" />
-                                                        <span>{c.company_name}</span>
-                                                    </h3>
-                                                    {c.corporate_number && (
-                                                        <span className="text-[11px] font-mono text-slate-500">
-                                                            法人番号: {c.corporate_number}
+                                        <div
+                                            key={c.id}
+                                            className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all group flex flex-col justify-between"
+                                        >
+                                            <div>
+                                                {/* ヘッダー: 企業名・法人番号・ステータスバッジ */}
+                                                <div className="flex items-start justify-between gap-3 mb-4">
+                                                    <div>
+                                                        <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                                                            <Building2 className="w-5 h-5 text-slate-600 shrink-0" />
+                                                            <span>{c.company_name}</span>
+                                                        </h3>
+                                                        {c.corporate_number && (
+                                                            <p className="text-xs text-slate-500 font-mono mt-1 ml-7">
+                                                                法人番号: {c.corporate_number}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                                                        {isResolved ? (
+                                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                                                <span>遅延解決 {c.resolved_delay_days ? `(遅延${c.resolved_delay_days}日)` : ""}</span>
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                                <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                                                                <span>現在未払い {overdueDays > 0 ? `(超過${overdueDays}日)` : ""}</span>
+                                                            </span>
+                                                        )}
+                                                        {c.status === "pending" && (
+                                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                                <Clock className="w-3 h-3 text-amber-600" />
+                                                                <span>審査待ち</span>
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* インフォボックス */}
+                                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 mb-3.5 space-y-2 text-xs">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-slate-500 font-medium">請求金額</span>
+                                                        <span className="text-slate-900 font-extrabold text-base font-mono">
+                                                            ¥{c.amount.toLocaleString()}
                                                         </span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-slate-500 font-medium">当初支払期日</span>
+                                                        <span className="font-mono text-slate-800">{c.due_date}</span>
+                                                    </div>
+                                                    {c.location && (
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-slate-500 font-medium">所在地</span>
+                                                            <span className="text-slate-800 truncate max-w-[240px] text-right font-medium">{c.location}</span>
+                                                        </div>
                                                     )}
                                                 </div>
-                                                <div className="shrink-0 flex items-center gap-1.5 flex-wrap justify-end">
-                                                    {isResolved ? (
-                                                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
-                                                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                                            <span>解決済み</span>
-                                                        </span>
-                                                    ) : (
-                                                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-1">
-                                                            <AlertTriangle className="w-3 h-3 text-rose-600" />
-                                                            <span>未払い中</span>
-                                                        </span>
-                                                    )}
-                                                    {c.status === "pending" && (
-                                                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1">
-                                                            <Clock className="w-3 h-3 text-amber-600" />
-                                                            <span>審査待ち</span>
-                                                        </span>
-                                                    )}
-                                                </div>
+
+                                                {/* 経緯ボックス */}
+                                                {c.counterparty_claim && (
+                                                    <div className="text-xs text-slate-700 leading-relaxed mb-4 bg-slate-50/70 p-3 rounded-xl border border-slate-100">
+                                                        <span className="font-bold text-slate-900">経緯: </span>
+                                                        <span>{c.counterparty_claim}</span>
+                                                    </div>
+                                                )}
                                             </div>
 
-                                            <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex justify-between items-center text-xs">
-                                                <span className="text-slate-500">未払い金額:</span>
-                                                <span className="font-extrabold text-sm font-mono text-slate-900">
-                                                    ¥{c.amount.toLocaleString()}
-                                                </span>
-                                            </div>
-
-                                            <div className="text-xs text-slate-600 space-y-1">
-                                                <div className="flex justify-between">
-                                                    <span className="text-slate-400">当初支払期日:</span>
-                                                    <span className="font-mono">{c.due_date.replace(/-/g, "/")}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-slate-400">登録元:</span>
-                                                    <span>{c.companies?.name || "加盟企業"}</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="pt-2 border-t border-slate-100">
+                                            {/* フッター */}
+                                            <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
+                                                <span>登録日: {new Date(c.created_at).toLocaleDateString()}</span>
                                                 <Link
                                                     href={`/credit/${c.id}`}
-                                                    className="btn-secondary w-full text-xs py-2 rounded-lg flex items-center justify-center gap-1.5 font-bold"
+                                                    className="text-blue-600 hover:text-blue-700 font-bold group-hover:translate-x-0.5 transition-all flex items-center gap-1"
                                                 >
-                                                    <span>詳細を確認する</span>
-                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                    <span>事実詳細を確認</span>
+                                                    <ArrowRight className="w-3.5 h-3.5" />
                                                 </Link>
                                             </div>
                                         </div>

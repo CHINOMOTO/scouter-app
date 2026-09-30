@@ -2,7 +2,21 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import { FolderOpen, Search, Plus, AlertCircle, Pencil, Trash2, Clock, CheckCircle2, XCircle, UserPlus, ArrowLeft } from "lucide-react";
+import { 
+  FolderOpen, 
+  Search, 
+  Plus, 
+  AlertCircle, 
+  Pencil, 
+  Trash2, 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  UserPlus, 
+  ArrowLeft,
+  ArrowRight,
+  User
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -12,7 +26,10 @@ import { Toast, ToastMessage } from "@/components/Toast";
 type BlacklistCase = {
   id: string;
   full_name: string;
+  full_name_kana?: string | null;
   birth_date: string | null;
+  occurrence_date?: string | null;
+  phone_last4?: string | null;
   reason_text: string;
   status: string;
   created_at: string;
@@ -47,6 +64,7 @@ export default function CasesPage() {
       const lowerTerm = searchTerm.toLowerCase();
       result = result.filter(c => 
         (c.full_name && c.full_name.toLowerCase().includes(lowerTerm)) ||
+        (c.full_name_kana && c.full_name_kana.toLowerCase().includes(lowerTerm)) ||
         (c.reason_text && c.reason_text.toLowerCase().includes(lowerTerm))
       );
     }
@@ -93,7 +111,7 @@ export default function CasesPage() {
       try {
         let query = supabase
           .from("blacklist_cases")
-          .select("id, full_name, birth_date, reason_text, status, created_at, registered_company_id")
+          .select("id, full_name, full_name_kana, birth_date, occurrence_date, phone_last4, reason_text, status, created_at, registered_company_id")
           .order("created_at", { ascending: false });
 
         // 一般ユーザーは自社登録データのみ表示（個人情報保護法対応）
@@ -257,139 +275,138 @@ export default function CasesPage() {
                 </div>
               </div>
             </div>
+          ) : filteredAndSortedCases.length === 0 ? (
+            <div className="bg-white p-12 text-center rounded-xl border border-slate-200 shadow-2xs animate-fade-in">
+              <FolderOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" strokeWidth={1} />
+              <h3 className="text-base font-bold text-slate-800 mb-1">該当するデータが見つかりませんでした</h3>
+              <p className="text-xs text-slate-500 mb-6">
+                {searchTerm ? "検索条件を変更してお試しください。" : "現在、登録されている就業トラブル情報はありません。"}
+              </p>
+              <Link href="/cases/new" className="btn-primary text-xs inline-flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                <span>トラブル情報を新規登録</span>
+              </Link>
+            </div>
           ) : (
-            <div className="glass-panel rounded-2xl overflow-hidden animate-fade-in delay-100 border border-slate-200 p-0">
-              {/* モバイル表示（カードレイアウト） */}
-              <div className="block md:hidden divide-y divide-slate-200">
-                {filteredAndSortedCases.length === 0 ? (
-                  <div className="p-8 text-center text-slate-500 text-sm">
-                    {cases.length === 0 && searchTerm === "" ? (
-                      <div>
-                        <FolderOpen className="w-10 h-10 mx-auto mb-2 text-slate-400" strokeWidth={1} />
-                        <p>データがまだありません</p>
+            <div className="space-y-6 animate-fade-in delay-100">
+              
+              {/* カードグリッド (PC: 2列, スマホ: 1列) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {paginatedCases.map((c) => (
+                  <div
+                    key={c.id}
+                    className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all group flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* ヘッダー: 氏名・カナ・ステータスバッジ */}
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <div>
+                          <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                            <User className="w-5 h-5 text-slate-600 shrink-0" />
+                            <span>{c.full_name}</span>
+                          </h3>
+                          {c.full_name_kana && (
+                            <p className="text-xs text-slate-500 font-medium mt-1 ml-7">
+                              {c.full_name_kana}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-1.5 shrink-0">
+                          {c.status === "approved" && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>登録済み（承認済）</span>
+                            </span>
+                          )}
+                          {c.status === "pending" && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>審査待ち</span>
+                            </span>
+                          )}
+                          {c.status === "rejected" && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                              <XCircle className="w-3.5 h-3.5" />
+                              <span>却下</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      "データが見つかりません"
-                    )}
-                  </div>
-                ) : (
-                  paginatedCases.map((c) => (
-                    <div key={c.id} className="p-4 hover:bg-slate-50 transition-colors">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <Link
-                          href={`/cases/${c.id}`}
-                          className="text-base font-bold text-slate-900 hover:text-blue-600 transition-colors"
-                        >
-                          {c.full_name}
-                        </Link>
-                        <StatusBadge status={c.status} />
+
+                      {/* インフォボックス */}
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 mb-3.5 space-y-2 text-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500 font-medium">生年月日</span>
+                          <span className="text-slate-900 font-bold font-mono text-sm">
+                            {c.birth_date ? c.birth_date.replace(/-/g, "/") : "-"}
+                          </span>
+                        </div>
+                        {c.occurrence_date && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-500 font-medium">トラブル発生日</span>
+                            <span className="font-mono text-slate-800">{c.occurrence_date.replace(/-/g, "/")}</span>
+                          </div>
+                        )}
+                        {c.phone_last4 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-500 font-medium">電話番号（下4桁）</span>
+                            <span className="font-mono text-slate-800">***-****-{c.phone_last4}</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="text-xs text-slate-500 space-y-1 mb-2.5">
-                        <p><span className="font-medium text-slate-600">生年月日:</span> {c.birth_date || "—"}</p>
-                        <p><span className="font-medium text-slate-600">登録日:</span> {new Date(c.created_at).toLocaleDateString()}</p>
-                      </div>
-                      <div className="bg-slate-50 rounded-lg p-2.5 text-xs text-slate-700 line-clamp-2 mb-3">
-                        {c.reason_text}
-                      </div>
-                      <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-                        <Link
-                          href={`/cases/${c.id}`}
-                          className="text-xs text-blue-600 font-bold hover:underline"
-                        >
-                          詳細を確認 →
-                        </Link>
+
+                      {/* 経緯・登録理由ボックス */}
+                      {c.reason_text && (
+                        <div className="text-xs text-slate-700 leading-relaxed mb-4 bg-slate-50/70 p-3 rounded-xl border border-slate-100">
+                          <span className="font-bold text-slate-900">経緯 / 登録理由: </span>
+                          <span className="line-clamp-2">{c.reason_text}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* フッター */}
+                    <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
+                      <span>登録日: {new Date(c.created_at).toLocaleDateString()}</span>
+                      <div className="flex items-center gap-3">
                         {isAdmin && (
-                          <div className="flex items-center gap-2">
-                            <Link href={`/cases/${c.id}/edit`} className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors" title="編集">
+                          <div className="flex items-center gap-1 mr-1">
+                            <Link
+                              href={`/cases/${c.id}/edit`}
+                              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                              title="編集"
+                            >
                               <Pencil className="w-3.5 h-3.5" />
                             </Link>
-                            <button onClick={() => handleDelete(c.id)} className="p-1.5 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-md transition-colors" title="削除">
+                            <button
+                              onClick={() => handleDelete(c.id)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                              title="削除"
+                            >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         )}
+                        <Link
+                          href={`/cases/${c.id}`}
+                          className="text-blue-600 hover:text-blue-700 font-bold group-hover:translate-x-0.5 transition-all flex items-center gap-1"
+                        >
+                          <span>事実詳細を確認</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
                       </div>
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
 
-              {/* デスクトップ表示（テーブルレイアウト） */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-700">
-                  <thead className="bg-slate-50 text-xs font-bold text-slate-600 border-b border-slate-200">
-                    <tr>
-                      {renderSortableHeader("氏名", "full_name")}
-                      {renderSortableHeader("生年月日", "birth_date")}
-                      {renderSortableHeader("登録理由", "reason_text")}
-                      {renderSortableHeader("ステータス", "status")}
-                      {renderSortableHeader("登録日", "created_at", true)}
-                      <th className="px-6 py-4 tracking-wider text-right font-bold text-slate-600">詳細</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white">
-                    {filteredAndSortedCases.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                          データが見つかりません
-                        </td>
-                      </tr>
-                    ) : (
-                      paginatedCases.map((c) => (
-                      <tr key={c.id} className="hover:bg-slate-50/80 transition-colors group">
-                        <td className="px-6 py-4">
-                          <Link
-                            href={`/cases/${c.id}`}
-                            className="text-slate-900 font-bold text-base hover:text-blue-600 transition-colors inline-block truncate max-w-[200px]"
-                          >
-                            {c.full_name}
-                          </Link>
-                        </td>
-                        <td className="px-6 py-4 font-mono text-slate-600">
-                          {c.birth_date || <span className="text-slate-600">-</span>}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="truncate max-w-xs text-slate-700 font-medium" title={c.reason_text}>
-                            {c.reason_text}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <StatusBadge status={c.status} />
-                        </td>
-                        <td className="px-6 py-4 text-xs text-slate-500 text-right font-mono">
-                          {new Date(c.created_at).toLocaleDateString()}
-                        </td>
-                        {isAdmin && (
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Link href={`/cases/${c.id}/edit`} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-lg transition-colors flex items-center justify-center" title="編集"><Pencil className="w-3.5 h-3.5" /></Link>
-                              <button onClick={() => handleDelete(c.id)} className="p-2 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-lg transition-colors flex items-center justify-center" title="削除"><Trash2 className="w-3.5 h-3.5" /></button>
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    ))
-                    )}
-                    {cases.length === 0 && searchTerm === "" && (
-                      <tr>
-                        <td colSpan={isAdmin ? 6 : 5} className="px-6 py-20 text-center text-slate-500">
-                          <FolderOpen className="w-12 h-12 mx-auto mb-3 text-slate-500 opacity-50" strokeWidth={1} />
-                          <p>データがまだありません</p>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* ページネーション */}
+              {/* 共通ページネーション */}
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 totalItems={filteredAndSortedCases.length}
                 pageSize={PAGE_SIZE}
                 onPageChange={setCurrentPage}
-                className="bg-white"
+                className="bg-white rounded-xl border border-slate-200 px-4 shadow-2xs"
               />
             </div>
           )}
