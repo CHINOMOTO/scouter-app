@@ -177,7 +177,7 @@ export default function NewCreditCasePage() {
                         <ul className="text-xs space-y-2 text-slate-300 list-disc list-inside leading-relaxed">
                             <li><strong className="text-white font-bold">同意書のない相手は登録できません</strong>（取引開始時に署名を得た同意書が必要です）</li>
                             <li><strong className="text-white font-bold">評価・推測・伝聞は禁止</strong>（「悪質」「危ない」といった主観的表現は審査で却下されます）</li>
-                            <li><strong className="text-white font-bold">登録理由（未払い・遅延の経緯）を必ず記録</strong>してください</li>
+                            <li><strong className="text-white font-bold">登録理由（未払い・遅延の経緯）および相手側の主張を必ず記録</strong>してください（客観性を担保するため、未払いに至る経緯と相手側から提示された言い分や主張内容も明記が必要です）</li>
                             <li><strong className="text-white font-bold">入金されたら5営業日以内に更新</strong>（「解決済み（遅延○日）」と表示更新されます）</li>
                             <li><strong className="text-white font-bold">全件、運営管理者の厳格なエビデンス審査</strong>を経てから共有されます</li>
                         </ul>
@@ -283,19 +283,22 @@ export default function NewCreditCasePage() {
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <label className="text-sm font-bold text-slate-800">
-                                        登録理由（未払い・遅延の経緯）
+                                        登録理由（未払い・遅延の経緯・相手側の主張）
                                     </label>
                                     <span className="text-xs text-slate-600 font-semibold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                                        ※客観的な事実をご記入ください
+                                        ※客観的な経緯と相手側の主張をご記入ください
                                     </span>
                                 </div>
                                 <textarea
-                                    rows={3}
+                                    rows={4}
                                     value={counterpartyClaim}
                                     onChange={(e) => setCounterpartyClaim(e.target.value)}
                                     className="input-field py-2.5 resize-none text-sm"
-                                    placeholder="例: 「支払期日を過ぎても入金がなく、複数回の督促に対しても『社内精査中』を繰り返すのみで支払われない」「納品完了後に一方的な減額を主張され残金の支払いを拒絶されている」など、未払い・遅延に至った客観的な経緯をご記入ください。"
+                                    placeholder="例: 「支払期日を過ぎても入金がなく、複数回の督促に対して『社内精査中』『資金調達中』と回答されている」「納品完了後に相手側より『検収内容に疑義がある』と主張され残金の支払いを拒絶されている」「連絡を試みているが担当者不在を理由に折り返しがない」など、未払い・遅延に至った客観的な経緯および相手側からの主張・言い分をご記入ください。"
                                 />
+                                <p className="text-[11px] text-slate-500">
+                                    ※一方的な申立てを防ぎ審査の客観性を保つため、未払い・遅延に至った経緯に加え、相手企業から提示された理由・言い分・反論（または連絡不通などの実態）についても併せてご記載ください。
+                                </p>
                             </div>
 
                             {/* エビデンス添付 */}

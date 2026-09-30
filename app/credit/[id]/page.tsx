@@ -282,10 +282,10 @@ export default function CreditCaseDetailPage() {
                         {/* 登録理由 */}
                         <div className="mt-6 p-5 bg-slate-50 rounded-xl border border-slate-200">
                             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
-                                登録理由（未払い・遅延の経緯）
+                                登録理由（未払い・遅延の経緯・相手側の主張）
                             </h3>
                             <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
-                                {caseData.counterparty_claim || "特段の登録理由は記載されていません。"}
+                                {caseData.counterparty_claim || "特段の登録理由・相手側の主張は記載されていません。"}
                             </p>
                         </div>
 

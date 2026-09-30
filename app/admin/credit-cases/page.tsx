@@ -249,7 +249,7 @@ export default function AdminCreditCasesPage() {
 
                                         {c.counterparty_claim && (
                                             <div className="text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 mb-2">
-                                                <span className="font-bold text-slate-900 block mb-0.5">登録理由:</span>
+                                                <span className="font-bold text-slate-900 block mb-0.5">登録理由・相手側の主張:</span>
                                                 {c.counterparty_claim}
                                             </div>
                                         )}

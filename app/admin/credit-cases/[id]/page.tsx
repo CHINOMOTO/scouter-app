@@ -380,10 +380,10 @@ export default function AdminCreditCaseDetailPage() {
                             {/* 登録理由 */}
                             <div className="mt-4 pt-4 border-t border-slate-100">
                                 <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-2">
-                                    登録理由（未払い・遅延の経緯）
+                                    登録理由（未払い・遅延の経緯・相手側の主張）
                                 </span>
                                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
-                                    {caseDetail.counterparty_claim || "特段の登録理由は記載されていません。"}
+                                    {caseDetail.counterparty_claim || "特段の登録理由・相手側の主張は記載されていません。"}
                                 </div>
                             </div>
 
