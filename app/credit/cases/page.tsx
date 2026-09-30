@@ -231,7 +231,7 @@ export default function CreditCasesListPage() {
                             
                             {/* 検索窓 */}
                             <div className="relative w-full md:w-96">
-                                <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                 <input
                                     type="text"
                                     value={searchTerm}
@@ -240,7 +240,8 @@ export default function CreditCasesListPage() {
                                         setCurrentPage(1);
                                     }}
                                     placeholder="企業名・法人番号・登録理由で絞り込み..."
-                                    className="input-field pl-10 text-xs py-2.5"
+                                    style={{ paddingLeft: '2.5rem' }}
+                                    className="w-full bg-white border border-slate-200 rounded-xl pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 transition-colors placeholder:text-slate-400"
                                 />
                             </div>
 

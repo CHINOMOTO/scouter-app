@@ -251,7 +251,7 @@ export default function CasesPage() {
           {!isLoading && cases.length > 0 && (
             <div className="flex gap-4 mb-6 animate-fade-in delay-100">
               <div className="flex-1 relative max-w-md">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="氏名や登録理由で絞り込み..."
@@ -260,7 +260,8 @@ export default function CasesPage() {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-slate-500 transition-colors"
+                  style={{ paddingLeft: '2.5rem' }}
+                  className="w-full bg-white border border-slate-200 rounded-xl pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-slate-500 transition-colors placeholder:text-slate-400"
                 />
               </div>
             </div>
