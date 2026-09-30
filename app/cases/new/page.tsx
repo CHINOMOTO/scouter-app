@@ -212,7 +212,7 @@ export default function NewCasePage() {
   if (isSubmitted) {
     return (
       <RequireAuth>
-        <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center justify-center">
+        <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center justify-center">
           <div className="max-w-xl w-full text-center glass-panel p-10 rounded-3xl animate-fade-in border-t-4 border-t-slate-900 relative overflow-hidden">
 
             {/* Background Effect */}
@@ -261,7 +261,7 @@ export default function NewCasePage() {
 
   return (
     <RequireAuth>
-      <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+      <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
         <div className="max-w-3xl w-full">
 
           {/* ヘッダーエリア */}

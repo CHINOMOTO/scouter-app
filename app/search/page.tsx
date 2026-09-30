@@ -149,7 +149,7 @@ export default function SearchPage() {
 
   return (
     <RequireAuth>
-      <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+      <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
         <div className="max-w-4xl w-full relative z-10">
 
           {/* ヘッダーエリア */}
@@ -165,7 +165,7 @@ export default function SearchPage() {
                 </span>
               </div>
               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                人物 検索・照会
+                応募者 検索・照会
               </h1>
               <p className="text-slate-600 text-sm mt-1">
                 採用や契約前に過去のトラブルや問題行動の記録を照会し、トラブルを未然に防ぎます。

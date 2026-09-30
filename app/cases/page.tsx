@@ -154,7 +154,7 @@ export default function CasesPage() {
 
   return (
     <RequireAuth>
-      <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+      <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
         <div className="max-w-6xl w-full relative z-10">
 
           {/* ヘッダーエリア */}

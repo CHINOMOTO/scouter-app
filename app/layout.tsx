@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+import AppShell from "@/components/AppShell";
 import { AlertTriangle } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -54,10 +53,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 overflow-x-hidden min-h-screen selection:bg-slate-900 selection:text-white flex flex-col">
-        <Navigation />
-        <main className="relative z-10 flex-grow">{children}</main>
-        <Footer />
+      <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 overflow-x-hidden min-h-screen selection:bg-slate-900 selection:text-white">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

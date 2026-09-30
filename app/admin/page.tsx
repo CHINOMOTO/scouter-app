@@ -68,7 +68,7 @@ export default function AdminDashboardPage() {
 
     return (
         <RequireAdmin>
-            <div className="min-h-screen text-slate-900 flex items-center justify-center pt-24 pb-12">
+            <div className="min-h-screen text-slate-900 flex items-center justify-center pt-20 md:pt-10 pb-12">
                 <div className="max-w-5xl w-full mx-4">
                     <div className="mb-12">
                         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">

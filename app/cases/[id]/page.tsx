@@ -214,7 +214,7 @@ export default function CaseDetailPage() {
 
     return (
         <RequireAuth>
-            <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+            <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
                 <div className="max-w-3xl w-full">
 
                     <div className="mb-4 animate-fade-in">

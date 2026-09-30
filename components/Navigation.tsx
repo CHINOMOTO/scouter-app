@@ -4,7 +4,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Users, Building2 } from "lucide-react";
+import { 
+    LayoutDashboard, 
+    Users, 
+    Building2, 
+    HelpCircle, 
+    ShieldCheck, 
+    User, 
+    LogOut, 
+    Menu, 
+    X,
+    ChevronRight,
+    ExternalLink
+} from "lucide-react";
 
 export default function Navigation() {
     const pathname = usePathname() || "";
@@ -12,7 +24,15 @@ export default function Navigation() {
     const [session, setSession] = useState<any>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
+    const [companyName, setCompanyName] = useState<string | null>(null);
     const [notificationCount, setNotificationCount] = useState(0);
+    const [allowedPlan, setAllowedPlan] = useState<string>("full");
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // 画面遷移時にモバイルメニューを閉じる
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [pathname]);
 
     useEffect(() => {
         const fetchNotifications = async (userId: string) => {
@@ -42,6 +62,7 @@ export default function Navigation() {
             } else {
                 setIsAdmin(false);
                 setUserName(null);
+                setCompanyName(null);
                 setNotificationCount(0);
             }
         };
@@ -53,6 +74,7 @@ export default function Navigation() {
             if (event === 'SIGNED_OUT') {
                 setIsAdmin(false);
                 setUserName(null);
+                setCompanyName(null);
                 setSession(null);
                 setNotificationCount(0);
                 return;
@@ -69,16 +91,15 @@ export default function Navigation() {
             } else {
                 setIsAdmin(false);
                 setUserName(null);
+                setCompanyName(null);
                 setNotificationCount(0);
             }
         });
 
         return () => subscription.unsubscribe();
-    }, [pathname]); // pathnameが変わるたびにも再チェック（通知数更新のため）
+    }, [pathname]);
 
-    // 会社名+登録名および契約プランを取得する（認証フローとは独立、ユーザーIDが変わった時だけ実行）
-    const [allowedPlan, setAllowedPlan] = useState<string>("full");
-
+    // 会社名+登録名および契約プランを取得する
     useEffect(() => {
         if (!session?.user?.id) return;
         let cancelled = false;
@@ -97,26 +118,27 @@ export default function Navigation() {
                 }
 
                 const displayName = (appUser.display_name as string) || "User";
-                if (!appUser.company_id) {
-                    setUserName(displayName);
-                    return;
+                setUserName(displayName);
+
+                if (appUser.company_id) {
+                    const { data: company } = await supabase
+                        .from("companies")
+                        .select("name")
+                        .eq("id", appUser.company_id)
+                        .maybeSingle();
+                    if (cancelled) return;
+                    if (company?.name) {
+                        setCompanyName(company.name);
+                    }
                 }
-                const { data: company } = await supabase
-                    .from("companies")
-                    .select("name")
-                    .eq("id", appUser.company_id)
-                    .maybeSingle();
-                if (cancelled) return;
-                const companyName = (company as { name: string } | null)?.name;
-                setUserName(companyName ? `${companyName} ${displayName}` : displayName);
             } catch {
-                // エラーが起きても何もしない
+                // エラー時は何もしない
             }
         };
 
         fetchUserProfile();
         return () => { cancelled = true; };
-    }, [session?.user?.id]); // ユーザーIDが変わった時のみ実行
+    }, [session?.user?.id]);
 
     const handleLogout = async () => {
         try {
@@ -124,215 +146,255 @@ export default function Navigation() {
         } catch (error) {
             console.error("Logout error:", error);
         } finally {
-            // ステートをクリア
             setSession(null);
             setIsAdmin(false);
             setUserName(null);
-
-            // 確実にログイン画面へ遷移させる
+            setCompanyName(null);
             window.location.href = "/";
         }
     };
 
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    // ログイン・サインアップ・デモ等の公開ページでは非表示
+    const isPublicPage = 
+        pathname === "/" || 
+        pathname === "/signup" || 
+        pathname === "/login" || 
+        pathname === "/demo" || 
+        pathname === "/forgot-password" || 
+        pathname === "/update-password" || 
+        pathname === "/pending-approval";
 
-    // ログイン・サインアップ・デモページではナビゲーションバーを表示しない
-    if (pathname === "/" || pathname === "/signup" || pathname === "/login" || pathname === "/demo") return null;
-
-    // セッションがない場合は表示しない
-    if (!session) return null;
+    if (isPublicPage || !session) return null;
 
     // プラン別の権限判定
     const canViewPerson = isAdmin || allowedPlan === "full" || allowedPlan === "employment";
     const canViewCredit = isAdmin || allowedPlan === "full" || allowedPlan === "credit";
 
+    // プラン名表示
+    const getPlanLabel = () => {
+        if (isAdmin) return "管理者";
+        if (allowedPlan === "full") return "両方セット";
+        if (allowedPlan === "employment") return "応募者照会";
+        if (allowedPlan === "credit") return "企業信用";
+        return "スタンダード";
+    };
+
     return (
-        <nav className="fixed top-0 w-full z-50 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-xs">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
-                    <div className="flex items-center justify-between w-full md:w-auto">
-                        <Link href={session ? "/dashboard" : "/"} className="flex-shrink-0 flex items-center gap-2.5 group" onClick={() => setIsMobileMenuOpen(false)}>
-                            <img src="/logo-mark.png" alt="MIERIS" className="w-8 h-8 object-contain" />
-                            <div className="flex flex-col">
-                                <span className="font-extrabold text-lg text-slate-900 tracking-wider leading-none group-hover:text-blue-600 transition-colors">MIERIS</span>
-                                <span className="text-[9px] text-slate-500 tracking-widest leading-none mt-0.5 font-bold">ミエリス</span>
-                            </div>
-                        </Link>
+        <>
+            {/* モバイル用トップバー (md未満で表示) */}
+            <div className="md:hidden fixed top-0 inset-x-0 h-14 bg-white/95 backdrop-blur-md border-b border-slate-200 z-30 px-4 flex items-center justify-between shadow-2xs">
+                <Link href="/dashboard" className="flex items-center gap-2">
+                    <img src="/logo-mark.png" alt="MIERIS" className="w-7 h-7 object-contain" />
+                    <span className="font-extrabold text-base text-slate-900 tracking-wider">MIERIS</span>
+                </Link>
 
-                        {/* Mobile menu button */}
-                        {session && (
-                            <div className="flex md:hidden">
-                                <button
-                                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                                    className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none"
-                                >
-                                    <span className="sr-only">Open main menu</span>
-                                    {isMobileMenuOpen ? (
-                                        <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    ) : (
-                                        <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                                        </svg>
-                                    )}
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {session && (
-                        <div className="hidden md:block">
-                            <div className="ml-6 flex items-baseline space-x-1">
-                                <NavLink href="/dashboard" active={pathname === "/dashboard"}>
-                                    ダッシュボード
-                                </NavLink>
-
-                                {/* 応募者照会（就業・トラブル防止） */}
-                                {canViewPerson && (
-                                    <NavLink href="/search" active={pathname.startsWith("/search") || pathname.startsWith("/cases")}>
-                                        <span className="inline-flex items-center gap-1.5">
-                                            <Users className="w-4 h-4" />
-                                            <span>応募者照会</span>
-                                        </span>
-                                    </NavLink>
-                                )}
-
-                                {/* 企業信用照会（取引先信用管理） */}
-                                {canViewCredit && (
-                                    <NavLink href="/credit" active={pathname.startsWith("/credit")}>
-                                        <span className="inline-flex items-center gap-1.5">
-                                            <Building2 className="w-4 h-4" />
-                                            <span>企業信用照会</span>
-                                        </span>
-                                    </NavLink>
-                                )}
-
-                                <NavLink href="/contact" active={pathname === "/contact"}>
-                                    お問い合わせ
-                                </NavLink>
-
-                                {isAdmin && (
-                                    <div className="relative inline-block">
-                                        <Link
-                                            href="/admin"
-                                            className={`ml-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all uppercase tracking-wider whitespace-nowrap ${pathname.startsWith("/admin") ? "bg-slate-900 text-white border-slate-900 shadow-sm" : "border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900"}`}
-                                        >
-                                            管理メニュー
-                                        </Link>
-                                        {notificationCount > 0 && (
-                                            <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white animate-pulse ring-2 ring-white shadow-sm">
-                                                {notificationCount}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                <button
+                    onClick={() => setIsMobileMenuOpen(true)}
+                    className="relative p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors focus:outline-none"
+                    aria-label="メニューを開く"
+                >
+                    <Menu className="w-5 h-5" />
+                    {notificationCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse ring-2 ring-white" />
                     )}
-
-                    <div className="hidden md:block">
-                        <div className="ml-4 flex items-center md:ml-6 gap-4">
-                            {session && userName && (
-                                <Link
-                                    href="/profile"
-                                    className="text-xs text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 tracking-wide hover:bg-slate-200 hover:text-slate-900 transition-all cursor-pointer whitespace-nowrap max-w-[200px] truncate font-semibold"
-                                >
-                                    <span className="font-bold">{userName}</span>
-                                </Link>
-                            )}
-                            {session && (
-                                <button
-                                    onClick={handleLogout}
-                                    className="text-slate-600 hover:text-red-600 text-xs px-3 py-1.5 rounded-lg border border-transparent hover:border-slate-200 hover:bg-slate-100 transition-all tracking-wide font-medium"
-                                >
-                                    ログアウト
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                </button>
             </div>
 
-            {/* Mobile menu */}
-            {session && isMobileMenuOpen && (
-                <div className="md:hidden border-t border-slate-200 bg-white/95 backdrop-blur-xl animate-fade-in shadow-lg">
-                    <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                        {userName && (
-                            <Link
-                                href="/profile"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className="block px-3 py-2 text-xs font-mono tracking-wider text-slate-600 border-b border-slate-200 mb-2 hover:bg-slate-50 transition-colors"
-                            >
-                                LOGGED IN AS: <span className="text-[#0f172a] font-bold ml-2">{userName}</span>
-                            </Link>
-                        )}
-                        <MobileNavLink href="/dashboard" active={pathname === "/dashboard"} onClick={() => setIsMobileMenuOpen(false)}>
-                            ダッシュボード
-                        </MobileNavLink>
+            {/* モバイル用背景オーバーレイ */}
+            {isMobileMenuOpen && (
+                <div 
+                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden animate-fade-in transition-opacity"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
 
-                        {canViewPerson && (
-                            <MobileNavLink href="/search" active={pathname.startsWith("/search") || pathname.startsWith("/cases")} onClick={() => setIsMobileMenuOpen(false)}>
-                                <span className="inline-flex items-center gap-2">
-                                    <Users className="w-5 h-5" />
-                                    <span>応募者照会</span>
-                                </span>
-                            </MobileNavLink>
-                        )}
+            {/* 左サイドバー本体 (デスクトップは左固定常時表示、モバイルはスライドイン) */}
+            <aside 
+                className={`fixed top-0 bottom-0 left-0 w-64 bg-white border-r border-slate-200 z-50 flex flex-col transition-transform duration-300 ease-in-out md:translate-x-0 shadow-xs md:shadow-none ${
+                    isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+                }`}
+            >
+                {/* 1. ブランドヘッダー */}
+                <div className="h-16 px-5 border-b border-slate-200/80 flex items-center justify-between shrink-0">
+                    <Link href="/dashboard" className="flex items-center gap-2.5 group">
+                        <img src="/logo-mark.png" alt="MIERIS" className="w-8 h-8 object-contain" />
+                        <div className="flex flex-col">
+                            <span className="font-extrabold text-lg text-slate-900 tracking-wider leading-none group-hover:text-blue-600 transition-colors">
+                                MIERIS
+                            </span>
+                            <span className="text-[9px] text-slate-500 tracking-widest leading-none mt-0.5 font-bold">
+                                ミエリス
+                            </span>
+                        </div>
+                    </Link>
 
-                        {canViewCredit && (
-                            <MobileNavLink href="/credit" active={pathname.startsWith("/credit")} onClick={() => setIsMobileMenuOpen(false)}>
-                                <span className="inline-flex items-center gap-2">
-                                    <Building2 className="w-5 h-5" />
-                                    <span>企業信用照会</span>
-                                </span>
-                            </MobileNavLink>
-                        )}
+                    {/* モバイル用 閉じるボタン */}
+                    <button
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                        aria-label="メニューを閉じる"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
 
-                        <MobileNavLink href="/contact" active={pathname === "/contact"} onClick={() => setIsMobileMenuOpen(false)}>
-                            お問い合わせ
-                        </MobileNavLink>
-
-                        {isAdmin && (
-                            <MobileNavLink href="/admin" active={pathname.startsWith("/admin")} onClick={() => setIsMobileMenuOpen(false)} isSpecial>
-                                管理メニュー {notificationCount > 0 && `(${notificationCount})`}
-                            </MobileNavLink>
-                        )}
-                        <button
-                            onClick={() => {
-                                setIsMobileMenuOpen(false);
-                                handleLogout();
-                            }}
-                            className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 mt-4 border-t border-slate-200 pt-4 font-bold"
-                        >
-                            ログアウト
-                        </button>
+                {/* 2. 会社・プラン情報バッジ */}
+                <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/60 shrink-0">
+                    <div className="text-[11px] font-bold text-slate-800 truncate" title={companyName || "所属企業"}>
+                        {companyName || "所属企業"}
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
+                            {getPlanLabel()}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">利用中</span>
                     </div>
                 </div>
-            )}
-        </nav>
+
+                {/* 3. ナビゲーションメニュー一覧 */}
+                <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+                    {/* メインメニュー */}
+                    <div>
+                        <div className="px-3 mb-2 text-[10px] font-extrabold text-slate-400 tracking-wider uppercase font-mono">
+                            業務メニュー
+                        </div>
+                        <nav className="space-y-1">
+                            {/* ダッシュボード */}
+                            <SidebarLink 
+                                href="/dashboard" 
+                                active={pathname === "/dashboard"}
+                                icon={<LayoutDashboard className="w-4 h-4" />}
+                                label="ダッシュボード"
+                            />
+
+                            {/* 応募者照会 */}
+                            {canViewPerson && (
+                                <SidebarLink 
+                                    href="/search" 
+                                    active={pathname.startsWith("/search") || pathname.startsWith("/cases")}
+                                    icon={<Users className="w-4 h-4" />}
+                                    label="応募者照会"
+                                />
+                            )}
+
+                            {/* 企業信用照会 */}
+                            {canViewCredit && (
+                                <SidebarLink 
+                                    href="/credit" 
+                                    active={pathname.startsWith("/credit")}
+                                    icon={<Building2 className="w-4 h-4" />}
+                                    label="企業信用照会"
+                                />
+                            )}
+
+                            {/* お問い合わせ */}
+                            <SidebarLink 
+                                href="/contact" 
+                                active={pathname === "/contact"}
+                                icon={<HelpCircle className="w-4 h-4" />}
+                                label="お問い合わせ"
+                            />
+                        </nav>
+                    </div>
+
+                    {/* 管理者メニュー（管理者のみ） */}
+                    {isAdmin && (
+                        <div>
+                            <div className="px-3 mb-2 text-[10px] font-extrabold text-slate-400 tracking-wider uppercase font-mono flex items-center justify-between">
+                                <span>システム管理</span>
+                                {notificationCount > 0 && (
+                                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
+                                        {notificationCount}
+                                    </span>
+                                )}
+                            </div>
+                            <nav className="space-y-1">
+                                <SidebarLink 
+                                    href="/admin" 
+                                    active={pathname.startsWith("/admin")}
+                                    icon={<ShieldCheck className="w-4 h-4" />}
+                                    label="管理メニュー"
+                                    badge={notificationCount > 0 ? `${notificationCount}件` : undefined}
+                                    isSpecial
+                                />
+                            </nav>
+                        </div>
+                    )}
+                </div>
+
+                {/* 4. フッターエリア（ユーザー情報・ログアウト） */}
+                <div className="p-3 border-t border-slate-200/80 bg-slate-50/70 shrink-0 space-y-2">
+                    {/* プロフィールへのリンクカード */}
+                    <Link
+                        href="/profile"
+                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-white border border-transparent hover:border-slate-200/80 transition-all group"
+                    >
+                        <div className="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center text-slate-700 font-bold text-xs shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                            <User className="w-4 h-4" />
+                        </div>
+                        <div className="flex flex-col min-w-0 flex-1">
+                            <span className="text-xs font-bold text-slate-900 truncate">
+                                {userName || "ユーザー"}
+                            </span>
+                            <span className="text-[10px] text-slate-500 truncate">
+                                設定・登録情報
+                            </span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </Link>
+
+                    {/* ログアウトボタン */}
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-600 hover:text-red-600 hover:bg-red-50/80 rounded-lg transition-colors text-left"
+                    >
+                        <LogOut className="w-3.5 h-3.5 shrink-0" />
+                        <span>ログアウト</span>
+                    </button>
+                </div>
+            </aside>
+        </>
     );
 }
 
-function NavLink({ href, children, active }: { href: string, children: React.ReactNode, active: boolean }) {
+function SidebarLink({ 
+    href, 
+    active, 
+    icon, 
+    label, 
+    badge,
+    isSpecial 
+}: { 
+    href: string; 
+    active: boolean; 
+    icon: React.ReactNode; 
+    label: string; 
+    badge?: string;
+    isSpecial?: boolean;
+}) {
     return (
         <Link
             href={href}
-            className={`px-3 py-2 rounded-none text-sm font-bold tracking-wider transition-all duration-200 border-b-2 whitespace-nowrap ${active ? "border-slate-900 text-slate-900 bg-slate-100/90 font-extrabold" : "border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-semibold"}`}
+            className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 ${
+                active 
+                    ? "bg-slate-900 text-white shadow-xs" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
+            }`}
         >
-            {children}
-        </Link>
-    )
-}
+            <div className="flex items-center gap-3 min-w-0">
+                <span className={`shrink-0 ${active ? "text-white" : isSpecial ? "text-blue-600" : "text-slate-500"}`}>
+                    {icon}
+                </span>
+                <span className="truncate">{label}</span>
+            </div>
 
-function MobileNavLink({ href, children, active, onClick, isSpecial }: { href: string, children: React.ReactNode, active: boolean, onClick: () => void, isSpecial?: boolean }) {
-    return (
-        <Link
-            href={href}
-            onClick={onClick}
-            className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${active ? "bg-slate-900 text-white font-bold" : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium"} ${isSpecial ? "border border-slate-300 text-slate-900 font-bold" : ""}`}
-        >
-            {children}
+            {badge && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold tabular-nums shrink-0 ${
+                    active ? "bg-white/20 text-white" : "bg-red-500 text-white animate-pulse"
+                }`}>
+                    {badge}
+                </span>
+            )}
         </Link>
     );
 }

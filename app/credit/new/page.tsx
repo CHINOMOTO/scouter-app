@@ -126,7 +126,7 @@ export default function NewCreditCasePage() {
 
     return (
         <RequireAuth>
-            <div className="min-h-screen pt-24 pb-16 px-4 bg-[#f8fafc] flex flex-col items-center">
+            <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-3xl w-full">
 
                     {/* ヘッダー */}

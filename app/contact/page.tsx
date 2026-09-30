@@ -104,7 +104,7 @@ export default function ContactPage() {
     if (success) {
         return (
             <RequireAuth>
-                <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+                <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
                     <div className="max-w-2xl w-full relative z-10">
                         <div className="glass-panel rounded-3xl p-10 text-center animate-fade-in border border-slate-200">
                             <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600"><CheckCircle2 className="w-10 h-10" /></div>
@@ -130,7 +130,7 @@ export default function ContactPage() {
 
     return (
         <RequireAuth>
-            <div className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center">
+            <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
                 <div className="max-w-2xl w-full relative z-10">
                     {/* ヘッダー */}
                     <div className="flex items-center justify-between mb-8 animate-fade-in">

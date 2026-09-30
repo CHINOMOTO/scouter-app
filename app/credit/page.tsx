@@ -131,7 +131,7 @@ export default function CreditSearchPage() {
 
     return (
         <RequireAuth>
-            <div className="min-h-screen pt-24 pb-16 px-4 bg-[#f8fafc] flex flex-col items-center">
+            <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-6xl w-full">
 
                     {/* ヘッダーエリア（洗練された欧文サブタイトルと引き締まったアクションバー） */}
