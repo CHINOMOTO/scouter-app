@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import { AlertTriangle } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -56,13 +57,7 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 overflow-x-hidden min-h-screen selection:bg-slate-900 selection:text-white flex flex-col">
         <Navigation />
         <main className="relative z-10 flex-grow">{children}</main>
-        <footer className="relative z-10 py-10 text-center text-slate-500 text-xs border-t border-slate-200 bg-white mt-16">
-          <div className="max-w-7xl mx-auto px-4 space-y-2">
-            <p className="font-bold text-slate-700">MIERIS - 雑工・荷揚げ・警備・運送 就業情報共有システム</p>
-            <p className="text-slate-500">運営: 株式会社ミヤエモン / 開発: 株式会社宇井建設</p>
-            <p className="text-slate-600 font-mono text-[11px]">&copy; 2026 MIERIS. ALL RIGHTS RESERVED.</p>
-          </div>
-        </footer>
+        <Footer />
       </body>
     </html>
   );
