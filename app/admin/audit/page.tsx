@@ -171,11 +171,11 @@ export default function AdminAuditPage() {
     return (
         <RequireAdmin>
             <Toast toast={toast} onClose={() => setToast(null)} />
-            <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
+            <div className="min-h-screen pt-16 sm:pt-20 md:pt-10 pb-16 px-3.5 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-6xl w-full">
 
                     {/* ヘッダー */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 animate-fade-in">
                         <div>
                             <div className="flex items-center gap-2 mb-1.5">
                                 <span className="inline-flex items-center gap-1.5 text-[11px] bg-slate-900 text-white px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
@@ -183,8 +183,8 @@ export default function AdminAuditPage() {
                                     COMPLIANCE & AUDIT
                                 </span>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                                     監査ログ・照会履歴
                                 </h1>
                                 {!loading && (
@@ -193,21 +193,21 @@ export default function AdminAuditPage() {
                                     </span>
                                 )}
                             </div>
-                            <p className="text-slate-600 text-sm mt-1">
+                            <p className="text-slate-600 text-xs sm:text-sm mt-1">
                                 個人情報保護法および加盟規約遵守のため、システム内での全検索・照会・閲覧操作を記録・監査しています。
                             </p>
                         </div>
-                        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+                        <div className="flex items-center gap-2.5 w-full sm:w-auto">
                             <button
                                 onClick={() => fetchLogs(true)}
                                 disabled={refreshing}
-                                className="btn-secondary text-xs h-10 px-3.5 flex items-center gap-1.5 font-bold transition-all"
+                                className="btn-secondary text-xs h-10 px-3.5 flex items-center justify-center gap-1.5 font-bold transition-all active:scale-[0.98] shrink-0"
                                 title="ログを最新に更新"
                             >
                                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
                                 <span className="whitespace-nowrap">更新</span>
                             </button>
-                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0">
+                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap flex-1 sm:flex-none active:scale-[0.98]">
                                 <ArrowLeft className="w-4 h-4 shrink-0" />
                                 <span className="whitespace-nowrap">管理者メニューへ戻る</span>
                             </Link>
@@ -215,35 +215,35 @@ export default function AdminAuditPage() {
                     </div>
 
                     {/* 統計指標カード */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 animate-fade-in">
-                        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-                            <span className="text-xs font-bold text-slate-500 block mb-1">総アクセスログ</span>
-                            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">{stats.total}</span>
-                            <span className="text-xs text-slate-400 ml-1">件</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 animate-fade-in">
+                        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
+                            <span className="text-[11px] sm:text-xs font-bold text-slate-500 block mb-1">総アクセスログ</span>
+                            <span className="text-xl sm:text-3xl font-extrabold text-slate-900">{stats.total}</span>
+                            <span className="text-[11px] sm:text-xs text-slate-400 ml-1">件</span>
                         </div>
-                        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-                            <span className="text-xs font-bold text-slate-500 block mb-1">検索・照会回数</span>
-                            <span className="text-2xl sm:text-3xl font-extrabold text-blue-600">{stats.searches}</span>
-                            <span className="text-xs text-slate-400 ml-1">回</span>
+                        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
+                            <span className="text-[11px] sm:text-xs font-bold text-slate-500 block mb-1">検索・照会回数</span>
+                            <span className="text-xl sm:text-3xl font-extrabold text-blue-600">{stats.searches}</span>
+                            <span className="text-[11px] sm:text-xs text-slate-400 ml-1">回</span>
                         </div>
-                        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-                            <span className="text-xs font-bold text-slate-500 block mb-1">事実詳細の閲覧</span>
-                            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-600">{stats.views}</span>
-                            <span className="text-xs text-slate-400 ml-1">回</span>
+                        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
+                            <span className="text-[11px] sm:text-xs font-bold text-slate-500 block mb-1">事実詳細の閲覧</span>
+                            <span className="text-xl sm:text-3xl font-extrabold text-emerald-600">{stats.views}</span>
+                            <span className="text-[11px] sm:text-xs text-slate-400 ml-1">回</span>
                         </div>
-                        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-                            <span className="text-xs font-bold text-slate-500 block mb-1">本日の操作</span>
-                            <span className="text-2xl sm:text-3xl font-extrabold text-purple-600">{stats.todayCount}</span>
-                            <span className="text-xs text-slate-400 ml-1">件</span>
+                        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
+                            <span className="text-[11px] sm:text-xs font-bold text-slate-500 block mb-1">本日の操作</span>
+                            <span className="text-xl sm:text-3xl font-extrabold text-purple-600">{stats.todayCount}</span>
+                            <span className="text-[11px] sm:text-xs text-slate-400 ml-1">件</span>
                         </div>
                     </div>
 
                     {/* コントロールバー（タブ & 検索 & ソート） */}
-                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs mb-6 space-y-4 animate-fade-in">
-                        <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
+                    <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs mb-6 space-y-4 animate-fade-in">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center">
                             
                             {/* 検索窓 */}
-                            <div className="relative flex-1 max-w-md">
+                            <div className="relative flex-1">
                                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                 <input
                                     type="text"
@@ -254,12 +254,12 @@ export default function AdminAuditPage() {
                                     }}
                                     placeholder="操作ユーザー・企業名・検索内容・IPアドレスで検索..."
                                     style={{ paddingLeft: '2.5rem' }}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 focus:bg-white transition-all placeholder:text-slate-400"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-4 py-2.5 sm:py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 focus:bg-white transition-all placeholder:text-slate-400"
                                 />
                             </div>
 
                             {/* ソート切り替え */}
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
                                 <span className="text-xs text-slate-500 font-semibold flex items-center gap-1">
                                     <ArrowUpDown className="w-3.5 h-3.5" />
                                     並び順:
@@ -267,7 +267,7 @@ export default function AdminAuditPage() {
                                 <select
                                     value={sortDirection}
                                     onChange={(e) => setSortDirection(e.target.value as "desc" | "asc")}
-                                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-bold focus:outline-none"
+                                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-bold focus:outline-none flex-1 sm:flex-none"
                                 >
                                     <option value="desc">日時 (新しい順)</option>
                                     <option value="asc">日時 (古い順)</option>
@@ -276,13 +276,13 @@ export default function AdminAuditPage() {
                         </div>
 
                         {/* アクション種別タブ */}
-                        <div className="flex gap-2 pt-2 border-t border-slate-100 overflow-x-auto">
+                        <div className="flex gap-2 pt-2 border-t border-slate-100 overflow-x-auto pb-1 -mx-1 px-1">
                             <button
                                 onClick={() => {
                                     setActionFilter("all");
                                     setCurrentPage(1);
                                 }}
-                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-[0.98] ${
                                     actionFilter === "all" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"
                                 }`}
                             >
@@ -293,11 +293,11 @@ export default function AdminAuditPage() {
                                     setActionFilter("SEARCH");
                                     setCurrentPage(1);
                                 }}
-                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] ${
                                     actionFilter === "SEARCH" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"
                                 }`}
                             >
-                                <Search className="w-3 h-3 text-blue-500" />
+                                <Search className="w-3 h-3 text-blue-500 shrink-0" />
                                 <span>就業トラブル検索 ({logs.filter(l => l.action_type === "SEARCH").length})</span>
                             </button>
                             <button
@@ -305,11 +305,11 @@ export default function AdminAuditPage() {
                                     setActionFilter("VIEW_CASE");
                                     setCurrentPage(1);
                                 }}
-                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] ${
                                     actionFilter === "VIEW_CASE" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"
                                 }`}
                             >
-                                <Eye className="w-3 h-3 text-emerald-500" />
+                                <Eye className="w-3 h-3 text-emerald-500 shrink-0" />
                                 <span>就業詳細閲覧 ({logs.filter(l => l.action_type === "VIEW_CASE").length})</span>
                             </button>
                             <button
@@ -317,11 +317,11 @@ export default function AdminAuditPage() {
                                     setActionFilter("SEARCH_CREDIT");
                                     setCurrentPage(1);
                                 }}
-                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] ${
                                     actionFilter === "SEARCH_CREDIT" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"
                                 }`}
                             >
-                                <FileSpreadsheet className="w-3 h-3 text-indigo-500" />
+                                <FileSpreadsheet className="w-3 h-3 text-indigo-500 shrink-0" />
                                 <span>企業信用照会 ({logs.filter(l => l.action_type === "SEARCH_CREDIT").length})</span>
                             </button>
                             <button
@@ -329,11 +329,11 @@ export default function AdminAuditPage() {
                                     setActionFilter("VIEW_CREDIT");
                                     setCurrentPage(1);
                                 }}
-                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] ${
                                     actionFilter === "VIEW_CREDIT" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"
                                 }`}
                             >
-                                <Building2 className="w-3 h-3 text-purple-500" />
+                                <Building2 className="w-3 h-3 text-purple-500 shrink-0" />
                                 <span>企業詳細閲覧 ({logs.filter(l => l.action_type === "VIEW_CREDIT").length})</span>
                             </button>
                         </div>
@@ -369,48 +369,48 @@ export default function AdminAuditPage() {
                                 return (
                                     <div
                                         key={log.id}
-                                        className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                                        className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4"
                                     >
-                                        <div className="space-y-2 flex-1">
+                                        <div className="space-y-2 flex-1 min-w-0">
                                             {/* ヘッダー行: バッジ + 操作内容 */}
-                                            <div className="flex flex-wrap items-center gap-2.5">
-                                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${badge.className}`}>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border shrink-0 ${badge.className}`}>
                                                     {badge.icon}
                                                     <span>{badge.label}</span>
                                                 </span>
 
-                                                <span className="text-xs font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 font-mono">
+                                                <span className="text-xs font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 font-mono break-all">
                                                     {log.target_detail}
                                                 </span>
                                             </div>
 
                                             {/* ユーザー & 企業情報 */}
-                                            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-600">
-                                                <div className="flex items-center gap-1.5">
-                                                    <User className="w-3.5 h-3.5 text-slate-400" />
+                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-600">
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                                     <span className="font-bold text-slate-800">{log.user_name}</span>
-                                                    <span className="text-slate-400">({log.user_email})</span>
+                                                    <span className="text-slate-400 break-all">({log.user_email})</span>
                                                     {log.user_role === "admin" && (
-                                                        <span className="text-[10px] bg-slate-900 text-white px-1.5 py-0.2 rounded font-bold">管理者</span>
+                                                        <span className="text-[10px] bg-slate-900 text-white px-1.5 py-0.2 rounded font-bold shrink-0">管理者</span>
                                                     )}
                                                 </div>
 
                                                 <div className="flex items-center gap-1.5">
-                                                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                                                    <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                                     <span>所属: <strong className="text-slate-700">{log.company_name}</strong></span>
                                                 </div>
 
                                                 <div className="flex items-center gap-1.5">
-                                                    <Globe className="w-3.5 h-3.5 text-slate-400" />
+                                                    <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                                     <span>IP: <code className="font-mono text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded text-[11px]">{log.ip_address}</code></span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* 日時表示 */}
-                                        <div className="text-right shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                                        <div className="text-left md:text-right shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
                                             <div className="flex items-center md:justify-end gap-1.5 text-xs font-mono font-bold text-slate-700">
-                                                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                                <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                                 <span>{dateFormatted}</span>
                                             </div>
                                         </div>

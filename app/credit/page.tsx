@@ -212,11 +212,11 @@ export default function CreditSearchPage() {
         <RequireAuth>
             <Toast toast={toast} onClose={() => setToast(null)} />
 
-            <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
+            <div className="min-h-screen pt-16 sm:pt-20 md:pt-10 pb-16 px-3.5 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-6xl w-full">
 
                     {/* ヘッダーエリア */}
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8 pb-4 border-b border-slate-200">
                         <div>
                             <div className="flex items-center gap-2 mb-1.5">
                                 <span className="text-[11px] font-extrabold text-blue-600 uppercase tracking-widest font-mono">
@@ -227,38 +227,38 @@ export default function CreditSearchPage() {
                                     取引先信用情報共有システム
                                 </span>
                             </div>
-                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                                企業信用照会（未払い・支払遅延）
+                            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                                企業信用 検索・照会
                             </h1>
-                            <p className="text-slate-600 text-sm mt-1">
+                            <p className="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
                                 取引開始前に事実を確認し、代金未回収・支払い遅延リスクを未然に防ぎます。
                             </p>
                         </div>
-                        <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
+                        <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto">
                             <Link 
                                 href="/dashboard" 
-                                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
+                                className="btn-secondary text-xs h-9 px-3 sm:px-3.5 rounded-lg flex items-center justify-center gap-1.5 font-medium transition-colors whitespace-nowrap"
                             >
                                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                                <span className="whitespace-nowrap">戻る</span>
+                                <span>戻る</span>
                             </Link>
                             <Link
                                 href="/credit/new"
-                                className="btn-primary flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap shrink-0"
+                                className="btn-primary flex items-center justify-center gap-1.5 px-3 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
                             >
                                 <Plus className="w-4 h-4 shrink-0" />
-                                <span className="whitespace-nowrap">遅延・未払い情報を新規登録</span>
+                                <span>遅延・未払いを新規登録</span>
                             </Link>
                         </div>
                     </div>
 
                     {/* プラン制限の場合の案内 */}
                     {planRestricted ? (
-                        <div className="bg-white p-10 rounded-xl border border-slate-200 text-center max-w-xl mx-auto my-12 shadow-sm animate-fade-in">
+                        <div className="bg-white p-6 sm:p-10 rounded-xl border border-slate-200 text-center max-w-xl mx-auto my-8 sm:my-12 shadow-sm animate-fade-in">
                             <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-600 border border-amber-200/60">
                                 <Lock className="w-6 h-6" />
                             </div>
-                            <h2 className="text-xl font-bold text-slate-900 mb-2">
+                            <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
                                 ミエリスクレジット 未加入プランです
                             </h2>
                             <p className="text-xs text-slate-600 leading-relaxed mb-6">
@@ -277,52 +277,52 @@ export default function CreditSearchPage() {
                     ) : (
                         <>
                             {/* 統計サマリーカード */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-                                    <div className="flex items-center justify-between text-slate-500 mb-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                                <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-2xs">
+                                    <div className="flex items-center justify-between text-slate-500 mb-1.5 sm:mb-2">
                                         <span className="text-xs font-bold tracking-wider text-slate-600">事故情報 登録企業</span>
                                         <Building2 className="w-4 h-4 text-slate-400" />
                                     </div>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-2xl font-extrabold tracking-tight text-slate-900 font-mono tabular-nums">
+                                        <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 font-mono tabular-nums">
                                             {totalCases}
                                         </span>
                                         <span className="text-xs font-bold text-slate-500 ml-1">社 / 件</span>
                                     </div>
-                                    <p className="text-[11px] text-slate-500 mt-1">過去に未払い・遅延の発生が報告された企業</p>
+                                    <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1">過去に未払い・遅延の発生が報告された企業</p>
                                 </div>
 
-                                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-                                    <div className="flex items-center justify-between text-slate-500 mb-2">
+                                <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-2xs">
+                                    <div className="flex items-center justify-between text-slate-500 mb-1.5 sm:mb-2">
                                         <span className="text-xs font-bold tracking-wider text-rose-700">現在未払い（要注意）</span>
                                         <AlertTriangle className="w-4 h-4 text-rose-500" />
                                     </div>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-2xl font-extrabold tracking-tight text-rose-600 font-mono tabular-nums">
+                                        <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-rose-600 font-mono tabular-nums">
                                             {unpaidCount}
                                         </span>
                                         <span className="text-xs font-bold text-slate-500 ml-1">社</span>
                                     </div>
-                                    <p className="text-[11px] text-slate-500 mt-1">現在も代金未回収・支払拒絶が継続中</p>
+                                    <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1">現在も代金未回収・支払拒絶が継続中</p>
                                 </div>
 
-                                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-                                    <div className="flex items-center justify-between text-slate-500 mb-2">
+                                <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-2xs">
+                                    <div className="flex items-center justify-between text-slate-500 mb-1.5 sm:mb-2">
                                         <span className="text-xs font-bold tracking-wider text-emerald-700">遅延後解決（入金完了）</span>
                                         <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                                     </div>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-2xl font-extrabold tracking-tight text-emerald-600 font-mono tabular-nums">
+                                        <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-emerald-600 font-mono tabular-nums">
                                             {resolvedCount}
                                         </span>
                                         <span className="text-xs font-bold text-slate-500 ml-1">件</span>
                                     </div>
-                                    <p className="text-[11px] text-slate-500 mt-1">支払遅延が発生したがその後全額回収完了</p>
+                                    <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1">支払遅延が発生したがその後全額回収完了</p>
                                 </div>
                             </div>
 
                             {/* 照会条件カード（法人番号必須） */}
-                            <div className="bg-white p-6 sm:p-7 rounded-xl border border-slate-200 shadow-2xs mb-6">
+                            <div className="bg-white p-4.5 sm:p-7 rounded-xl border border-slate-200 shadow-2xs mb-6">
                                 <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 leading-relaxed mb-5">
                                     ※同名企業との誤認防止および信用情報の適正管理の観点から、照会には<strong>「法人番号（13桁）」</strong>の入力が必須となっています。
                                 </div>
@@ -394,7 +394,7 @@ export default function CreditSearchPage() {
                                         <button
                                             type="submit"
                                             disabled={searching}
-                                            className="btn-primary w-full sm:w-auto px-8 h-[44px] text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-xs"
+                                            className="btn-primary w-full sm:w-auto px-8 h-[44px] text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] transition-transform"
                                         >
                                             {searching ? (
                                                 <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent" />
@@ -416,28 +416,28 @@ export default function CreditSearchPage() {
                             ) : !hasSearched ? (
                                 /* 初期状態（未検索時）のガイドカード */
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-                                    <div className="p-8 text-center border-b border-slate-100 bg-slate-50/50">
+                                    <div className="p-6 sm:p-8 text-center border-b border-slate-100 bg-slate-50/50">
                                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-blue-600 mb-3 border border-blue-200/60">
                                             <Building2 className="w-6 h-6" />
                                         </div>
-                                        <h3 className="text-base font-bold text-slate-900 mb-1">
+                                        <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1 leading-snug">
                                             照会対象企業の「法人番号」を入力して照会してください
                                         </h3>
-                                        <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed">
+                                        <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed mt-1">
                                             本システムは厳格な信用情報管理のため、13桁の法人番号による特定照会を採用しています。上記の入力欄に法人番号を入力して「企業信用情報を照会する」を押してください。
                                         </p>
                                     </div>
 
                                     {/* 業務サポート・安全取引ガイド */}
-                                    <div className="p-6 bg-white">
-                                        <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                                    <div className="p-4.5 sm:p-6 bg-white">
+                                        <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3.5 sm:mb-4 flex items-center gap-1.5">
                                             <Info className="w-4 h-4 text-blue-600" />
                                             <span>取引前の安全対策チェックポイント</span>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+                                            <div className="p-3.5 sm:p-4 rounded-lg bg-slate-50 border border-slate-200/80">
                                                 <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
-                                                    <FileCheck className="w-4 h-4 text-emerald-600" />
+                                                    <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                                                     <span>1. 同意書の事前取得</span>
                                                 </div>
                                                 <p className="text-[11px] text-slate-500 leading-relaxed">
@@ -445,19 +445,19 @@ export default function CreditSearchPage() {
                                                 </p>
                                             </div>
 
-                                            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80">
+                                            <div className="p-3.5 sm:p-4 rounded-lg bg-slate-50 border border-slate-200/80">
                                                 <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
-                                                    <FileText className="w-4 h-4 text-blue-600" />
-                                                    <span>2. 客観的エビデンスの保管</span>
+                                                    <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                                                    <span>2. 客観的証憑の保管</span>
                                                 </div>
                                                 <p className="text-[11px] text-slate-500 leading-relaxed">
                                                     発注書、納品書、請求書、支払期日の通知メールなど、法的・客観的に請求権を裏付ける証憑を保管してください。
                                                 </p>
                                             </div>
 
-                                            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80">
+                                            <div className="p-3.5 sm:p-4 rounded-lg bg-slate-50 border border-slate-200/80">
                                                 <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
-                                                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                                                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                                                     <span>3. 期日超過時の速やかな登録</span>
                                                 </div>
                                                 <p className="text-[11px] text-slate-500 leading-relaxed">
@@ -470,11 +470,11 @@ export default function CreditSearchPage() {
                             ) : cases.length === 0 ? (
                                 /* 検索後・該当なし（安全・問題なし） */
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-                                    <div className="p-8 text-center border-b border-slate-100 bg-slate-50/50">
+                                    <div className="p-6 sm:p-8 text-center border-b border-slate-100 bg-slate-50/50">
                                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 mb-3 border border-emerald-200/60">
                                             <ShieldCheck className="w-6 h-6" />
                                         </div>
-                                        <h3 className="text-base font-bold text-slate-900 mb-1">
+                                        <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1">
                                             該当する遅延・未払い企業情報はありません
                                         </h3>
                                         <p className="text-xs text-slate-600 max-w-lg mx-auto font-mono mt-1 mb-2">
@@ -486,15 +486,15 @@ export default function CreditSearchPage() {
                                     </div>
 
                                     {/* 業務サポート・安全取引ガイド */}
-                                    <div className="p-6 bg-white">
-                                        <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                                    <div className="p-4.5 sm:p-6 bg-white">
+                                        <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3.5 sm:mb-4 flex items-center gap-1.5">
                                             <Info className="w-4 h-4 text-blue-600" />
                                             <span>取引前の安全対策チェックポイント</span>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+                                            <div className="p-3.5 sm:p-4 rounded-lg bg-slate-50 border border-slate-200/80">
                                                 <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
-                                                    <FileCheck className="w-4 h-4 text-emerald-600" />
+                                                    <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                                                     <span>1. 同意書の事前取得</span>
                                                 </div>
                                                 <p className="text-[11px] text-slate-500 leading-relaxed">
@@ -502,19 +502,19 @@ export default function CreditSearchPage() {
                                                 </p>
                                             </div>
 
-                                            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80">
+                                            <div className="p-3.5 sm:p-4 rounded-lg bg-slate-50 border border-slate-200/80">
                                                 <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
-                                                    <FileText className="w-4 h-4 text-blue-600" />
-                                                    <span>2. 客観的エビデンスの保管</span>
+                                                    <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                                                    <span>2. 客観的証憑の保管</span>
                                                 </div>
                                                 <p className="text-[11px] text-slate-500 leading-relaxed">
                                                     発注書、納品書、請求書、支払期日の通知メールなど、法的・客観的に請求権を裏付ける証憑を保管してください。
                                                 </p>
                                             </div>
 
-                                            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80">
+                                            <div className="p-3.5 sm:p-4 rounded-lg bg-slate-50 border border-slate-200/80">
                                                 <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
-                                                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                                                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                                                     <span>3. 期日超過時の速やかな登録</span>
                                                 </div>
                                                 <p className="text-[11px] text-slate-500 leading-relaxed">
@@ -539,13 +539,13 @@ export default function CreditSearchPage() {
                                                 <Link
                                                     key={c.id}
                                                     href={`/credit/${c.id}`}
-                                                    className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all group flex flex-col justify-between"
+                                                    className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all group flex flex-col justify-between"
                                                 >
                                                     <div>
-                                                        <div className="flex items-start justify-between gap-3 mb-3">
+                                                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 mb-3">
                                                             <div>
-                                                                <h4 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
-                                                                    <Building2 className="w-4 h-4 text-slate-500" />
+                                                                <h4 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
+                                                                    <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
                                                                     <span>{c.company_name}</span>
                                                                 </h4>
                                                                 {c.corporate_number && (
@@ -554,23 +554,25 @@ export default function CreditSearchPage() {
                                                                     </p>
                                                                 )}
                                                             </div>
-                                                            {isResolved ? (
-                                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                                    <CheckCircle2 className="w-3 h-3" />
-                                                                    <span>遅延解決 {c.resolved_delay_days ? `(遅延${c.resolved_delay_days}日)` : ""}</span>
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                                    <AlertTriangle className="w-3 h-3" />
-                                                                    <span>現在未払い {calculateOverdueDays(c.due_date) > 0 ? `(超過${calculateOverdueDays(c.due_date)}日)` : ""}</span>
-                                                                </span>
-                                                            )}
+                                                            <div className="shrink-0 self-start sm:self-auto">
+                                                                {isResolved ? (
+                                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                        <CheckCircle2 className="w-3 h-3" />
+                                                                        <span>遅延解決 {c.resolved_delay_days ? `(${c.resolved_delay_days}日)` : ""}</span>
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                                        <AlertTriangle className="w-3 h-3" />
+                                                                        <span>現在未払い {calculateOverdueDays(c.due_date) > 0 ? `(${calculateOverdueDays(c.due_date)}日超過)` : ""}</span>
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
 
-                                                        <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200/80 mb-3 space-y-1.5 text-xs">
+                                                        <div className="bg-slate-50 p-3 sm:p-3.5 rounded-lg border border-slate-200/80 mb-3 space-y-1.5 text-xs">
                                                             <div className="flex justify-between items-center">
                                                                 <span className="text-slate-500 font-medium">請求金額</span>
-                                                                <span className="text-slate-900 font-extrabold text-sm">¥{c.amount.toLocaleString()}</span>
+                                                                <span className="text-slate-900 font-extrabold text-sm font-mono">¥{c.amount.toLocaleString()}</span>
                                                             </div>
                                                             <div className="flex justify-between items-center">
                                                                 <span className="text-slate-500 font-medium">当初支払期日</span>
@@ -579,13 +581,13 @@ export default function CreditSearchPage() {
                                                             {c.location && (
                                                                 <div className="flex justify-between items-center">
                                                                     <span className="text-slate-500 font-medium">所在地</span>
-                                                                    <span className="text-slate-800">{c.location}</span>
+                                                                    <span className="text-slate-800 truncate max-w-[200px]">{c.location}</span>
                                                                 </div>
                                                             )}
                                                         </div>
 
                                                         {c.counterparty_claim && (
-                                                            <p className="text-xs text-slate-600 line-clamp-2 mb-4 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+                                                            <p className="text-xs text-slate-600 line-clamp-2 mb-3 sm:mb-4 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
                                                                 <span className="font-bold text-slate-800">経緯: </span>
                                                                 {c.counterparty_claim}
                                                             </p>
@@ -593,7 +595,7 @@ export default function CreditSearchPage() {
                                                     </div>
 
                                                     <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-                                                        <span>登録日: {new Date(c.created_at).toLocaleDateString()}</span>
+                                                        <span className="text-[11px] sm:text-xs">登録日: {new Date(c.created_at).toLocaleDateString()}</span>
                                                         <span className="text-blue-600 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
                                                             <span>事実詳細を確認</span>
                                                             <ArrowRight className="w-3.5 h-3.5" />

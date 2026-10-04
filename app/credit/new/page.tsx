@@ -132,14 +132,14 @@ export default function NewCreditCasePage() {
 
     return (
         <RequireAuth>
-            <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
+            <div className="min-h-screen pt-16 sm:pt-20 md:pt-10 pb-16 px-3.5 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-3xl w-full">
 
                     {/* ナビゲーション */}
-                    <div className="flex items-center justify-between mb-6 animate-fade-in flex-wrap gap-3">
+                    <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-in flex-wrap gap-2.5">
                         <Link 
                             href="/credit" 
-                            className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
+                            className="btn-secondary text-xs h-9 px-3 sm:px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
                         >
                             <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                             <span className="whitespace-nowrap">企業信用照会へ戻る</span>
@@ -156,20 +156,20 @@ export default function NewCreditCasePage() {
                     </div>
 
                     {/* 見出し */}
-                    <div className="mb-8 animate-fade-in">
-                        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight sm:whitespace-nowrap">
+                    <div className="mb-6 sm:mb-8 animate-fade-in">
+                        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                             企業信用（遅延・未払い）情報の登録申請
                         </h1>
-                        <p className="text-slate-600 text-sm mt-1">
+                        <p className="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
                             客観的な請求事実と裏付け資料に基づき、未払い・支払遅延の事実を記録・申請します。
                         </p>
                     </div>
 
                     {/* コンプライアンス遵守ボックス（確実に視認可能なコントラスト設計） */}
-                    <div className="bg-slate-900 text-slate-100 p-6 rounded-xl mb-6 shadow-2xs border border-slate-800 animate-fade-in">
-                        <div className="flex items-center gap-2.5 mb-3 border-b border-slate-800 pb-3">
+                    <div className="bg-slate-900 text-slate-100 p-4.5 sm:p-6 rounded-xl mb-6 shadow-2xs border border-slate-800 animate-fade-in">
+                        <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3 border-b border-slate-800 pb-2.5 sm:pb-3">
                             <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
-                            <span className="text-sm font-bold tracking-wide text-white">
+                            <span className="text-xs sm:text-sm font-bold tracking-wide text-white">
                                 「晒す」仕組みにしないための6つの運用ルール
                             </span>
                         </div>
@@ -183,12 +183,12 @@ export default function NewCreditCasePage() {
                     </div>
 
                     {/* 申請フォーム */}
-                    <div className="bg-white p-7 sm:p-9 rounded-xl border border-slate-200 shadow-2xs animate-fade-in">
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="bg-white p-4.5 sm:p-9 rounded-2xl border border-slate-200 shadow-2xs animate-fade-in">
+                        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
 
                             {/* 対象企業名 */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-800 flex items-center justify-between">
+                            <div className="space-y-1.5 sm:space-y-2">
+                                <label className="text-xs sm:text-sm font-bold text-slate-800 flex items-center justify-between">
                                     <span>対象企業名（商号） <span className="text-red-500">*</span></span>
                                 </label>
                                 <input
@@ -196,15 +196,15 @@ export default function NewCreditCasePage() {
                                     required
                                     value={companyName}
                                     onChange={(e) => setCompanyName(e.target.value)}
-                                    className="input-field"
+                                    className="input-field py-2.5 sm:py-3 text-sm sm:text-base"
                                     placeholder="例: 株式会社〇〇工務店"
                                 />
                             </div>
 
                             {/* 法人番号 & 所在地 */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-800">
+                                <div className="space-y-1.5 sm:space-y-2">
+                                    <label className="text-xs sm:text-sm font-bold text-slate-800">
                                         法人番号（13桁） <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -213,29 +213,29 @@ export default function NewCreditCasePage() {
                                         maxLength={13}
                                         value={corporateNumber}
                                         onChange={(e) => setCorporateNumber(e.target.value.replace(/[^0-9]/g, ""))}
-                                        className="input-field font-mono"
+                                        className="input-field font-mono py-2.5 sm:py-3 text-sm sm:text-base"
                                         placeholder="例: 1234567890123"
                                     />
-                                    <p className="text-[11px] text-slate-400">※同名他社との誤認防止のため13桁の番号を入力してください</p>
+                                    <p className="text-[10px] sm:text-[11px] text-slate-400">※同名他社との誤認防止のため13桁の番号を入力してください</p>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-800">
+                                <div className="space-y-1.5 sm:space-y-2">
+                                    <label className="text-xs sm:text-sm font-bold text-slate-800">
                                         本社所在地
                                     </label>
                                     <input
                                         type="text"
                                         value={location}
                                         onChange={(e) => setLocation(e.target.value)}
-                                        className="input-field"
+                                        className="input-field py-2.5 sm:py-3 text-sm sm:text-base"
                                         placeholder="例: 東京都千代田区〇〇1-2-3"
                                     />
                                 </div>
                             </div>
 
                             {/* 未払い金額 & 支払期日 */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-200">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-800">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200">
+                                <div className="space-y-1.5 sm:space-y-2">
+                                    <label className="text-xs sm:text-sm font-bold text-slate-800">
                                         未払い・遅延金額（税込） <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
@@ -248,13 +248,13 @@ export default function NewCreditCasePage() {
                                                 const val = e.target.value.replace(/[^0-9]/g, "");
                                                 setAmount(val ? Number(val).toLocaleString() : "");
                                             }}
-                                            className="input-field pl-8 font-extrabold text-lg"
+                                            className="input-field pl-8 font-extrabold text-base sm:text-lg"
                                             placeholder="1,500,000"
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-800">
+                                <div className="space-y-1.5 sm:space-y-2">
+                                    <label className="text-xs sm:text-sm font-bold text-slate-800">
                                         当初の支払期日 <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -397,7 +397,7 @@ export default function NewCreditCasePage() {
                                 <button
                                     type="submit"
                                     disabled={uploading}
-                                    className="btn-primary w-full py-4 text-base font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                                    className="btn-primary w-full py-3.5 sm:py-4 text-sm sm:text-base font-bold shadow-md hover:shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                 >
                                     {uploading ? (
                                         <>

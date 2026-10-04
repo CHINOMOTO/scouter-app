@@ -181,11 +181,11 @@ export default function AdminCaseList() {
     return (
         <RequireAdmin>
             <Toast toast={toast} onClose={() => setToast(null)} />
-            <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
+            <div className="min-h-screen pt-16 sm:pt-20 md:pt-10 pb-16 px-3.5 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-6xl w-full">
 
                     {/* ヘッダー */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 animate-fade-in">
                         <div>
                             <div className="flex items-center gap-2 mb-1.5">
                                 <span className="inline-flex items-center gap-1.5 text-[11px] bg-slate-900 text-white px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
@@ -193,8 +193,8 @@ export default function AdminCaseList() {
                                     ADMIN CONSOLE
                                 </span>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                                     就業トラブル 審査管理
                                 </h1>
                                 {!loading && (
@@ -203,22 +203,22 @@ export default function AdminCaseList() {
                                     </span>
                                 )}
                             </div>
-                            <p className="text-slate-600 text-sm mt-1">
+                            <p className="text-slate-600 text-xs sm:text-sm mt-1">
                                 加盟企業から申請された就業トラブル情報・エビデンス資料の審査を行います。
                             </p>
                         </div>
-                        <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center gap-1.5 self-start transition-colors whitespace-nowrap shrink-0">
+                        <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center justify-center gap-1.5 w-full sm:w-auto transition-colors whitespace-nowrap shrink-0 active:scale-[0.98]">
                             <ArrowLeft className="w-4 h-4 shrink-0" />
                             <span className="whitespace-nowrap">管理者メニューへ戻る</span>
                         </Link>
                     </div>
 
                     {/* コントロールバー（タブ & 検索 & ソート） */}
-                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs mb-6 space-y-4 animate-fade-in">
-                        <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
+                    <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs mb-6 space-y-4 animate-fade-in">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center">
                             
                             {/* 検索窓 */}
-                            <div className="relative flex-1 max-w-md">
+                            <div className="relative flex-1">
                                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                 <input
                                     type="text"
@@ -229,12 +229,12 @@ export default function AdminCaseList() {
                                     }}
                                     placeholder="氏名・フリガナ・登録企業名・理由で絞り込み..."
                                     style={{ paddingLeft: '2.5rem' }}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 focus:bg-white transition-all placeholder:text-slate-400"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-4 py-2.5 sm:py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 focus:bg-white transition-all placeholder:text-slate-400"
                                 />
                             </div>
 
                             {/* ソート切り替え */}
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
                                 <span className="text-xs text-slate-500 font-semibold flex items-center gap-1">
                                     <ArrowUpDown className="w-3.5 h-3.5" />
                                     並び順:
@@ -245,7 +245,7 @@ export default function AdminCaseList() {
                                         const [key, direction] = e.target.value.split('-') as [any, any];
                                         setSortConfig({ key, direction });
                                     }}
-                                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-bold focus:outline-none"
+                                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-bold focus:outline-none flex-1 sm:flex-none"
                                 >
                                     <option value="created_at-desc">登録日 (新しい順)</option>
                                     <option value="created_at-asc">登録日 (古い順)</option>
@@ -256,13 +256,13 @@ export default function AdminCaseList() {
                         </div>
 
                         {/* タブ切り替え */}
-                        <div className="flex gap-2 pt-2 border-t border-slate-100 overflow-x-auto">
+                        <div className="flex gap-2 pt-2 border-t border-slate-100 overflow-x-auto pb-1 -mx-1 px-1">
                             <button
                                 onClick={() => {
                                     setFilterStatus("pending");
                                     setCurrentPage(1);
                                 }}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "pending" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
+                                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] ${filterStatus === "pending" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
                             >
                                 <Clock className="w-3.5 h-3.5" />
                                 <span>審査待ち ({cases.filter(c => c.status === "pending").length})</span>
@@ -272,7 +272,7 @@ export default function AdminCaseList() {
                                     setFilterStatus("approved");
                                     setCurrentPage(1);
                                 }}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "approved" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
+                                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] ${filterStatus === "approved" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
                             >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 <span>承認済み ({cases.filter(c => c.status === "approved").length})</span>
@@ -282,7 +282,7 @@ export default function AdminCaseList() {
                                     setFilterStatus("rejected");
                                     setCurrentPage(1);
                                 }}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === "rejected" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
+                                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] ${filterStatus === "rejected" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
                             >
                                 <XCircle className="w-3.5 h-3.5" />
                                 <span>却下 ({cases.filter(c => c.status === "rejected").length})</span>
@@ -292,7 +292,7 @@ export default function AdminCaseList() {
                                     setFilterStatus("all");
                                     setCurrentPage(1);
                                 }}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${filterStatus === "all" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
+                                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 active:scale-[0.98] ${filterStatus === "all" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
                             >
                                 すべて ({cases.length})
                             </button>
@@ -317,12 +317,12 @@ export default function AdminCaseList() {
                             {paginatedCases.map((c) => (
                                 <div
                                     key={c.id}
-                                    className="bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
+                                    className="bg-white p-4.5 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6"
                                 >
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                                                <User className="w-5 h-5 text-slate-600" />
+                                        <div className="flex flex-wrap items-center gap-2.5 mb-2">
+                                            <h3 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+                                                <User className="w-5 h-5 text-slate-600 shrink-0" />
                                                 <span>{c.full_name}</span>
                                                 {c.full_name_kana && (
                                                     <span className="text-xs text-slate-400 font-normal">
@@ -331,26 +331,26 @@ export default function AdminCaseList() {
                                                 )}
                                             </h3>
                                             {c.status === "pending" && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                                    <Clock className="w-3 h-3" />
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
+                                                    <Clock className="w-3 h-3 shrink-0" />
                                                     <span>審査待ち</span>
                                                 </span>
                                             )}
                                             {c.status === "approved" && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                    <CheckCircle2 className="w-3 h-3" />
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                                                    <CheckCircle2 className="w-3 h-3 shrink-0" />
                                                     <span>承認済み</span>
                                                 </span>
                                             )}
                                             {c.status === "rejected" && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                    <XCircle className="w-3 h-3" />
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">
+                                                    <XCircle className="w-3 h-3 shrink-0" />
                                                     <span>却下</span>
                                                 </span>
                                             )}
                                         </div>
 
-                                        <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-600 my-3">
+                                        <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-slate-600 my-3">
                                             <div>生年月日: <span className="font-mono text-slate-800">{c.birth_date ? c.birth_date.replace(/-/g, "/") : "未設定"}</span></div>
                                             {c.occurrence_date && <div>発生日: <span className="font-mono text-slate-800">{c.occurrence_date.replace(/-/g, "/")}</span></div>}
                                             {c.phone_last4 && <div>電話番号: <span className="font-mono text-slate-800">下4桁 {c.phone_last4}</span></div>}
@@ -367,10 +367,10 @@ export default function AdminCaseList() {
                                     </div>
 
                                     {/* アクションボタン */}
-                                    <div className="flex flex-row md:flex-col gap-2 min-w-[140px]">
+                                    <div className="flex flex-col sm:flex-row md:flex-col gap-2 min-w-[140px] w-full md:w-auto shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
                                         <Link
                                             href={`/admin/cases/${c.id}`}
-                                            className="btn-secondary text-xs text-center py-2.5 rounded-xl font-bold"
+                                            className="btn-secondary text-xs text-center py-2.5 rounded-xl font-bold w-full active:scale-[0.98]"
                                         >
                                             詳細を確認
                                         </Link>
@@ -380,7 +380,7 @@ export default function AdminCaseList() {
                                                 <button
                                                     onClick={() => handleUpdateStatus(c.id, "approved")}
                                                     disabled={actionLoading === c.id}
-                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition-all"
+                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition-all w-full active:scale-[0.98]"
                                                 >
                                                     <Check className="w-3.5 h-3.5" />
                                                     <span>{actionLoading === c.id ? "更新中..." : "承認する"}</span>
@@ -388,7 +388,7 @@ export default function AdminCaseList() {
                                                 <button
                                                     onClick={() => handleUpdateStatus(c.id, "rejected")}
                                                     disabled={actionLoading === c.id}
-                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition-all"
+                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition-all w-full active:scale-[0.98]"
                                                 >
                                                     <X className="w-3.5 h-3.5" />
                                                     <span>却下する</span>

@@ -186,11 +186,11 @@ export default function CasesPage() {
   return (
     <RequireAuth>
       <Toast toast={toast} onClose={() => setToast(null)} />
-      <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
+      <div className="min-h-screen pt-16 sm:pt-20 md:pt-10 pb-12 px-3.5 sm:px-6 flex flex-col items-center">
         <div className="max-w-6xl w-full relative z-10">
 
           {/* ヘッダーエリア */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-slate-200 animate-fade-in">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8 pb-4 border-b border-slate-200 animate-fade-in">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-widest font-mono">
@@ -201,8 +201,8 @@ export default function CasesPage() {
                   就業・採用トラブル情報データベース
                 </span>
               </div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                   就業トラブル 登録データ一覧
                 </h1>
                 {!isLoading && (
@@ -211,37 +211,37 @@ export default function CasesPage() {
                   </span>
                 )}
               </div>
-              <p className="text-slate-600 text-sm mt-1">
+              <p className="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
                 共有データベースに登録されている就業トラブル情報の一覧です。
               </p>
             </div>
-            <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
+            <div className="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto">
               <Link 
                 href="/dashboard" 
-                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
+                className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
               >
                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                <span className="whitespace-nowrap">戻る</span>
+                <span>戻る</span>
               </Link>
               <Link
                 href="/search"
-                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
+                className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
               >
                 <Search className="w-3.5 h-3.5 shrink-0" />
-                <span className="whitespace-nowrap">検索・照会</span>
+                <span>検索・照会</span>
               </Link>
               <Link
                 href="/cases/new"
-                className="btn-primary flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap shrink-0"
+                className="btn-primary flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
               >
-                <UserPlus className="w-4 h-4 shrink-0" />
-                <span className="whitespace-nowrap">トラブル情報を新規登録</span>
+                <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span>新規登録</span>
               </Link>
             </div>
           </div>
 
           {errorMSG && (
-            <div className="p-4 mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 text-sm flex items-start gap-3 animate-fade-in">
+            <div className="p-4 mb-6 sm:mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 text-sm flex items-start gap-3 animate-fade-in">
               <AlertCircle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
               <span className="pt-0.5">{errorMSG}</span>
             </div>
@@ -250,7 +250,7 @@ export default function CasesPage() {
           {/* Controls Bar */}
           {!isLoading && cases.length > 0 && (
             <div className="flex gap-4 mb-6 animate-fade-in delay-100">
-              <div className="flex-1 relative max-w-md">
+              <div className="w-full sm:max-w-md relative">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
@@ -296,38 +296,38 @@ export default function CasesPage() {
                 {paginatedCases.map((c) => (
                   <div
                     key={c.id}
-                    className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all group flex flex-col justify-between"
+                    className="bg-white p-4.5 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all group flex flex-col justify-between"
                   >
                     <div>
                       {/* ヘッダー: 氏名・カナ・ステータスバッジ */}
-                      <div className="flex items-start justify-between gap-3 mb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 mb-3.5 sm:mb-4">
                         <div>
-                          <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
-                            <User className="w-5 h-5 text-slate-600 shrink-0" />
+                          <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5 sm:gap-2">
+                            <User className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-600 shrink-0" />
                             <span>{c.full_name}</span>
                           </h3>
                           {c.full_name_kana && (
-                            <p className="text-xs text-slate-500 font-medium mt-1 ml-7">
+                            <p className="text-xs text-slate-500 font-medium mt-0.5 ml-6 sm:ml-7">
                               {c.full_name_kana}
                             </p>
                           )}
                         </div>
-                        <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        <div className="flex flex-col items-start sm:items-end gap-1.5 shrink-0 self-start sm:self-auto">
                           {c.status === "approved" && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <CheckCircle2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                               <span>登録済み（承認済）</span>
                             </span>
                           )}
                           {c.status === "pending" && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                              <Clock className="w-3.5 h-3.5" />
+                            <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                              <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                               <span>審査待ち</span>
                             </span>
                           )}
                           {c.status === "rejected" && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                              <XCircle className="w-3.5 h-3.5" />
+                            <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                              <XCircle className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                               <span>却下</span>
                             </span>
                           )}
@@ -335,10 +335,10 @@ export default function CasesPage() {
                       </div>
 
                       {/* インフォボックス */}
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 mb-3.5 space-y-2 text-xs">
+                      <div className="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200/80 mb-3 sm:mb-3.5 space-y-1.5 sm:space-y-2 text-xs">
                         <div className="flex justify-between items-center">
                           <span className="text-slate-500 font-medium">生年月日</span>
-                          <span className="text-slate-900 font-bold font-mono text-sm">
+                          <span className="text-slate-900 font-bold font-mono text-xs sm:text-sm">
                             {c.birth_date ? c.birth_date.replace(/-/g, "/") : "-"}
                           </span>
                         </div>
@@ -358,7 +358,7 @@ export default function CasesPage() {
 
                       {/* 経緯・登録理由ボックス */}
                       {c.reason_text && (
-                        <div className="text-xs text-slate-700 leading-relaxed mb-4 bg-slate-50/70 p-3 rounded-xl border border-slate-100">
+                        <div className="text-xs text-slate-700 leading-relaxed mb-3 sm:mb-4 bg-slate-50/70 p-2.5 sm:p-3 rounded-xl border border-slate-100">
                           <span className="font-bold text-slate-900">経緯 / 登録理由: </span>
                           <span className="line-clamp-2">{c.reason_text}</span>
                         </div>

@@ -261,11 +261,11 @@ export default function NewCasePage() {
 
   return (
     <RequireAuth>
-      <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
+      <div className="min-h-screen pt-16 sm:pt-20 md:pt-10 pb-12 px-3.5 sm:px-6 flex flex-col items-center">
         <div className="max-w-3xl w-full">
 
           {/* ヘッダーエリア */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-slate-200 animate-fade-in">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8 pb-4 border-b border-slate-200 animate-fade-in">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-widest font-mono">
@@ -276,17 +276,17 @@ export default function NewCasePage() {
                   就業・採用トラブル情報登録
                 </span>
               </div>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 就業トラブル情報 新規登録申請
               </h1>
-              <p className="text-slate-600 text-sm mt-1">
+              <p className="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
                 問題行動・無断欠勤・損害等の事実を客観的根拠に基づき登録申請します。
               </p>
             </div>
-            <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
               <Link 
                 href="/cases" 
-                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
+                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center justify-center gap-1.5 font-medium transition-colors whitespace-nowrap w-full sm:w-auto"
               >
                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                 <span className="whitespace-nowrap">一覧へ戻る</span>
@@ -294,76 +294,82 @@ export default function NewCasePage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 shadow-2xs p-6 md:p-10 animate-fade-in delay-100">
-            <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4.5 sm:p-8 md:p-10 animate-fade-in delay-100">
+            <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
 
               {/* 基本情報 */}
               <Section title="基本情報">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
+                <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <Label required>氏名</Label>
                     <input
                       type="text"
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="input-field"
+                      className="input-field text-sm sm:text-base py-2.5 sm:py-3"
                       placeholder="山田 太郎"
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <Label>氏名（カナ）</Label>
                     <input
                       type="text"
                       value={nameKana}
                       onChange={(e) => setNameKana(e.target.value)}
-                      className="input-field"
+                      className="input-field text-sm sm:text-base py-2.5 sm:py-3"
                       placeholder="ヤマダ タロウ"
                       pattern="^[ァ-ヶー\s　]*$"
                       title="全角カタカナで入力してください"
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <Label>生年月日</Label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={4}
-                        value={birthYear}
-                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthYear(e.target.value); }}
-                        className="input-field w-24 text-center font-mono"
-                        placeholder="1990"
-                      />
-                      <span className="text-slate-600">年</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={2}
-                        value={birthMonth}
-                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthMonth(e.target.value); }}
-                        className="input-field w-16 text-center font-mono"
-                        placeholder="01"
-                      />
-                      <span className="text-slate-600">月</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={2}
-                        value={birthDay}
-                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthDay(e.target.value); }}
-                        className="input-field w-16 text-center font-mono"
-                        placeholder="01"
-                      />
-                      <span className="text-slate-600">日</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <div className="flex-1 flex items-center gap-1">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={4}
+                          value={birthYear}
+                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthYear(e.target.value); }}
+                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                          placeholder="1990"
+                        />
+                        <span className="text-slate-600 text-xs font-bold shrink-0">年</span>
+                      </div>
+                      <div className="w-20 sm:w-24 flex items-center gap-1">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={2}
+                          value={birthMonth}
+                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthMonth(e.target.value); }}
+                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                          placeholder="01"
+                        />
+                        <span className="text-slate-600 text-xs font-bold shrink-0">月</span>
+                      </div>
+                      <div className="w-20 sm:w-24 flex items-center gap-1">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={2}
+                          value={birthDay}
+                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthDay(e.target.value); }}
+                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                          placeholder="01"
+                        />
+                        <span className="text-slate-600 text-xs font-bold shrink-0">日</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <Label>性別</Label>
                     <select
                       value={gender}
                       onChange={(e) => setGender(e.target.value)}
-                      className="input-field appearance-none"
+                      className="input-field appearance-none py-2.5 sm:py-3 text-sm sm:text-base"
                     >
                       <option value="">選択してください</option>
                       <option value="male">男性</option>
@@ -403,57 +409,63 @@ export default function NewCasePage() {
                       placeholder="例: 東京都渋谷区"
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <Label>発生日</Label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={4}
-                        value={occurrenceYear}
-                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceYear(e.target.value); }}
-                        className="input-field w-24 text-center"
-                        placeholder="0000"
-                      />
-                      <span className="text-slate-600">年</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={2}
-                        value={occurrenceMonth}
-                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceMonth(e.target.value); }}
-                        className="input-field w-16 text-center"
-                        placeholder="00"
-                      />
-                      <span className="text-slate-600">月</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={2}
-                        value={occurrenceDay}
-                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceDay(e.target.value); }}
-                        className="input-field w-16 text-center"
-                        placeholder="00"
-                      />
-                      <span className="text-slate-600">日</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <div className="flex-1 flex items-center gap-1">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={4}
+                          value={occurrenceYear}
+                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceYear(e.target.value); }}
+                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                          placeholder="2024"
+                        />
+                        <span className="text-slate-600 text-xs font-bold shrink-0">年</span>
+                      </div>
+                      <div className="w-20 sm:w-24 flex items-center gap-1">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={2}
+                          value={occurrenceMonth}
+                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceMonth(e.target.value); }}
+                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                          placeholder="01"
+                        />
+                        <span className="text-slate-600 text-xs font-bold shrink-0">月</span>
+                      </div>
+                      <div className="w-20 sm:w-24 flex items-center gap-1">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={2}
+                          value={occurrenceDay}
+                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceDay(e.target.value); }}
+                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                          placeholder="01"
+                        />
+                        <span className="text-slate-600 text-xs font-bold shrink-0">日</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   <Label required>登録理由 / 詳細</Label>
                   <textarea
                     required
                     rows={5}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    className="input-field min-h-[120px]"
+                    className="input-field min-h-[120px] text-sm leading-relaxed"
                     placeholder="具体的なトラブル内容や注意点を記載してください..."
                   />
                 </div>
 
                 <div className="space-y-2 mt-4">
                   <Label>添付資料（画像・PDF等）</Label>
-                  <div className="border border-dashed border-slate-600 rounded-lg p-6 text-center hover:bg-slate-100/30 transition-colors relative">
+                  <div className="border border-dashed border-slate-300 rounded-xl p-5 sm:p-6 text-center hover:bg-slate-50 transition-colors relative">
                     <input
                       type="file"
                       multiple
@@ -462,9 +474,9 @@ export default function NewCasePage() {
                       accept="image/*,application/pdf"
                     />
                     <div className="pointer-events-none">
-                      <UploadCloud className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-sm text-slate-600">クリックまたはドラッグ＆ドロップでファイルを追加</p>
-                      <p className="text-xs text-slate-500 mt-1">（画像、PDFなど複数可）</p>
+                      <UploadCloud className="w-7 h-7 sm:w-8 sm:h-8 text-slate-400 mx-auto mb-1.5 sm:mb-2" />
+                      <p className="text-xs sm:text-sm font-semibold text-slate-700">タップまたはドラッグ＆ドロップで追加</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">（画像、PDFなど複数可 / 最大50MB）</p>
                     </div>
                   </div>
 
@@ -505,14 +517,14 @@ export default function NewCasePage() {
                 </div>
               )}
 
-              <div className="flex gap-4 pt-4 border-t border-slate-200">
-                <Link href="/dashboard" className="btn-secondary flex-1 text-center py-3">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 pt-4 border-t border-slate-200">
+                <Link href="/dashboard" className="btn-secondary w-full sm:flex-1 text-center py-3 text-sm font-bold">
                   キャンセル
                 </Link>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn-primary flex-1 py-3 text-base"
+                  className="btn-primary w-full sm:flex-1 py-3 text-sm sm:text-base font-bold active:scale-[0.98] transition-transform"
                 >
                   {loading ? "送信中..." : "登録を申請する"}
                 </button>

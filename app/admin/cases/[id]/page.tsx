@@ -246,8 +246,8 @@ export default function AdminCaseDetailPage() {
 
   return (
     <RequireAdmin>
-      <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center pt-20 md:pt-10 pb-12">
-        <div className="max-w-3xl w-full mx-4 bg-slate-100/80 border border-slate-200 rounded-2xl p-8 relative">
+      <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center pt-16 sm:pt-20 md:pt-10 pb-12 px-3 sm:px-4">
+        <div className="max-w-3xl w-full bg-slate-100/80 border border-slate-200 rounded-2xl p-4.5 sm:p-8 relative">
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
@@ -265,11 +265,11 @@ export default function AdminCaseDetailPage() {
               <div className="mb-4">
                 <Link
                   href="/admin/cases"
-                  className="text-sm text-slate-900 hover:text-slate-900 transition-colors inline-block mb-2"
+                  className="text-xs sm:text-sm text-slate-900 hover:text-slate-900 transition-colors inline-block mb-2 font-medium"
                 >
-                  一覧へ戻る
+                  ← 一覧へ戻る
                 </Link>
-                <h1 className="text-xl font-bold text-slate-900">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
                   承認・却下（詳細）
                 </h1>
               </div>
@@ -282,34 +282,34 @@ export default function AdminCaseDetailPage() {
               )}
 
               <div className="space-y-4 mb-8">
-                <div className="bg-white p-6 rounded-xl border border-slate-200">
+                <div className="bg-white p-4.5 sm:p-6 rounded-xl border border-slate-200">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">基本情報</h2>
-                  <div className="space-y-2 text-sm">
-                    <div className="grid grid-cols-[140px_1fr]">
+                  <div className="space-y-2.5 text-xs sm:text-sm">
+                    <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">氏名：</span>
                       <span className="text-slate-900 font-semibold">{caseDetail.full_name}</span>
                     </div>
-                    <div className="grid grid-cols-[140px_1fr]">
+                    <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">氏名（カナ）：</span>
                       <span className="text-slate-900">{caseDetail.full_name_kana || "-"}</span>
                     </div>
-                    <div className="grid grid-cols-[140px_1fr]">
+                    <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">性別：</span>
                       <span className="text-slate-900">{genderLabel(caseDetail.gender)}</span>
                     </div>
-                    <div className="grid grid-cols-[140px_1fr]">
+                    <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">生年月日：</span>
                       <span className="text-slate-900">{caseDetail.birth_date?.replace(/-/g, "/")}</span>
                     </div>
-                    <div className="grid grid-cols-[140px_1fr]">
+                    <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">電話番号（下4桁）：</span>
                       <span className="text-slate-900">{caseDetail.phone_last4 || "-"}</span>
                     </div>
-                    <div className="grid grid-cols-[140px_1fr]">
+                    <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">発生日：</span>
                       <span className="text-slate-900">{caseDetail.occurrence_date?.replace(/-/g, "/")}</span>
                     </div>
-                    <div className="grid grid-cols-[140px_1fr]">
+                    <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">登録日：</span>
                       <span className="text-slate-900">
                         {caseDetail.created_at
@@ -317,31 +317,31 @@ export default function AdminCaseDetailPage() {
                           : "-"}
                       </span>
                     </div>
-                    <div className="grid grid-cols-[140px_1fr]">
+                    <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">登録元：</span>
                       <span className="text-slate-900">{companyName || "-"}</span>
                     </div>
-                    <div className="grid grid-cols-[140px_1fr]">
+                    <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">ステータス：</span>
                       <span className="text-slate-900 font-bold">{statusLabel(caseDetail.status)}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl border border-slate-200">
+                <div className="bg-white p-4.5 sm:p-6 rounded-xl border border-slate-200">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">トラブル詳細・理由</h2>
-                  <div className="text-sm text-slate-900 whitespace-pre-wrap leading-relaxed">
+                  <div className="text-xs sm:text-sm text-slate-900 whitespace-pre-wrap leading-relaxed">
                     {caseDetail.reason_text}
                   </div>
                 </div>
 
                 {/* 証拠ファイルセクション */}
-                <div className="bg-white p-6 rounded-xl border border-slate-200">
+                <div className="bg-white p-4.5 sm:p-6 rounded-xl border border-slate-200">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">添付資料</h2>
                   {evidenceFiles.length === 0 ? (
-                    <p className="text-sm text-slate-500">証拠ファイルはありません。</p>
+                    <p className="text-xs sm:text-sm text-slate-500">証拠ファイルはありません。</p>
                   ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                       {evidenceFiles.map((file, i) => (
                         <div key={i} className="group relative bg-slate-100 rounded-lg overflow-hidden border border-slate-200 hover:border-slate-200 transition-colors">
                           {file.type === 'image' ? (
@@ -368,12 +368,12 @@ export default function AdminCaseDetailPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 mt-8">
+              <div className="flex flex-col sm:flex-row gap-3 mt-8">
                 <button
                   type="button"
                   onClick={() => setShowApproveModal(true)}
                   disabled={isProcessing}
-                  className="flex-1 bg-[#0f172a]/80 hover:bg-[#0f172a] disabled:bg-[#0f172a]/40 text-white font-bold py-3 rounded-lg text-sm transition-all"
+                  className="flex-1 bg-[#0f172a]/80 hover:bg-[#0f172a] disabled:bg-[#0f172a]/40 text-white font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98]"
                 >
                   承認する
                 </button>
@@ -384,7 +384,7 @@ export default function AdminCaseDetailPage() {
                     setShowRejectModal(true)
                   }}
                   disabled={isProcessing}
-                  className="flex-1 bg-red-600 hover:bg-red-500 disabled:bg-red-800/60 text-white font-bold py-3 rounded-lg text-sm transition-all shadow-red-900/20"
+                  className="flex-1 bg-red-600 hover:bg-red-500 disabled:bg-red-800/60 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-red-900/20 active:scale-[0.98]"
                 >
                   却下する
                 </button>

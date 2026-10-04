@@ -76,35 +76,35 @@ export default function AdminDashboardPage() {
 
     return (
         <RequireAdmin>
-            <div className="min-h-screen text-slate-900 flex items-center justify-center pt-20 md:pt-10 pb-12">
-                <div className="max-w-5xl w-full mx-4">
-                    <div className="mb-12">
-                        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
+            <div className="min-h-screen text-slate-900 flex flex-col items-center pt-16 sm:pt-20 md:pt-10 pb-16 px-3.5 sm:px-6">
+                <div className="max-w-5xl w-full">
+                    <div className="mb-6 sm:mb-10">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">
                             管理者ダッシュボード
                         </h1>
-                        <p className="text-slate-600 font-medium">システムの各種管理と設定を行います</p>
+                        <p className="text-slate-600 text-xs sm:text-sm font-medium">システムの各種管理と設定を行います</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         {/* 未払い企業審査タイル */}
                         <Link
                             href="/admin/credit-cases"
-                            className="block group relative p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 hover:border-slate-300/50 hover:bg-slate-50 flex flex-col overflow-hidden"
+                            className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 glass-panel hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
                         >
-                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="p-3 rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
-                                        <FileSpreadsheet className="w-8 h-8" strokeWidth={1.5} />
+                                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                                    <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-200">
+                                        <FileSpreadsheet className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
                                     </div>
-                                    <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
+                                    <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-slate-100 text-slate-800 text-[10px] sm:text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-xs">
                                         Credit Review
                                     </span>
                                 </div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                                <h2 className="text-lg sm:text-2xl font-bold text-slate-900 mb-1.5 sm:mb-2 group-hover:text-blue-600 transition-colors duration-200">
                                     企業信用 審査
                                 </h2>
-                                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                                <p className="text-slate-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
                                     加盟企業から申請された企業信用（遅延・未払い）情報およびエビデンス資料の審査を行います。
                                 </p>
                             </div>
@@ -113,35 +113,35 @@ export default function AdminDashboardPage() {
                         {/* 承認待ちタイル */}
                         <Link
                             href="/admin/cases"
-                            className="block group relative p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 hover:border-slate-300/50 hover:bg-slate-50 flex flex-col overflow-hidden"
+                            className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 glass-panel hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
                         >
-                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                             <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="p-3 rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
-     <ClipboardCheck className="w-8 h-8" strokeWidth={1.5} />
-   </div>
-                                    <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
+                                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                                    <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-200">
+                                        <ClipboardCheck className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
+                                    </div>
+                                    <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-slate-100 text-slate-800 text-[10px] sm:text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-xs">
                                         Action Required
                                     </span>
                                 </div>
 
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                                <h2 className="text-lg sm:text-2xl font-bold text-slate-900 mb-1.5 sm:mb-2 group-hover:text-blue-600 transition-colors duration-200">
                                     就業トラブル 審査
                                 </h2>
-                                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                                <p className="text-slate-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
                                     加盟企業から申請された就業トラブル情報およびエビデンス資料の審査を行います。
                                 </p>
 
                                 <div className="mt-auto">
-                                    <div className="text-5xl font-bold text-slate-900">
+                                    <div className="text-3xl sm:text-5xl font-bold text-slate-900">
                                         {loading ? (
-                                            <span className="text-2xl text-slate-600 animate-pulse">...</span>
+                                            <span className="text-xl sm:text-2xl text-slate-600 animate-pulse">...</span>
                                         ) : (
                                             <>
                                                 {pendingCount}
-                                                <span className="text-lg text-slate-500 font-normal ml-2 tracking-widest">
+                                                <span className="text-sm sm:text-lg text-slate-500 font-normal ml-2 tracking-widest">
                                                     CASE
                                                 </span>
                                             </>
@@ -154,7 +154,7 @@ export default function AdminDashboardPage() {
                         {/* ユーザー承認タイル */}
                         <Link
                             href="/admin/users"
-                            className="block group relative p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 hover:border-slate-300/50 hover:bg-slate-50 flex flex-col overflow-hidden"
+                            className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 glass-panel hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
                         >
                             <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -197,37 +197,37 @@ export default function AdminDashboardPage() {
                         {/* 登録済みユーザー一覧タイル */}
                         <Link
                             href="/admin/registered-users"
-                            className="block group relative p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 hover:border-slate-300/50 hover:bg-slate-50 flex flex-col overflow-hidden"
+                            className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 glass-panel hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
                         >
-                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                             <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="p-3 rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
-     <Users className="w-8 h-8" strokeWidth={1.5} />
-   </div>
-                                    <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
+                                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                                    <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-200">
+                                        <Users className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
+                                    </div>
+                                    <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-slate-100 text-slate-800 text-[10px] sm:text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-xs">
                                         Member
                                     </span>
                                 </div>
 
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                                <h2 className="text-lg sm:text-2xl font-bold text-slate-900 mb-1.5 sm:mb-2 group-hover:text-blue-600 transition-colors duration-200">
                                     登録ユーザー一覧
                                 </h2>
-                                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                                <p className="text-slate-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
                                     現在承認されている全ユーザーを確認します。
                                 </p>
 
                                 <div className="mt-auto">
-                                    <div className="text-5xl font-bold text-slate-900">
+                                    <div className="text-3xl sm:text-5xl font-bold text-slate-900">
                                         {loading ? (
-                                            <span className="text-2xl text-slate-600 animate-pulse">...</span>
+                                            <span className="text-xl sm:text-2xl text-slate-600 animate-pulse">...</span>
                                         ) : (
                                             <>
                                                 <span>
                                                     {approvedUserCount ?? 0}
                                                 </span>
-                                                <span className="text-lg text-slate-500 font-normal ml-2 tracking-widest">
+                                                <span className="text-sm sm:text-lg text-slate-500 font-normal ml-2 tracking-widest">
                                                     ACTIVE
                                                 </span>
                                             </>
@@ -240,37 +240,37 @@ export default function AdminDashboardPage() {
                         {/* 会社管理タイル */}
                         <Link
                             href="/admin/companies"
-                            className="block group relative p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 hover:border-slate-300/50 hover:bg-slate-50 flex flex-col overflow-hidden"
+                            className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 glass-panel hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
                         >
-                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                             <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="p-3 rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
-     <Building className="w-8 h-8" strokeWidth={1.5} />
-   </div>
-                                    <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
+                                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                                    <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-200">
+                                        <Building className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
+                                    </div>
+                                    <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-slate-100 text-slate-800 text-[10px] sm:text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-xs">
                                         System
                                     </span>
                                 </div>
 
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                                <h2 className="text-lg sm:text-2xl font-bold text-slate-900 mb-1.5 sm:mb-2 group-hover:text-blue-600 transition-colors duration-200">
                                     会社管理
                                 </h2>
-                                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                                <p className="text-slate-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
                                     利用会社（グループ会社）の追加・編集を行います。
                                 </p>
 
                                 <div className="mt-auto">
-                                    <div className="text-5xl font-bold text-slate-900">
+                                    <div className="text-3xl sm:text-5xl font-bold text-slate-900">
                                         {loading ? (
-                                            <span className="text-2xl text-slate-600 animate-pulse">...</span>
+                                            <span className="text-xl sm:text-2xl text-slate-600 animate-pulse">...</span>
                                         ) : (
                                             <>
                                                 <span>
                                                     {companyCount ?? 0}
                                                 </span>
-                                                <span className="text-lg text-slate-500 font-normal ml-2 tracking-widest">
+                                                <span className="text-sm sm:text-lg text-slate-500 font-normal ml-2 tracking-widest">
                                                     CORP
                                                 </span>
                                             </>
@@ -283,37 +283,37 @@ export default function AdminDashboardPage() {
                         {/* お問い合わせ管理タイル */}
                         <Link
                             href="/admin/inquiries"
-                            className="block group relative p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 hover:border-slate-300/50 hover:bg-slate-50 flex flex-col overflow-hidden"
+                            className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 glass-panel hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
                         >
-                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                             <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="p-3 rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
-     <Mail className="w-8 h-8" strokeWidth={1.5} />
-   </div>
-                                    <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
+                                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                                    <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-200">
+                                        <Mail className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
+                                    </div>
+                                    <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-slate-100 text-slate-800 text-[10px] sm:text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-xs">
                                         Support
                                     </span>
                                 </div>
 
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                                <h2 className="text-lg sm:text-2xl font-bold text-slate-900 mb-1.5 sm:mb-2 group-hover:text-blue-600 transition-colors duration-200">
                                     お問い合わせ管理
                                 </h2>
-                                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                                <p className="text-slate-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
                                     ユーザーからのお問い合わせを確認・管理します。
                                 </p>
 
                                 <div className="mt-auto">
-                                    <div className="text-5xl font-bold text-slate-900">
+                                    <div className="text-3xl sm:text-5xl font-bold text-slate-900">
                                         {loading ? (
-                                            <span className="text-2xl text-slate-600 animate-pulse">...</span>
+                                            <span className="text-xl sm:text-2xl text-slate-600 animate-pulse">...</span>
                                         ) : (
                                             <>
-                                                <span className={inquiryCount && inquiryCount > 0 ? "text-amber-400" : "group-hover:text-blue-600 transition-colors"}>
+                                                <span className={inquiryCount && inquiryCount > 0 ? "text-amber-500 font-extrabold" : "group-hover:text-blue-600 transition-colors"}>
                                                     {inquiryCount ?? 0}
                                                 </span>
-                                                <span className="text-lg text-slate-500 font-normal ml-2 tracking-widest">
+                                                <span className="text-sm sm:text-lg text-slate-500 font-normal ml-2 tracking-widest">
                                                     未読
                                                 </span>
                                             </>
@@ -323,27 +323,25 @@ export default function AdminDashboardPage() {
                             </div>
                         </Link>
 
-
-                    
                         {/* お知らせ管理タイル */}
                         <Link
                             href="/admin/announcements"
-                            className="block group relative p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 hover:border-slate-300/50 hover:bg-slate-50 flex flex-col overflow-hidden"
+                            className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 glass-panel hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
                         >
-                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="p-3 rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bell"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                                    <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 sm:w-8 sm:h-8"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                                     </div>
-                                    <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
+                                    <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-slate-100 text-slate-800 text-[10px] sm:text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-xs">
                                         News
                                     </span>
                                 </div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                                <h2 className="text-lg sm:text-2xl font-bold text-slate-900 mb-1.5 sm:mb-2 group-hover:text-blue-600 transition-colors duration-200">
                                     お知らせ管理
                                 </h2>
-                                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                                <p className="text-slate-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
                                     ダッシュボードに表示するお知らせの作成・公開を行います。
                                 </p>
                             </div>
@@ -352,35 +350,35 @@ export default function AdminDashboardPage() {
                         {/* 監査ログ・照会履歴タイル */}
                         <Link
                             href="/admin/audit"
-                            className="block group relative p-8 rounded-3xl border border-slate-200 transition-all duration-300 glass-panel hover:-translate-y-2 hover:border-slate-300/50 hover:bg-slate-50 flex flex-col overflow-hidden"
+                            className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 glass-panel hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
                         >
-                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="p-3 rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
-                                        <Activity className="w-8 h-8" strokeWidth={1.5} />
+                                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                                    <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-200">
+                                        <Activity className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
                                     </div>
-                                    <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
+                                    <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-slate-100 text-slate-800 text-[10px] sm:text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-xs">
                                         Audit & Security
                                     </span>
                                 </div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                                <h2 className="text-lg sm:text-2xl font-bold text-slate-900 mb-1.5 sm:mb-2 group-hover:text-blue-600 transition-colors duration-200">
                                     監査ログ・照会履歴
                                 </h2>
-                                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                                <p className="text-slate-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
                                     個人情報保護法遵守のため、全ユーザーの検索・照会・閲覧アクティビティを監査します。
                                 </p>
 
                                 <div className="mt-auto">
-                                    <div className="text-5xl font-bold text-slate-900">
+                                    <div className="text-3xl sm:text-5xl font-bold text-slate-900">
                                         {loading ? (
-                                            <span className="text-2xl text-slate-600 animate-pulse">...</span>
+                                            <span className="text-xl sm:text-2xl text-slate-600 animate-pulse">...</span>
                                         ) : (
                                             <>
                                                 <span>
                                                     {auditCount ?? 0}
                                                 </span>
-                                                <span className="text-lg text-slate-500 font-normal ml-2 tracking-widest">
+                                                <span className="text-sm sm:text-lg text-slate-500 font-normal ml-2 tracking-widest">
                                                     LOGS
                                                 </span>
                                             </>
@@ -394,9 +392,9 @@ export default function AdminDashboardPage() {
                         <Link
                             href="/demo"
                             target="_blank"
-                            className="block group p-8 rounded-3xl border border-slate-200 transition-all duration-300 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center min-h-[160px]"
+                            className="block group p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex items-center justify-center min-h-[120px] sm:min-h-[160px] shadow-2xs"
                         >
-                            <span className="text-xl font-bold text-slate-700 group-hover:text-blue-600 transition-colors">
+                            <span className="text-lg sm:text-xl font-bold text-slate-700 group-hover:text-blue-600 transition-colors">
                                 デモ
                             </span>
                         </Link>

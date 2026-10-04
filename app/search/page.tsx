@@ -181,11 +181,11 @@ export default function SearchPage() {
   return (
     <RequireAuth>
       <Toast toast={toast} onClose={() => setToast(null)} />
-      <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
+      <div className="min-h-screen pt-16 sm:pt-20 md:pt-10 pb-12 px-3.5 sm:px-6 flex flex-col items-center">
         <div className="max-w-4xl w-full relative z-10">
 
           {/* ヘッダーエリア */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-slate-200 animate-fade-in">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8 pb-4 border-b border-slate-200 animate-fade-in">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-widest font-mono">
@@ -196,48 +196,48 @@ export default function SearchPage() {
                   就業・採用トラブル情報照会
                 </span>
               </div>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 応募者 検索・照会
               </h1>
-              <p className="text-slate-600 text-sm mt-1">
+              <p className="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
                 採用や契約前に過去のトラブルや問題行動の記録を照会し、トラブルを未然に防ぎます。
               </p>
             </div>
-            <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
+            <div className="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto">
               <Link 
                 href="/dashboard" 
-                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
+                className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
               >
                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                <span className="whitespace-nowrap">戻る</span>
+                <span>戻る</span>
               </Link>
               <Link
                 href="/cases"
-                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
+                className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
               >
                 <ClipboardList className="w-3.5 h-3.5 shrink-0" />
-                <span className="whitespace-nowrap">登録一覧</span>
+                <span>登録一覧</span>
               </Link>
               <Link
                 href="/cases/new"
-                className="btn-primary flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap shrink-0"
+                className="btn-primary flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
               >
-                <UserPlus className="w-4 h-4 shrink-0" />
-                <span className="whitespace-nowrap">人物を新規登録</span>
+                <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span>新規登録</span>
               </Link>
             </div>
           </div>
 
-          <div className="glass-panel rounded-3xl p-8 md:p-10 mb-8 animate-fade-in delay-100 border border-slate-200">
-            <form onSubmit={handleSearch} className="space-y-6">
-              <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 leading-relaxed">
+          <div className="glass-panel rounded-2xl sm:rounded-3xl p-4.5 sm:p-8 md:p-10 mb-8 animate-fade-in delay-100 border border-slate-200">
+            <form onSubmit={handleSearch} className="space-y-5 sm:space-y-6">
+              <div className="text-xs text-slate-600 bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-200 leading-relaxed">
                 ※同姓同名の別人との誤認防止および適正運用の観点から、照会には<strong>「氏名（フルネーム）」</strong>と<strong>「生年月日」</strong>の2つの入力が必須となっています。
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
 
                 {/* 氏名検索 */}
-                <div className="input-group group space-y-2">
+                <div className="input-group group space-y-1.5 sm:space-y-2">
                   <div className="flex justify-between items-center ml-1">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-widest transition-colors duration-300">
                       氏名（フルネーム） / カナ
@@ -251,13 +251,13 @@ export default function SearchPage() {
                     required
                     value={nameQuery}
                     onChange={(e) => setNameQuery(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-white/30 transition-all duration-300"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 sm:px-4 py-3 sm:py-3.5 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-300 focus:bg-white focus:ring-2 focus:ring-slate-900/10 transition-all duration-200"
                     placeholder="例: 山田 太郎"
                   />
                 </div>
 
                 {/* 生年月日検索 */}
-                <div className="input-group group space-y-2">
+                <div className="input-group group space-y-1.5 sm:space-y-2">
                   <div className="flex justify-between items-center ml-1">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-widest transition-colors duration-300">
                       生年月日
@@ -266,59 +266,65 @@ export default function SearchPage() {
                       必須
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      required
-                      inputMode="numeric"
-                      maxLength={4}
-                      value={searchYear}
-                      onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchYear(e.target.value); }}
-                      className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-3.5 text-slate-900 focus:outline-none focus:border-slate-200 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center font-mono"
-                      placeholder="1990"
-                    />
-                    <span className="text-slate-600 text-xs font-bold">年</span>
-                    <input
-                      type="text"
-                      required
-                      inputMode="numeric"
-                      maxLength={2}
-                      value={searchMonth}
-                      onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchMonth(e.target.value); }}
-                      className="w-16 bg-white border border-slate-200 rounded-xl px-3 py-3.5 text-slate-900 focus:outline-none focus:border-slate-200 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center font-mono"
-                      placeholder="01"
-                    />
-                    <span className="text-slate-600 text-xs font-bold">月</span>
-                    <input
-                      type="text"
-                      required
-                      inputMode="numeric"
-                      maxLength={2}
-                      value={searchDay}
-                      onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchDay(e.target.value); }}
-                      className="w-16 bg-white border border-slate-200 rounded-xl px-3 py-3.5 text-slate-900 focus:outline-none focus:border-slate-200 focus:ring-4 focus:ring-white/30 transition-all duration-300 text-center font-mono"
-                      placeholder="01"
-                    />
-                    <span className="text-slate-600 text-xs font-bold">日</span>
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <div className="flex-1 flex items-center gap-1">
+                      <input
+                        type="text"
+                        required
+                        inputMode="numeric"
+                        maxLength={4}
+                        value={searchYear}
+                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchYear(e.target.value); }}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-2 sm:px-3 py-3 sm:py-3.5 text-sm sm:text-base text-slate-900 focus:outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10 transition-all text-center font-mono"
+                        placeholder="1990"
+                      />
+                      <span className="text-slate-600 text-xs font-bold shrink-0">年</span>
+                    </div>
+                    <div className="w-20 sm:w-24 flex items-center gap-1">
+                      <input
+                        type="text"
+                        required
+                        inputMode="numeric"
+                        maxLength={2}
+                        value={searchMonth}
+                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchMonth(e.target.value); }}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-2 sm:px-3 py-3 sm:py-3.5 text-sm sm:text-base text-slate-900 focus:outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10 transition-all text-center font-mono"
+                        placeholder="01"
+                      />
+                      <span className="text-slate-600 text-xs font-bold shrink-0">月</span>
+                    </div>
+                    <div className="w-20 sm:w-24 flex items-center gap-1">
+                      <input
+                        type="text"
+                        required
+                        inputMode="numeric"
+                        maxLength={2}
+                        value={searchDay}
+                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchDay(e.target.value); }}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-2 sm:px-3 py-3 sm:py-3.5 text-sm sm:text-base text-slate-900 focus:outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10 transition-all text-center font-mono"
+                        placeholder="01"
+                      />
+                      <span className="text-slate-600 text-xs font-bold shrink-0">日</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2">
-                <p className="text-xs text-slate-500">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                <p className="text-[11px] sm:text-xs text-slate-500 leading-normal">
                   ※適正運用の観点から、氏名（フルネーム）と生年月日は<span className="text-slate-900 font-bold">両方の入力が必須</span>です
                 </p>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="btn-primary min-w-[160px] py-3 rounded-xl font-bold tracking-wide"
+                  className="btn-primary w-full sm:w-auto sm:min-w-[160px] py-3 rounded-xl font-bold tracking-wide active:scale-[0.98] transition-transform"
                 >
                   {isLoading ?
                     <span className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-                      検索中...
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      照会中...
                     </span>
-                    : "検索実行"
+                    : "照会を実行"
                   }
                 </button>
               </div>
@@ -354,47 +360,48 @@ export default function SearchPage() {
                     return (
                       <div
                         key={item.id}
-                        className={`glass-panel p-6 rounded-2xl border-l-4 flex flex-col md:flex-row justify-between gap-6 card-hover group transition-all ${badge.borderLeft}`}
+                        className={`glass-panel p-4.5 sm:p-6 rounded-2xl border-l-4 flex flex-col md:flex-row justify-between gap-4 sm:gap-6 card-hover group transition-all ${badge.borderLeft}`}
                       >
                         <div className="flex-1">
-                          <div className="flex items-start gap-4 mb-3">
+                          <div className="flex items-start gap-3 sm:gap-4 mb-2.5 sm:mb-3">
                             <div className="flex-1">
-                              <h3 className="text-xl font-bold text-slate-900 group-hover:text-slate-900 transition-colors">
+                              <h3 className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-slate-900 transition-colors">
                                 {item.full_name}
                               </h3>
-                              <p className="text-sm text-slate-500 font-medium">
+                              <p className="text-xs sm:text-sm text-slate-500 font-medium">
                                 {item.full_name_kana}
                               </p>
                             </div>
-                            <div className="text-right">
-                              <span className={`px-3 py-1 text-[10px] font-bold rounded-full border uppercase tracking-widest ${badge.className}`}>
+                            <div className="text-right shrink-0">
+                              <span className={`px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] font-bold rounded-full border uppercase tracking-wider ${badge.className}`}>
                                 {badge.label}
                               </span>
                             </div>
                           </div>
 
-                          <div className="bg-white rounded-xl p-4 border border-slate-200">
-                            <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2">登録理由</h4>
-                            <p className="text-sm text-slate-700 leading-relaxed font-medium line-clamp-3">
+                          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200">
+                            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 sm:mb-2">登録理由</h4>
+                            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium line-clamp-3">
                               {item.reason_text}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex flex-col justify-between items-end min-w-[140px] text-right">
-                          <div className="space-y-1">
-                            <p className="text-xs text-slate-500 uppercase tracking-wider">生年月日</p>
-                            <p className="text-sm text-slate-800 font-mono font-bold">{item.birth_date}</p>
-                          </div>
-
-                          <div className="space-y-1 mt-4">
-                            <p className="text-xs text-slate-500 uppercase tracking-wider">発生日</p>
-                            <p className="text-sm text-red-700 font-mono font-medium">{item.occurrence_date}</p>
+                        <div className="flex flex-row md:flex-col justify-between items-center md:items-end md:min-w-[140px] pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 gap-2">
+                          <div className="flex md:flex-col gap-3 md:gap-2 text-left md:text-right">
+                            <div>
+                              <p className="text-[10px] text-slate-400 uppercase tracking-wider">生年月日</p>
+                              <p className="text-xs sm:text-sm text-slate-800 font-mono font-bold">{item.birth_date}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-slate-400 uppercase tracking-wider">発生日</p>
+                              <p className="text-xs sm:text-sm text-red-700 font-mono font-medium">{item.occurrence_date || "—"}</p>
+                            </div>
                           </div>
 
                           <Link
-                            href={`/cases/${item.id}`} // 詳細ページができたら飛ぶ想定（なければ#）
-                            className="mt-4 text-xs text-slate-700 hover:text-slate-900 font-bold hover:underline decoration-slate-300 underline-offset-4 transition-all"
+                            href={`/cases/${item.id}`}
+                            className="btn-secondary text-xs px-3 py-1.5 rounded-lg font-bold text-slate-700 hover:text-slate-900 shrink-0 md:mt-2"
                           >
                             詳細を見る
                           </Link>

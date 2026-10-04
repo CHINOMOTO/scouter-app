@@ -296,6 +296,7 @@ export default function Navigation() {
                                 active={pathname === "/dashboard"}
                                 icon={<LayoutDashboard className="w-4 h-4" />}
                                 label="ダッシュボード"
+                                onClick={() => setIsMobileMenuOpen(false)}
                             />
 
                             {/* 応募者照会（アコーディオン） */}
@@ -306,6 +307,7 @@ export default function Navigation() {
                                     href="/search"
                                     isOpen={openMenus.person}
                                     onToggle={() => toggleMenu("person")}
+                                    onLinkClick={() => setIsMobileMenuOpen(false)}
                                     isParentActive={pathname.startsWith("/search") || pathname.startsWith("/cases")}
                                 >
                                     <SubmenuLink 
@@ -313,18 +315,21 @@ export default function Navigation() {
                                         active={pathname === "/search"}
                                         icon={<Search className="w-3.5 h-3.5" />}
                                         label="応募者 検索・照会"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
                                         href="/cases/new"
                                         active={pathname === "/cases/new"}
                                         icon={<UserPlus className="w-3.5 h-3.5" />}
                                         label="トラブル情報を新規登録"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
                                         href="/cases"
                                         active={pathname === "/cases"}
                                         icon={<FileText className="w-3.5 h-3.5" />}
                                         label="登録データ一覧"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                 </AccordionGroup>
                             )}
@@ -337,6 +342,7 @@ export default function Navigation() {
                                     href="/credit"
                                     isOpen={openMenus.credit}
                                     onToggle={() => toggleMenu("credit")}
+                                    onLinkClick={() => setIsMobileMenuOpen(false)}
                                     isParentActive={pathname.startsWith("/credit")}
                                 >
                                     <SubmenuLink 
@@ -344,18 +350,21 @@ export default function Navigation() {
                                         active={pathname === "/credit"}
                                         icon={<Building className="w-3.5 h-3.5" />}
                                         label="企業信用 検索・照会"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
                                         href="/credit/new"
                                         active={pathname === "/credit/new"}
                                         icon={<FilePlus2 className="w-3.5 h-3.5" />}
                                         label="遅延・未払いを新規登録"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
                                         href="/credit/cases"
                                         active={pathname === "/credit/cases"}
                                         icon={<FileText className="w-3.5 h-3.5" />}
                                         label="登録データ一覧"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                 </AccordionGroup>
                             )}
@@ -366,6 +375,7 @@ export default function Navigation() {
                                 active={pathname === "/contact"}
                                 icon={<HelpCircle className="w-4 h-4" />}
                                 label="お問い合わせ"
+                                onClick={() => setIsMobileMenuOpen(false)}
                             />
                         </nav>
                     </div>
@@ -388,6 +398,7 @@ export default function Navigation() {
                                     href="/admin"
                                     isOpen={openMenus.admin}
                                     onToggle={() => toggleMenu("admin")}
+                                    onLinkClick={() => setIsMobileMenuOpen(false)}
                                     isParentActive={pathname.startsWith("/admin")}
                                     badge={notificationCount > 0 ? (
                                         <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold tabular-nums bg-red-500 text-white animate-pulse">
@@ -400,48 +411,56 @@ export default function Navigation() {
                                         active={pathname === "/admin"}
                                         icon={<LayoutDashboard className="w-3.5 h-3.5" />}
                                         label="管理トップ"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
                                         href="/admin/cases"
                                         active={pathname.startsWith("/admin/cases")}
                                         icon={<ShieldAlert className="w-3.5 h-3.5" />}
                                         label="就業トラブル審査"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
                                         href="/admin/credit-cases"
                                         active={pathname.startsWith("/admin/credit-cases")}
                                         icon={<Building2 className="w-3.5 h-3.5" />}
                                         label="企業信用審査"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
                                         href="/admin/users"
                                         active={pathname.startsWith("/admin/users")}
                                         icon={<Users className="w-3.5 h-3.5" />}
                                         label="ユーザー管理"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
                                         href="/admin/companies"
                                         active={pathname.startsWith("/admin/companies")}
                                         icon={<Building className="w-3.5 h-3.5" />}
                                         label="利用会社管理"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
                                         href="/admin/announcements"
                                         active={pathname.startsWith("/admin/announcements")}
                                         icon={<Bell className="w-3.5 h-3.5" />}
                                         label="お知らせ管理"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
                                         href="/admin/inquiries"
                                         active={pathname.startsWith("/admin/inquiries")}
                                         icon={<MessageSquare className="w-3.5 h-3.5" />}
                                         label="お問い合わせ管理"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
                                         href="/admin/audit"
                                         active={pathname.startsWith("/admin/audit")}
                                         icon={<Activity className="w-3.5 h-3.5" />}
                                         label="監査ログ・照会履歴"
+                                        onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                 </AccordionGroup>
                             </nav>
@@ -454,6 +473,7 @@ export default function Navigation() {
                     {/* プロフィールへのリンクカード */}
                     <Link
                         href="/profile"
+                        onClick={() => setIsMobileMenuOpen(false)}
                         className="flex items-center gap-3 p-2 rounded-xl hover:bg-white border border-transparent hover:border-slate-200/80 transition-all group"
                     >
                         <div className="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center text-slate-700 font-bold text-xs shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
@@ -490,21 +510,24 @@ function SidebarSingleLink({
     active, 
     icon, 
     label, 
-    badge 
+    badge,
+    onClick
 }: { 
     href: string; 
     active: boolean; 
     icon: React.ReactNode; 
     label: string; 
     badge?: React.ReactNode;
+    onClick?: () => void;
 }) {
     return (
         <Link
             href={href}
+            onClick={onClick}
             className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 ${
                 active 
                     ? "bg-slate-900 text-white shadow-xs" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 active:bg-slate-200/70"
             }`}
         >
             <div className="flex items-center gap-3 min-w-0">
@@ -527,6 +550,7 @@ function AccordionGroup({
     onToggle,
     isParentActive,
     badge,
+    onLinkClick,
     children
 }: {
     title: string;
@@ -536,6 +560,7 @@ function AccordionGroup({
     onToggle: () => void;
     isParentActive: boolean;
     badge?: React.ReactNode;
+    onLinkClick?: () => void;
     children: React.ReactNode;
 }) {
     return (
@@ -551,6 +576,7 @@ function AccordionGroup({
                 {/* 左側: メインページへ遷移するリンク */}
                 <Link
                     href={href}
+                    onClick={onLinkClick}
                     className="flex-1 flex items-center gap-3 px-3 py-2.5 min-w-0 text-xs tracking-tight"
                 >
                     <span className={`shrink-0 ${isParentActive ? "text-slate-900" : "text-slate-500"}`}>
@@ -593,21 +619,24 @@ function SubmenuLink({
     active,
     icon,
     label,
-    badge
+    badge,
+    onClick
 }: {
     href: string;
     active: boolean;
     icon?: React.ReactNode;
     label: string;
     badge?: React.ReactNode;
+    onClick?: () => void;
 }) {
     return (
         <Link
             href={href}
+            onClick={onClick}
             className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all duration-150 ${
                 active 
                     ? "bg-slate-900 text-white font-bold shadow-2xs" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200/70 font-semibold"
             }`}
         >
             <div className="flex items-center gap-2 min-w-0">

@@ -99,7 +99,7 @@ export default function DashboardPage() {
 
   return (
     <RequireAuth>
-      <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
+      <div className="min-h-screen pt-16 sm:pt-20 md:pt-10 pb-16 px-3.5 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
         {isLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center py-32 gap-3">
             <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
@@ -109,12 +109,12 @@ export default function DashboardPage() {
           <div className="max-w-5xl w-full animate-fade-in relative z-10">
 
           {/* ヘッダーエリア */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-6 border-b border-slate-200">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8 pb-5 sm:pb-6 border-b border-slate-200">
             <div>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 ダッシュボード
               </h1>
-              <p className="text-slate-600 text-sm mt-1">
+              <p className="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
                 ご利用のプランに応じた各種照会・登録メニューをご案内します。
               </p>
             </div>
@@ -122,8 +122,8 @@ export default function DashboardPage() {
 
           {/* お知らせ・システム通知 */}
           {announcements.length > 0 && (
-            <div className="mb-8 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
-              <div className="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
+            <div className="mb-6 sm:mb-8 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
+              <div className="px-4 sm:px-5 py-3 sm:py-3.5 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="p-1 rounded-md bg-blue-50 text-blue-600 border border-blue-100">
                     <Bell className="w-3.5 h-3.5" />
@@ -143,16 +143,16 @@ export default function DashboardPage() {
               </div>
               <div className="divide-y divide-slate-100">
                 {announcements.map((item) => (
-                  <div key={item.id} className="p-5 hover:bg-slate-50/40 transition-colors">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                      <span className="text-xs text-slate-500 font-mono shrink-0">
+                  <div key={item.id} className="p-4 sm:p-5 hover:bg-slate-50/40 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                      <span className="text-[11px] sm:text-xs text-slate-500 font-mono shrink-0">
                         {new Date(item.created_at).toLocaleDateString("ja-JP", {
                           year: "numeric",
                           month: "2-digit",
                           day: "2-digit",
                         })}
                       </span>
-                      <h3 className="text-sm font-bold text-slate-900">
+                      <h3 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
                         {item.title}
                       </h3>
                     </div>
@@ -379,10 +379,10 @@ function MenuCard({
   return (
     <button
       onClick={onClick}
-      className="group text-left p-6 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 transition-all duration-200 flex flex-col h-full relative cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5"
+      className="group text-left p-4.5 sm:p-6 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-150 flex flex-col h-full relative cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5"
     >
-      <div className="flex items-start justify-between w-full mb-4">
-        <div className="p-2.5 rounded-lg bg-slate-100 text-slate-800 group-hover:bg-slate-200/80 transition-colors">
+      <div className="flex items-start justify-between w-full mb-3 sm:mb-4">
+        <div className="p-2 sm:p-2.5 rounded-lg bg-slate-100 text-slate-800 group-hover:bg-slate-200/80 transition-colors">
           {icon}
         </div>
         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
@@ -390,9 +390,9 @@ function MenuCard({
         </span>
       </div>
 
-      <h3 className="text-base font-bold mb-1.5 flex items-center justify-between text-slate-900 group-hover:text-blue-600 transition-colors">
+      <h3 className="text-sm sm:text-base font-bold mb-1.5 flex items-center justify-between text-slate-900 group-hover:text-blue-600 transition-colors">
         <span>{title}</span>
-        <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-blue-600" />
+        <ArrowRight className="w-4 h-4 opacity-70 sm:opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-blue-600" />
       </h3>
       <p className="text-xs leading-relaxed mt-auto text-slate-600">
         {description}
@@ -418,7 +418,7 @@ function UtilityCard({
   return (
     <button
       onClick={onClick}
-      className="group text-left p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-between shadow-2xs cursor-pointer"
+      className="group text-left p-3.5 sm:p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 active:scale-[0.99] transition-all flex items-center justify-between shadow-2xs cursor-pointer"
     >
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-slate-100 text-slate-700 group-hover:bg-slate-200 transition-colors">
