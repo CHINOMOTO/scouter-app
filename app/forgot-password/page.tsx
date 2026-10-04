@@ -44,41 +44,43 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
-            <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-white/[0.03] rounded-full blur-[100px]"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-white/[0.03] rounded-full blur-[100px]"></div>
-            </div>
+        <div className="min-h-screen flex flex-col items-center justify-between p-3.5 sm:p-6 bg-[#f8fafc]">
+            <div className="h-2 sm:h-6"></div>
 
-            <main className="w-full max-w-lg flex flex-col items-center justify-center relative z-10 animate-fade-in">
-                <div className="mb-8 text-center">
-                    <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
+            <main className="w-full max-w-[460px] flex flex-col items-center justify-center py-4 sm:py-8 my-auto">
+                <div className="mb-6 sm:mb-8 text-center flex flex-col items-center">
+                    <Link href="/" className="inline-block mb-3">
+                        <img 
+                            src="/logo-brand.png" 
+                            alt="MIERIS ミエリス" 
+                            className="w-36 sm:w-44 h-auto object-contain select-none pointer-events-none" 
+                        />
+                    </Link>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
                         パスワード再発行
                     </h1>
-                    <p className="text-slate-600 text-sm">
-                        登録済みのメールアドレスを入力してください
+                    <p className="text-slate-600 text-xs sm:text-sm mt-1">
+                        ご登録のメールアドレスに再設定リンクをお送りします
                     </p>
                 </div>
 
-                <div className="w-full glass-panel rounded-2xl md:rounded-3xl p-6 md:p-8 border border-slate-200 backdrop-blur-xl relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#0f172a] to-transparent opacity-50"></div>
-
+                <div className="w-full bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-9 border border-slate-200 shadow-xl shadow-slate-200/50">
                     {successMsg ? (
-                        <div className="text-center">
-                            <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
-                                <Mail className="w-8 h-8 text-blue-600" />
+                        <div className="text-center py-2">
+                            <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200 text-emerald-600">
+                                <Mail className="w-7 h-7" />
                             </div>
-                            <p className="text-slate-800 leading-relaxed text-sm mb-6">
+                            <p className="text-slate-800 leading-relaxed text-xs sm:text-sm mb-6">
                                 {successMsg}
                             </p>
-                            <Link href="/" className="btn-secondary w-full inline-block py-3">
+                            <Link href="/" className="btn-secondary w-full inline-block py-3 rounded-xl font-bold text-xs sm:text-sm active:scale-[0.98]">
                                 ログイン画面に戻る
                             </Link>
                         </div>
                     ) : (
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
+                                <label className="block text-xs sm:text-sm font-bold text-slate-800 mb-1.5">
                                     メールアドレス
                                 </label>
                                 <input
@@ -86,35 +88,39 @@ export default function ForgotPasswordPage() {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-200 focus:bg-white focus:ring-1 focus:ring-white/30 transition-all font-mono text-sm"
-                                    placeholder="name@company.com"
+                                    className="input-field py-2.5 sm:py-3 px-3.5 sm:px-4 text-sm sm:text-base rounded-xl"
+                                    placeholder="example@company.com"
                                 />
                             </div>
 
                             {errorMsg && (
-                                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-start gap-2 animate-fade-in">
-                                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                                    <p className="text-xs text-red-700 pt-0.5">{errorMsg}</p>
+                                <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2.5 text-red-700 text-xs sm:text-sm">
+                                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                                    <p className="leading-snug">{errorMsg}</p>
                                 </div>
                             )}
 
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="btn-primary w-full py-3.5"
+                                className="btn-primary w-full py-3.5 sm:py-4 text-sm sm:text-base font-bold tracking-wider rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
                             >
-                                {isLoading ? "SENDING..." : "リセットメールを送信"}
+                                {isLoading ? "送信中..." : "再設定メールを送信する"}
                             </button>
                         </form>
                     )}
 
-                    <div className="text-center mt-8 pt-4 border-t border-slate-200">
-                        <Link href="/" className="text-xs text-slate-500 hover:text-slate-900 transition-colors">
-                            キャンセルして戻る
+                    <div className="text-center mt-5 sm:mt-6 pt-4 border-t border-slate-100">
+                        <Link href="/" className="text-xs sm:text-sm text-slate-500 hover:text-slate-900 transition-colors">
+                            ← ログイン画面へ戻る
                         </Link>
                     </div>
                 </div>
             </main>
+
+            <footer className="text-center py-3 text-[11px] text-slate-400 font-medium">
+                © 2026 MIERIS. All rights reserved.
+            </footer>
         </div>
     );
 }

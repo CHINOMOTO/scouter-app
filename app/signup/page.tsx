@@ -102,10 +102,10 @@ ${notes.trim() || "なし"}`;
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-between p-4 bg-[#f8fafc]">
-            <div className="h-4"></div>
+        <div className="min-h-screen flex flex-col items-center justify-between p-3.5 sm:p-6 bg-[#f8fafc]">
+            <div className="h-2 sm:h-4"></div>
 
-            <main className="w-full max-w-[540px] flex flex-col items-center justify-center py-6">
+            <main className="w-full max-w-[540px] flex flex-col items-center justify-center py-4 sm:py-6 my-auto">
 
                 {/* ヘッダーロゴ */}
                 <div className="text-center mb-6 flex flex-col items-center">
@@ -119,7 +119,7 @@ ${notes.trim() || "なし"}`;
                             ミエリス
                         </p>
                     </Link>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-3">
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-2 sm:mt-3 whitespace-nowrap">
                         利用お申し込み・資料請求
                     </h1>
                     <p className="text-xs text-slate-600 mt-1">
@@ -129,40 +129,40 @@ ${notes.trim() || "なし"}`;
 
                 {/* 完了画面 */}
                 {isSuccess ? (
-                    <div className="w-full bg-white rounded-3xl p-8 sm:p-10 border border-slate-200 shadow-xl text-center animate-fade-in">
+                    <div className="w-full bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-10 border border-slate-200 shadow-xl shadow-slate-200/50 text-center animate-fade-in">
                         <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
                             <CheckCircle2 className="w-8 h-8" />
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
                             お申し込みを受け付けました
                         </h2>
-                        <p className="text-sm text-slate-600 leading-relaxed mb-6">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-6">
                             MIERIS（ミエリス）へのお申し込みありがとうございます。<br />
                             運営管理者（株式会社ミヤエモン / 株式会社宇井建設）にて内容を確認の上、通常1〜2営業日以内にアカウント発行のご案内をお送りいたします。
                         </p>
 
-                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-left text-xs text-slate-700 space-y-2 mb-8">
+                        <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 text-left text-xs text-slate-700 space-y-2 mb-6 sm:mb-8">
                             <div className="font-bold text-slate-900 mb-1">【今後の流れ】</div>
                             <div>1. 運営事務局にて会社情報・ご利用プランの確認</div>
                             <div>2. 担当者様へ利用規約および初期ログイン情報（ID/PW）の送付</div>
                             <div>3. ログイン後、すぐにご利用を開始いただけます</div>
                         </div>
 
-                        <Link href="/" className="btn-primary w-full py-3.5 inline-block text-center font-bold">
+                        <Link href="/" className="btn-primary w-full py-3.5 inline-block text-center font-bold active:scale-[0.98]">
                             ログイン画面へ戻る
                         </Link>
                     </div>
                 ) : (
                     /* フォーム入力画面 */
-                    <div className="w-full bg-white rounded-3xl p-8 sm:p-9 border border-slate-200 shadow-xl">
-                        <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="w-full bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-9 border border-slate-200 shadow-xl shadow-slate-200/50">
+                        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                             
                             {/* プラン選択 */}
-                            <div className="space-y-2.5">
-                                <label className="block text-sm font-bold text-slate-800">
+                            <div className="space-y-2">
+                                <label className="block text-xs sm:text-sm font-bold text-slate-800">
                                     ご希望のプラン <span className="text-red-500">*</span>
                                 </label>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
                                     <label className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${planType === 'full' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>
                                         <input
                                             type="radio"
@@ -311,14 +311,14 @@ ${notes.trim() || "なし"}`;
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="btn-primary w-full py-4 text-base font-bold tracking-wider rounded-xl shadow-md"
+                                    className="btn-primary w-full py-3.5 sm:py-4 text-sm sm:text-base font-bold tracking-wider rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
                                 >
                                     {isSubmitting ? "送信中..." : "お申し込み内容を送信する"}
                                 </button>
                             </div>
                         </form>
 
-                        <div className="text-center mt-6 border-t border-slate-100 pt-5 text-sm">
+                        <div className="text-center mt-5 sm:mt-6 border-t border-slate-100 pt-5 text-xs sm:text-sm">
                             <span className="text-slate-600 font-medium">既にアカウントをお持ちの方は </span>
                             <Link href="/" className="text-slate-900 hover:text-blue-600 font-bold underline underline-offset-2 ml-1">
                                 ログイン画面へ
@@ -327,6 +327,10 @@ ${notes.trim() || "なし"}`;
                     </div>
                 )}
             </main>
+
+            <footer className="text-center py-3 text-[11px] text-slate-400 font-medium">
+                © 2026 MIERIS. All rights reserved.
+            </footer>
         </div>
     );
 }
