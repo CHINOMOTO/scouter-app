@@ -18,7 +18,9 @@ import {
   Sparkles,
   Lock,
   Building,
-  Bell
+  Bell,
+  AlertTriangle,
+  BookmarkCheck
 } from "lucide-react";
 
 type Announcement = {
@@ -35,6 +37,7 @@ export default function DashboardPage() {
   const [companyName, setCompanyName] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [watchlistAlertCount, setWatchlistAlertCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -89,8 +92,31 @@ export default function DashboardPage() {
       }
     };
 
+    const loadWatchlistAlerts = async () => {
+      try {
+        const session = (await supabase.auth.getSession()).data.session;
+        if (!session) return;
+
+        const res = await fetch("/api/credit/watchlist", {
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.warning_count === "number") {
+            setWatchlistAlertCount(data.warning_count);
+          }
+        }
+      } catch {
+        // ignore silently
+      }
+    };
+
     loadUserData();
     loadAnnouncements();
+    loadWatchlistAlerts();
   }, []);
 
   // プラン権限の判定
@@ -119,6 +145,38 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
+
+          {/* 取引先ウォッチ警告バナー（未払い発生時） */}
+          {watchlistAlertCount > 0 && (
+            <div className="mb-6 sm:mb-8 bg-red-50/90 border border-red-200/90 rounded-xl p-4 sm:p-5 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fade-in">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-lg bg-red-100 text-red-600 border border-red-200 flex items-center justify-center shrink-0 mt-0.5">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[11px] font-extrabold text-red-600 uppercase tracking-widest font-mono">
+                      WATCHLIST ALERT
+                    </span>
+                    <span className="text-xs text-red-300">|</span>
+                    <h3 className="text-sm font-bold text-red-950">
+                      取引先ウォッチ: 監視中企業に未払いトラブルが発生しています（{watchlistAlertCount}社）
+                    </h3>
+                  </div>
+                  <p className="text-xs text-red-800/90 leading-relaxed">
+                    貴社がウォッチリストに登録している取引先企業について、他社から未払い・遅延の事故情報が報告されました。至急ご確認ください。
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/credit/watchlist?filter=warning"
+                className="btn-primary bg-red-600 hover:bg-red-700 text-white text-xs px-4 py-2 shrink-0 flex items-center gap-1.5 font-bold whitespace-nowrap shadow-xs"
+              >
+                <span>対象企業を確認する</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          )}
 
           {/* お知らせ・システム通知 */}
           {announcements.length > 0 && (
@@ -226,7 +284,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {/* 企業信用照会 */}
                 <MenuCard
                   title="企業信用 検索・照会"
@@ -234,6 +292,15 @@ export default function DashboardPage() {
                   badge="信用照会"
                   icon={<Building2 className="w-5 h-5 text-blue-600" />}
                   onClick={() => router.push("/credit")}
+                />
+
+                {/* 取引先ウォッチ */}
+                <MenuCard
+                  title="取引先ウォッチ"
+                  description="主要取引先を登録して継続モニタリング。他社で未払いが発生した際に自動検知します。"
+                  badge={watchlistAlertCount > 0 ? `${watchlistAlertCount}件警告` : "監視中"}
+                  icon={<BookmarkCheck className="w-5 h-5 text-blue-600" />}
+                  onClick={() => router.push("/credit/watchlist")}
                 />
 
                 {/* 登録データ一覧 */}

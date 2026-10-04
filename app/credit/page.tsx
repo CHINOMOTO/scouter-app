@@ -19,7 +19,8 @@ import {
     ArrowLeft,
     Info,
     FileCheck,
-    AlertCircle
+    AlertCircle,
+    BookmarkCheck
 } from "lucide-react";
 
 type CreditCase = {
@@ -53,6 +54,11 @@ export default function CreditSearchPage() {
     const [totalCases, setTotalCases] = useState(0);
     const [unpaidCount, setUnpaidCount] = useState(0);
     const [resolvedCount, setResolvedCount] = useState(0);
+
+    // ウォッチリスト監視用
+    const [isWatched, setIsWatched] = useState(false);
+    const [watchLoading, setWatchLoading] = useState(false);
+    const [discoveredCompanyName, setDiscoveredCompanyName] = useState("");
 
     // プラン制限チェック用
     const [planRestricted, setPlanRestricted] = useState(false);
@@ -183,6 +189,9 @@ export default function CreditSearchPage() {
             setHasSearched(true);
             setSearchedCorp(normalizedCorp);
 
+            // ウォッチリスト登録状況の確認と社名補完
+            checkWatchlistStatus(normalizedCorp, fetchedCases);
+
             // 照会監査ログの保存 (POST /api/audit)
             try {
                 await fetch("/api/audit", {
@@ -205,6 +214,106 @@ export default function CreditSearchPage() {
             setToast({ type: "error", text: err.message || "照会中にエラーが発生しました。" });
         } finally {
             setSearching(false);
+        }
+    };
+
+    // 照会対象のウォッチリスト状況チェック
+    const checkWatchlistStatus = async (corpNum: string, currentCases: CreditCase[]) => {
+        try {
+            const session = (await supabase.auth.getSession()).data.session;
+            if (!session) return;
+
+            const res = await fetch("/api/credit/watchlist", {
+                headers: {
+                    "Authorization": `Bearer ${session.access_token}`
+                }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                const list = data.watchlist || [];
+                const watched = list.some((item: any) => item.corporate_number === corpNum);
+                setIsWatched(watched);
+            }
+
+            // 社名特定（0件かつ社名未設定の場合、国税庁APIで補完を試みる）
+            if (currentCases.length > 0 && currentCases[0].company_name) {
+                setDiscoveredCompanyName(currentCases[0].company_name);
+            } else if (!searchQuery.trim()) {
+                try {
+                    const ntaRes = await fetch(`https://api.houjin-bangou.nta.go.jp/4/num?id=K8yQd8Xq9L1zV&number=${corpNum}&type=12&history=0`);
+                    const xmlText = await ntaRes.text();
+                    const nameMatch = xmlText.match(/<name>(.*?)<\/name>/);
+                    if (nameMatch && nameMatch[1]) {
+                        setDiscoveredCompanyName(nameMatch[1]);
+                    }
+                } catch {
+                    // ignore
+                }
+            } else {
+                setDiscoveredCompanyName(searchQuery.trim());
+            }
+        } catch (e) {
+            console.error("Watchlist check error:", e);
+        }
+    };
+
+    // ウォッチリスト登録・解除トグル
+    const handleToggleWatchlist = async () => {
+        if (!searchedCorp) return;
+        setWatchLoading(true);
+
+        try {
+            const session = (await supabase.auth.getSession()).data.session;
+            if (!session) {
+                setToast({ type: "error", text: "再度ログインしてください。" });
+                return;
+            }
+
+            if (isWatched) {
+                // 解除
+                const res = await fetch(`/api/credit/watchlist?corp=${searchedCorp}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${session.access_token}`
+                    }
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || "ウォッチ解除に失敗しました。");
+                }
+
+                setIsWatched(false);
+                setToast({ type: "success", text: "取引先ウォッチを解除しました。" });
+            } else {
+                // 登録
+                const targetName = discoveredCompanyName || searchQuery.trim() || `法人番号: ${searchedCorp}`;
+                const res = await fetch("/api/credit/watchlist", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        corporate_number: searchedCorp,
+                        company_name: targetName,
+                        notes: "信用照会画面からウォッチ登録"
+                    })
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || "ウォッチ登録に失敗しました。");
+                }
+
+                setIsWatched(true);
+                setToast({ type: "success", text: `「${targetName}」を取引先ウォッチリストに登録しました。` });
+            }
+        } catch (err: any) {
+            setToast({ type: "error", text: err.message || "処理に失敗しました。" });
+        } finally {
+            setWatchLoading(false);
         }
     };
 
@@ -234,13 +343,20 @@ export default function CreditSearchPage() {
                                 取引開始前に事実を確認し、代金未回収・支払い遅延リスクを未然に防ぎます。
                             </p>
                         </div>
-                        <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto">
                             <Link 
                                 href="/dashboard" 
                                 className="btn-secondary text-xs h-9 px-3 sm:px-3.5 rounded-lg flex items-center justify-center gap-1.5 font-medium transition-colors whitespace-nowrap"
                             >
                                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                                 <span>戻る</span>
+                            </Link>
+                            <Link 
+                                href="/credit/watchlist" 
+                                className="btn-secondary text-xs h-9 px-3 sm:px-3.5 rounded-lg flex items-center justify-center gap-1.5 font-bold transition-colors whitespace-nowrap text-slate-700 hover:text-blue-600 hover:border-blue-200"
+                            >
+                                <BookmarkCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                                <span>取引先ウォッチ</span>
                             </Link>
                             <Link
                                 href="/credit/new"
@@ -477,12 +593,51 @@ export default function CreditSearchPage() {
                                         <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1">
                                             該当する遅延・未払い企業情報はありません
                                         </h3>
-                                        <p className="text-xs text-slate-600 max-w-lg mx-auto font-mono mt-1 mb-2">
-                                            法人番号: {searchedCorp}
-                                        </p>
-                                        <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed">
+                                        <div className="flex flex-wrap items-center justify-center gap-2 mt-1 mb-2">
+                                            {discoveredCompanyName && (
+                                                <span className="text-sm font-bold text-slate-800">
+                                                    {discoveredCompanyName}
+                                                </span>
+                                            )}
+                                            <span className="text-xs text-slate-500 font-mono">
+                                                (法人番号: {searchedCorp})
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed mb-4">
                                             データベース上に該当する未払い・支払遅延の記録は存在しません。安心してお取引をご検討いただけます。
                                         </p>
+
+                                        {/* ウォッチ登録カード */}
+                                        <div className="mt-4 p-4 rounded-xl bg-blue-50/70 border border-blue-100 max-w-lg mx-auto flex flex-col sm:flex-row items-center justify-between gap-3.5 text-left">
+                                            <div className="flex-1">
+                                                <div className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                                                    <BookmarkCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                                                    <span>取引先ウォッチ（アラート監視）</span>
+                                                </div>
+                                                <p className="text-[11px] text-blue-700/80 mt-1 leading-snug">
+                                                    監視リストに追加すると、今後の未払いトラブル発生時に自動で通知・アラートされます。
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={handleToggleWatchlist}
+                                                disabled={watchLoading}
+                                                className={`shrink-0 px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs ${
+                                                    isWatched
+                                                        ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                                                        : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
+                                                }`}
+                                            >
+                                                {watchLoading ? (
+                                                    <div className="animate-spin h-3.5 w-3.5 border-2 border-white rounded-full border-t-transparent" />
+                                                ) : isWatched ? (
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                ) : (
+                                                    <Plus className="w-3.5 h-3.5" />
+                                                )}
+                                                <span>{isWatched ? "ウォッチ中（監視継続）" : "ウォッチリストに登録"}</span>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {/* 業務サポート・安全取引ガイド */}
@@ -527,10 +682,29 @@ export default function CreditSearchPage() {
                             ) : (
                                 /* 検索後・該当あり（警告・事故情報表示） */
                                 <div>
-                                    <div className="flex items-center justify-between mb-4">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                                         <span className="text-xs font-bold text-slate-700">
                                             照会結果: {cases.length} 件の記録が見つかりました（法人番号: <span className="font-mono">{searchedCorp}</span>）
                                         </span>
+                                        <button
+                                            type="button"
+                                            onClick={handleToggleWatchlist}
+                                            disabled={watchLoading}
+                                            className={`self-start sm:self-auto px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
+                                                isWatched
+                                                    ? "bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200"
+                                                    : "bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
+                                            }`}
+                                        >
+                                            {watchLoading ? (
+                                                <div className="animate-spin h-3.5 w-3.5 border-2 border-current rounded-full border-t-transparent" />
+                                            ) : isWatched ? (
+                                                <BookmarkCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                            ) : (
+                                                <Plus className="w-3.5 h-3.5 text-blue-600" />
+                                            )}
+                                            <span>{isWatched ? "ウォッチリスト登録中（解除）" : "この企業をウォッチ登録"}</span>
+                                        </button>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {cases.map((c) => {

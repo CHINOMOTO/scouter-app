@@ -25,7 +25,8 @@ import {
     Bell,
     MessageSquare,
     ExternalLink,
-    Activity
+    Activity,
+    BookmarkCheck
 } from "lucide-react";
 
 export default function Navigation() {
@@ -350,6 +351,13 @@ export default function Navigation() {
                                         active={pathname === "/credit"}
                                         icon={<Building className="w-3.5 h-3.5" />}
                                         label="企業信用 検索・照会"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    />
+                                    <SubmenuLink 
+                                        href="/credit/watchlist"
+                                        active={pathname.startsWith("/credit/watchlist")}
+                                        icon={<BookmarkCheck className="w-3.5 h-3.5" />}
+                                        label="取引先ウォッチリスト"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
