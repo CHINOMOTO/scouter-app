@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
-import { User, ArrowLeft } from "lucide-react";
+import { User, ArrowLeft, Settings, Lock } from "lucide-react";
 
 type UserProfile = {
     email: string;
@@ -72,13 +72,20 @@ export default function ProfilePage() {
             <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
                 <div className="max-w-2xl w-full">
 
-                    <div className="mb-6 animate-fade-in">
+                    <div className="flex items-center justify-between mb-6 animate-fade-in flex-wrap gap-2.5">
                         <Link 
                             href="/dashboard" 
                             className="btn-secondary text-xs h-9 px-3.5 rounded-lg inline-flex items-center gap-1.5 font-medium transition-colors"
                         >
                             <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                             <span>ダッシュボードへ戻る</span>
+                        </Link>
+                        <Link
+                            href="/settings"
+                            className="btn-primary text-xs h-9 px-4 rounded-lg inline-flex items-center gap-1.5 font-bold shadow-xs hover:-translate-y-0.5 transition-all"
+                        >
+                            <Settings className="w-3.5 h-3.5 shrink-0" />
+                            <span>パスワード・登録情報変更</span>
                         </Link>
                     </div>
 
@@ -145,6 +152,25 @@ export default function ProfilePage() {
                                             </dd>
                                         </div>
                                     </dl>
+                                </div>
+
+                                {/* 設定変更への案内フッター */}
+                                <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-50/80 p-4 rounded-xl border border-slate-200/80">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-200/60">
+                                            <Lock className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-slate-800">パスワードや登録情報の変更</p>
+                                            <p className="text-[11px] text-slate-500">ログインパスワードや表示名・電話番号の設定を変更できます。</p>
+                                        </div>
+                                    </div>
+                                    <Link
+                                        href="/settings"
+                                        className="btn-secondary text-xs h-8 px-3.5 rounded-lg inline-flex items-center gap-1.5 font-bold whitespace-nowrap self-stretch sm:self-auto justify-center"
+                                    >
+                                        <span>設定ページへ</span>
+                                    </Link>
                                 </div>
                             </div>
                         )}

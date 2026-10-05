@@ -51,7 +51,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "パスワードは6文字以上で設定してください" }, { status: 400 });
         }
 
-        // 1. Supabase Auth でユーザーを直接作成 (メール確認済み)
+        // 1. Supabase Auth でユーザーを直接作成 (メール確認済み & 即時承認)
         const { data: authResult, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
             email: email.trim(),
             password: password,
@@ -59,6 +59,10 @@ export async function POST(request: Request) {
             user_metadata: {
                 display_name: displayName.trim(),
                 role: role || "user"
+            },
+            app_metadata: {
+                role: role || "user",
+                is_approved: true
             }
         });
 

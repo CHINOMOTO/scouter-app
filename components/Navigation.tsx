@@ -26,7 +26,8 @@ import {
     MessageSquare,
     ExternalLink,
     Activity,
-    BookmarkCheck
+    BookmarkCheck,
+    UserCheck
 } from "lucide-react";
 
 export default function Navigation() {
@@ -437,9 +438,16 @@ export default function Navigation() {
                                     />
                                     <SubmenuLink 
                                         href="/admin/users"
-                                        active={pathname.startsWith("/admin/users")}
+                                        active={pathname === "/admin/users" || pathname.startsWith("/admin/users/new")}
                                         icon={<Users className="w-3.5 h-3.5" />}
-                                        label="ユーザー管理"
+                                        label="ユーザー承認待ち"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    />
+                                    <SubmenuLink 
+                                        href="/admin/registered-users"
+                                        active={pathname.startsWith("/admin/registered-users")}
+                                        icon={<UserCheck className="w-3.5 h-3.5" />}
+                                        label="登録ユーザー一覧"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 

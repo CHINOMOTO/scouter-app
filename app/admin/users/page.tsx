@@ -61,12 +61,25 @@ export default function AdminUsersPage() {
     const paginatedUsers = pendingUsers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
     const handleApprove = async (userId: string) => {
-        const { error } = await supabase
-            .from("app_users")
-            .update({ is_approved: true })
-            .eq("id", userId);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            if (!token) throw new Error("認証セッションが見つかりません。");
 
-        if (!error) {
+            const res = await fetch(`/api/admin/users/${userId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ is_approved: true })
+            });
+
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                throw new Error(data.error || "承認処理に失敗しました");
+            }
+
             // リストから削除して更新
             setPendingUsers((prev) => {
                 const next = prev.filter((u) => u.id !== userId);
@@ -74,9 +87,9 @@ export default function AdminUsersPage() {
                 if (currentPage > nextPages) setCurrentPage(nextPages);
                 return next;
             });
-            setToast({ type: "success", text: "ユーザーを承認しました。" });
-        } else {
-            setToast({ type: "error", text: "承認に失敗しました: " + error.message });
+            setToast({ type: "success", text: "ユーザーを承認しました（ログイン権限が有効化されました）。" });
+        } catch (err: any) {
+            setToast({ type: "error", text: "承認に失敗しました: " + err.message });
         }
     };
 

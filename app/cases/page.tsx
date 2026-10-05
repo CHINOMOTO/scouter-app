@@ -15,7 +15,8 @@ import {
   UserPlus, 
   ArrowLeft,
   ArrowRight,
-  User
+  User,
+  Lock
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -43,9 +44,11 @@ export default function CasesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMSG, setErrorMSG] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [planRestricted, setPlanRestricted] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "pending" | "rejected">("all");
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" }>({ key: "created_at", direction: "desc" });
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -59,6 +62,11 @@ export default function CasesPage() {
 
   const filteredAndSortedCases = useMemo(() => {
     let result = [...cases];
+
+    // ステータスフィルター
+    if (statusFilter !== "all") {
+      result = result.filter(c => c.status === statusFilter);
+    }
 
     if (searchTerm.trim() !== "") {
       const lowerTerm = searchTerm.toLowerCase();
@@ -118,14 +126,21 @@ export default function CasesPage() {
         if (!isUserAdmin && user) {
           const { data: appUser } = await supabase
             .from("app_users")
-            .select("company_id")
+            .select("company_id, allowed_plan, role")
             .eq("id", user.id)
             .maybeSingle();
+
+          // クレジット専用プランの場合はアクセス制限
+          if (appUser && appUser.allowed_plan === "credit" && appUser.role !== "admin") {
+            setPlanRestricted(true);
+            setIsLoading(false);
+            return;
+          }
 
           if (appUser?.company_id) {
             query = query.eq("registered_company_id", appUser.company_id);
           }
-          query = query.eq("status", "approved");
+          // 自社のデータは審査中(pending)や却下(rejected)も含めて表示するため status 制限は設けない
         }
 
         const { data, error } = await query;
@@ -240,17 +255,47 @@ export default function CasesPage() {
             </div>
           </div>
 
-          {errorMSG && (
-            <div className="p-4 mb-6 sm:mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 text-sm flex items-start gap-3 animate-fade-in">
-              <AlertCircle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
-              <span className="pt-0.5">{errorMSG}</span>
+          {/* プラン制限の場合の案内 */}
+          {planRestricted ? (
+            <div className="bg-white p-6 sm:p-10 rounded-2xl border border-slate-200 text-center max-w-xl mx-auto my-8 sm:my-12 shadow-sm animate-fade-in">
+              <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-600 border border-amber-200/60">
+                <Lock className="w-6 h-6" />
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
+                応募者照会・人物情報プラン 未加入です
+              </h2>
+              <p className="text-xs text-slate-600 leading-relaxed mb-6">
+                現在のご契約プラン（ミエリスクレジット専用）では、応募者照会・就業トラブル防止機能をご利用いただけません。<br />
+                就業トラブルデータの確認や登録を行うには、プラン追加のお申し込みが必要です。
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Link
+                  href="/contact"
+                  className="btn-primary text-xs w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold shadow-xs hover:-translate-y-0.5 transition-all text-center"
+                >
+                  プラン追加のお問い合わせ
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="btn-secondary text-xs w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold transition-all text-center"
+                >
+                  ダッシュボードへ戻る
+                </Link>
+              </div>
             </div>
-          )}
+          ) : (
+            <>
+              {errorMSG && (
+                <div className="p-4 mb-6 sm:mb-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 text-sm flex items-start gap-3 animate-fade-in">
+                  <AlertCircle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
+                  <span className="pt-0.5">{errorMSG}</span>
+                </div>
+              )}
 
-          {/* Controls Bar */}
-          {!isLoading && cases.length > 0 && (
-            <div className="flex gap-4 mb-6 animate-fade-in delay-100">
-              <div className="w-full sm:max-w-md relative">
+              {/* Controls Bar */}
+              {!isLoading && cases.length > 0 && (
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center mb-6 animate-fade-in delay-100">
+              <div className="w-full sm:max-w-xs md:max-w-sm relative">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
@@ -261,8 +306,51 @@ export default function CasesPage() {
                     setCurrentPage(1);
                   }}
                   style={{ paddingLeft: '2.5rem' }}
-                  className="w-full bg-white border border-slate-200 rounded-xl pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-slate-500 transition-colors placeholder:text-slate-400"
+                  className="w-full bg-white border border-slate-200 rounded-xl pr-4 py-2 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-slate-500 transition-colors placeholder:text-slate-400"
                 />
+              </div>
+
+              {/* ステータス切り替えタブ */}
+              <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold shrink-0 self-start sm:self-auto overflow-x-auto max-w-full">
+                <button
+                  type="button"
+                  onClick={() => { setStatusFilter("all"); setCurrentPage(1); }}
+                  className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap ${
+                    statusFilter === "all" ? "bg-white text-slate-900 shadow-2xs font-extrabold" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  すべて ({cases.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStatusFilter("approved"); setCurrentPage(1); }}
+                  className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap flex items-center gap-1 ${
+                    statusFilter === "approved" ? "bg-white text-emerald-700 shadow-2xs font-extrabold" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                  承認済み ({cases.filter(c => c.status === "approved").length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStatusFilter("pending"); setCurrentPage(1); }}
+                  className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap flex items-center gap-1 ${
+                    statusFilter === "pending" ? "bg-white text-amber-700 shadow-2xs font-extrabold" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+                  審査中 ({cases.filter(c => c.status === "pending").length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStatusFilter("rejected"); setCurrentPage(1); }}
+                  className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap flex items-center gap-1 ${
+                    statusFilter === "rejected" ? "bg-white text-rose-700 shadow-2xs font-extrabold" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
+                  却下 ({cases.filter(c => c.status === "rejected").length})
+                </button>
               </div>
             </div>
           )}
@@ -410,6 +498,8 @@ export default function CasesPage() {
                 className="bg-white rounded-xl border border-slate-200 px-4 shadow-2xs"
               />
             </div>
+          )}
+          </>
           )}
         </div>
       </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Search, AlertCircle, UserPlus, ClipboardList, ArrowLeft } from "lucide-react";
+import { Search, AlertCircle, UserPlus, ClipboardList, ArrowLeft, Lock } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Toast, ToastMessage } from "@/components/Toast";
 
@@ -30,6 +30,7 @@ export default function SearchPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [planRestricted, setPlanRestricted] = useState(false);
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
 
   // Check admin role and get company_id on mount
@@ -42,11 +43,17 @@ export default function SearchPage() {
       if (session?.user) {
         const { data: appUser } = await supabase
           .from("app_users")
-          .select("company_id")
+          .select("company_id, allowed_plan, role")
           .eq("id", session.user.id)
           .maybeSingle();
+
         if (appUser?.company_id) {
           setUserCompanyId(appUser.company_id);
+        }
+
+        // クレジット専用プランで管理職以外の場合は就業情報照会を制限
+        if (appUser && appUser.allowed_plan === "credit" && appUser.role !== "admin") {
+          setPlanRestricted(true);
         }
       }
     };
@@ -95,63 +102,50 @@ export default function SearchPage() {
 
       const dateQuery = `${searchYear.padStart(4, '0')}-${searchMonth.padStart(2, '0')}-${searchDay.padStart(2, '0')}`;
 
-      // クライアントサイドフィルタリング
-      let query = supabase
-        .from("blacklist_cases")
-        .select("*");
-
-      // 管理者でない場合は承認済みデータのみ（他社データも検索可能）
-      if (!isAdmin) {
-        query = query.eq("status", "approved");
+      // サーバーサイドAPI経由の安全な照会実行
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("ログインセッションが見つかりません。再度ログインしてください。");
       }
 
-      const { data, error } = await query;
+      const params = new URLSearchParams();
+      params.append("name", trimmedName);
+      params.append("birth_date", dateQuery);
 
-      if (error) {
-        throw new Error("データの取得に失敗しました: " + error.message);
-      }
-
-      const filtered = (data || []).filter((item) => {
-        let matchName = true;
-        let matchDate = true;
-
-        if (nameQuery) {
-          const q = nameQuery.replace(/\s+/g, "").toLowerCase();
-          const name = (item.full_name || "").replace(/\s+/g, "").toLowerCase();
-          const kana = (item.full_name_kana || "").replace(/\s+/g, "").toLowerCase();
-          matchName = name.includes(q) || kana.includes(q);
+      const res = await fetch(`/api/cases/search?${params.toString()}`, {
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`
         }
-
-        if (dateQuery) {
-          matchDate = item.birth_date === dateQuery;
-        }
-
-        return matchName && matchDate;
       });
 
-      // 登録日でソート (降順)
-      filtered.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        if (res.status === 403 && errData.planRestricted) {
+          setPlanRestricted(true);
+        }
+        throw new Error(errData.error || "データの照会に失敗しました。");
+      }
 
-      setResults(filtered);
+      const data = await res.json();
+      const fetchedResults = (data.results || []) as BlacklistCase[];
+
+      setResults(fetchedResults);
       setHasSearched(true);
 
       // アクセスログの保存
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) {
-          const logQuery = [nameQuery, dateQuery].filter(Boolean).join(", ");
-          await fetch("/api/audit", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${session.access_token}`
-            },
-            body: JSON.stringify({
-              action_type: "SEARCH",
-              target_id: logQuery
-            })
-          });
-        }
+        const logQuery = [nameQuery, dateQuery].filter(Boolean).join(", ");
+        await fetch("/api/audit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            action_type: "SEARCH",
+            target_id: logQuery
+          })
+        });
       } catch (logErr) {
         console.error("Failed to save audit log:", logErr);
       }
@@ -228,11 +222,40 @@ export default function SearchPage() {
             </div>
           </div>
 
-          <div className="glass-panel rounded-2xl sm:rounded-3xl p-4.5 sm:p-8 md:p-10 mb-8 animate-fade-in delay-100 border border-slate-200">
-            <form onSubmit={handleSearch} className="space-y-5 sm:space-y-6">
-              <div className="text-xs text-slate-600 bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-200 leading-relaxed">
-                ※同姓同名の別人との誤認防止および適正運用の観点から、照会には<strong>「氏名（フルネーム）」</strong>と<strong>「生年月日」</strong>の2つの入力が必須となっています。
+          {/* プラン制限の場合の案内 */}
+          {planRestricted ? (
+            <div className="bg-white p-6 sm:p-10 rounded-2xl border border-slate-200 text-center max-w-xl mx-auto my-8 sm:my-12 shadow-sm animate-fade-in">
+              <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-600 border border-amber-200/60">
+                <Lock className="w-6 h-6" />
               </div>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
+                応募者照会・人物情報プラン 未加入です
+              </h2>
+              <p className="text-xs text-slate-600 leading-relaxed mb-6">
+                現在のご契約プラン（ミエリスクレジット専用）では、応募者照会・就業トラブル防止機能をご利用いただけません。<br />
+                採用時のバックグラウンド確認やトラブル人物情報の照会を行うには、プラン追加のお申し込みが必要です。
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Link
+                  href="/contact"
+                  className="btn-primary text-xs w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold shadow-xs hover:-translate-y-0.5 transition-all text-center"
+                >
+                  プラン追加のお問い合わせ
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="btn-secondary text-xs w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold transition-all text-center"
+                >
+                  ダッシュボードへ戻る
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="glass-panel rounded-2xl sm:rounded-3xl p-4.5 sm:p-8 md:p-10 mb-8 animate-fade-in delay-100 border border-slate-200">
+              <form onSubmit={handleSearch} className="space-y-5 sm:space-y-6">
+                <div className="text-xs text-slate-600 bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-200 leading-relaxed">
+                  ※同姓同名の別人との誤認防止および適正運用の観点から、照会には<strong>「氏名（フルネーム）」</strong>と<strong>「生年月日」</strong>の2つの入力が必須となっています。
+                </div>
 
               <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
 
@@ -337,6 +360,7 @@ export default function SearchPage() {
               )}
             </form>
           </div>
+          )}
 
           {hasSearched && (
             <div className="animate-fade-in delay-200">
