@@ -9,6 +9,7 @@ import {
   Search, 
   ClipboardList, 
   UserPlus, 
+  Users,
   Settings, 
   Mail, 
   ShieldAlert, 
@@ -223,103 +224,156 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* セクション 1: 👤 応募者照会・就業管理（トラブル防止） */}
+          {/* セクション 1: 👤 応募者照会・就業管理（大型コンテナ） */}
           {canViewPerson && (
-            <div className="mb-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-1.5 h-5 bg-slate-900 rounded-full" />
-                  <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                    応募者照会・就業管理
-                  </h2>
-                  <span className="text-xs text-slate-500 font-medium hidden sm:inline">
-                    （就業トラブル・無断欠勤・損害リスク等の照会・共有）
-                  </span>
+            <div className="mb-8 bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+              {/* セクションヘッダー帯 */}
+              <div className="px-4.5 py-4 sm:px-6 sm:py-4.5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10 shrink-0">
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold text-slate-300 uppercase tracking-widest font-mono">
+                        MIERIS WORK
+                      </span>
+                      <span className="text-[10px] bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full font-semibold border border-slate-600">
+                        人物信用管理
+                      </span>
+                    </div>
+                    <h2 className="text-base sm:text-lg font-bold tracking-tight text-white mt-0.5">
+                      応募者照会・就業トラブル防止
+                    </h2>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <Link
+                    href="/cases/new"
+                    className="bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs px-3.5 py-2 rounded-lg font-bold border border-white/20 flex items-center gap-1.5 transition-all shadow-xs"
+                  >
+                    <span>＋ トラブル新規登録</span>
+                  </Link>
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
-                {/* 応募者検索・照会 */}
-                <MenuCard
-                  title="応募者 検索・照会"
-                  description="氏名・カナ・生年月日等から過去のトラブルや問題行動の記録を照会します。"
-                  badge="照会"
-                  icon={<Search className="w-5 h-5 text-slate-700" />}
-                  onClick={() => router.push("/search")}
-                />
+              {/* 内部カードエリア */}
+              <div className="p-4 sm:p-6 bg-slate-50/50">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+                  {/* 応募者検索・照会 (主機能ハイライト) */}
+                  <MenuCard
+                    title="応募者 検索・照会"
+                    description="氏名・カナ・生年月日等から過去のトラブルや問題行動の記録を照会します。"
+                    badge="主機能"
+                    isPrimary
+                    actionText="照会画面を開く"
+                    icon={<Search className="w-5 h-5 text-slate-900" />}
+                    onClick={() => router.push("/search")}
+                  />
 
-                {/* 登録データ一覧 */}
-                <MenuCard
-                  title="登録データ一覧"
-                  description="現在データベースに登録・共有されているトラブル人材の一覧を確認します。"
-                  badge="一覧"
-                  icon={<ClipboardList className="w-5 h-5 text-slate-700" />}
-                  onClick={() => router.push("/cases")}
-                />
+                  {/* 登録データ一覧 */}
+                  <MenuCard
+                    title="登録データ一覧"
+                    description="現在データベースに登録・共有されているトラブル人材の一覧を確認します。"
+                    badge="一覧"
+                    actionText="一覧を見る"
+                    icon={<ClipboardList className="w-5 h-5 text-slate-700" />}
+                    onClick={() => router.push("/cases")}
+                  />
 
-                {/* 人物を新規登録 */}
-                <MenuCard
-                  title="トラブル情報を新規登録"
-                  description="就業トラブルを起こした従業員や応募者の事実を新規登録し、共有申請を行います。"
-                  badge="登録申請"
-                  icon={<UserPlus className="w-5 h-5 text-slate-700" />}
-                  onClick={() => router.push("/cases/new")}
-                />
+                  {/* 人物を新規登録 */}
+                  <MenuCard
+                    title="トラブル情報を新規登録"
+                    description="就業トラブルを起こした従業員や応募者の事実を新規登録し、共有申請を行います。"
+                    badge="登録申請"
+                    actionText="登録フォームへ"
+                    icon={<UserPlus className="w-5 h-5 text-slate-700" />}
+                    onClick={() => router.push("/cases/new")}
+                  />
+                </div>
               </div>
             </div>
           )}
 
-          {/* セクション 2: 🏢 企業信用管理（未払い・代金未回収防止） */}
+          {/* セクション 2: 🏢 企業信用管理（大型コンテナ） */}
           {canViewCredit && (
-            <div className="mb-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-1.5 h-5 bg-blue-600 rounded-full" />
-                  <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                    企業信用管理
-                  </h2>
-                  <span className="text-xs text-slate-500 font-medium hidden sm:inline">
-                    （MIERIS CREDIT | 支払い遅延・未払い情報の照会・共有）
-                  </span>
+            <div className="mb-8 bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+              {/* セクションヘッダー帯 */}
+              <div className="px-4.5 py-4 sm:px-6 sm:py-4.5 bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10 shrink-0">
+                    <Building2 className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold text-blue-200 uppercase tracking-widest font-mono">
+                        MIERIS CREDIT
+                      </span>
+                      <span className="text-[10px] bg-blue-500/50 text-white px-2 py-0.5 rounded-full font-semibold border border-blue-400/40">
+                        企業信用・未払い防止
+                      </span>
+                    </div>
+                    <h2 className="text-base sm:text-lg font-bold tracking-tight text-white mt-0.5">
+                      企業信用管理・取引先モニタリング
+                    </h2>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <Link
+                    href="/credit/new"
+                    className="bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs px-3.5 py-2 rounded-lg font-bold border border-white/20 flex items-center gap-1.5 transition-all shadow-xs"
+                  >
+                    <span>＋ 遅延・未払いを登録</span>
+                  </Link>
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {/* 企業信用照会 */}
-                <MenuCard
-                  title="企業信用 検索・照会"
-                  description="取引先企業の支払い遅延履歴や未払い金額、事故の登録理由を照会し、代金未回収を防ぎます。"
-                  badge="信用照会"
-                  icon={<Building2 className="w-5 h-5 text-blue-600" />}
-                  onClick={() => router.push("/credit")}
-                />
+              {/* 内部カードエリア */}
+              <div className="p-4 sm:p-6 bg-slate-50/50">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+                  {/* 企業信用照会 (主機能ハイライト) */}
+                  <MenuCard
+                    title="企業信用 検索・照会"
+                    description="法人番号から未払い金額や過去の支払遅延記録を照会し、貸倒れを防ぎます。"
+                    badge="法人照会"
+                    isPrimary
+                    theme="blue"
+                    actionText="照会を実行"
+                    icon={<Building2 className="w-5 h-5 text-blue-600" />}
+                    onClick={() => router.push("/credit")}
+                  />
 
-                {/* 取引先ウォッチ */}
-                <MenuCard
-                  title="取引先ウォッチ"
-                  description="主要取引先を登録して継続モニタリング。他社で未払いが発生した際に自動検知します。"
-                  badge={watchlistAlertCount > 0 ? `${watchlistAlertCount}件警告` : "監視中"}
-                  icon={<BookmarkCheck className="w-5 h-5 text-blue-600" />}
-                  onClick={() => router.push("/credit/watchlist")}
-                />
+                  {/* 取引先ウォッチ */}
+                  <MenuCard
+                    title="取引先ウォッチ"
+                    description="主要取引先を登録して継続モニタリング。他社で未払いが発生した際に自動検知します。"
+                    badge={watchlistAlertCount > 0 ? `${watchlistAlertCount}件警告` : "監視中"}
+                    badgeVariant={watchlistAlertCount > 0 ? "danger" : "success"}
+                    actionText="リストを確認"
+                    icon={<BookmarkCheck className="w-5 h-5 text-blue-600" />}
+                    onClick={() => router.push("/credit/watchlist")}
+                  />
 
-                {/* 登録データ一覧 */}
-                <MenuCard
-                  title="登録データ一覧"
-                  description="現在データベースに登録・共有されている取引先企業の遅延・未払いデータの一覧を確認します。"
-                  badge="一覧"
-                  icon={<ClipboardList className="w-5 h-5 text-slate-700" />}
-                  onClick={() => router.push("/credit/cases")}
-                />
+                  {/* 登録データ一覧 */}
+                  <MenuCard
+                    title="登録データ一覧"
+                    description="現在データベースに登録・共有されている取引先企業の遅延・未払いデータの一覧を確認します。"
+                    badge="一覧"
+                    actionText="一覧を見る"
+                    icon={<ClipboardList className="w-5 h-5 text-slate-700" />}
+                    onClick={() => router.push("/credit/cases")}
+                  />
 
-                {/* 遅延・未払いを新規登録 */}
-                <MenuCard
-                  title="遅延・未払いを新規登録"
-                  description="期日を過ぎても支払いがない取引先企業の事実を登録し、信用情報として共有申請します。"
-                  badge="情報登録"
-                  icon={<FilePlus2 className="w-5 h-5 text-slate-700" />}
-                  onClick={() => router.push("/credit/new")}
-                />
+                  {/* 遅延・未払いを新規登録 */}
+                  <MenuCard
+                    title="遅延・未払いを新規登録"
+                    description="期日を過ぎても支払いがない取引先企業の事実を登録し、信用情報として共有申請します。"
+                    badge="情報登録"
+                    actionText="登録フォームへ"
+                    icon={<FilePlus2 className="w-5 h-5 text-slate-700" />}
+                    onClick={() => router.push("/credit/new")}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -436,34 +490,60 @@ function MenuCard({
   badge,
   icon,
   onClick,
+  isPrimary = false,
+  theme = "slate",
+  badgeVariant = "default",
+  actionText = "画面を開く",
 }: {
   title: string;
   description: string;
   badge: string;
   icon: React.ReactNode;
   onClick: () => void;
+  isPrimary?: boolean;
+  theme?: "slate" | "blue";
+  badgeVariant?: "default" | "success" | "danger";
+  actionText?: string;
 }) {
+  const badgeClasses = {
+    default: "bg-slate-100 text-slate-700 border-slate-200",
+    success: "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold",
+    danger: "bg-red-50 text-red-700 border-red-200 animate-pulse font-extrabold",
+  }[badgeVariant];
+
+  const borderClasses = isPrimary
+    ? theme === "blue"
+      ? "border-2 border-blue-600/30 hover:border-blue-600 shadow-xs"
+      : "border-2 border-slate-900/20 hover:border-slate-900 shadow-xs"
+    : "border border-slate-200 hover:border-slate-300 shadow-2xs";
+
   return (
     <button
       onClick={onClick}
-      className="group text-left p-4.5 sm:p-6 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-150 flex flex-col h-full relative cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5"
+      className={`group text-left p-4.5 sm:p-5 rounded-xl bg-white hover:bg-slate-50/90 active:scale-[0.98] transition-all duration-150 flex flex-col justify-between h-full relative cursor-pointer hover:shadow-xs hover:-translate-y-0.5 ${borderClasses}`}
     >
-      <div className="flex items-start justify-between w-full mb-3 sm:mb-4">
-        <div className="p-2 sm:p-2.5 rounded-lg bg-slate-100 text-slate-800 group-hover:bg-slate-200/80 transition-colors">
-          {icon}
+      <div>
+        <div className="flex items-start justify-between w-full mb-3">
+          <div className="p-2 sm:p-2.5 rounded-lg bg-slate-100 text-slate-800 group-hover:bg-slate-200/80 transition-colors">
+            {icon}
+          </div>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeClasses}`}>
+            {badge}
+          </span>
         </div>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
-          {badge}
-        </span>
+
+        <h3 className="text-sm sm:text-base font-bold mb-1.5 flex items-center justify-between text-slate-900 group-hover:text-blue-600 transition-colors">
+          <span>{title}</span>
+        </h3>
+        <p className="text-xs leading-relaxed text-slate-600">
+          {description}
+        </p>
       </div>
 
-      <h3 className="text-sm sm:text-base font-bold mb-1.5 flex items-center justify-between text-slate-900 group-hover:text-blue-600 transition-colors">
-        <span>{title}</span>
-        <ArrowRight className="w-4 h-4 opacity-70 sm:opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-blue-600" />
-      </h3>
-      <p className="text-xs leading-relaxed mt-auto text-slate-600">
-        {description}
-      </p>
+      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 group-hover:text-blue-600 transition-colors w-full">
+        <span>{actionText}</span>
+        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+      </div>
     </button>
   );
 }
