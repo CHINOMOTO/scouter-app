@@ -297,8 +297,8 @@ export default function DashboardPage() {
           {/* セクション 2: 🏢 企業信用管理（大型コンテナ） */}
           {canViewCredit && (
             <div className="mb-8 bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
-              {/* セクションヘッダー帯 (単色フラット) */}
-              <div className="px-4.5 py-4 sm:px-6 sm:py-4.5 bg-blue-600 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+              {/* セクションヘッダー帯 (ネイビー) */}
+              <div className="px-4.5 py-4 sm:px-6 sm:py-4.5 bg-blue-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10 shrink-0">
                     <Building2 className="w-5 h-5 text-white" />
@@ -308,7 +308,7 @@ export default function DashboardPage() {
                       <span className="text-[10px] font-extrabold text-blue-200 uppercase tracking-widest font-mono">
                         MIERIS CREDIT
                       </span>
-                      <span className="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-semibold border border-blue-400">
+                      <span className="text-[10px] bg-blue-800 text-blue-100 px-2 py-0.5 rounded-full font-semibold border border-blue-700/60">
                         企業信用・未払い防止
                       </span>
                     </div>
@@ -515,11 +515,11 @@ function MenuCard({
     : "hover:border-slate-400 hover:shadow-xs";
 
   const hoverIconClass = theme === "blue"
-    ? "group-hover:bg-blue-50 group-hover:text-blue-600"
+    ? "group-hover:bg-blue-50 group-hover:text-blue-700"
     : "group-hover:bg-slate-200 group-hover:text-slate-900";
 
   const hoverTextClass = theme === "blue"
-    ? "group-hover:text-blue-600"
+    ? "group-hover:text-blue-700"
     : "group-hover:text-slate-900";
 
   return (
