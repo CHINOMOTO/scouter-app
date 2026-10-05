@@ -227,8 +227,8 @@ export default function DashboardPage() {
           {/* セクション 1: 👤 応募者照会・就業管理（大型コンテナ） */}
           {canViewPerson && (
             <div className="mb-8 bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
-              {/* セクションヘッダー帯 */}
-              <div className="px-4.5 py-4 sm:px-6 sm:py-4.5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+              {/* セクションヘッダー帯 (単色フラット) */}
+              <div className="px-4.5 py-4 sm:px-6 sm:py-4.5 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10 shrink-0">
                     <Users className="w-5 h-5 text-white" />
@@ -238,7 +238,7 @@ export default function DashboardPage() {
                       <span className="text-[10px] font-extrabold text-slate-300 uppercase tracking-widest font-mono">
                         MIERIS WORK
                       </span>
-                      <span className="text-[10px] bg-slate-700/80 text-slate-200 px-2 py-0.5 rounded-full font-semibold border border-slate-600">
+                      <span className="text-[10px] bg-slate-700 text-slate-200 px-2 py-0.5 rounded-full font-semibold border border-slate-600">
                         人物信用管理
                       </span>
                     </div>
@@ -260,14 +260,13 @@ export default function DashboardPage() {
               {/* 内部カードエリア */}
               <div className="p-4 sm:p-6 bg-slate-50/50">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
-                  {/* 応募者検索・照会 (主機能ハイライト) */}
+                  {/* 応募者検索・照会 */}
                   <MenuCard
                     title="応募者 検索・照会"
                     description="氏名・カナ・生年月日等から過去のトラブルや問題行動の記録を照会します。"
-                    badge="主機能"
-                    isPrimary
+                    badge="照会"
                     actionText="照会画面を開く"
-                    icon={<Search className="w-5 h-5 text-slate-900" />}
+                    icon={<Search className="w-5 h-5 text-slate-700" />}
                     onClick={() => router.push("/search")}
                   />
 
@@ -298,8 +297,8 @@ export default function DashboardPage() {
           {/* セクション 2: 🏢 企業信用管理（大型コンテナ） */}
           {canViewCredit && (
             <div className="mb-8 bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
-              {/* セクションヘッダー帯 */}
-              <div className="px-4.5 py-4 sm:px-6 sm:py-4.5 bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+              {/* セクションヘッダー帯 (単色フラット) */}
+              <div className="px-4.5 py-4 sm:px-6 sm:py-4.5 bg-blue-600 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10 shrink-0">
                     <Building2 className="w-5 h-5 text-white" />
@@ -309,7 +308,7 @@ export default function DashboardPage() {
                       <span className="text-[10px] font-extrabold text-blue-200 uppercase tracking-widest font-mono">
                         MIERIS CREDIT
                       </span>
-                      <span className="text-[10px] bg-blue-500/50 text-white px-2 py-0.5 rounded-full font-semibold border border-blue-400/40">
+                      <span className="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-semibold border border-blue-400">
                         企業信用・未払い防止
                       </span>
                     </div>
@@ -331,15 +330,14 @@ export default function DashboardPage() {
               {/* 内部カードエリア */}
               <div className="p-4 sm:p-6 bg-slate-50/50">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
-                  {/* 企業信用照会 (主機能ハイライト) */}
+                  {/* 企業信用照会 */}
                   <MenuCard
                     title="企業信用 検索・照会"
                     description="法人番号から未払い金額や過去の支払遅延記録を照会し、貸倒れを防ぎます。"
-                    badge="法人照会"
-                    isPrimary
+                    badge="信用照会"
                     theme="blue"
                     actionText="照会を実行"
-                    icon={<Building2 className="w-5 h-5 text-blue-600" />}
+                    icon={<Building2 className="w-5 h-5 text-slate-700" />}
                     onClick={() => router.push("/credit")}
                   />
 
@@ -348,9 +346,10 @@ export default function DashboardPage() {
                     title="取引先ウォッチ"
                     description="主要取引先を登録して継続モニタリング。他社で未払いが発生した際に自動検知します。"
                     badge={watchlistAlertCount > 0 ? `${watchlistAlertCount}件警告` : "監視中"}
-                    badgeVariant={watchlistAlertCount > 0 ? "danger" : "success"}
+                    badgeVariant={watchlistAlertCount > 0 ? "danger" : "default"}
+                    theme="blue"
                     actionText="リストを確認"
-                    icon={<BookmarkCheck className="w-5 h-5 text-blue-600" />}
+                    icon={<BookmarkCheck className="w-5 h-5 text-slate-700" />}
                     onClick={() => router.push("/credit/watchlist")}
                   />
 
@@ -359,6 +358,7 @@ export default function DashboardPage() {
                     title="登録データ一覧"
                     description="現在データベースに登録・共有されている取引先企業の遅延・未払いデータの一覧を確認します。"
                     badge="一覧"
+                    theme="blue"
                     actionText="一覧を見る"
                     icon={<ClipboardList className="w-5 h-5 text-slate-700" />}
                     onClick={() => router.push("/credit/cases")}
@@ -369,6 +369,7 @@ export default function DashboardPage() {
                     title="遅延・未払いを新規登録"
                     description="期日を過ぎても支払いがない取引先企業の事実を登録し、信用情報として共有申請します。"
                     badge="情報登録"
+                    theme="blue"
                     actionText="登録フォームへ"
                     icon={<FilePlus2 className="w-5 h-5 text-slate-700" />}
                     onClick={() => router.push("/credit/new")}
@@ -490,7 +491,6 @@ function MenuCard({
   badge,
   icon,
   onClick,
-  isPrimary = false,
   theme = "slate",
   badgeVariant = "default",
   actionText = "画面を開く",
@@ -500,39 +500,44 @@ function MenuCard({
   badge: string;
   icon: React.ReactNode;
   onClick: () => void;
-  isPrimary?: boolean;
   theme?: "slate" | "blue";
   badgeVariant?: "default" | "success" | "danger";
   actionText?: string;
 }) {
   const badgeClasses = {
-    default: "bg-slate-100 text-slate-700 border-slate-200",
-    success: "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold",
+    default: "bg-slate-100 text-slate-600 border-slate-200",
+    success: "bg-slate-100 text-slate-600 border-slate-200",
     danger: "bg-red-50 text-red-700 border-red-200 animate-pulse font-extrabold",
   }[badgeVariant];
 
-  const borderClasses = isPrimary
-    ? theme === "blue"
-      ? "border-2 border-blue-600/30 hover:border-blue-600 shadow-xs"
-      : "border-2 border-slate-900/20 hover:border-slate-900 shadow-xs"
-    : "border border-slate-200 hover:border-slate-300 shadow-2xs";
+  const hoverBorderClass = theme === "blue" 
+    ? "hover:border-blue-400 hover:shadow-xs" 
+    : "hover:border-slate-400 hover:shadow-xs";
+
+  const hoverIconClass = theme === "blue"
+    ? "group-hover:bg-blue-50 group-hover:text-blue-600"
+    : "group-hover:bg-slate-200 group-hover:text-slate-900";
+
+  const hoverTextClass = theme === "blue"
+    ? "group-hover:text-blue-600"
+    : "group-hover:text-slate-900";
 
   return (
     <button
       onClick={onClick}
-      className={`group text-left p-4.5 sm:p-5 rounded-xl bg-white hover:bg-slate-50/90 active:scale-[0.98] transition-all duration-150 flex flex-col justify-between h-full relative cursor-pointer hover:shadow-xs hover:-translate-y-0.5 ${borderClasses}`}
+      className={`group text-left p-4.5 sm:p-5 rounded-xl bg-white border border-slate-200/90 shadow-2xs hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-150 flex flex-col justify-between h-full relative cursor-pointer hover:-translate-y-0.5 ${hoverBorderClass}`}
     >
       <div>
         <div className="flex items-start justify-between w-full mb-3">
-          <div className="p-2 sm:p-2.5 rounded-lg bg-slate-100 text-slate-800 group-hover:bg-slate-200/80 transition-colors">
+          <div className={`p-2 sm:p-2.5 rounded-lg bg-slate-100 text-slate-700 transition-colors ${hoverIconClass}`}>
             {icon}
           </div>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeClasses}`}>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-colors ${badgeClasses}`}>
             {badge}
           </span>
         </div>
 
-        <h3 className="text-sm sm:text-base font-bold mb-1.5 flex items-center justify-between text-slate-900 group-hover:text-blue-600 transition-colors">
+        <h3 className={`text-sm sm:text-base font-bold mb-1.5 flex items-center justify-between text-slate-900 transition-colors ${hoverTextClass}`}>
           <span>{title}</span>
         </h3>
         <p className="text-xs leading-relaxed text-slate-600">
@@ -540,7 +545,7 @@ function MenuCard({
         </p>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 group-hover:text-blue-600 transition-colors w-full">
+      <div className={`mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-400 transition-colors w-full ${hoverTextClass}`}>
         <span>{actionText}</span>
         <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
       </div>
