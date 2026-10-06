@@ -33,7 +33,7 @@ export default function DemoLandingPage() {
   }, []);
 
   return (
-    <div className="kaonavi-lp-wrapper">
+    <div className="kaonavi-lp-wrapper" style={{ overflowX: "hidden", width: "100%", maxWidth: "100vw", position: "relative" }}>
       {/* 1. カオナビ完全同期 ヘッダー */}
       <header id="header" className="header">
         <div className="header__container">
@@ -58,14 +58,14 @@ export default function DemoLandingPage() {
         </div>
       </header>
 
-      <div className="content">
+      <div className="content" style={{ overflowX: "hidden", width: "100%", maxWidth: "100vw" }}>
         {/* 2. カオナビ完全同期 ファーストビュー (Hero) */}
-        <section className="mv -min" id="hero" style={{ paddingTop: "130px", paddingBottom: "60px" }}>
+        <section className="mv -min" id="hero" style={{ paddingTop: "130px", paddingBottom: "60px", overflow: "hidden" }}>
           <div className="mv__container">
             <div className="mv__inner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "32px" }}>
               
               {/* 左側コピー */}
-              <div className="mv__content" style={{ flex: "1 1 480px", maxWidth: "520px" }}>
+              <div className="mv__content" style={{ flex: "1 1 300px", maxWidth: "520px", width: "100%", minWidth: 0 }}>
                 <span className="mv__bubble" style={{ fontSize: "14px", fontWeight: "bold", padding: "6px 18px" }}>
                   使いやすい就業・信用リスク管理システム
                 </span>
@@ -94,7 +94,7 @@ export default function DemoLandingPage() {
               </div>
 
               {/* 右側：生成した高品質ノートPCモックアップ写真 */}
-              <div className="mv__bg" style={{ flex: "1 1 480px", maxWidth: "540px" }}>
+              <div className="mv__bg" style={{ flex: "1 1 300px", maxWidth: "540px", width: "100%", minWidth: 0 }}>
                 <div className="mv__bgInner" style={{ borderRadius: "20px", overflow: "hidden", backgroundColor: "#E8F0F2", boxShadow: "0 12px 30px rgba(32,34,38,0.12)" }}>
                   <img
                     src="/demo-assets/hero-laptop.jpg"
@@ -184,8 +184,8 @@ export default function DemoLandingPage() {
                 <div className="company__inner">
                   <div className="no1-list">
                     
-                    <div className="item-no1 laurel" style={{ width: "260px", margin: "0 6px" }}>
-                      <div className="title-set" style={{ width: "195px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                    <div className="item-no1 laurel" style={{ maxWidth: "260px", width: "100%", margin: "0 6px" }}>
+                      <div className="title-set" style={{ maxWidth: "195px", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                         <p className="category" style={{ flex: "0 0 auto", fontSize: "13px", fontWeight: "bold", lineHeight: "1.35", textAlign: "center", textAlignLast: "center", whiteSpace: "nowrap", color: "#202226" }}>
                           就業トラブル<br />防止システム
                         </p>
@@ -195,8 +195,8 @@ export default function DemoLandingPage() {
                       </div>
                     </div>
 
-                    <div className="item-no1 laurel" style={{ width: "260px", margin: "0 6px" }}>
-                      <div className="title-set" style={{ width: "195px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                    <div className="item-no1 laurel" style={{ maxWidth: "260px", width: "100%", margin: "0 6px" }}>
+                      <div className="title-set" style={{ maxWidth: "195px", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                         <p className="category" style={{ flex: "0 0 auto", fontSize: "13px", fontWeight: "bold", lineHeight: "1.35", textAlign: "center", textAlignLast: "center", whiteSpace: "nowrap", color: "#202226" }}>
                           取引先信用<br />照会システム
                         </p>
@@ -206,7 +206,7 @@ export default function DemoLandingPage() {
                       </div>
                     </div>
 
-                    <div className="item-no1 activeuser laurel">
+                    <div className="item-no1 activeuser laurel" style={{ maxWidth: "260px", width: "100%" }}>
                       <div className="title-set">
                         <p className="title">利用企業数<br /><strong className="numberOfCompany">120</strong>社超</p>
                       </div>
@@ -223,17 +223,29 @@ export default function DemoLandingPage() {
               </div>
             </div>
 
-            {/* 企業ロゴ ループカルーセル */}
-            <div className="company__loop" style={{ marginTop: "24px" }}>
-              <div className="company__list">
-                <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/szc_logo.png" alt="清水建設株式会社" />
-                <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/hhp_logo.png" alt="阪急阪神不動産株式会社" />
-                <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tto_logo.png" alt="TOTO株式会社" />
-                <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/cat_logo.png" alt="日本キャタピラー合同会社" />
-                <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tvt_logo-1.png" alt="株式会社テレビ東京" />
-                <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tyt_logo.png" alt="トヨタ自動車株式会社" />
-                <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/shl_logo.png" alt="SOMPOひまわり生命保険株式会社" />
-                <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/mbd_logo.png" alt="三菱電機株式会社" />
+            {/* 企業ロゴ ループカルーセル (完全シームレス・はみ出しゼロ仕様) */}
+            <div className="company__loop" style={{ marginTop: "24px", overflow: "hidden", width: "100%", maxWidth: "100%" }}>
+              <div className="company__marquee">
+                <div className="company__list">
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/szc_logo.png" alt="清水建設株式会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/hhp_logo.png" alt="阪急阪神不動産株式会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tto_logo.png" alt="TOTO株式会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/cat_logo.png" alt="日本キャタピラー合同会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tvt_logo-1.png" alt="株式会社テレビ東京" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tyt_logo.png" alt="トヨタ自動車株式会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/shl_logo.png" alt="SOMPOひまわり生命保険株式会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/mbd_logo.png" alt="三菱電機株式会社" />
+                </div>
+                <div className="company__list" aria-hidden="true">
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/szc_logo.png" alt="清水建設株式会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/hhp_logo.png" alt="阪急阪神不動産株式会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tto_logo.png" alt="TOTO株式会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/cat_logo.png" alt="日本キャタピラー合同会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tvt_logo-1.png" alt="株式会社テレビ東京" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tyt_logo.png" alt="トヨタ自動車株式会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/shl_logo.png" alt="SOMPOひまわり生命保険株式会社" />
+                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/mbd_logo.png" alt="三菱電機株式会社" />
+                </div>
               </div>
             </div>
           </div>
@@ -666,29 +678,29 @@ export default function DemoLandingPage() {
               </div>
               <div className="conv-02__inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "32px", flexWrap: "wrap", maxWidth: "940px", margin: "0 auto" }}>
                 
-                <div className="conv-02__box" style={{ display: "flex", gap: "16px", flex: "1 1 420px" }}>
-                  <div className="conv-02__item" style={{ flex: 1 }}>
+                <div className="conv-02__box" style={{ display: "flex", gap: "16px", flex: "1 1 300px", maxWidth: "100%", width: "100%", minWidth: 0 }}>
+                  <div className="conv-02__item" style={{ flex: 1, minWidth: 0 }}>
                     <a className="button-a button-a--blue conv-02__button" href="#contact-form" style={{ width: "100%", padding: "18px 10px" }}>
                       <span className="button-a__deco">3分でわかるミエリス</span>
                       <span style={{ fontSize: "15px" }}>詳しいPDF資料を見る</span>
                     </a>
                   </div>
-                  <div className="conv-02__item" style={{ flex: 1 }}>
+                  <div className="conv-02__item" style={{ flex: 1, minWidth: 0 }}>
                     <a className="button-a button-a--white conv-02__button" href="#contact-form" style={{ width: "100%", padding: "18px 10px" }}>
                       <span style={{ fontSize: "15px" }}>無料デモを申し込む</span>
                     </a>
                   </div>
                 </div>
 
-                <div className="conv-02__phone" style={{ flex: "1 1 380px", textAlign: "center" }}>
-                  <h3 className="conv-02__phoneHeading" style={{ fontSize: "16px", fontWeight: "bold", color: "#202226", marginBottom: "8px", whiteSpace: "nowrap" }}>
+                <div className="conv-02__phone" style={{ flex: "1 1 300px", maxWidth: "100%", width: "100%", minWidth: 0, textAlign: "center" }}>
+                  <h3 className="conv-02__phoneHeading" style={{ fontSize: "16px", fontWeight: "bold", color: "#202226", marginBottom: "8px" }}>
                     お電話でも、お問い合わせいただけます
                   </h3>
-                  <div className="conv-02__phoneNum" style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "nowrap" }}>
+                  <div className="conv-02__phoneNum" style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: "10px" }}>
                     <a 
                       href="tel:08055846715"
                       className="conv-02__phoneNum--link" 
-                      style={{ fontSize: "30px", fontWeight: "900", color: "#3F6ECC", fontFamily: "monospace", textDecoration: "none", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" }}
+                      style={{ fontSize: "28px", fontWeight: "900", color: "#3F6ECC", fontFamily: "monospace", textDecoration: "none", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" }}
                     >
                       080-5584-6715
                     </a>
