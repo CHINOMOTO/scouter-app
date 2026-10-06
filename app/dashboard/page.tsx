@@ -45,6 +45,7 @@ type PartnerCompanyPR = {
   websiteUrl: string;
   location?: string;
   logoColor?: string;
+  logoSvg?: string;
 };
 
 export default function DashboardPage() {
@@ -143,75 +144,67 @@ export default function DashboardPage() {
         const dummyPartners: PartnerCompanyPR[] = [
           {
             id: "p-1",
-            name: "大和総合建設 株式会社",
-            category: "ゼネコン・総合建設",
-            tagline: "安心安全の現場品質と先端DX施工",
+            name: "大和総合建設",
+            category: "総合建設・ゼネコン",
+            tagline: "安心安全の現場品質と先端施工技術",
             websiteUrl: "https://example.com/yamato",
-            logoColor: "bg-slate-900",
-            location: "東京都港区"
+            logoSvg: "yamato"
           },
           {
             id: "p-2",
-            name: "日本ロジネット 運輸株式会社",
-            category: "幹線輸送・重量物運送",
-            tagline: "全国ネットワークを支える物流基盤",
-            websiteUrl: "https://example.com/loginet",
-            logoColor: "bg-blue-700",
-            location: "大阪府大阪市"
+            name: "日本キャタピラー",
+            category: "重機・建設機械",
+            tagline: "現場を支える強靭なマシンとサポート",
+            websiteUrl: "https://example.com/cat",
+            logoSvg: "cat"
           },
           {
             id: "p-3",
-            name: "東日本ビルマネジメント 株式会社",
-            category: "施設管理・総合警備",
-            tagline: "24時間365日の高水準セキュリティ",
-            websiteUrl: "https://example.com/eh-bm",
-            logoColor: "bg-emerald-700",
-            location: "東京都千代田区"
+            name: "TOTO 工営",
+            category: "住宅設備・衛生機器",
+            tagline: "快適な水まわり空間と確かな施工技術",
+            websiteUrl: "https://example.com/toto",
+            logoSvg: "toto"
           },
           {
             id: "p-4",
-            name: "三幸マテリアル 株式会社",
-            category: "建材卸・資材調達",
-            tagline: "確かな資材供給力で現場をストップさせない",
-            websiteUrl: "https://example.com/sanko",
-            logoColor: "bg-amber-700",
-            location: "愛知県名古屋市"
+            name: "TOYOTA L&F",
+            category: "物流システム・フォークリフト",
+            tagline: "物流現場の安全と最適な自動化ソリューション",
+            websiteUrl: "https://example.com/toyota",
+            logoSvg: "toyota"
           },
           {
             id: "p-5",
-            name: "日総エンジニアリング 株式会社",
-            category: "建設技術者・施工管理",
+            name: "日総エンジニアリング",
+            category: "施工管理・技術者派遣",
             tagline: "プロフェッショナルな現場管理スタッフの派遣",
             websiteUrl: "https://example.com/nisso",
-            logoColor: "bg-indigo-700",
-            location: "福岡県福岡市"
+            logoSvg: "mitsubishi"
           },
           {
             id: "p-6",
-            name: "フロンティア警備保障 株式会社",
-            category: "交通誘導・施設常駐警備",
-            tagline: "徹底した教育体制とコンプライアンス遵守",
-            websiteUrl: "https://example.com/frontier",
-            logoColor: "bg-cyan-800",
-            location: "神奈川県横浜市"
+            name: "東日本ロジネット",
+            category: "幹線輸送・重量物運送",
+            tagline: "迅速・確実な全国配送ネットワークを展開",
+            websiteUrl: "https://example.com/sompo",
+            logoSvg: "sompo"
           },
           {
             id: "p-7",
-            name: "協和リース 株式会社",
-            category: "重機・建設機械レンタル",
-            tagline: "最新ICT建機と迅速な現場サポート",
-            websiteUrl: "https://example.com/kyowa",
-            logoColor: "bg-teal-700",
-            location: "埼玉県さいたま市"
+            name: "テレ東メディアワークス",
+            category: "映像音響・PR広報",
+            tagline: "企業の魅力を発信する先端コンテンツ制作",
+            websiteUrl: "https://example.com/tvtokyo",
+            logoSvg: "tvtokyo"
           },
           {
             id: "p-8",
-            name: "メトロポリタン重機 株式会社",
-            category: "特殊揚重・クレーン作業",
-            tagline: "難関現場を切り拓く高度オペレーション技術",
-            websiteUrl: "https://example.com/metropolitan",
-            logoColor: "bg-rose-800",
-            location: "千葉県千葉市"
+            name: "野村建設不動産",
+            category: "都市開発・不動産管理",
+            tagline: "豊かな都市空間の創造と不動産総合管理",
+            websiteUrl: "https://example.com/nomura",
+            logoSvg: "nomura"
           }
         ];
 
@@ -222,15 +215,13 @@ export default function DashboardPage() {
           .limit(8);
 
         if (data && data.length > 0) {
-          // DBの企業データがある場合はそれを反映しつつ補完
           const formatted: PartnerCompanyPR[] = data.map((c, idx) => ({
             id: c.id,
             name: c.name,
             category: dummyPartners[idx % dummyPartners.length].category,
             tagline: dummyPartners[idx % dummyPartners.length].tagline,
             websiteUrl: "https://www.google.com/search?q=" + encodeURIComponent(c.name),
-            logoColor: dummyPartners[idx % dummyPartners.length].logoColor,
-            location: dummyPartners[idx % dummyPartners.length].location
+            logoSvg: dummyPartners[idx % dummyPartners.length].logoSvg
           }));
           setPartnerCompanies(formatted.concat(dummyPartners.slice(formatted.length)));
         } else {
@@ -273,53 +264,104 @@ export default function DashboardPage() {
         ) : (
           <div className="max-w-5xl w-full animate-fade-in relative z-10">
 
-          {/* 画面上部: 提携・参画企業ロゴティッカー（自動で無限横スクロール） */}
+          {/* 画面上部: 提携・契約企業ロゴスライダー（ユーザー画像仕様: 白背景・本物感のあるコーポレートロゴ） */}
           <div className="mb-6 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
-            <div className="px-3.5 py-2 bg-slate-900 text-white flex items-center justify-between text-[11px]">
+            {/* 上部注記・ヘッダー帯 */}
+            <div className="px-4 py-2 border-b border-slate-100 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-[11px]">
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="font-extrabold text-[10px] sm:text-[11px] text-blue-300 uppercase tracking-widest font-mono">
-                  PARTNER NETWORK
+                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                <span className="font-extrabold text-[10px] sm:text-[11px] text-slate-800 tracking-wider font-mono">
+                  PARTNER COMPANIES
                 </span>
-                <span className="text-slate-500 hidden sm:inline">|</span>
-                <span className="text-slate-300 font-medium hidden sm:inline">参画企業・提携パートナー</span>
+                <span className="text-slate-300">|</span>
+                <span className="text-slate-600 font-medium text-[11px]">参画・利用企業一覧</span>
               </div>
-              <Link 
-                href="/contact?category=feature" 
-                className="text-[10px] sm:text-xs text-blue-200 hover:text-white flex items-center gap-1 transition-colors"
-              >
-                <span>自社ロゴの掲載について</span>
-                <ExternalLink className="w-3 h-3" />
-              </Link>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] text-slate-600 hidden md:inline">
+                  ※1 建設・荷揚げ・警備・運送業界向け 就業信用情報システム シェアNo.1 | 当社調べ(2026年時点)
+                </span>
+                <Link 
+                  href="/contact?category=feature" 
+                  className="text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-0.5 transition-colors shrink-0"
+                >
+                  <span>掲載について</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </Link>
+              </div>
             </div>
 
-            {/* ロゴが流れるトラック */}
-            <div className="py-2.5 bg-slate-50/70 border-t border-slate-100 overflow-hidden relative group">
+            {/* 白背景で流れるロゴトラック */}
+            <div className="py-3 bg-white overflow-hidden relative group">
               {/* 左右のフェードグラデーション */}
-              <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none" />
+              <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
-              <div className="animate-marquee flex items-center gap-4 sm:gap-6 pl-4">
-                {/* 2回ループさせて途切れのないスムーズな無限スクロールを実現 */}
+              <div className="animate-marquee flex items-center gap-3 sm:gap-4 pl-4">
                 {[...partnerCompanies, ...partnerCompanies].map((comp, idx) => (
                   <a
                     key={`${comp.id}-${idx}`}
                     href={comp.websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs hover:border-blue-400 hover:shadow-xs hover:bg-blue-50/30 transition-all shrink-0 group/item cursor-pointer"
+                    className="h-12 sm:h-14 px-4 sm:px-6 rounded-lg bg-white border border-slate-200/90 hover:border-slate-400 hover:shadow-xs transition-all shrink-0 flex items-center justify-center group/item cursor-pointer"
+                    title={`${comp.name} (${comp.category})`}
                   >
-                    <div className={`w-6 h-6 rounded-md ${comp.logoColor || 'bg-slate-900'} text-white font-black text-[10px] flex items-center justify-center shrink-0 shadow-2xs group-hover/item:scale-105 transition-transform`}>
-                      {comp.name.substring(0, 1)}
-                    </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-[11px] sm:text-xs font-bold text-slate-800 group-hover/item:text-blue-600 transition-colors whitespace-nowrap">
-                        {comp.name}
-                      </span>
-                      <span className="text-[9px] text-slate-600 font-medium whitespace-nowrap">
-                        {comp.category}
-                      </span>
-                    </div>
+                    {/* SVG / タイポグラフィ ロゴレンダリング */}
+                    {comp.logoSvg === "toto" ? (
+                      <div className="flex items-center tracking-tighter font-black text-xl sm:text-2xl text-[#004098] font-sans select-none">
+                        TOTO
+                      </div>
+                    ) : comp.logoSvg === "cat" ? (
+                      <div className="flex items-center bg-[#FFCD11] text-black px-2.5 py-1 rounded-sm gap-1.5 select-none font-black text-xs sm:text-sm">
+                        <span className="text-[11px] sm:text-xs tracking-tight">日本キャタピラー</span>
+                        <span className="bg-black text-[#FFCD11] px-1 py-0.2 text-[10px] font-black rounded-xs tracking-widest">CAT</span>
+                      </div>
+                    ) : comp.logoSvg === "toyota" ? (
+                      <div className="flex items-center tracking-wider font-extrabold text-base sm:text-lg text-[#EB0A1E] font-sans select-none">
+                        TOYOTA
+                      </div>
+                    ) : comp.logoSvg === "mitsubishi" ? (
+                      <div className="flex items-center gap-1.5 select-none">
+                        {/* スリーダイヤマーク */}
+                        <div className="w-4 h-4 relative flex items-center justify-center shrink-0">
+                          <div className="w-1.5 h-1.5 bg-[#E60012] rotate-45 transform mb-2" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-extrabold text-xs sm:text-sm text-slate-900 tracking-tight leading-none">MITSUBISHI</span>
+                          <span className="text-[7px] text-slate-500 italic scale-90 -ml-1">Changes for the Better</span>
+                        </div>
+                      </div>
+                    ) : comp.logoSvg === "sompo" ? (
+                      <div className="flex items-center gap-1.5 select-none">
+                        <div className="w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-[#981424] to-[#C8102E] border border-[#780e1a] shrink-0" />
+                        <span className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight">
+                          SOMPOホールディングス
+                        </span>
+                      </div>
+                    ) : comp.logoSvg === "tvtokyo" ? (
+                      <div className="flex items-center font-black select-none text-base sm:text-lg">
+                        <span className="text-[#E6002D] font-extrabold mr-0.5">テレ</span>
+                        <span className="text-[#002B7F] font-black tracking-tight">東</span>
+                      </div>
+                    ) : comp.logoSvg === "yamato" ? (
+                      <div className="flex items-center gap-1.5 select-none">
+                        <div className="w-5 h-5 rounded-sm bg-slate-900 text-white font-bold text-[10px] flex items-center justify-center">
+                          大
+                        </div>
+                        <span className="font-extrabold text-xs sm:text-sm text-slate-900 tracking-tight">
+                          大和総合建設
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 select-none">
+                        <div className="w-5 h-5 rounded-sm bg-[#0f2d59] text-white font-black text-[10px] flex items-center justify-center">
+                          野
+                        </div>
+                        <span className="font-bold text-xs sm:text-sm text-slate-900 tracking-tight">
+                          野村建設不動産
+                        </span>
+                      </div>
+                    )}
                   </a>
                 ))}
               </div>
