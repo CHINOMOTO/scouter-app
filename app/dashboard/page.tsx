@@ -140,74 +140,101 @@ export default function DashboardPage() {
 
     const loadPartnerCompanies = async () => {
       try {
+        const dummyPartners: PartnerCompanyPR[] = [
+          {
+            id: "p-1",
+            name: "大和総合建設 株式会社",
+            category: "ゼネコン・総合建設",
+            tagline: "安心安全の現場品質と先端DX施工",
+            websiteUrl: "https://example.com/yamato",
+            logoColor: "bg-slate-900",
+            location: "東京都港区"
+          },
+          {
+            id: "p-2",
+            name: "日本ロジネット 運輸株式会社",
+            category: "幹線輸送・重量物運送",
+            tagline: "全国ネットワークを支える物流基盤",
+            websiteUrl: "https://example.com/loginet",
+            logoColor: "bg-blue-700",
+            location: "大阪府大阪市"
+          },
+          {
+            id: "p-3",
+            name: "東日本ビルマネジメント 株式会社",
+            category: "施設管理・総合警備",
+            tagline: "24時間365日の高水準セキュリティ",
+            websiteUrl: "https://example.com/eh-bm",
+            logoColor: "bg-emerald-700",
+            location: "東京都千代田区"
+          },
+          {
+            id: "p-4",
+            name: "三幸マテリアル 株式会社",
+            category: "建材卸・資材調達",
+            tagline: "確かな資材供給力で現場をストップさせない",
+            websiteUrl: "https://example.com/sanko",
+            logoColor: "bg-amber-700",
+            location: "愛知県名古屋市"
+          },
+          {
+            id: "p-5",
+            name: "日総エンジニアリング 株式会社",
+            category: "建設技術者・施工管理",
+            tagline: "プロフェッショナルな現場管理スタッフの派遣",
+            websiteUrl: "https://example.com/nisso",
+            logoColor: "bg-indigo-700",
+            location: "福岡県福岡市"
+          },
+          {
+            id: "p-6",
+            name: "フロンティア警備保障 株式会社",
+            category: "交通誘導・施設常駐警備",
+            tagline: "徹底した教育体制とコンプライアンス遵守",
+            websiteUrl: "https://example.com/frontier",
+            logoColor: "bg-cyan-800",
+            location: "神奈川県横浜市"
+          },
+          {
+            id: "p-7",
+            name: "協和リース 株式会社",
+            category: "重機・建設機械レンタル",
+            tagline: "最新ICT建機と迅速な現場サポート",
+            websiteUrl: "https://example.com/kyowa",
+            logoColor: "bg-teal-700",
+            location: "埼玉県さいたま市"
+          },
+          {
+            id: "p-8",
+            name: "メトロポリタン重機 株式会社",
+            category: "特殊揚重・クレーン作業",
+            tagline: "難関現場を切り拓く高度オペレーション技術",
+            websiteUrl: "https://example.com/metropolitan",
+            logoColor: "bg-rose-800",
+            location: "千葉県千葉市"
+          }
+        ];
+
         const { data } = await supabase
           .from("companies")
           .select("id, name, corporate_number")
           .order("created_at", { ascending: false })
-          .limit(6);
-
-        const defaultCategories = [
-          "総合建設・土木工事業",
-          "建築設計・施工監理",
-          "物流・貨物運送業",
-          "人材紹介・派遣サービス",
-          "ITインフラ・現場DX",
-          "不動産開発・設備管理"
-        ];
-        const defaultTaglines = [
-          "安全施工と高品質なインフラ整備で健全な街づくりに貢献します。",
-          "迅速・確実な全国配送ネットワークを展開。安心の物流パートナー。",
-          "即戦力エンジニア・建設専門職の最適マッチングをご提案します。",
-          "現場業務の効率化とコンプライアンス管理を推進するクラウド支援。",
-          "安全第一の現場運営と環境配慮型の確かな施工技術をお届けします。",
-          "健全な企業間取引と信頼関係の構築を共に目指すパートナー企業。"
-        ];
-        const defaultColors = [
-          "bg-blue-600",
-          "bg-slate-800",
-          "bg-emerald-600",
-          "bg-indigo-600",
-          "bg-amber-600",
-          "bg-teal-600"
-        ];
+          .limit(8);
 
         if (data && data.length > 0) {
+          // DBの企業データがある場合はそれを反映しつつ補完
           const formatted: PartnerCompanyPR[] = data.map((c, idx) => ({
             id: c.id,
             name: c.name,
-            category: defaultCategories[idx % defaultCategories.length],
-            tagline: defaultTaglines[idx % defaultTaglines.length],
+            category: dummyPartners[idx % dummyPartners.length].category,
+            tagline: dummyPartners[idx % dummyPartners.length].tagline,
             websiteUrl: "https://www.google.com/search?q=" + encodeURIComponent(c.name),
-            logoColor: defaultColors[idx % defaultColors.length]
+            logoColor: dummyPartners[idx % dummyPartners.length].logoColor,
+            location: dummyPartners[idx % dummyPartners.length].location
           }));
-          setPartnerCompanies(formatted);
+          setPartnerCompanies(formatted.concat(dummyPartners.slice(formatted.length)));
         } else {
-          setPartnerCompanies([
-            {
-              id: "sample-1",
-              name: "大和総合建設株式会社",
-              category: "総合建設・土木工事業",
-              tagline: "安全施工と高品質なインフラ整備で健全な街づくりに貢献します。",
-              websiteUrl: "https://example.com",
-              logoColor: "bg-blue-600"
-            },
-            {
-              id: "sample-2",
-              name: "日本ロジスティクス運輸",
-              category: "物流・貨物運送業",
-              tagline: "迅速・確実な全国配送ネットワークを展開。安心の物流パートナー。",
-              websiteUrl: "https://example.com",
-              logoColor: "bg-slate-800"
-            },
-            {
-              id: "sample-3",
-              name: "キャリアエージェント東京",
-              category: "人材紹介・派遣サービス",
-              tagline: "即戦力エンジニア・建設専門職の最適マッチングをご提案します。",
-              websiteUrl: "https://example.com",
-              logoColor: "bg-emerald-600"
-            }
-          ]);
+          setPartnerCompanies(dummyPartners);
         }
       } catch (err) {
         console.error("Partner companies fetch error:", err);
@@ -245,6 +272,59 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="max-w-5xl w-full animate-fade-in relative z-10">
+
+          {/* 画面上部: 提携・参画企業ロゴティッカー（自動で無限横スクロール） */}
+          <div className="mb-6 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
+            <div className="px-3.5 py-2 bg-slate-900 text-white flex items-center justify-between text-[11px]">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="font-extrabold text-[10px] sm:text-[11px] text-blue-300 uppercase tracking-widest font-mono">
+                  PARTNER NETWORK
+                </span>
+                <span className="text-slate-500 hidden sm:inline">|</span>
+                <span className="text-slate-300 font-medium hidden sm:inline">参画企業・提携パートナー</span>
+              </div>
+              <Link 
+                href="/contact?category=feature" 
+                className="text-[10px] sm:text-xs text-blue-200 hover:text-white flex items-center gap-1 transition-colors"
+              >
+                <span>自社ロゴの掲載について</span>
+                <ExternalLink className="w-3 h-3" />
+              </Link>
+            </div>
+
+            {/* ロゴが流れるトラック */}
+            <div className="py-2.5 bg-slate-50/70 border-t border-slate-100 overflow-hidden relative group">
+              {/* 左右のフェードグラデーション */}
+              <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none" />
+
+              <div className="animate-marquee flex items-center gap-4 sm:gap-6 pl-4">
+                {/* 2回ループさせて途切れのないスムーズな無限スクロールを実現 */}
+                {[...partnerCompanies, ...partnerCompanies].map((comp, idx) => (
+                  <a
+                    key={`${comp.id}-${idx}`}
+                    href={comp.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-lg bg-white border border-slate-200/80 shadow-2xs hover:border-blue-400 hover:shadow-xs hover:bg-blue-50/30 transition-all shrink-0 group/item cursor-pointer"
+                  >
+                    <div className={`w-6 h-6 rounded-md ${comp.logoColor || 'bg-slate-900'} text-white font-black text-[10px] flex items-center justify-center shrink-0 shadow-2xs group-hover/item:scale-105 transition-transform`}>
+                      {comp.name.substring(0, 1)}
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-[11px] sm:text-xs font-bold text-slate-800 group-hover/item:text-blue-600 transition-colors whitespace-nowrap">
+                        {comp.name}
+                      </span>
+                      <span className="text-[9px] text-slate-600 font-medium whitespace-nowrap">
+                        {comp.category}
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
 
           {/* ヘッダーエリア */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8 pb-5 sm:pb-6 border-b border-slate-200">
@@ -596,94 +676,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* セクション 3: 🤝 提携・契約企業 PRギャラリー */}
-          <div className="mb-10 bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
-            {/* ヘッダー帯 */}
-            <div className="px-4.5 py-4 sm:px-6 sm:py-4 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/10 shrink-0">
-                  <Megaphone className="w-4.5 h-4.5 text-white" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-extrabold text-blue-300 uppercase tracking-widest font-mono">
-                      PARTNER DIRECTORY
-                    </span>
-                    <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-semibold border border-slate-700">
-                      参画企業PR
-                    </span>
-                  </div>
-                  <h2 className="text-sm sm:text-base font-bold tracking-tight text-white mt-0.5">
-                    提携・契約企業 PRギャラリー
-                  </h2>
-                </div>
-              </div>
-              <Link
-                href="/contact?category=feature"
-                className="text-xs text-blue-200 hover:text-white font-medium flex items-center gap-1 transition-colors self-start sm:self-auto bg-white/10 px-3 py-1.5 rounded-lg border border-white/10"
-              >
-                <span>自社のPR掲載・ロゴ掲載について</span>
-                <ExternalLink className="w-3 h-3" />
-              </Link>
-            </div>
 
-            {/* 内部カード一覧 */}
-            <div className="p-4.5 sm:p-6 bg-slate-50/50">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  MIERISをご利用中の契約企業様の事業・サービスをご紹介しています。協業や新規取引のご相談にご活用ください。
-                </p>
-                <span className="text-[11px] font-bold text-slate-500 shrink-0">
-                  掲載企業数: {partnerCompanies.length}社
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-                {partnerCompanies.map((comp) => (
-                  <a
-                    key={comp.id}
-                    href={comp.websiteUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-white p-4.5 rounded-xl border border-slate-200/90 shadow-2xs hover:border-blue-400 hover:shadow-xs hover:-translate-y-0.5 transition-all group flex flex-col justify-between"
-                  >
-                    <div>
-                      {/* 業種タグ & 外部リンクアイコン */}
-                      <div className="flex items-center justify-between gap-2 mb-2.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                          {comp.category}
-                        </span>
-                        <div className="p-1 rounded bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 transition-colors">
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </div>
-                      </div>
-
-                      {/* 企業ロゴバッジ & 企業名 */}
-                      <div className="flex items-center gap-2.5 mb-2">
-                        <div className={`w-8 h-8 rounded-lg ${comp.logoColor || 'bg-blue-600'} text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform`}>
-                          {comp.name.substring(0, 1)}
-                        </div>
-                        <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
-                          {comp.name}
-                        </h3>
-                      </div>
-
-                      {/* キャッチコピー */}
-                      <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2 mb-3">
-                        {comp.tagline}
-                      </p>
-                    </div>
-
-                    {/* フッターリンク */}
-                    <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-blue-600 font-bold">
-                      <span className="group-hover:underline">企業情報・Webサイト</span>
-                      <span className="group-hover:translate-x-0.5 transition-transform">→</span>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
 
           {/* セクション 4: システム設定 & サポート */}
           <div className="border-t border-slate-200 pt-6">
