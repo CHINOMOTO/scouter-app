@@ -59,9 +59,7 @@ export default function DashboardPage() {
   const [partnerCompanies, setPartnerCompanies] = useState<PartnerCompanyPR[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // お知らせティッカー用 state
-  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
-  const [isTickerPaused, setIsTickerPaused] = useState(false);
+  // お知らせモーダル用 state
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
   const [showAllAnnouncementsModal, setShowAllAnnouncementsModal] = useState(false);
 
@@ -238,17 +236,6 @@ export default function DashboardPage() {
     loadPartnerCompanies();
   }, []);
 
-  // お知らせティッカーの自動切り替え
-  useEffect(() => {
-    if (announcements.length <= 1 || isTickerPaused) return;
-
-    const timer = setInterval(() => {
-      setCurrentAnnouncementIndex((prev) => (prev + 1) % announcements.length);
-    }, 4500);
-
-    return () => clearInterval(timer);
-  }, [announcements.length, isTickerPaused]);
-
   // プラン権限の判定
   const canViewPerson = isAdmin || allowedPlan === "full" || allowedPlan === "employment";
   const canViewCredit = isAdmin || allowedPlan === "full" || allowedPlan === "credit";
@@ -266,8 +253,8 @@ export default function DashboardPage() {
 
           {/* 画面上部: 提携・契約企業ロゴスライダー（ユーザー画像仕様: 白背景・本物感のあるコーポレートロゴ） */}
           <div className="mb-6 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
-            {/* 上部注記・ヘッダー帯 */}
-            <div className="px-4 py-2 border-b border-slate-100 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-[11px]">
+            {/* 上部ヘッダー帯 */}
+            <div className="px-4 py-2 border-b border-slate-100 bg-white flex items-center justify-between text-[11px]">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
                 <span className="font-extrabold text-[10px] sm:text-[11px] text-slate-800 tracking-wider font-mono">
@@ -276,18 +263,13 @@ export default function DashboardPage() {
                 <span className="text-slate-300">|</span>
                 <span className="text-slate-600 font-medium text-[11px]">参画・利用企業一覧</span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] text-slate-600 hidden md:inline">
-                  ※1 建設・荷揚げ・警備・運送業界向け 就業信用情報システム シェアNo.1 | 当社調べ(2026年時点)
-                </span>
-                <Link 
-                  href="/contact?category=feature" 
-                  className="text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-0.5 transition-colors shrink-0"
-                >
-                  <span>掲載について</span>
-                  <ExternalLink className="w-2.5 h-2.5" />
-                </Link>
-              </div>
+              <Link 
+                href="/contact?category=feature" 
+                className="text-[10px] sm:text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-0.5 transition-colors shrink-0"
+              >
+                <span>掲載について</span>
+                <ExternalLink className="w-2.5 h-2.5" />
+              </Link>
             </div>
 
             {/* 白背景で流れるロゴトラック */}
@@ -412,86 +394,50 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* お知らせ・ニュースティッカーバー（流れる形式） */}
+          {/* お知らせ・ニュース（最新の1件を表示） */}
           {announcements.length > 0 && (
-            <div 
-              className="mb-6 sm:mb-8 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden px-3.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3 text-xs animate-fade-in"
-              onMouseEnter={() => setIsTickerPaused(true)}
-              onMouseLeave={() => setIsTickerPaused(false)}
-            >
-              {/* 左側: バッジ */}
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="p-1 rounded-md bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
-                  <Bell className="w-3.5 h-3.5" />
-                </div>
-                <span className="font-extrabold text-[10px] sm:text-[11px] text-blue-700 uppercase tracking-widest font-mono">
-                  NEWS
-                </span>
-                <span className="text-slate-300 hidden sm:inline">|</span>
-              </div>
-
-              {/* 中央: 流れるテキスト（クリックでモーダルオープン） */}
+            <div className="mb-6 sm:mb-8 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden px-3.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3 text-xs animate-fade-in">
               <div 
-                className="flex-1 min-w-0 cursor-pointer group flex items-center gap-2 sm:gap-2.5 overflow-hidden"
-                onClick={() => setSelectedAnnouncement(announcements[currentAnnouncementIndex])}
+                className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 cursor-pointer group"
+                onClick={() => setSelectedAnnouncement(announcements[0])}
                 title="クリックしてお知らせ全文を表示"
               >
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="p-1 rounded-md bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+                    <Bell className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-extrabold text-[10px] sm:text-[11px] text-blue-700 uppercase tracking-widest font-mono">
+                    NEWS
+                  </span>
+                  <span className="text-slate-300 hidden sm:inline">|</span>
+                </div>
                 <span className="text-[11px] font-mono text-slate-400 shrink-0">
-                  {new Date(announcements[currentAnnouncementIndex].created_at).toLocaleDateString("ja-JP", {
+                  {new Date(announcements[0].created_at).toLocaleDateString("ja-JP", {
                     year: "numeric",
                     month: "2-digit",
                     day: "2-digit",
                   })}
                 </span>
-                <span 
-                  key={currentAnnouncementIndex} 
-                  className="font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors animate-fade-in"
-                >
-                  {announcements[currentAnnouncementIndex].title}
+                <span className="font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                  {announcements[0].title}
                 </span>
                 <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 shrink-0 hidden md:inline group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   詳細を見る
                 </span>
               </div>
 
-              {/* 右側: コントロールボタン */}
-              <div className="flex items-center gap-1 shrink-0">
-                {/* ページネーションカウンター */}
-                <span className="text-[10px] sm:text-[11px] text-slate-400 font-mono hidden sm:inline mr-1">
-                  {currentAnnouncementIndex + 1}/{announcements.length}
-                </span>
-
-                {/* 前後ボタン */}
-                <button
-                  type="button"
-                  onClick={() => setCurrentAnnouncementIndex(prev => (prev - 1 + announcements.length) % announcements.length)}
-                  className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                  title="前のお知らせ"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrentAnnouncementIndex(prev => (prev + 1) % announcements.length)}
-                  className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                  title="次のお知らせ"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-
-                {/* 全件一覧モーダル開くボタン */}
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowAllAnnouncementsModal(true)}
-                  className="text-[10px] sm:text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-2 py-1 rounded-lg border border-slate-200 transition-colors ml-1 whitespace-nowrap"
+                  className="text-[10px] sm:text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-2 py-1 rounded-lg border border-slate-200 transition-colors whitespace-nowrap"
                 >
                   一覧
                 </button>
-
                 {isAdmin && (
                   <Link
                     href="/admin/announcements"
-                    className="text-[10px] sm:text-[11px] font-bold text-slate-500 hover:text-slate-900 ml-1 hidden lg:inline whitespace-nowrap"
+                    className="text-[10px] sm:text-[11px] font-bold text-slate-500 hover:text-slate-900 hidden lg:inline whitespace-nowrap"
                   >
                     管理 →
                   </Link>
