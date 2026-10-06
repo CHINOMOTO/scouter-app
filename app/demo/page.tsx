@@ -82,13 +82,13 @@ export default function DemoLandingPage() {
                   本人同意と客観的事実のもとで企業間共有する業界初インフラです。
                 </p>
 
-                <div className="cta-set sp-hidden" style={{ display: "flex", gap: "16px", marginTop: "0" }}>
-                  <a className="mv__button button-a button-a--blue" href="#contact" style={{ padding: "18px 24px" }}>
+                <div className="cta-set" style={{ display: "flex", gap: "14px", marginTop: "24px", flexWrap: "wrap", width: "100%" }}>
+                  <a className="mv__button button-a button-a--blue" href="#contact" style={{ padding: "16px 20px", textAlign: "center", boxSizing: "border-box" }}>
                     <span className="button-a__deco">3分でわかるミエリス</span>
-                    <span style={{ fontSize: "16px" }}>詳しいPDF資料を見る</span>
+                    <span style={{ fontSize: "15px" }}>詳しいPDF資料を見る</span>
                   </a>
-                  <a className="mv__button button-a button-a--white" href="#estimate" style={{ padding: "18px 24px" }}>
-                    <span style={{ fontSize: "16px" }}>費用の見積りをする</span>
+                  <a className="mv__button button-a button-a--white" href="#estimate" style={{ padding: "16px 20px", textAlign: "center", boxSizing: "border-box" }}>
+                    <span style={{ fontSize: "15px" }}>費用の見積りをする</span>
                   </a>
                 </div>
               </div>
@@ -104,17 +104,6 @@ export default function DemoLandingPage() {
                 </div>
               </div>
 
-            </div>
-
-            {/* スマホ用ボタン */}
-            <div className="sp-block only-sp" style={{ padding: "24px 16px 0" }}>
-              <a className="mv__button button-a button-a--blue" href="#contact" style={{ marginBottom: "14px", width: "100%", padding: "16px" }}>
-                <span className="button-a__deco">3分でわかるミエリス</span>
-                <span style={{ fontSize: "15px" }}>詳しいPDF資料を見る</span>
-              </a>
-              <a className="mv__button button-a button-a--white" href="#estimate" style={{ width: "100%", padding: "16px" }}>
-                <span style={{ fontSize: "15px" }}>費用の見積りをする</span>
-              </a>
             </div>
           </div>
         </section>
