@@ -1,11 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./kaonavi.css";
 
 export default function DemoLandingPage() {
   const [selectedPlan, setSelectedPlan] = useState("full");
   const [selectedMembers, setSelectedMembers] = useState("1");
+
+  // スクロール時に要素がふわっと浮き上がるアニメーション (uiken.jpスタイル)
+  useEffect(() => {
+    const targets = document.querySelectorAll(".scroll-fade, .scroll-fade-up");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: "0px 0px -60px 0px",
+        threshold: 0.1,
+      }
+    );
+
+    targets.forEach((target) => observer.observe(target));
+
+    return () => {
+      targets.forEach((target) => observer.unobserve(target));
+    };
+  }, []);
 
   return (
     <div className="kaonavi-lp-wrapper">
@@ -95,7 +120,7 @@ export default function DemoLandingPage() {
         </section>
 
         {/* 3. カオナビ完全同期 ホワイトペーパー (白書カード3連) */}
-        <div className="whitepaper" style={{ margin: "24px 0 40px" }}>
+        <div className="whitepaper scroll-fade-up" style={{ margin: "24px 0 40px" }}>
           <div className="section-a__inner">
             <ul className="whitepaper-list">
               
@@ -152,7 +177,7 @@ export default function DemoLandingPage() {
         </div>
 
         {/* 4. カオナビ完全同期 権威性・実績・No.1バッジ */}
-        <section id="author">
+        <section id="author" className="scroll-fade-up">
           <div className="company">
             <div className="section-c" style={{ marginTop: "16px" }}>
               <div className="section-c__inner">
@@ -166,7 +191,6 @@ export default function DemoLandingPage() {
                         </p>
                         <p className="share" style={{ margin: 0, position: "relative", flex: "0 0 96px" }}>
                           <img className="pict" src="https://www.kaonavi.jp/img/top/text_shareno1_water.png" alt="シェアNo.1" style={{ width: "96px", height: "auto", display: "block" }} />
-                          <sup style={{ position: "absolute", top: "14px", right: "-12px", fontSize: "10px" }}>※1</sup>
                         </p>
                       </div>
                     </div>
@@ -178,14 +202,13 @@ export default function DemoLandingPage() {
                         </p>
                         <p className="share" style={{ margin: 0, position: "relative", flex: "0 0 96px" }}>
                           <img className="pict" src="https://www.kaonavi.jp/img/top/text_shareno1_water.png" alt="シェアNo.1" style={{ width: "96px", height: "auto", display: "block" }} />
-                          <sup style={{ position: "absolute", top: "14px", right: "-12px", fontSize: "10px" }}>※2</sup>
                         </p>
                       </div>
                     </div>
 
                     <div className="item-no1 activeuser laurel">
                       <div className="title-set">
-                        <p className="title">利用企業数<br /><strong className="numberOfCompany">120</strong>社超<sup>※3</sup></p>
+                        <p className="title">利用企業数<br /><strong className="numberOfCompany">120</strong>社超</p>
                       </div>
                     </div>
 
@@ -196,9 +219,6 @@ export default function DemoLandingPage() {
                     </div>
 
                   </div>
-                  <small className="itrNote caution" style={{ display: "block", textAlign: "center", color: "#737378", marginTop: "14px", fontSize: "11px" }}>
-                    ※1 建設・荷揚げ・警備・運送業向け 就業情報共有システム シェアNo.1｜当社調べ（2026年時点）
-                  </small>
                 </div>
               </div>
             </div>
@@ -220,7 +240,7 @@ export default function DemoLandingPage() {
         </section>
 
         {/* 5. カオナビ完全同期 お悩み解決セクション */}
-        <section className="section-a" style={{ padding: "90px 0 70px" }}>
+        <section id="problem" className="section-a scroll-fade-up" style={{ padding: "90px 0 70px" }}>
           <div className="section-a__inner">
             <div className="problem">
               <h2 className="h2-b" style={{ fontSize: "34px", marginBottom: "54px", letterSpacing: "-0.5px" }}>
@@ -229,7 +249,7 @@ export default function DemoLandingPage() {
               <div className="case__inner" style={{ display: "flex", gap: "24px", justifyContent: "center", flexWrap: "wrap" }}>
                 
                 {/* 悩み 1 */}
-                <div className="case__item cream_bg" style={{ flex: "1 1 320px", maxWidth: "360px", padding: "36px 24px 28px", borderRadius: "16px", backgroundColor: "#fbf8ee", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div className="case__item cream_bg scroll-fade-up" style={{ flex: "1 1 320px", maxWidth: "360px", padding: "36px 24px 28px", borderRadius: "16px", backgroundColor: "#fbf8ee", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
                     <div style={{ display: "inline-block", fontSize: "11px", fontWeight: "900", letterSpacing: "1.2px", color: "#3F6ECC", backgroundColor: "#EDF6FF", padding: "3px 10px", borderRadius: "20px", marginBottom: "12px", border: "1px solid #d0e4ff" }}>
                       MIERIS WORK
@@ -254,7 +274,7 @@ export default function DemoLandingPage() {
                 </div>
 
                 {/* 悩み 2 */}
-                <div className="case__item cream_bg" style={{ flex: "1 1 320px", maxWidth: "360px", padding: "36px 24px 28px", borderRadius: "16px", backgroundColor: "#fbf8ee", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div className="case__item cream_bg scroll-fade-up scroll-delay-1" style={{ flex: "1 1 320px", maxWidth: "360px", padding: "36px 24px 28px", borderRadius: "16px", backgroundColor: "#fbf8ee", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
                     <div style={{ display: "inline-block", fontSize: "11px", fontWeight: "900", letterSpacing: "1.2px", color: "#4f46e5", backgroundColor: "#EEF2FF", padding: "3px 10px", borderRadius: "20px", marginBottom: "12px", border: "1px solid #e0e7ff" }}>
                       MIERIS CREDIT
@@ -279,7 +299,7 @@ export default function DemoLandingPage() {
                 </div>
 
                 {/* 悩み 3 */}
-                <div className="case__item cream_bg" style={{ flex: "1 1 320px", maxWidth: "360px", padding: "36px 24px 28px", borderRadius: "16px", backgroundColor: "#fbf8ee", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div className="case__item cream_bg scroll-fade-up scroll-delay-2" style={{ flex: "1 1 320px", maxWidth: "360px", padding: "36px 24px 28px", borderRadius: "16px", backgroundColor: "#fbf8ee", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
                     <div style={{ display: "inline-block", fontSize: "11px", fontWeight: "900", letterSpacing: "1.2px", color: "#025D2C", backgroundColor: "#ECFAEC", padding: "3px 10px", borderRadius: "20px", marginBottom: "12px", border: "1px solid #cceccc" }}>
                       COMPLIANCE RULE
@@ -309,7 +329,7 @@ export default function DemoLandingPage() {
         </section>
 
         {/* 6. カオナビ完全同期 機能一覧・強み (strength) */}
-        <section className="section-a section-a--cream" style={{ padding: "90px 0" }}>
+        <section className="section-a section-a--cream scroll-fade-up" style={{ padding: "90px 0" }}>
           <div className="section-a__inner">
             <div className="strength">
               <div className="h2-a" style={{ textAlign: "center", marginBottom: "54px" }}>
@@ -318,7 +338,7 @@ export default function DemoLandingPage() {
               </div>
               <ul className="reason-list" style={{ display: "flex", gap: "24px", justifyContent: "center", flexWrap: "wrap", padding: 0 }}>
                 
-                <li className="item user" style={{ flex: "1 1 320px", maxWidth: "360px", backgroundColor: "#ffffff", padding: "36px 28px", borderRadius: "16px", boxShadow: "0 4px 16px rgba(115,115,120,0.08)" }}>
+                <li className="item user scroll-fade-up" style={{ flex: "1 1 320px", maxWidth: "360px", backgroundColor: "#ffffff", padding: "36px 28px", borderRadius: "16px", boxShadow: "0 4px 16px rgba(115,115,120,0.08)" }}>
                   <h3 className="title" style={{ fontSize: "21px", fontWeight: "bold", lineHeight: "1.4", marginBottom: "18px", color: "#202226" }}>
                     誰でも使いやすい<br />操作画面
                   </h3>
@@ -330,7 +350,7 @@ export default function DemoLandingPage() {
                   </p>
                 </li>
 
-                <li className="item support" style={{ flex: "1 1 320px", maxWidth: "360px", backgroundColor: "#ffffff", padding: "36px 28px", borderRadius: "16px", boxShadow: "0 4px 16px rgba(115,115,120,0.08)" }}>
+                <li className="item support scroll-fade-up scroll-delay-1" style={{ flex: "1 1 320px", maxWidth: "360px", backgroundColor: "#ffffff", padding: "36px 28px", borderRadius: "16px", boxShadow: "0 4px 16px rgba(115,115,120,0.08)" }}>
                   <h3 className="title" style={{ fontSize: "21px", fontWeight: "bold", lineHeight: "1.4", marginBottom: "18px", color: "#202226" }}>
                     ニーズに応じた<br />高い柔軟性
                   </h3>
@@ -343,7 +363,7 @@ export default function DemoLandingPage() {
                   </p>
                 </li>
 
-                <li className="item custom" style={{ flex: "1 1 320px", maxWidth: "360px", backgroundColor: "#ffffff", padding: "36px 28px", borderRadius: "16px", boxShadow: "0 4px 16px rgba(115,115,120,0.08)" }}>
+                <li className="item custom scroll-fade-up scroll-delay-2" style={{ flex: "1 1 320px", maxWidth: "360px", backgroundColor: "#ffffff", padding: "36px 28px", borderRadius: "16px", boxShadow: "0 4px 16px rgba(115,115,120,0.08)" }}>
                   <h3 className="title" style={{ fontSize: "21px", fontWeight: "bold", lineHeight: "1.4", marginBottom: "18px", color: "#202226" }}>
                     適法運用に応じた<br />厳格なルール体制
                   </h3>
@@ -370,7 +390,7 @@ export default function DemoLandingPage() {
         </section>
 
         {/* 7. カオナビ完全同期 活用シーン (case) */}
-        <section className="section-a section-a--cream" style={{ padding: "90px 0", borderTop: "1px solid #e5e6ea" }}>
+        <section className="section-a section-a--cream scroll-fade-up" style={{ padding: "90px 0", borderTop: "1px solid #e5e6ea" }}>
           <div className="section-a__inner">
             <div className="case">
               <div className="h2-a" style={{ textAlign: "center", marginBottom: "54px" }}>
@@ -379,7 +399,7 @@ export default function DemoLandingPage() {
               </div>
               <div className="case__inner line-3" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "24px" }}>
                 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                <div className="case__item scroll-fade-up" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
                   <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img src="/demo-assets/case-01.png" alt="就業トラブルの事前可視化" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
                   </div>
@@ -392,7 +412,7 @@ export default function DemoLandingPage() {
                   </p>
                 </div>
 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                <div className="case__item scroll-fade-up scroll-delay-1" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
                   <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img src="/demo-assets/case-02.png" alt="取引先未払いリスクの事前把握" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
                   </div>
@@ -405,7 +425,7 @@ export default function DemoLandingPage() {
                   </p>
                 </div>
 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                <div className="case__item scroll-fade-up scroll-delay-2" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
                   <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img src="/demo-assets/case-03.png" alt="客観的事実の登録フロー" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
                   </div>
@@ -415,7 +435,7 @@ export default function DemoLandingPage() {
                   </p>
                 </div>
 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                <div className="case__item scroll-fade-up" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
                   <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img src="/demo-assets/case-04.png" alt="本人同意書の電子管理" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
                   </div>
@@ -425,7 +445,7 @@ export default function DemoLandingPage() {
                   </p>
                 </div>
 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                <div className="case__item scroll-fade-up scroll-delay-1" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
                   <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img src="/demo-assets/case-05.png" alt="入金完了後の解決済み更新" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
                   </div>
@@ -435,7 +455,7 @@ export default function DemoLandingPage() {
                   </p>
                 </div>
 
-                <div className="case__item" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
+                <div className="case__item scroll-fade-up scroll-delay-2" style={{ backgroundColor: "#ffffff", padding: "32px 28px", borderRadius: "16px", boxShadow: "0 4px 12px rgba(115,115,120,0.06)", display: "flex", flexDirection: "column" }}>
                   <div className="case__logo" style={{ textAlign: "center", marginBottom: "20px", height: "135px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img src="/demo-assets/case-06.png" alt="支店・営業所での一括運用" style={{ maxHeight: "125px", maxWidth: "100%", objectFit: "contain" }} />
                   </div>
@@ -461,7 +481,7 @@ export default function DemoLandingPage() {
         </section>
 
         {/* 8. カオナビ完全同期 導入事例 (showcase) */}
-        <section className="section-a" style={{ padding: "90px 0" }}>
+        <section className="section-a scroll-fade-up" style={{ padding: "90px 0" }}>
           <div className="section-a__inner">
             <div className="cando showcase">
               <div className="cando__heading">
@@ -470,7 +490,7 @@ export default function DemoLandingPage() {
               <div className="cando__inner" style={{ display: "flex", flexDirection: "column", gap: "36px" }}>
                 
                 {/* 事例 1 */}
-                <div className="cando__item" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px", position: "relative" }}>
+                <div className="cando__item scroll-fade-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px", position: "relative" }}>
                   <div className="cando__content balloon" style={{ flex: "1 1 auto", backgroundColor: "#ffffff", padding: "32px", borderRadius: "12px", border: "2px solid #EDDFBB", position: "relative" }}>
                     <h3 className="cando__title" style={{ fontSize: "16px", lineHeight: "1.85", color: "#202226" }}>
                       <span className="large-title underline" style={{ fontSize: "21px", fontWeight: "bold", color: "#3F6ECC", display: "inline-block", borderBottom: "3px solid #FFDA1B", paddingBottom: "2px", marginBottom: "12px" }}>
@@ -489,7 +509,7 @@ export default function DemoLandingPage() {
                 </div>
 
                 {/* 事例 2 */}
-                <div className="cando__item" style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px", position: "relative" }}>
+                <div className="cando__item scroll-fade-up" style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px", position: "relative" }}>
                   <div className="cando__content balloon" style={{ flex: "1 1 auto", backgroundColor: "#ffffff", padding: "32px", borderRadius: "12px", border: "2px solid #EDDFBB", position: "relative" }}>
                     <h3 className="cando__title" style={{ fontSize: "16px", lineHeight: "1.85", color: "#202226" }}>
                       <span className="large-title underline" style={{ fontSize: "21px", fontWeight: "bold", color: "#3F6ECC", display: "inline-block", borderBottom: "3px solid #FFDA1B", paddingBottom: "2px", marginBottom: "12px" }}>
@@ -508,7 +528,7 @@ export default function DemoLandingPage() {
                 </div>
 
                 {/* 事例 3 */}
-                <div className="cando__item" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px", position: "relative" }}>
+                <div className="cando__item scroll-fade-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "40px", backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px", position: "relative" }}>
                   <div className="cando__content balloon" style={{ flex: "1 1 auto", backgroundColor: "#ffffff", padding: "32px", borderRadius: "12px", border: "2px solid #EDDFBB", position: "relative" }}>
                     <h3 className="cando__title" style={{ fontSize: "16px", lineHeight: "1.85", color: "#202226" }}>
                       <span className="large-title underline" style={{ fontSize: "21px", fontWeight: "bold", color: "#3F6ECC", display: "inline-block", borderBottom: "3px solid #FFDA1B", paddingBottom: "2px", marginBottom: "12px" }}>
@@ -532,7 +552,7 @@ export default function DemoLandingPage() {
         </section>
 
         {/* 9. カオナビ完全同期 シンプルな料金体系 (Pricing) */}
-        <section id="estimate" className="section-a section-a--cream" style={{ padding: "90px 0" }}>
+        <section id="estimate" className="section-a section-a--cream scroll-fade-up" style={{ padding: "90px 0" }}>
           <div className="section-a__inner">
             <div className="case">
               <h2 className="h2-b" style={{ fontSize: "34px", letterSpacing: "-0.5px" }}>シンプルな料金体系</h2>
@@ -584,7 +604,7 @@ export default function DemoLandingPage() {
         </section>
 
         {/* 10. カオナビ完全同期 システムと活用ノウハウ (knowhow) */}
-        <section className="section-a section-a--narrow" style={{ padding: "90px 0" }}>
+        <section className="section-a section-a--narrow scroll-fade-up" style={{ padding: "90px 0" }}>
           <div className="section-a__inner">
             <div className="knowhow">
               <div className="h2-a" style={{ textAlign: "center", marginBottom: "54px" }}>
@@ -600,7 +620,7 @@ export default function DemoLandingPage() {
 
               <div className="knowhow__inner" style={{ display: "flex", alignItems: "stretch", justifyContent: "center", gap: "32px", position: "relative", flexWrap: "wrap" }}>
                 
-                <div className="knowhow__item knowhow__item--blue" style={{ flex: "1 1 420px", maxWidth: "490px", backgroundColor: "#ffffff", borderRadius: "16px", overflow: "hidden", boxShadow: "0 6px 20px rgba(115,115,120,0.08)", borderTop: "4px solid #3F6ECC" }}>
+                <div className="knowhow__item knowhow__item--blue scroll-fade-up" style={{ flex: "1 1 420px", maxWidth: "490px", backgroundColor: "#ffffff", borderRadius: "16px", overflow: "hidden", boxShadow: "0 6px 20px rgba(115,115,120,0.08)", borderTop: "4px solid #3F6ECC" }}>
                   <div className="knowhow__card" style={{ padding: "36px 32px" }}>
                     <div className="knowhow__image" style={{ textAlign: "center", marginBottom: "20px" }}>
                       <img src="/demo-assets/image-knowhow-01.png" alt="安心安全なシステム" style={{ width: "100%", maxWidth: "340px", height: "auto", margin: "0 auto", display: "block" }} />
@@ -615,7 +635,7 @@ export default function DemoLandingPage() {
                   </div>
                 </div>
 
-                <div className="knowhow__item knowhow__item--green" style={{ flex: "1 1 420px", maxWidth: "490px", backgroundColor: "#ffffff", borderRadius: "16px", overflow: "hidden", boxShadow: "0 6px 20px rgba(115,115,120,0.08)", borderTop: "4px solid #30a143" }}>
+                <div className="knowhow__item knowhow__item--green scroll-fade-up" style={{ flex: "1 1 420px", maxWidth: "490px", backgroundColor: "#ffffff", borderRadius: "16px", overflow: "hidden", boxShadow: "0 6px 20px rgba(115,115,120,0.08)", borderTop: "4px solid #30a143" }}>
                   <div className="knowhow__card" style={{ padding: "36px 32px" }}>
                     <div className="knowhow__image" style={{ textAlign: "center", marginBottom: "20px" }}>
                       <img src="/demo-assets/image-knowhow-02.png" alt="育んだノウハウ" style={{ width: "100%", maxWidth: "340px", height: "auto", margin: "0 auto", display: "block" }} />
@@ -636,7 +656,7 @@ export default function DemoLandingPage() {
         </section>
 
         {/* 11. カオナビ完全同期 CTAセクション (お電話 & お問い合わせ) */}
-        <section id="contact" className="section-a section-a--yellow section-a--narrow" style={{ padding: "90px 0", backgroundColor: "#ffda1b" }}>
+        <section id="contact" className="section-a section-a--yellow section-a--narrow scroll-fade-up" style={{ padding: "90px 0", backgroundColor: "#ffda1b" }}>
           <div className="section-a__inner">
             <div className="conv-02">
               <div className="h2-a" style={{ textAlign: "center", marginBottom: "44px" }}>
@@ -684,7 +704,7 @@ export default function DemoLandingPage() {
         </section>
 
         {/* 簡易問い合わせフォーム */}
-        <section id="contact-form" style={{ padding: "70px 0", backgroundColor: "#ffffff" }}>
+        <section id="contact-form" className="scroll-fade-up" style={{ padding: "70px 0", backgroundColor: "#ffffff" }}>
           <div className="section-a__inner" style={{ maxWidth: "620px", margin: "0 auto", padding: "0 20px" }}>
             <div style={{ backgroundColor: "#fbf8ee", padding: "40px", borderRadius: "16px", border: "1px solid #dadcdf", boxShadow: "0 4px 16px rgba(115,115,120,0.06)" }}>
               <h3 style={{ fontSize: "22px", fontWeight: "bold", textAlign: "center", marginBottom: "24px", color: "#202226" }}>

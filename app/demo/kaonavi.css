@@ -5127,23 +5127,408 @@ video.mv__video {
   }
 }
 
-/* デモページ用 追加レスポンシブ調整 */
+/* =============================================
+   スクロール浮き上がりアニメーション (uiken.jp風)
+============================================= */
+.scroll-fade-up {
+  opacity: 0;
+  transform: translateY(35px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-fade-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 子要素に順番に時間差をつけて浮き上がらせるディレイクラス */
+.scroll-delay-1 {
+  transition-delay: 0.1s;
+}
+.scroll-delay-2 {
+  transition-delay: 0.2s;
+}
+.scroll-delay-3 {
+  transition-delay: 0.3s;
+}
+
+/* =============================================
+   デモページ用 スマホ版レスポンシブ最適化 (max-width: 768px)
+============================================= */
 @media screen and (max-width: 768px) {
-  .cando.showcase .cando__item {
+  /* 全体共通のコンテナ・セクション余白 */
+  .section-a,
+  .section-a--cream,
+  .section-a--yellow,
+  .section-a--narrow {
+    padding: 54px 0 !important;
+  }
+
+  .section-a__inner {
+    padding: 0 16px !important;
+  }
+
+  /* セクション見出しのサイズ適正化 */
+  .h2-a__title,
+  .h2-b {
+    font-size: 24px !important;
+    line-height: 1.35 !important;
+    margin-bottom: 28px !important;
+    letter-spacing: -0.3px !important;
+  }
+
+  .h2-a__subtitle {
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+  }
+
+  /* ヒーローセクション */
+  .mv.-min {
+    padding-top: 86px !important;
+    padding-bottom: 36px !important;
+  }
+
+  .mv__inner {
     flex-direction: column !important;
     gap: 24px !important;
-    padding: 24px 16px !important;
   }
-  .cando.showcase .cando__image {
+
+  .mv__content {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    text-align: left;
+  }
+
+  .mv__bubble {
+    font-size: 12px !important;
+    padding: 5px 14px !important;
+    display: inline-block !important;
+  }
+
+  .h1-a {
+    font-size: 24px !important;
+    line-height: 1.4 !important;
+    margin-top: 14px !important;
+  }
+
+  .mv__content p {
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+    margin-top: 14px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .mv__bg {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    margin-top: 8px !important;
+  }
+
+  /* 白書（ホワイトペーパー）カード3連 */
+  .whitepaper {
+    margin: 16px 0 32px !important;
+  }
+
+  .whitepaper-list {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .whitepaper-list_item a {
+    min-height: auto !important;
+    padding: 12px 14px !important;
+    gap: 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .whitepaper-list_thumb {
+    width: 96px !important;
+    height: 68px !important;
+  }
+
+  .whitepaper-list_thumb img {
+    width: 96px !important;
+    height: 68px !important;
+  }
+
+  .whitepaper-list_title {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* 実績バッジ（No.1・導入社数・アワード） */
+  .no1-list {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .item-no1.laurel {
     width: 100% !important;
     max-width: 280px !important;
     margin: 0 auto !important;
   }
-  .cando.showcase .cando__image img {
-    height: 180px !important;
+
+  .item-award {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    margin-top: 8px !important;
   }
-  .case__item {
+
+  .award-pict {
+    height: 34px !important;
+    width: auto !important;
+  }
+
+  /* お悩み解決カード */
+  .problem .case__inner {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .problem .case__item {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
     padding: 24px 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .problem .case__title {
+    font-size: 17px !important;
+    min-height: auto !important;
+    margin-bottom: 8px !important;
+  }
+
+  .worries_blue_text {
+    font-size: 15px !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* 強み（3つの理由） */
+  .reason-list {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .reason-list .item {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    padding: 24px 18px !important;
+  }
+
+  .reason-list .title {
+    font-size: 18px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .conv-01 {
+    flex-direction: column !important;
+    gap: 12px !important;
+    margin-top: 32px !important;
+  }
+
+  .conv-01 .button-a {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    padding: 16px !important;
+  }
+
+  /* 活用シーン（6連グリッド） */
+  .case__inner.line-3 {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .case__inner.line-3 .case__item {
+    padding: 24px 16px !important;
+  }
+
+  .case__inner.line-3 .case__title {
+    font-size: 17px !important;
+    margin-bottom: 10px !important;
+  }
+
+  /* 事例詳細 (showcase) */
+  .cando.showcase .cando__item {
+    flex-direction: column !important;
+    gap: 20px !important;
+    padding: 24px 16px !important;
+  }
+
+  .cando.showcase .cando__content.balloon {
+    padding: 20px 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .cando.showcase .large-title.underline {
+    font-size: 17px !important;
+  }
+
+  .cando.showcase .cando__text {
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+  }
+
+  .cando.showcase .cando__image {
+    width: 100% !important;
+    max-width: 260px !important;
+    margin: 0 auto !important;
+  }
+
+  .cando.showcase .cando__image img {
+    height: 170px !important;
+    width: auto !important;
+  }
+
+  /* 料金体系 (Pricing) */
+  #estimate .case {
+    padding: 0 !important;
+  }
+
+  .estimate_cta_area {
+    padding: 28px 16px !important;
+    gap: 24px !important;
+  }
+
+  .estimate_image {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+
+  .estimate_image img {
+    max-width: 220px !important;
+  }
+
+  .estimate_cont {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+
+  .estimate_title {
+    font-size: 19px !important;
+    text-align: center !important;
+  }
+
+  .estimate-set {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 12px !important;
+  }
+
+  .select-set {
+    width: 100% !important;
+  }
+
+  .select-set select {
+    width: 100% !important;
+    font-size: 13px !important;
+  }
+
+  .estimate-set .button-a {
+    width: 100% !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ノウハウ (knowhow) */
+  .knowhow__inner {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  .knowhow__item {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+
+  .knowhow__card {
+    padding: 28px 18px !important;
+  }
+
+  .knowhow__itemHeading--large {
+    font-size: 20px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .knowhow__list {
+    font-size: 14px !important;
+    line-height: 2 !important;
+  }
+
+  /* CTAセクション (#contact) */
+  #contact {
+    padding: 50px 0 !important;
+  }
+
+  .conv-02__inner {
+    flex-direction: column !important;
+    gap: 28px !important;
+  }
+
+  .conv-02__box {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 12px !important;
+  }
+
+  .conv-02__item {
+    width: 100% !important;
+  }
+
+  .conv-02__button {
+    padding: 16px 10px !important;
+  }
+
+  .conv-02__phone {
+    width: 100% !important;
+  }
+
+  .conv-02__phoneNum {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .conv-02__phoneNum--link {
+    font-size: 26px !important;
+  }
+
+  /* フォーム */
+  #contact-form {
+    padding: 40px 0 !important;
+  }
+
+  #contact-form > div > div {
+    padding: 24px 16px !important;
+  }
+
+  #contact-form input {
+    font-size: 16px !important; /* iOSでズームされないフォントサイズ */
+  }
+
+  /* フッター */
+  .footer {
+    padding: 36px 0 !important;
+  }
+
+  .footer__logo {
+    flex-direction: column !important;
+    gap: 18px !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .footer__linkList {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 12px 16px !important;
+  }
+
+  .footer__copyright {
+    font-size: 12px !important;
   }
 }
 
