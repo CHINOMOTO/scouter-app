@@ -29,6 +29,24 @@ import {
   Megaphone,
   Globe
 } from "lucide-react";
+import {
+  IcAttendance,
+  IcShift,
+  IcHoliday,
+  IcWorkAlert,
+  IcVariableHours,
+  IcPayroll,
+  IcYearEnd,
+  IcManHourSales,
+  IcStatutoryLedgers,
+  IcTurnoverRate,
+  IcDailyReport,
+  IcProject,
+  IcWorkflow,
+  IcSecurityAudit,
+  IcCorporateTrust,
+  IcPersonSearch,
+} from "@/components/ui/SaasIcons";
 
 type Announcement = {
   id: string;
@@ -452,8 +470,8 @@ export default function DashboardPage() {
               {/* セクションヘッダー帯 (単色フラット) */}
               <div className="px-4.5 py-4 sm:px-6 sm:py-4.5 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10 shrink-0">
-                    <Users className="w-5 h-5 text-white" />
+                  <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center border border-white/15 shrink-0">
+                    <IcTurnoverRate className="w-7 h-7" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -488,7 +506,7 @@ export default function DashboardPage() {
                     description="氏名・カナ・生年月日等から過去のトラブルや問題行動の記録を照会します。"
                     badge="照会"
                     actionText="照会画面を開く"
-                    icon={<Search className="w-5 h-5 text-slate-700" />}
+                    icon={<IcPersonSearch className="w-12 h-12" />}
                     onClick={() => router.push("/search")}
                   />
 
@@ -498,7 +516,7 @@ export default function DashboardPage() {
                     description="現在データベースに登録・共有されているトラブル人材の一覧を確認します。"
                     badge="一覧"
                     actionText="一覧を見る"
-                    icon={<ClipboardList className="w-5 h-5 text-slate-700" />}
+                    icon={<IcStatutoryLedgers className="w-12 h-12" />}
                     onClick={() => router.push("/cases")}
                   />
 
@@ -508,7 +526,7 @@ export default function DashboardPage() {
                     description="就業トラブルを起こした従業員や応募者の事実を新規登録し、共有申請を行います。"
                     badge="登録申請"
                     actionText="登録フォームへ"
-                    icon={<UserPlus className="w-5 h-5 text-slate-700" />}
+                    icon={<IcDailyReport className="w-12 h-12" />}
                     onClick={() => router.push("/cases/new")}
                   />
                 </div>
@@ -522,8 +540,8 @@ export default function DashboardPage() {
               {/* セクションヘッダー帯 (ネイビー) */}
               <div className="px-4.5 py-4 sm:px-6 sm:py-4.5 bg-blue-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10 shrink-0">
-                    <Building2 className="w-5 h-5 text-white" />
+                  <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center border border-white/15 shrink-0">
+                    <IcCorporateTrust className="w-7 h-7" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -559,7 +577,7 @@ export default function DashboardPage() {
                     badge="信用照会"
                     theme="blue"
                     actionText="照会を実行"
-                    icon={<Building2 className="w-5 h-5 text-slate-700" />}
+                    icon={<IcCorporateTrust className="w-12 h-12" />}
                     onClick={() => router.push("/credit")}
                   />
 
@@ -571,7 +589,7 @@ export default function DashboardPage() {
                     badgeVariant={watchlistAlertCount > 0 ? "danger" : "default"}
                     theme="blue"
                     actionText="リストを確認"
-                    icon={<BookmarkCheck className="w-5 h-5 text-slate-700" />}
+                    icon={<IcWorkAlert className="w-12 h-12" />}
                     onClick={() => router.push("/credit/watchlist")}
                   />
 
@@ -582,7 +600,7 @@ export default function DashboardPage() {
                     badge="一覧"
                     theme="blue"
                     actionText="一覧を見る"
-                    icon={<ClipboardList className="w-5 h-5 text-slate-700" />}
+                    icon={<IcProject className="w-12 h-12" />}
                     onClick={() => router.push("/credit/cases")}
                   />
 
@@ -593,7 +611,7 @@ export default function DashboardPage() {
                     badge="情報登録"
                     theme="blue"
                     actionText="登録フォームへ"
-                    icon={<FilePlus2 className="w-5 h-5 text-slate-700" />}
+                    icon={<IcWorkflow className="w-12 h-12" />}
                     onClick={() => router.push("/credit/new")}
                   />
                 </div>
@@ -605,8 +623,8 @@ export default function DashboardPage() {
           {!isAdmin && allowedPlan === "employment" && (
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs mb-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <Building2 className="w-5 h-5" />
+                <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 mt-0.5 p-1">
+                  <IcCorporateTrust className="w-9 h-9" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -636,8 +654,8 @@ export default function DashboardPage() {
           {!isAdmin && allowedPlan === "credit" && (
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs mb-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-lg bg-slate-100 text-slate-800 border border-slate-200 flex items-center justify-center shrink-0 mt-0.5">
-                  <UserPlus className="w-5 h-5" />
+                <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 mt-0.5 p-1">
+                  <IcPersonSearch className="w-9 h-9" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -676,7 +694,7 @@ export default function DashboardPage() {
               <UtilityCard
                 title="アカウント設定"
                 description="パスワード変更やユーザー情報の確認"
-                icon={<Settings className="w-4 h-4 text-slate-600" />}
+                icon={<IcVariableHours className="w-6 h-6" />}
                 onClick={() => router.push("/settings")}
               />
 
@@ -684,7 +702,7 @@ export default function DashboardPage() {
               <UtilityCard
                 title="お問い合わせ"
                 description="システムの要望・プラン変更等のご相談"
-                icon={<Mail className="w-4 h-4 text-slate-600" />}
+                icon={<IcShift className="w-6 h-6" />}
                 onClick={() => router.push("/contact")}
               />
 
@@ -694,7 +712,7 @@ export default function DashboardPage() {
                   title="管理者メニュー"
                   description="申請の承認・企業登録・ユーザー管理"
                   badge="Admin"
-                  icon={<ShieldAlert className="w-4 h-4 text-slate-900" />}
+                  icon={<IcSecurityAudit className="w-6 h-6" />}
                   onClick={() => router.push("/admin")}
                 />
               )}
@@ -881,10 +899,6 @@ function MenuCard({
     ? "hover:border-blue-400 hover:shadow-xs" 
     : "hover:border-slate-400 hover:shadow-xs";
 
-  const hoverIconClass = theme === "blue"
-    ? "group-hover:bg-blue-50 group-hover:text-blue-700"
-    : "group-hover:bg-slate-200 group-hover:text-slate-900";
-
   const hoverTextClass = theme === "blue"
     ? "group-hover:text-blue-700"
     : "group-hover:text-slate-900";
@@ -895,11 +909,11 @@ function MenuCard({
       className={`group text-left p-4.5 sm:p-5 rounded-xl bg-white border border-slate-200/90 shadow-2xs hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-150 flex flex-col justify-between h-full relative cursor-pointer hover:-translate-y-0.5 ${hoverBorderClass}`}
     >
       <div>
-        <div className="flex items-start justify-between w-full mb-3">
-          <div className={`p-2 sm:p-2.5 rounded-lg bg-slate-100 text-slate-700 transition-colors ${hoverIconClass}`}>
+        <div className="flex items-start justify-between w-full mb-3.5">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 p-1 rounded-xl bg-slate-50/90 border border-slate-100 flex items-center justify-center group-hover:scale-105 group-hover:shadow-xs group-hover:bg-blue-50/50 group-hover:border-blue-100 transition-all duration-200 shrink-0">
             {icon}
           </div>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-colors ${badgeClasses}`}>
+          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md border transition-colors ${badgeClasses}`}>
             {badge}
           </span>
         </div>
@@ -940,7 +954,7 @@ function UtilityCard({
       className="group text-left p-3.5 sm:p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 active:scale-[0.99] transition-all flex items-center justify-between shadow-2xs cursor-pointer"
     >
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-slate-100 text-slate-700 group-hover:bg-slate-200 transition-colors">
+        <div className="w-10 h-10 p-1 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center group-hover:scale-105 group-hover:bg-blue-50 group-hover:border-blue-200 transition-all shrink-0">
           {icon}
         </div>
         <div>
