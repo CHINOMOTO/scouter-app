@@ -5202,15 +5202,17 @@ video.mv__video {
     margin-bottom: 6px !important;
   }
 
-  /* ヒーローセクション */
+  /* ヒーローセクション (スマホ上部の開放感・余白の確保) */
   .mv.-min {
-    padding-top: 86px !important;
-    padding-bottom: 36px !important;
+    padding-top: 108px !important; /* 固定ヘッダーとの間に約45pxの抜け感を確保 */
+    padding-bottom: 48px !important;
   }
 
   .mv__inner {
     flex-direction: column !important;
-    gap: 24px !important;
+    gap: 32px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
   }
 
   .mv__content {
@@ -5220,28 +5222,32 @@ video.mv__video {
   }
 
   .mv__bubble {
-    font-size: 12px !important;
+    font-size: 11.5px !important;
     padding: 5px 14px !important;
     display: inline-block !important;
+    margin-bottom: 10px !important;
+    letter-spacing: 0.5px !important;
   }
 
   .h1-a {
-    font-size: 24px !important;
-    line-height: 1.4 !important;
-    margin-top: 14px !important;
+    font-size: 22px !important;
+    line-height: 1.55 !important;
+    margin-top: 10px !important;
+    letter-spacing: -0.3px !important;
   }
 
   .mv__content p {
-    font-size: 14px !important;
-    line-height: 1.7 !important;
+    font-size: 13.5px !important;
+    line-height: 1.85 !important;
     margin-top: 14px !important;
-    margin-bottom: 24px !important;
+    margin-bottom: 22px !important;
+    color: #56575b !important;
   }
 
   .mv__bg {
     flex: 1 1 100% !important;
     max-width: 100% !important;
-    margin-top: 8px !important;
+    margin-top: 20px !important;
   }
 
   /* 白書（ホワイトペーパー）カード3連 */
@@ -5650,8 +5656,8 @@ video.mv__video {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
-    gap: 12px !important;
-    margin-top: 20px !important;
+    gap: 10px !important;
+    margin-top: 18px !important;
   }
 
   .mv.-min .cta-set > .mv__button,
@@ -5661,7 +5667,9 @@ video.mv__video {
     max-width: 100% !important;
     flex: 1 1 auto !important;
     margin: 0 !important;
-    padding: 16px 20px !important;
+    padding: 13px 18px !important;
+    font-size: 14.5px !important;
+    border-radius: 8px !important;
     text-align: center !important;
     box-sizing: border-box !important;
     display: flex !important;
