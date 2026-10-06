@@ -236,16 +236,17 @@ export default function CreditSearchPage() {
                 setIsWatched(watched);
             }
 
-            // 社名特定（0件かつ社名未設定の場合、国税庁APIで補完を試みる）
+            // 社名特定（0件かつ社名未設定の場合、企業名補完APIを試みる）
             if (currentCases.length > 0 && currentCases[0].company_name) {
                 setDiscoveredCompanyName(currentCases[0].company_name);
             } else if (!searchQuery.trim()) {
                 try {
-                    const ntaRes = await fetch(`https://api.houjin-bangou.nta.go.jp/4/num?id=K8yQd8Xq9L1zV&number=${corpNum}&type=12&history=0`);
-                    const xmlText = await ntaRes.text();
-                    const nameMatch = xmlText.match(/<name>(.*?)<\/name>/);
-                    if (nameMatch && nameMatch[1]) {
-                        setDiscoveredCompanyName(nameMatch[1]);
+                    const res = await fetch(`/api/credit/corporate-lookup?number=${corpNum}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.found && data.name) {
+                            setDiscoveredCompanyName(data.name);
+                        }
                     }
                 } catch {
                     // ignore

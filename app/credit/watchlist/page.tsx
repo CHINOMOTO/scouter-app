@@ -90,7 +90,7 @@ export default function CreditWatchlistPage() {
         fetchWatchlist();
     }, []);
 
-    // 国税庁API自動取得
+    // 法人番号から企業名を補完取得
     const handleFetchCorporateName = async () => {
         const clean = newCorpNum.trim().replace(/[^0-9]/g, "");
         if (clean.length !== 13) {
@@ -100,18 +100,20 @@ export default function CreditWatchlistPage() {
 
         setFetchingCorp(true);
         try {
-            const res = await fetch(`https://api.houjin-bangou.nta.go.jp/4/num?id=K8yQd8Xq9L1zV&number=${clean}&type=12&history=0`);
-            const xmlText = await res.text();
-            const nameMatch = xmlText.match(/<name>(.*?)<\/name>/);
-            if (nameMatch && nameMatch[1]) {
-                setNewCompanyName(nameMatch[1]);
-                setToast({ type: "success", text: `企業名「${nameMatch[1]}」を取得しました。` });
-            } else {
-                setToast({ type: "error", text: "企業名が見つかりませんでした。手動で入力してください。" });
+            const res = await fetch(`/api/credit/corporate-lookup?number=${clean}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.found && data.name) {
+                    setNewCompanyName(data.name);
+                    setToast({ type: "success", text: `企業名「${data.name}」を取得しました。` });
+                    return;
+                }
             }
+            // 取得できなかった場合はエラーで威圧せず、手動入力を促す情報トーストを表示
+            setToast({ type: "info", text: "企業名が見つかりませんでした。下の「企業名」欄に直接ご入力ください。" });
         } catch (e) {
             console.error(e);
-            setToast({ type: "error", text: "国税庁API通信に失敗しました。企業名を手動で入力してください。" });
+            setToast({ type: "info", text: "企業名の自動取得が行えませんでした。下の「企業名」欄に直接ご入力ください。" });
         } finally {
             setFetchingCorp(false);
         }
