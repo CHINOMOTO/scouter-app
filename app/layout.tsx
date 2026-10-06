@@ -6,6 +6,15 @@ import { AlertTriangle } from "lucide-react";
 export const metadata: Metadata = {
   title: "MIERIS（ミエリス）- 採る前に、事実を知る 就業情報共有システム",
   description: "雑工・荷揚げ・警備・運送 就業情報共有システム。就業実績を本人同意のもとで利用企業間に共有する仕組みです。",
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
 };
 
 export default function RootLayout({
