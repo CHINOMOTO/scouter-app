@@ -35,7 +35,73 @@ type CreditCase = {
     resolved_delay_days?: number | null;
     counterparty_claim?: string | null;
     status: "pending" | "approved" | "rejected";
+    business_status?: string | null;
+    registry_status?: string | null;
+    registry_close_date?: string | null;
+    registry_close_cause?: string | null;
     created_at: string;
+};
+
+// 公的登記ステータスバッジ
+const renderRegistryBadge = (status?: string | null, closeCause?: string | null) => {
+    switch (status) {
+        case "closed":
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse" />
+                    <span>公的登記: 閉鎖（{closeCause || "清算結了等"}）</span>
+                </span>
+            );
+        case "sole_proprietor":
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                    <span>個人事業主・一人親方（法人登記なし）</span>
+                </span>
+            );
+        case "active":
+        default:
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                    <span>公的登記: 登記中（存続）</span>
+                </span>
+            );
+    }
+};
+
+// 相手方の営業実態バッジ（被害企業報告）
+const renderBusinessStatusBadge = (status?: string | null) => {
+    switch (status) {
+        case "unreachable":
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                    <span>営業実態: 音信不通（連絡拒絶）</span>
+                </span>
+            );
+        case "relocated":
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                    <span>営業実態: 夜逃げ・事務所閉鎖</span>
+                </span>
+            );
+        case "bankrupt":
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-slate-900 text-rose-300 border border-slate-700 font-extrabold">
+                    <span>営業実態: 倒産・破産手続き中</span>
+                </span>
+            );
+        case "active":
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span>営業実態: 連絡可能（協議中）</span>
+                </span>
+            );
+        default:
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                    <span>営業実態: 不明・未申告</span>
+                </span>
+            );
+    }
 };
 
 export default function CreditSearchPage() {
@@ -59,6 +125,10 @@ export default function CreditSearchPage() {
     const [isWatched, setIsWatched] = useState(false);
     const [watchLoading, setWatchLoading] = useState(false);
     const [discoveredCompanyName, setDiscoveredCompanyName] = useState("");
+
+    // 国税庁lookup照会結果（該当なし時の閉鎖検知用）
+    const [lookupRegistryStatus, setLookupRegistryStatus] = useState<string | null>(null);
+    const [lookupCloseDetails, setLookupCloseDetails] = useState<{ date?: string; cause?: string } | null>(null);
 
     // プラン制限チェック用
     const [planRestricted, setPlanRestricted] = useState(false);
@@ -156,6 +226,8 @@ export default function CreditSearchPage() {
         setSearching(true);
         setHasSearched(false);
         setCases([]);
+        setLookupRegistryStatus(null);
+        setLookupCloseDetails(null);
 
         try {
             const session = (await supabase.auth.getSession()).data.session;
@@ -189,7 +261,7 @@ export default function CreditSearchPage() {
             setHasSearched(true);
             setSearchedCorp(normalizedCorp);
 
-            // ウォッチリスト登録状況の確認と社名補完
+            // ウォッチリスト登録状況の確認と社名・登記ステータス補完
             checkWatchlistStatus(normalizedCorp, fetchedCases);
 
             // 照会監査ログの保存 (POST /api/audit)
@@ -217,7 +289,7 @@ export default function CreditSearchPage() {
         }
     };
 
-    // 照会対象のウォッチリスト状況チェック
+    // 照会対象のウォッチリスト状況チェック & 国税庁登記ステータス確認
     const checkWatchlistStatus = async (corpNum: string, currentCases: CreditCase[]) => {
         try {
             const session = (await supabase.auth.getSession()).data.session;
@@ -236,22 +308,34 @@ export default function CreditSearchPage() {
                 setIsWatched(watched);
             }
 
-            // 社名特定（0件かつ社名未設定の場合、企業名補完APIを試みる）
-            if (currentCases.length > 0 && currentCases[0].company_name) {
-                setDiscoveredCompanyName(currentCases[0].company_name);
-            } else if (!searchQuery.trim()) {
-                try {
-                    const res = await fetch(`/api/credit/corporate-lookup?number=${corpNum}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.found && data.name) {
-                            setDiscoveredCompanyName(data.name);
+            // 国税庁lookupを呼び出して、登記ステータス（存続/閉鎖/清算等）と社名を取得
+            try {
+                const lookupRes = await fetch(`/api/credit/corporate-lookup?number=${corpNum}`);
+                if (lookupRes.ok) {
+                    const lookupData = await lookupRes.json();
+                    if (lookupData.found) {
+                        if (lookupData.name && !discoveredCompanyName) {
+                            setDiscoveredCompanyName(lookupData.name);
+                        }
+                        if (lookupData.registry_status) {
+                            setLookupRegistryStatus(lookupData.registry_status);
+                        }
+                        if (lookupData.close_date || lookupData.close_cause) {
+                            setLookupCloseDetails({
+                                date: lookupData.close_date,
+                                cause: lookupData.close_cause
+                            });
                         }
                     }
-                } catch {
-                    // ignore
                 }
-            } else {
+            } catch (lookupErr) {
+                console.error("Corporate lookup error:", lookupErr);
+            }
+
+            // currentCasesから社名補完
+            if (currentCases.length > 0 && currentCases[0].company_name) {
+                setDiscoveredCompanyName(currentCases[0].company_name);
+            } else if (searchQuery.trim() && !discoveredCompanyName) {
                 setDiscoveredCompanyName(searchQuery.trim());
             }
         } catch (e) {
@@ -585,28 +669,60 @@ export default function CreditSearchPage() {
                                     </div>
                                 </div>
                             ) : cases.length === 0 ? (
-                                /* 検索後・該当なし（安全・問題なし） */
+                                /* 検索後・該当なし（安全・または登記閉鎖アラート） */
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
                                     <div className="p-6 sm:p-8 text-center border-b border-slate-100 bg-slate-50/50">
-                                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 mb-3 border border-emerald-200/60">
-                                            <ShieldCheck className="w-6 h-6" />
-                                        </div>
-                                        <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1">
-                                            該当する遅延・未払い企業情報はありません
-                                        </h3>
-                                        <div className="flex flex-wrap items-center justify-center gap-2 mt-1 mb-2">
-                                            {discoveredCompanyName && (
-                                                <span className="text-sm font-bold text-slate-800">
-                                                    {discoveredCompanyName}
-                                                </span>
-                                            )}
-                                            <span className="text-xs text-slate-500 font-mono">
-                                                (法人番号: {searchedCorp})
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed mb-4">
-                                            データベース上に該当する未払い・支払遅延の記録は存在しません。安心してお取引をご検討いただけます。
-                                        </p>
+                                        {lookupRegistryStatus === "closed" ? (
+                                            <>
+                                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-rose-50 text-rose-600 mb-3 border border-rose-200/80">
+                                                    <AlertTriangle className="w-6 h-6" />
+                                                </div>
+                                                <h3 className="text-sm sm:text-base font-bold text-rose-800 mb-1">
+                                                    注意: 公的登記がすでに閉鎖（清算・解散）されています
+                                                </h3>
+                                                <div className="flex flex-wrap items-center justify-center gap-2 mt-1 mb-2">
+                                                    {discoveredCompanyName && (
+                                                        <span className="text-sm font-bold text-slate-800">
+                                                            {discoveredCompanyName}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-xs text-slate-500 font-mono">
+                                                        (法人番号: {searchedCorp})
+                                                    </span>
+                                                </div>
+                                                <div className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 mb-3">
+                                                    国税庁登記情報: 閉鎖（{lookupCloseDetails?.cause || "清算結了等"}）{lookupCloseDetails?.date ? ` / 閉鎖日: ${lookupCloseDetails.date}` : ""}
+                                                </div>
+                                                <p className="text-xs text-slate-600 max-w-lg mx-auto leading-relaxed mb-4">
+                                                    過去の未払い登録自体はありませんが、<strong>国税庁の法人登記データ上ですでに法人活動が終了（倒産・清算結了）</strong>しています。取引や債権回収の際は極めて高い警戒が必要です。
+                                                </p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 mb-3 border border-emerald-200/60">
+                                                    <ShieldCheck className="w-6 h-6" />
+                                                </div>
+                                                <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1">
+                                                    該当する遅延・未払い企業情報はありません
+                                                </h3>
+                                                <div className="flex flex-wrap items-center justify-center gap-2 mt-1 mb-2">
+                                                    {discoveredCompanyName && (
+                                                        <span className="text-sm font-bold text-slate-800">
+                                                            {discoveredCompanyName}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-xs text-slate-500 font-mono">
+                                                        (法人番号: {searchedCorp})
+                                                    </span>
+                                                </div>
+                                                <div className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 mb-3">
+                                                    公的登記ステータス: 登記中（存続企業）
+                                                </div>
+                                                <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed mb-4">
+                                                    データベース上に該当する未払い・支払遅延の記録は存在しません。安心してお取引をご検討いただけます。
+                                                </p>
+                                            </>
+                                        )}
 
 {/*                                         {/* ウォッチ登録カード */}
                                         <div className="mt-4 p-4 rounded-xl bg-blue-50/70 border border-blue-100 max-w-lg mx-auto flex flex-col sm:flex-row items-center justify-between gap-3.5 text-left">
@@ -717,15 +833,19 @@ export default function CreditSearchPage() {
                                                     className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all group flex flex-col justify-between"
                                                 >
                                                     <div>
-                                                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 mb-3">
+                                                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 mb-2.5">
                                                             <div>
                                                                 <h4 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
                                                                     <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
                                                                     <span>{c.company_name}</span>
                                                                 </h4>
-                                                                {c.corporate_number && (
+                                                                {c.corporate_number ? (
                                                                     <p className="text-xs text-slate-500 font-mono mt-0.5 ml-5.5">
                                                                         法人番号: {c.corporate_number}
+                                                                    </p>
+                                                                ) : (
+                                                                    <p className="text-[11px] text-amber-700 font-semibold mt-0.5 ml-5.5">
+                                                                        ※個人事業主・一人親方（法人番号なし）
                                                                     </p>
                                                                 )}
                                                             </div>
@@ -742,6 +862,12 @@ export default function CreditSearchPage() {
                                                                     </span>
                                                                 )}
                                                             </div>
+                                                        </div>
+
+                                                        {/* 2軸ステータス表示（公的登記 & 営業実態） */}
+                                                        <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                                                            {renderRegistryBadge(c.registry_status, c.registry_close_cause)}
+                                                            {renderBusinessStatusBadge(c.business_status)}
                                                         </div>
 
                                                         <div className="bg-slate-50 p-3 sm:p-3.5 rounded-lg border border-slate-200/80 mb-3 space-y-1.5 text-xs">

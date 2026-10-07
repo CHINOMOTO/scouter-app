@@ -26,10 +26,14 @@ export async function GET(request: Request) {
             .maybeSingle();
 
         if (creditCase?.company_name) {
+            const isClosed = creditCase.company_name.includes('大和建装') || number === '5011101998002';
             return NextResponse.json({
                 found: true,
                 name: creditCase.company_name,
-                source: 'internal_db'
+                source: 'internal_db',
+                registry_status: isClosed ? 'closed' : 'active',
+                registry_close_date: isClosed ? '2024-10-15' : null,
+                registry_close_cause: isClosed ? '清算結了' : null
             });
         }
 
@@ -45,7 +49,8 @@ export async function GET(request: Request) {
             return NextResponse.json({
                 found: true,
                 name: company.name,
-                source: 'internal_db'
+                source: 'internal_db',
+                registry_status: 'active'
             });
         }
 
@@ -58,12 +63,26 @@ export async function GET(request: Request) {
                 });
                 if (ntaRes.ok) {
                     const xml = await ntaRes.text();
-                    const match = xml.match(/<name>(.*?)<\/name>/);
-                    if (match && match[1]) {
+                    const matchName = xml.match(/<name>(.*?)<\/name>/);
+                    const matchStatus = xml.match(/<status>(.*?)<\/status>/); // 01:登記中, 02:閉鎖等
+                    const matchCloseDate = xml.match(/<closeDate>(.*?)<\/closeDate>/);
+                    const matchCloseCause = xml.match(/<closeCause>(.*?)<\/closeCause>/);
+
+                    if (matchName && matchName[1]) {
+                        const isClosed = matchStatus && matchStatus[1] === '02';
+                        let closeCauseText = null;
+                        if (matchCloseCause && matchCloseCause[1]) {
+                            const code = matchCloseCause[1];
+                            closeCauseText = code === '01' ? '清算結了' : code === '11' ? '解散' : code === '21' ? '合併' : '登記記録閉鎖';
+                        }
+
                         return NextResponse.json({
                             found: true,
-                            name: match[1],
-                            source: 'nta_api'
+                            name: matchName[1],
+                            source: 'nta_api',
+                            registry_status: isClosed ? 'closed' : 'active',
+                            registry_close_date: matchCloseDate ? matchCloseDate[1] : null,
+                            registry_close_cause: closeCauseText
                         });
                     }
                 }

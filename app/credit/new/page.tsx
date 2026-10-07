@@ -8,6 +8,7 @@ import {
     ArrowLeft, 
     Upload, 
     AlertCircle, 
+    AlertTriangle,
     Check, 
     FileText,
     Building2,
@@ -28,6 +29,13 @@ export default function NewCreditCasePage() {
     const [amount, setAmount] = useState("");
     const [dueDate, setDueDate] = useState("");
     const [counterpartyClaim, setCounterpartyClaim] = useState("");
+    
+    // 営業実態ステータス & 公的登記ステータス
+    const [businessStatus, setBusinessStatus] = useState<string>("unreachable");
+    const [registryStatus, setRegistryStatus] = useState<string>("active");
+    const [registryCloseDate, setRegistryCloseDate] = useState<string>("");
+    const [registryCloseCause, setRegistryCloseCause] = useState<string>("");
+    const [isSoleProprietor, setIsSoleProprietor] = useState(false);
     
     // エビデンスファイル（同意書、請求書、督促書）
     const [files, setFiles] = useState<File[]>([]);
@@ -67,8 +75,8 @@ export default function NewCreditCasePage() {
         }
 
         const cleanCorpNum = corporateNumber.trim().replace(/[^0-9]/g, "");
-        if (!cleanCorpNum || cleanCorpNum.length !== 13) {
-            setErrorMsg("法人番号（13桁の半角数字）を必ず入力してください。");
+        if (!isSoleProprietor && (!cleanCorpNum || cleanCorpNum.length !== 13)) {
+            setErrorMsg("法人の場合は法人番号（13桁の半角数字）を入力してください。個人事業主の場合は「個人事業主・一人親方」にチェックを入れてください。");
             return;
         }
 
@@ -105,13 +113,17 @@ export default function NewCreditCasePage() {
                 },
                 body: JSON.stringify({
                     companyName: companyName.trim(),
-                    corporateNumber: cleanCorpNum || null,
+                    corporateNumber: isSoleProprietor ? null : (cleanCorpNum || null),
                     location: location.trim() || null,
                     invoiceDate: invoiceDate || null,
                     amount: numAmount,
                     dueDate: dueDate,
                     counterpartyClaim: counterpartyClaim.trim() || null,
-                    evidenceUrls: uploadedUrls
+                    evidenceUrls: uploadedUrls,
+                    businessStatus: businessStatus,
+                    registryStatus: isSoleProprietor ? "sole_proprietor" : registryStatus,
+                    registryCloseDate: registryCloseDate || null,
+                    registryCloseCause: registryCloseCause || null
                 })
             });
 
@@ -127,6 +139,30 @@ export default function NewCreditCasePage() {
             setErrorMsg(err.message || "予期せぬエラーが発生しました");
         } finally {
             setUploading(false);
+        }
+    };
+
+    // 法人番号入力時の自動照会（公的ステータスチェック）
+    const handleCorporateNumberChange = async (num: string) => {
+        const clean = num.replace(/[^0-9]/g, "");
+        setCorporateNumber(clean);
+        if (clean.length === 13) {
+            try {
+                const res = await fetch(`/api/credit/corporate-lookup?number=${clean}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.found && data.name) {
+                        if (!companyName) setCompanyName(data.name);
+                        if (data.registry_status) {
+                            setRegistryStatus(data.registry_status);
+                            setRegistryCloseDate(data.registry_close_date || "");
+                            setRegistryCloseCause(data.registry_close_cause || "");
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn("Corporate lookup silent error:", err);
+            }
         }
     };
 
@@ -204,23 +240,57 @@ export default function NewCreditCasePage() {
                             {/* 法人番号 & 所在地 */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-1.5 sm:space-y-2">
-                                    <label className="text-xs sm:text-sm font-bold text-slate-800">
-                                        法人番号（13桁） <span className="text-red-500">*</span>
-                                    </label>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs sm:text-sm font-bold text-slate-800">
+                                            法人番号（13桁） {!isSoleProprietor && <span className="text-red-500">*</span>}
+                                        </label>
+                                        <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer select-none">
+                                            <input
+                                                type="checkbox"
+                                                checked={isSoleProprietor}
+                                                onChange={(e) => {
+                                                    setIsSoleProprietor(e.target.checked);
+                                                    if (e.target.checked) {
+                                                        setRegistryStatus("sole_proprietor");
+                                                    } else {
+                                                        setRegistryStatus("active");
+                                                    }
+                                                }}
+                                                className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
+                                            />
+                                            <span className="font-semibold text-slate-700">個人事業主・一人親方</span>
+                                        </label>
+                                    </div>
                                     <input
                                         type="text"
-                                        required
+                                        disabled={isSoleProprietor}
+                                        required={!isSoleProprietor}
                                         maxLength={13}
-                                        value={corporateNumber}
-                                        onChange={(e) => setCorporateNumber(e.target.value.replace(/[^0-9]/g, ""))}
-                                        className="input-field font-mono py-2.5 sm:py-3 text-sm sm:text-base"
-                                        placeholder="例: 1234567890123"
+                                        value={isSoleProprietor ? "" : corporateNumber}
+                                        onChange={(e) => handleCorporateNumberChange(e.target.value)}
+                                        className={`input-field font-mono py-2.5 sm:py-3 text-sm sm:text-base ${
+                                            isSoleProprietor ? "bg-slate-100 text-slate-400 cursor-not-allowed" : ""
+                                        }`}
+                                        placeholder={isSoleProprietor ? "（法人番号なし・個人事業主）" : "例: 1234567890123"}
                                     />
-                                    <p className="text-[10px] sm:text-[11px] text-slate-400">※同名他社との誤認防止のため13桁の番号を入力してください</p>
+                                    {/* 登記閉鎖検知バナー */}
+                                    {registryStatus === "closed" && (
+                                        <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2">
+                                            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                                            <span>
+                                                <strong>公的データ検知:</strong> この法人はすでに登記閉鎖（{registryCloseCause || "清算結了等"}）されています
+                                            </span>
+                                        </div>
+                                    )}
+                                    {isSoleProprietor && (
+                                        <p className="text-[10px] sm:text-[11px] text-blue-600 font-medium">
+                                            ※個人事業主・一人親方（屋号）として登録されます
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="space-y-1.5 sm:space-y-2">
                                     <label className="text-xs sm:text-sm font-bold text-slate-800">
-                                        本社所在地
+                                        本社所在地 / 現場拠点
                                     </label>
                                     <input
                                         type="text"
@@ -229,6 +299,54 @@ export default function NewCreditCasePage() {
                                         className="input-field py-2.5 sm:py-3 text-sm sm:text-base"
                                         placeholder="例: 東京都千代田区〇〇1-2-3"
                                     />
+                                </div>
+                            </div>
+
+                            {/* 相手先の現在の営業実態ステータス（一人親方・未払い現場対策） */}
+                            <div className="p-4 sm:p-5 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs sm:text-sm font-bold text-amber-950 flex items-center gap-1.5">
+                                        <AlertTriangle className="w-4 h-4 text-amber-600" />
+                                        <span>相手先の現在の営業状況・連絡状況 <span className="text-red-500">*</span></span>
+                                    </label>
+                                    <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                                        信用リスク判定
+                                    </span>
+                                </div>
+                                <p className="text-xs text-amber-900/80 leading-relaxed">
+                                    未払い発生後の相手方の現状を選択してください。他社が照会する際の重要なリスク指標になります。
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+                                    {[
+                                        { id: "unreachable", label: "音信不通", desc: "電話不通・LINE等ブロック", badge: "高リスク", color: "border-red-300 bg-white hover:border-red-500" },
+                                        { id: "relocated", label: "事務所引き払い・夜逃げ", desc: "拠点不在・行方不明", badge: "極めて危険", color: "border-rose-300 bg-white hover:border-rose-500" },
+                                        { id: "bankrupt", label: "破産・倒産手続き中", desc: "弁護士等からの通知受領", badge: "回収困難", color: "border-purple-300 bg-white hover:border-purple-500" },
+                                        { id: "active", label: "連絡可能（督促中）", desc: "連絡はつくが支払拒絶・延期", badge: "協議中", color: "border-amber-300 bg-white hover:border-amber-500" },
+                                        { id: "unknown", label: "現状不明", desc: "最新状況は未確認", badge: "不明", color: "border-slate-300 bg-white hover:border-slate-400" },
+                                    ].map((opt) => (
+                                        <label
+                                            key={opt.id}
+                                            onClick={() => setBusinessStatus(opt.id)}
+                                            className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between ${opt.color} ${
+                                                businessStatus === opt.id
+                                                    ? "ring-2 ring-blue-600 border-blue-600 bg-blue-50/50 shadow-xs"
+                                                    : "opacity-80 hover:opacity-100"
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="text-xs font-bold text-slate-900">{opt.label}</span>
+                                                <input
+                                                    type="radio"
+                                                    name="businessStatus"
+                                                    value={opt.id}
+                                                    checked={businessStatus === opt.id}
+                                                    onChange={() => setBusinessStatus(opt.id)}
+                                                    className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <p className="text-[10px] text-slate-500 leading-tight">{opt.desc}</p>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
 

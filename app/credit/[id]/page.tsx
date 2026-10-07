@@ -31,6 +31,10 @@ type CreditCaseDetail = {
     registered_by_company_id: string;
     evidence_urls?: string[];
     status: "pending" | "approved" | "rejected";
+    business_status?: string | null;
+    registry_status?: string | null;
+    registry_close_date?: string | null;
+    registry_close_cause?: string | null;
     created_at: string;
     companies?: {
         id: string;
@@ -237,7 +241,7 @@ export default function CreditCaseDetailPage() {
                                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">
                                     未払い金額（税込）
                                 </span>
-                                <span className="text-4xl font-extrabold text-slate-900">
+                                <span className="text-4xl font-extrabold text-slate-900 font-mono">
                                     ¥{caseData.amount.toLocaleString()}
                                 </span>
                             </div>
@@ -249,18 +253,112 @@ export default function CreditCaseDetailPage() {
                             </div>
                         </div>
 
+                        {/* 2軸ステータスカード（公的登記ステータス × 相手先の営業実態） */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-6">
+                            {/* 1. 公的登記ステータス（国税庁データ準拠） */}
+                            <div className={`p-4 rounded-xl border ${
+                                caseData.registry_status === "closed"
+                                    ? "bg-rose-50/80 border-rose-200"
+                                    : caseData.registry_status === "sole_proprietor"
+                                    ? "bg-amber-50/80 border-amber-200"
+                                    : "bg-blue-50/80 border-blue-200"
+                            }`}>
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                                    <span>公的登記ステータス（国税庁準拠）</span>
+                                    <span className="text-[10px] font-normal text-slate-400">公的記録</span>
+                                </div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    {caseData.registry_status === "closed" ? (
+                                        <div className="text-sm font-extrabold text-rose-800 flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
+                                            <span>登記記録閉鎖（{caseData.registry_close_cause || "清算結了等"}）</span>
+                                        </div>
+                                    ) : caseData.registry_status === "sole_proprietor" ? (
+                                        <div className="text-sm font-extrabold text-amber-800">
+                                            個人事業主・一人親方（法人登記なし）
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm font-extrabold text-blue-800">
+                                            法人登記中（存続中）
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-[11px] text-slate-600 leading-snug">
+                                    {caseData.registry_status === "closed"
+                                        ? `国税庁データ上、すでに清算結了や解散が行われ法人格が消滅しています${caseData.registry_close_date ? `（閉鎖日: ${caseData.registry_close_date}）` : ""}。`
+                                        : caseData.registry_status === "sole_proprietor"
+                                        ? "法人番号を持たない個人事業・一人親方組織として登録されています。"
+                                        : "国税庁の法人番号公表サイト上で正常に存続・登記されています。"}
+                                </p>
+                            </div>
+
+                            {/* 2. 相手方の営業実態（被害企業報告） */}
+                            <div className="p-4 rounded-xl border bg-slate-50 border-slate-200">
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                                    <span>相手方の営業実態（被害企業報告）</span>
+                                    <span className="text-[10px] font-normal text-slate-400">現場実態</span>
+                                </div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    {caseData.business_status === "unreachable" ? (
+                                        <span className="text-sm font-extrabold text-rose-700">
+                                            音信不通（電話不通・連絡拒絶）
+                                        </span>
+                                    ) : caseData.business_status === "relocated" ? (
+                                        <span className="text-sm font-extrabold text-purple-700">
+                                            事務所引き払い・夜逃げ状態
+                                        </span>
+                                    ) : caseData.business_status === "bankrupt" ? (
+                                        <span className="text-sm font-extrabold text-slate-900">
+                                            倒産・破産手続き中
+                                        </span>
+                                    ) : caseData.business_status === "active" ? (
+                                        <span className="text-sm font-extrabold text-emerald-700">
+                                            連絡可能（督促・協議継続中）
+                                        </span>
+                                    ) : (
+                                        <span className="text-sm font-extrabold text-slate-700">
+                                            不明・未申告
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-[11px] text-slate-600 leading-snug">
+                                    {caseData.business_status === "unreachable"
+                                        ? "請求・督促に対して電話拒否、LINEブロック、着信不通など連絡が取れない状態です。"
+                                        : caseData.business_status === "relocated"
+                                        ? "登録されている所在地から退去・夜逃げし、郵便物も返戻されている状態です。"
+                                        : caseData.business_status === "bankrupt"
+                                        ? "弁護士等による受任通知や破産申し立て手続きが行われている状態です。"
+                                        : caseData.business_status === "active"
+                                        ? "連絡自体は取れているものの、約束期日に入金が履行されていない状態です。"
+                                        : "現在の営業実態に関する明確な申告はありません。"}
+                                </p>
+                            </div>
+                        </div>
+
                         {/* 7項目詳細リスト */}
                         <div className="space-y-4 py-2 text-sm">
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">対象企業名（商号）</span>
+                                <span className="text-slate-500 font-medium">対象企業名（商号・屋号）</span>
                                 <span className="font-bold text-slate-900">{caseData.company_name}</span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">法人番号</span>
-                                <span className="font-mono text-slate-800">{caseData.corporate_number || "未登録"}</span>
+                                <span className="font-mono text-slate-800">{caseData.corporate_number || "未登録（個人事業主・一人親方）"}</span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">本社所在地</span>
+                                <span className="text-slate-500 font-medium">公的登記ステータス</span>
+                                <span className="font-bold text-slate-800">
+                                    {caseData.registry_status === "closed" ? "閉鎖（清算結了等）" : caseData.registry_status === "sole_proprietor" ? "個人事業主・一人親方" : "登記中（存続）"}
+                                </span>
+                            </div>
+                            <div className="flex justify-between py-2.5 border-b border-slate-100">
+                                <span className="text-slate-500 font-medium">相手先営業・連絡実態</span>
+                                <span className="font-bold text-slate-800">
+                                    {caseData.business_status === "unreachable" ? "音信不通" : caseData.business_status === "relocated" ? "事務所引き払い・夜逃げ" : caseData.business_status === "bankrupt" ? "倒産・破産手続き中" : caseData.business_status === "active" ? "連絡可能（協議中）" : "不明"}
+                                </span>
+                            </div>
+                            <div className="flex justify-between py-2.5 border-b border-slate-100">
+                                <span className="text-slate-500 font-medium">本社所在地・拠点</span>
                                 <span className="text-slate-800">{caseData.location || "未登録"}</span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">

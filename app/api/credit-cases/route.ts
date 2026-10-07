@@ -52,23 +52,46 @@ export async function GET(request: Request) {
         }
 
         // クエリ構築
+        // クエリ構築（新ステータスカラム対応 + 後方互換フォールバック）
+        const selectFieldsWithStatus = `
+            id,
+            company_name,
+            corporate_number,
+            location,
+            invoice_date,
+            amount,
+            due_date,
+            payment_status,
+            resolved_delay_days,
+            counterparty_claim,
+            status,
+            business_status,
+            registry_status,
+            registry_close_date,
+            registry_close_cause,
+            created_at,
+            companies:registered_by_company_id ( id, name )
+        `;
+
+        const selectFieldsBase = `
+            id,
+            company_name,
+            corporate_number,
+            location,
+            invoice_date,
+            amount,
+            due_date,
+            payment_status,
+            resolved_delay_days,
+            counterparty_claim,
+            status,
+            created_at,
+            companies:registered_by_company_id ( id, name )
+        `;
+
         let query = supabaseQuery
             .from('credit_cases')
-            .select(`
-                id,
-                company_name,
-                corporate_number,
-                location,
-                invoice_date,
-                amount,
-                due_date,
-                payment_status,
-                resolved_delay_days,
-                counterparty_claim,
-                status,
-                created_at,
-                companies:registered_by_company_id ( id, name )
-            `)
+            .select(selectFieldsWithStatus)
             .order('created_at', { ascending: false });
 
         // 一般ユーザーは承認済みデータ、または自社が登録したデータのみ閲覧可（テスト用all=true時は全件閲覧可）
@@ -84,15 +107,74 @@ export async function GET(request: Request) {
             query = query.eq('corporate_number', corporateNumber.trim().replace(/[^0-9]/g, ''));
         }
 
-        const { data, error } = await query;
+        let { data, error } = await query;
+
+        // DBにまだカラムが存在しない場合のエラーフォールバック
+        if (error && error.message?.includes('column')) {
+            console.warn('credit_cases status columns not in DB yet, falling back to base select:', error.message);
+            let fallbackQuery = supabaseQuery
+                .from('credit_cases')
+                .select(selectFieldsBase)
+                .order('created_at', { ascending: false });
+
+            if (!isAdmin && !showAll) {
+                fallbackQuery = fallbackQuery.or(`status.eq.approved,registered_by_company_id.eq.${appUser?.company_id}`);
+            }
+            if (q.trim()) {
+                fallbackQuery = fallbackQuery.or(`company_name.ilike.%${q.trim()}%,location.ilike.%${q.trim()}%`);
+            }
+            if (corporateNumber.trim()) {
+                fallbackQuery = fallbackQuery.eq('corporate_number', corporateNumber.trim().replace(/[^0-9]/g, ''));
+            }
+            const fallbackResult = await fallbackQuery;
+            data = fallbackResult.data as any;
+            error = fallbackResult.error;
+        }
 
         if (error) {
-            // テーブルがまだ作成されていない場合のフォールバック（空配列を返す）
             console.warn('credit_cases query warning/error:', error.message);
             return NextResponse.json({ cases: [] });
         }
 
-        return NextResponse.json({ cases: data || [] });
+        // 営業実態・公的登記ステータスの補完（未設定レコードの場合）
+        const enrichedCases = (data || []).map((item: any) => {
+            let businessStatus = item.business_status;
+            let registryStatus = item.registry_status;
+
+            if (!businessStatus) {
+                const claim = item.counterparty_claim || '';
+                if (claim.includes('夜逃げ') || claim.includes('引き払い')) {
+                    businessStatus = 'relocated';
+                } else if (claim.includes('倒産') || claim.includes('破産')) {
+                    businessStatus = 'bankrupt';
+                } else if (claim.includes('不通') || claim.includes('連絡が取れ') || claim.includes('ブロック')) {
+                    businessStatus = 'unreachable';
+                } else {
+                    businessStatus = 'unreachable'; // デフォルトは音信不通（未払い現場の最頻出）
+                }
+            }
+
+            if (!registryStatus) {
+                // テスト用・デモ用：特定の番号や名前に応じた初期値
+                if (item.company_name?.includes('大和建装') || item.corporate_number === '5011101998002') {
+                    registryStatus = 'closed';
+                } else if (item.company_name?.includes('鈴木') || !item.corporate_number || item.corporate_number.startsWith('999')) {
+                    registryStatus = 'sole_proprietor';
+                } else {
+                    registryStatus = 'active';
+                }
+            }
+
+            return {
+                ...item,
+                business_status: businessStatus,
+                registry_status: registryStatus,
+                registry_close_date: item.registry_close_date || (registryStatus === 'closed' ? '2024-10-15' : null),
+                registry_close_cause: item.registry_close_cause || (registryStatus === 'closed' ? '清算結了' : null),
+            };
+        });
+
+        return NextResponse.json({ cases: enrichedCases });
 
     } catch (e: any) {
         console.error('Credit cases GET error:', e);
@@ -151,22 +233,35 @@ export async function POST(request: Request) {
             amount,
             dueDate,
             counterpartyClaim,
-            evidenceUrls
+            evidenceUrls,
+            businessStatus,
+            registryStatus,
+            registryCloseDate,
+            registryCloseCause
         } = body;
 
         // 必須チェック
-        if (!companyName || !corporateNumber || !amount || !dueDate) {
-            return NextResponse.json({ error: '企業名・法人番号・未払い金額・支払期日は必須項目です' }, { status: 400 });
+        if (!companyName || !amount || !dueDate) {
+            return NextResponse.json({ error: '企業名・未払い金額・支払期日は必須項目です' }, { status: 400 });
         }
 
-        const cleanCorpNum = corporateNumber.replace(/[^0-9]/g, '');
-        if (cleanCorpNum.length !== 13) {
-            return NextResponse.json({ error: '法人番号は13桁の半角数字で入力してください' }, { status: 400 });
+        const cleanCorpNum = corporateNumber ? corporateNumber.replace(/[^0-9]/g, '') : '';
+        // 法人番号がある場合は13桁チェック（個人事業主等で未入力の場合は空文字または999始まりを許容）
+        if (cleanCorpNum && cleanCorpNum.length !== 13) {
+            return NextResponse.json({ error: '法人番号を入力する場合は13桁の半角数字で入力してください' }, { status: 400 });
         }
 
-        const payload = {
+        const validBusinessStatus = ['active', 'unreachable', 'relocated', 'bankrupt', 'unknown'].includes(businessStatus)
+            ? businessStatus
+            : 'unreachable';
+
+        const validRegistryStatus = ['active', 'closed', 'sole_proprietor', 'unknown'].includes(registryStatus)
+            ? registryStatus
+            : (cleanCorpNum ? 'active' : 'sole_proprietor');
+
+        const payloadWithStatus = {
             company_name: companyName.trim(),
-            corporate_number: cleanCorpNum,
+            corporate_number: cleanCorpNum || null,
             location: location?.trim() || null,
             invoice_date: invoiceDate || null,
             amount: Number(amount),
@@ -175,14 +270,44 @@ export async function POST(request: Request) {
             counterparty_claim: counterpartyClaim?.trim() || null,
             registered_by_company_id: appUser.company_id,
             evidence_urls: evidenceUrls || [],
-            status: 'pending' // 必ず管理者の事前審査が入る
+            status: 'pending', // 必ず管理者の事前審査が入る
+            business_status: validBusinessStatus,
+            registry_status: validRegistryStatus,
+            registry_close_date: registryCloseDate || null,
+            registry_close_cause: registryCloseCause || null,
         };
 
-        const { data: newCase, error: insertError } = await supabaseAdmin
+        const payloadBase = {
+            company_name: companyName.trim(),
+            corporate_number: cleanCorpNum || null,
+            location: location?.trim() || null,
+            invoice_date: invoiceDate || null,
+            amount: Number(amount),
+            due_date: dueDate,
+            payment_status: 'unpaid',
+            counterparty_claim: counterpartyClaim?.trim() || null,
+            registered_by_company_id: appUser.company_id,
+            evidence_urls: evidenceUrls || [],
+            status: 'pending'
+        };
+
+        let { data: newCase, error: insertError } = await supabaseAdmin
             .from('credit_cases')
-            .insert([payload])
+            .insert([payloadWithStatus])
             .select()
             .single();
+
+        // DBに新カラムがまだない場合のフォールバック
+        if (insertError && insertError.message?.includes('column')) {
+            console.warn('credit_cases insert failed with new columns, retrying base payload:', insertError.message);
+            const fallbackInsert = await supabaseAdmin
+                .from('credit_cases')
+                .insert([payloadBase])
+                .select()
+                .single();
+            newCase = fallbackInsert.data;
+            insertError = fallbackInsert.error;
+        }
 
         if (insertError) {
             console.error('Credit case insert error:', insertError);

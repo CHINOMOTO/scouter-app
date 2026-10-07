@@ -45,7 +45,42 @@ export async function GET(
             return NextResponse.json({ error: '対象データが見つかりません' }, { status: 404 });
         }
 
-        return NextResponse.json({ case: creditCase });
+        // 営業実態・公的登記ステータスの補完（未設定レコードの場合）
+        let businessStatus = creditCase.business_status;
+        let registryStatus = creditCase.registry_status;
+
+        if (!businessStatus) {
+            const claim = creditCase.counterparty_claim || '';
+            if (claim.includes('夜逃げ') || claim.includes('引き払い')) {
+                businessStatus = 'relocated';
+            } else if (claim.includes('倒産') || claim.includes('破産')) {
+                businessStatus = 'bankrupt';
+            } else if (claim.includes('不通') || claim.includes('連絡が取れ') || claim.includes('ブロック')) {
+                businessStatus = 'unreachable';
+            } else if (creditCase.payment_status === 'resolved') {
+                businessStatus = 'active';
+            } else {
+                businessStatus = 'unreachable';
+            }
+        }
+
+        if (!registryStatus) {
+            if (!creditCase.corporate_number) {
+                registryStatus = 'sole_proprietor';
+            } else if (businessStatus === 'bankrupt' || (creditCase.counterparty_claim || '').includes('清算')) {
+                registryStatus = 'closed';
+            } else {
+                registryStatus = 'active';
+            }
+        }
+
+        const enrichedCase = {
+            ...creditCase,
+            business_status: businessStatus,
+            registry_status: registryStatus
+        };
+
+        return NextResponse.json({ case: enrichedCase });
 
     } catch (e: any) {
         console.error('Credit case detail GET error:', e);
