@@ -352,13 +352,13 @@ export default function CreditSearchPage() {
                                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                                 <span>戻る</span>
                             </Link>
-                            <Link 
+{/*                             <Link 
                                 href="/credit/watchlist" 
                                 className="btn-secondary text-xs h-9 px-3 sm:px-3.5 rounded-lg flex items-center justify-center gap-1.5 font-bold transition-colors whitespace-nowrap text-slate-700 hover:text-blue-600 hover:border-blue-200"
                             >
                                 <BookmarkCheck className="w-4 h-4 text-blue-600 shrink-0" />
                                 <span>取引先ウォッチ</span>
-                            </Link>
+                            </Link> */}
                             <Link
                                 href="/credit/new"
                                 className="btn-primary flex items-center justify-center gap-1.5 px-3 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
@@ -608,7 +608,7 @@ export default function CreditSearchPage() {
                                             データベース上に該当する未払い・支払遅延の記録は存在しません。安心してお取引をご検討いただけます。
                                         </p>
 
-                                        {/* ウォッチ登録カード */}
+{/*                                         {/* ウォッチ登録カード */}
                                         <div className="mt-4 p-4 rounded-xl bg-blue-50/70 border border-blue-100 max-w-lg mx-auto flex flex-col sm:flex-row items-center justify-between gap-3.5 text-left">
                                             <div className="flex-1">
                                                 <div className="text-xs font-bold text-blue-900 flex items-center gap-1.5">

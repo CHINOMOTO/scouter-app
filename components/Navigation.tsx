@@ -354,13 +354,7 @@ export default function Navigation() {
                                         label="企業信用 検索・照会"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
-                                    <SubmenuLink 
-                                        href="/credit/watchlist"
-                                        active={pathname.startsWith("/credit/watchlist")}
-                                        icon={<BookmarkCheck className="w-3.5 h-3.5" />}
-                                        label="取引先ウォッチリスト"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    />
+                                    {/* 取引先ウォッチは検証中のため一時非表示 */}
                                     <SubmenuLink 
                                         href="/credit/new"
                                         active={pathname === "/credit/new"}
