@@ -305,7 +305,7 @@ export default function CreditCaseDetailPage() {
                                         </span>
                                     ) : caseData.business_status === "relocated" ? (
                                         <span className="text-sm font-extrabold text-purple-700">
-                                            事務所引き払い・夜逃げ状態
+                                            事務所引き払い・所在不明
                                         </span>
                                     ) : caseData.business_status === "bankrupt" ? (
                                         <span className="text-sm font-extrabold text-slate-900">
@@ -325,7 +325,7 @@ export default function CreditCaseDetailPage() {
                                     {caseData.business_status === "unreachable"
                                         ? "請求・督促に対して電話拒否、LINEブロック、着信不通など連絡が取れない状態です。"
                                         : caseData.business_status === "relocated"
-                                        ? "登録されている所在地から退去・夜逃げし、郵便物も返戻されている状態です。"
+                                        ? "登録されている所在地から退去・不在となっており、連絡がつかない状態です。"
                                         : caseData.business_status === "bankrupt"
                                         ? "弁護士等による受任通知や破産申し立て手続きが行われている状態です。"
                                         : caseData.business_status === "active"
@@ -354,7 +354,7 @@ export default function CreditCaseDetailPage() {
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">相手先営業・連絡実態</span>
                                 <span className="font-bold text-slate-800">
-                                    {caseData.business_status === "unreachable" ? "音信不通" : caseData.business_status === "relocated" ? "事務所引き払い・夜逃げ" : caseData.business_status === "bankrupt" ? "倒産・破産手続き中" : caseData.business_status === "active" ? "連絡可能（協議中）" : "不明"}
+                                    {caseData.business_status === "unreachable" ? "音信不通" : caseData.business_status === "relocated" ? "事務所引き払い・所在不明" : caseData.business_status === "bankrupt" ? "倒産・破産手続き中" : caseData.business_status === "active" ? "連絡可能（協議中）" : "不明"}
                                 </span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">

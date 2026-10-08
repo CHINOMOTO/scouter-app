@@ -80,7 +80,7 @@ const renderBusinessStatusBadge = (status?: string | null) => {
         case "relocated":
             return (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                    <span>営業実態: 夜逃げ・事務所閉鎖</span>
+                    <span>営業実態: 事務所閉鎖・所在不明</span>
                 </span>
             );
         case "bankrupt":

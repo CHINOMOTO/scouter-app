@@ -51,7 +51,7 @@ export async function GET(
 
         if (!businessStatus) {
             const claim = creditCase.counterparty_claim || '';
-            if (claim.includes('夜逃げ') || claim.includes('引き払い')) {
+            if (claim.includes('夜逃げ') || claim.includes('引き払い') || claim.includes('所在不明')) {
                 businessStatus = 'relocated';
             } else if (claim.includes('倒産') || claim.includes('破産')) {
                 businessStatus = 'bankrupt';

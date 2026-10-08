@@ -302,27 +302,23 @@ export default function NewCreditCasePage() {
                                 </div>
                             </div>
 
-                            {/* 相手先の現在の営業実態ステータス（一人親方・未払い現場対策） */}
-                            <div className="p-4 sm:p-5 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs sm:text-sm font-bold text-amber-950 flex items-center gap-1.5">
-                                        <AlertTriangle className="w-4 h-4 text-amber-600" />
-                                        <span>相手先の現在の営業状況・連絡状況 <span className="text-red-500">*</span></span>
+                            {/* 相手先の現在の営業実態ステータス */}
+                            <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                                <div>
+                                    <label className="text-xs sm:text-sm font-bold text-slate-800 block">
+                                        相手先の現在の営業状況・連絡状況 <span className="text-red-500">*</span>
                                     </label>
-                                    <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
-                                        信用リスク判定
-                                    </span>
                                 </div>
-                                <p className="text-xs text-amber-900/80 leading-relaxed">
-                                    未払い発生後の相手方の現状を選択してください。他社が照会する際の重要なリスク指標になります。
+                                <p className="text-xs text-slate-500 leading-relaxed">
+                                    未払い発生後の相手方の現状を選択してください。
                                 </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
                                     {[
-                                        { id: "unreachable", label: "音信不通", desc: "電話不通・LINE等ブロック", badge: "高リスク", color: "border-red-300 bg-white hover:border-red-500" },
-                                        { id: "relocated", label: "事務所引き払い・夜逃げ", desc: "拠点不在・行方不明", badge: "極めて危険", color: "border-rose-300 bg-white hover:border-rose-500" },
-                                        { id: "bankrupt", label: "破産・倒産手続き中", desc: "弁護士等からの通知受領", badge: "回収困難", color: "border-purple-300 bg-white hover:border-purple-500" },
-                                        { id: "active", label: "連絡可能（督促中）", desc: "連絡はつくが支払拒絶・延期", badge: "協議中", color: "border-amber-300 bg-white hover:border-amber-500" },
-                                        { id: "unknown", label: "現状不明", desc: "最新状況は未確認", badge: "不明", color: "border-slate-300 bg-white hover:border-slate-400" },
+                                        { id: "unreachable", label: "音信不通", desc: "電話不通・LINE等ブロック", color: "border-slate-200 bg-white hover:border-slate-400" },
+                                        { id: "relocated", label: "事務所引き払い・所在不明", desc: "拠点退去・連絡不能", color: "border-slate-200 bg-white hover:border-slate-400" },
+                                        { id: "bankrupt", label: "破産・倒産手続き中", desc: "弁護士等からの通知受領", color: "border-slate-200 bg-white hover:border-slate-400" },
+                                        { id: "active", label: "連絡可能（督促中）", desc: "連絡はつくが支払拒絶・延期", color: "border-slate-200 bg-white hover:border-slate-400" },
+                                        { id: "unknown", label: "現状不明", desc: "最新状況は未確認", color: "border-slate-200 bg-white hover:border-slate-400" },
                                     ].map((opt) => (
                                         <label
                                             key={opt.id}
@@ -330,7 +326,7 @@ export default function NewCreditCasePage() {
                                             className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between ${opt.color} ${
                                                 businessStatus === opt.id
                                                     ? "ring-2 ring-blue-600 border-blue-600 bg-blue-50/50 shadow-xs"
-                                                    : "opacity-80 hover:opacity-100"
+                                                    : "hover:bg-slate-50/80"
                                             }`}
                                         >
                                             <div className="flex items-center justify-between mb-1">
@@ -356,8 +352,8 @@ export default function NewCreditCasePage() {
                                     <label className="text-xs sm:text-sm font-bold text-slate-800">
                                         未払い・遅延金額（税込） <span className="text-red-500">*</span>
                                     </label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-3 text-slate-500 font-bold">¥</span>
+                                    <div className="relative flex items-center">
+                                        <span className="absolute left-3.5 text-slate-400 font-bold text-base pointer-events-none select-none">¥</span>
                                         <input
                                             type="text"
                                             required
@@ -366,8 +362,9 @@ export default function NewCreditCasePage() {
                                                 const val = e.target.value.replace(/[^0-9]/g, "");
                                                 setAmount(val ? Number(val).toLocaleString() : "");
                                             }}
-                                            className="input-field pl-8 font-extrabold text-base sm:text-lg"
-                                            placeholder="1,500,000"
+                                            style={{ paddingLeft: "2.25rem" }}
+                                            className="input-field font-extrabold text-base sm:text-lg font-mono"
+                                            placeholder="500,000"
                                         />
                                     </div>
                                 </div>
