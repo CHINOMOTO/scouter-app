@@ -76,7 +76,7 @@ export default function NewCreditCasePage() {
 
         const cleanCorpNum = corporateNumber.trim().replace(/[^0-9]/g, "");
         if (!isSoleProprietor && (!cleanCorpNum || cleanCorpNum.length !== 13)) {
-            setErrorMsg("法人の場合は法人番号（13桁の半角数字）を入力してください。個人事業主の場合は「個人事業主・一人親方」にチェックを入れてください。");
+            setErrorMsg("法人の場合は法人番号（13桁の半角数字）を入力してください。個人事業主の場合は「個人事業主」にチェックを入れてください。");
             return;
         }
 
@@ -258,7 +258,7 @@ export default function NewCreditCasePage() {
                                                 }}
                                                 className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
                                             />
-                                            <span className="font-semibold text-slate-700">個人事業主・一人親方</span>
+                                             <span className="font-semibold text-slate-700">個人事業主</span>
                                         </label>
                                     </div>
                                     <input
@@ -284,7 +284,7 @@ export default function NewCreditCasePage() {
                                     )}
                                     {isSoleProprietor && (
                                         <p className="text-[10px] sm:text-[11px] text-blue-600 font-medium">
-                                            ※個人事業主・一人親方（屋号）として登録されます
+                                            ※個人事業主（屋号等）として登録されます
                                         </p>
                                     )}
                                 </div>

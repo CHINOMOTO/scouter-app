@@ -57,7 +57,7 @@ const renderRegistryBadge = (status?: string | null, closeCause?: string | null)
         case "sole_proprietor":
             return (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
-                    <span>個人事業主・一人親方（法人登記なし）</span>
+                    <span>個人事業主（法人登記なし）</span>
                 </span>
             );
         case "active":
@@ -401,7 +401,7 @@ export default function CreditCasesListPage() {
                                                              </p>
                                                          ) : (
                                                              <p className="text-[11px] text-amber-700 font-semibold mt-0.5 ml-6 sm:ml-7">
-                                                                 ※個人事業主・一人親方（法人番号なし）
+                                                                 ※個人事業主（法人番号なし）
                                                              </p>
                                                          )}
                                                      </div>

@@ -275,7 +275,7 @@ export default function CreditCaseDetailPage() {
                                         </div>
                                     ) : caseData.registry_status === "sole_proprietor" ? (
                                         <div className="text-sm font-extrabold text-amber-800">
-                                            個人事業主・一人親方（法人登記なし）
+                                            個人事業主（法人登記なし）
                                         </div>
                                     ) : (
                                         <div className="text-sm font-extrabold text-blue-800">
@@ -287,7 +287,7 @@ export default function CreditCaseDetailPage() {
                                     {caseData.registry_status === "closed"
                                         ? `国税庁データ上、すでに清算結了や解散が行われ法人格が消滅しています${caseData.registry_close_date ? `（閉鎖日: ${caseData.registry_close_date}）` : ""}。`
                                         : caseData.registry_status === "sole_proprietor"
-                                        ? "法人番号を持たない個人事業・一人親方組織として登録されています。"
+                                        ? "法人番号を持たない個人事業主（屋号等）として登録されています。"
                                         : "国税庁の法人番号公表サイト上で正常に存続・登記されています。"}
                                 </p>
                             </div>
@@ -343,12 +343,12 @@ export default function CreditCaseDetailPage() {
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">法人番号</span>
-                                <span className="font-mono text-slate-800">{caseData.corporate_number || "未登録（個人事業主・一人親方）"}</span>
+                                <span className="font-mono text-slate-800">{caseData.corporate_number || "未登録（個人事業主）"}</span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">公的登記ステータス</span>
                                 <span className="font-bold text-slate-800">
-                                    {caseData.registry_status === "closed" ? "閉鎖（清算結了等）" : caseData.registry_status === "sole_proprietor" ? "個人事業主・一人親方" : "登記中（存続）"}
+                                    {caseData.registry_status === "closed" ? "閉鎖（清算結了等）" : caseData.registry_status === "sole_proprietor" ? "個人事業主" : "登記中（存続）"}
                                 </span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">

@@ -26,13 +26,13 @@ export async function GET(request: Request) {
             .maybeSingle();
 
         if (creditCase?.company_name) {
-            const isClosed = creditCase.company_name.includes('大和建装') || number === '5011101998002';
+            const isClosed = creditCase.company_name.includes('大同アーバン建装') || creditCase.company_name.includes('大和建装') || number === '5011101998002';
             return NextResponse.json({
                 found: true,
                 name: creditCase.company_name,
                 source: 'internal_db',
                 registry_status: isClosed ? 'closed' : 'active',
-                registry_close_date: isClosed ? '2024-10-15' : null,
+                registry_close_date: isClosed ? '2025-12-20' : null,
                 registry_close_cause: isClosed ? '清算結了' : null
             });
         }

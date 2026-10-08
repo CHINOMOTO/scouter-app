@@ -30,7 +30,7 @@ async function main() {
   // デモ用ケース定義
   const demoCases = [
     {
-      company_name: '大和建装株式会社',
+      company_name: '大同アーバン建装株式会社',
       corporate_number: '5011101998002',
       location: '東京都新宿区西新宿2-8-1',
       invoice_date: '2025-10-15',
@@ -45,7 +45,7 @@ async function main() {
       registry_close_cause: '清算結了'
     },
     {
-      company_name: '鈴木内装（一人親方）',
+      company_name: '鈴木内装（個人事業主）',
       corporate_number: null,
       location: '埼玉県さいたま市大宮区桜木町1-4',
       invoice_date: '2025-11-01',
@@ -53,7 +53,7 @@ async function main() {
       due_date: '2025-11-30',
       payment_status: 'unpaid',
       status: 'approved',
-      counterparty_claim: '個人事業主（一人親方）。クロス貼り替え現場完工後に電話不通・LINEブロックとなり、アパート事務所も引き払い夜逃げ状態。',
+      counterparty_claim: '個人事業主。クロス貼り替え現場完工後に電話不通・LINEブロックとなり、アパート事務所も引き払い夜逃げ状態。',
       business_status: 'relocated',
       registry_status: 'sole_proprietor'
     },
