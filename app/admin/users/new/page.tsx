@@ -31,7 +31,7 @@ export default function NewUserPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [allowedPlan, setAllowedPlan] = useState<"employment" | "credit" | "full">("full");
-    const [role, setRole] = useState<"user" | "admin">("user");
+    const [role, setRole] = useState<"viewer" | "admin">("viewer");
     
     const [loadingCompanies, setLoadingCompanies] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -299,7 +299,7 @@ export default function NewUserPage() {
                                     type="checkbox"
                                     id="isAdminRole"
                                     checked={role === "admin"}
-                                    onChange={(e) => setRole(e.target.checked ? "admin" : "user")}
+                                    onChange={(e) => setRole(e.target.checked ? "admin" : "viewer")}
                                     className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                 />
                                 <label htmlFor="isAdminRole" className="cursor-pointer">

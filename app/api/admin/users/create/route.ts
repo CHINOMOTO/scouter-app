@@ -51,6 +51,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "パスワードは6文字以上で設定してください" }, { status: 400 });
         }
 
+        // DB enum (user_role) に準拠: 'admin' または 'viewer'
+        const targetRole = role === "admin" ? "admin" : "viewer";
+
         // 1. Supabase Auth でユーザーを直接作成 (メール確認済み & 即時承認)
         const { data: authResult, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
             email: email.trim(),
@@ -58,10 +61,10 @@ export async function POST(request: Request) {
             email_confirm: true,
             user_metadata: {
                 display_name: displayName.trim(),
-                role: role || "user"
+                role: targetRole
             },
             app_metadata: {
-                role: role || "user",
+                role: targetRole,
                 is_approved: true
             }
         });
@@ -78,7 +81,7 @@ export async function POST(request: Request) {
             id: newUserId,
             company_id: companyId,
             display_name: displayName.trim(),
-            role: role || "user",
+            role: targetRole,
             is_approved: true, // 管理者発行なので即時承認
             is_active: true
         };
