@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ClipboardCheck, UserCheck, Building, Users, MessageSquare, Mail, FileSpreadsheet, Activity, Sparkles, Box } from "lucide-react";
+import { ClipboardCheck, UserCheck, Building, Users, MessageSquare, Mail, FileSpreadsheet, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
 
@@ -356,37 +356,6 @@ export default function AdminDashboardPage() {
                                                 </span>
                                             </>
                                         )}
-                                    </div>
-                                </div>
-                            </div>
-                        </Link>
-
-                        {/* test タイル */}
-                        <Link
-                            href="/admin/test"
-                            className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-indigo-200/80 transition-all duration-200 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/40 hover:-translate-y-1 hover:border-indigo-400 hover:shadow-md active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
-                        >
-                            <div className="absolute inset-0 bg-indigo-500/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-4 sm:mb-6">
-                                    <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-indigo-600 text-white shadow-xs group-hover:scale-105 transition-transform duration-200">
-                                        <Box className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
-                                    </div>
-                                    <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 bg-indigo-100 text-indigo-800 text-[10px] sm:text-xs font-bold rounded-lg border border-indigo-200 uppercase tracking-wider shadow-xs">
-                                        <Sparkles className="w-3 h-3 text-indigo-600" />
-                                        <span>test</span>
-                                    </span>
-                                </div>
-                                <h2 className="text-lg sm:text-2xl font-extrabold text-slate-900 mb-1.5 sm:mb-2 group-hover:text-indigo-600 transition-colors duration-200">
-                                    test
-                                </h2>
-                                <p className="text-slate-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
-                                    3Dインタラクティブテスト
-                                </p>
-
-                                <div className="mt-auto">
-                                    <div className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 group-hover:translate-x-1 transition-transform">
-                                        <span>開く →</span>
                                     </div>
                                 </div>
                             </div>

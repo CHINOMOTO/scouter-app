@@ -482,13 +482,6 @@ export default function Navigation() {
                                         label="監査ログ・照会履歴"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
-                                    <SubmenuLink 
-                                        href="/admin/test"
-                                        active={pathname === "/admin/test"}
-                                        icon={<Sparkles className="w-3.5 h-3.5 text-indigo-400" />}
-                                        label="test"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    />
                                 </AccordionGroup>
                             </nav>
                         </div>
