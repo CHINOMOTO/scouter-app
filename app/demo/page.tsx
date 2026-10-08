@@ -216,7 +216,7 @@ export default function DemoLandingPage() {
             <div className="company__loop" style={{ marginTop: "24px", overflow: "hidden", width: "100%", maxWidth: "100%" }}>
               <div className="company__marquee">
                 <div className="company__list">
-                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">アクロスクリエイト株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">株式会社宇井建設</span>
                   <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">ネクストライン重機株式会社</span>
                   <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">グランアクシス工営株式会社</span>
                   <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">レクシスロジスティクス株式会社</span>
@@ -226,7 +226,7 @@ export default function DemoLandingPage() {
                   <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">フロンティア都市開発株式会社</span>
                 </div>
                 <div className="company__list" aria-hidden="true">
-                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">アクロスクリエイト株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">株式会社宇井建設</span>
                   <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">ネクストライン重機株式会社</span>
                   <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">グランアクシス工営株式会社</span>
                   <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">レクシスロジスティクス株式会社</span>

@@ -22,9 +22,13 @@ async function main() {
     console.error('Error fetching companies:', compErr);
   } else {
     for (const c of companies) {
-      if (c.name.includes('宇井建設')) {
-        console.log(`Renaming company: ${c.name} -> アクロスクリエイト株式会社`);
-        await supabase.from('companies').update({ name: 'アクロスクリエイト株式会社' }).eq('id', c.id);
+      if (c.name.includes('アクロス') || c.name.includes('宇井建設')) {
+        console.log(`Setting operating company: ${c.name} -> 株式会社宇井建設 (法人番号: 7012401040328)`);
+        await supabase.from('companies').update({
+          name: '株式会社宇井建設',
+          corporate_number: '7012401040328',
+          is_main: true
+        }).eq('id', c.id);
       } else if (c.name.includes('ミヤエモン')) {
         console.log(`Renaming company: ${c.name} -> グランアクシス工営株式会社`);
         await supabase.from('companies').update({ name: 'グランアクシス工営株式会社' }).eq('id', c.id);

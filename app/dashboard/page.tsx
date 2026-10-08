@@ -160,11 +160,11 @@ export default function DashboardPage() {
         const dummyPartners: PartnerCompanyPR[] = [
           {
             id: "p-1",
-            name: "アクロスクリエイト株式会社",
-            category: "総合建設・施工管理",
-            tagline: "先端施工と現場品質を追求する総合建設エンジニアリング",
-            websiteUrl: "#",
-            logoSvg: "acros"
+            name: "株式会社宇井建設",
+            category: "荷揚げ・雑工・多能工サポート",
+            tagline: "現場の円滑な進行を支える荷揚げ・雑工のプロフェッショナル",
+            websiteUrl: "https://www.uiken.jp/",
+            logoSvg: "uiken"
           },
           {
             id: "p-2",
@@ -289,17 +289,14 @@ export default function DashboardPage() {
                     className="h-12 sm:h-14 px-4 sm:px-6 rounded-lg bg-white border border-slate-200/90 hover:border-slate-400 hover:shadow-xs transition-all shrink-0 flex items-center justify-center group/item cursor-pointer"
                     title={`${comp.name} (${comp.category})`}
                   >
-                    {/* 完全オリジナルの架空企業SVGロゴ */}
-                    {comp.logoSvg === "acros" ? (
+                    {comp.logoSvg === "uiken" ? (
                       <div className="flex items-center gap-2 select-none">
-                        <svg className="w-5 h-5 text-slate-800 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                          <polygon points="12 2 21 7 21 17 12 22 3 17 3 7" opacity="0.15" />
-                          <polygon points="12 4 19 8 19 16 12 20 5 16 5 8" fill="none" stroke="currentColor" strokeWidth="2" />
-                          <path d="M12 4 L12 20 M5 8 L19 16 M19 8 L5 16" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-                        </svg>
+                        <div className="w-5 h-5 rounded bg-slate-900 flex items-center justify-center font-black text-white text-[10px] shrink-0 shadow-2xs">
+                          UI
+                        </div>
                         <div className="flex flex-col">
-                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">ACROS</span>
-                          <span className="text-[7px] text-slate-500 font-bold tracking-widest mt-0.5">アクロスクリエイト</span>
+                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">UIKEN</span>
+                          <span className="text-[7px] text-slate-500 font-bold tracking-widest mt-0.5">宇井建設</span>
                         </div>
                       </div>
                     ) : comp.logoSvg === "nextline" ? (
