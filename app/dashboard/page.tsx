@@ -160,89 +160,72 @@ export default function DashboardPage() {
         const dummyPartners: PartnerCompanyPR[] = [
           {
             id: "p-1",
-            name: "大和総合建設",
-            category: "総合建設・ゼネコン",
-            tagline: "安心安全の現場品質と先端施工技術",
-            websiteUrl: "https://example.com/yamato",
-            logoSvg: "yamato"
+            name: "アクロスクリエイト株式会社",
+            category: "総合建設・施工管理",
+            tagline: "先端施工と現場品質を追求する総合建設エンジニアリング",
+            websiteUrl: "#",
+            logoSvg: "acros"
           },
           {
             id: "p-2",
-            name: "日本キャタピラー",
-            category: "重機・建設機械",
-            tagline: "現場を支える強靭なマシンとサポート",
-            websiteUrl: "https://example.com/cat",
-            logoSvg: "cat"
+            name: "ネクストライン重機株式会社",
+            category: "建機レンタル・重機輸送",
+            tagline: "現場の安全稼働を支える強力なマシンラインナップ",
+            websiteUrl: "#",
+            logoSvg: "nextline"
           },
           {
             id: "p-3",
-            name: "TOTO 工営",
-            category: "住宅設備・衛生機器",
-            tagline: "快適な水まわり空間と確かな施工技術",
-            websiteUrl: "https://example.com/toto",
-            logoSvg: "toto"
+            name: "グランアクシス工営株式会社",
+            category: "設備工事業・プラント設備",
+            tagline: "都市インフラと水まわり設備を支える確かな技術力",
+            websiteUrl: "#",
+            logoSvg: "grandaxis"
           },
           {
             id: "p-4",
-            name: "TOYOTA L&F",
-            category: "物流システム・フォークリフト",
-            tagline: "物流現場の安全と最適な自動化ソリューション",
-            websiteUrl: "https://example.com/toyota",
-            logoSvg: "toyota"
+            name: "レクシスロジスティクス株式会社",
+            category: "幹線輸送・資材運送",
+            tagline: "全国ネットワークを結ぶ迅速な現場ロジスティクス",
+            websiteUrl: "#",
+            logoSvg: "lexis"
           },
           {
             id: "p-5",
-            name: "日総エンジニアリング",
-            category: "施工管理・技術者派遣",
-            tagline: "プロフェッショナルな現場管理スタッフの派遣",
-            websiteUrl: "https://example.com/nisso",
-            logoSvg: "mitsubishi"
+            name: "ソリッドアーキテクト株式会社",
+            category: "建築設計・躯体工事",
+            tagline: "堅牢な構造設計を追求するプロフェッショナル集団",
+            websiteUrl: "#",
+            logoSvg: "solid"
           },
           {
             id: "p-6",
-            name: "東日本ロジネット",
-            category: "幹線輸送・重量物運送",
-            tagline: "迅速・確実な全国配送ネットワークを展開",
-            websiteUrl: "https://example.com/sompo",
-            logoSvg: "sompo"
+            name: "ヴェルサス電設株式会社",
+            category: "電気通信・受変電設備",
+            tagline: "次世代エネルギーと先端受変電ソリューション",
+            websiteUrl: "#",
+            logoSvg: "versus"
           },
           {
             id: "p-7",
-            name: "テレ東メディアワークス",
-            category: "映像音響・PR広報",
-            tagline: "企業の魅力を発信する先端コンテンツ制作",
-            websiteUrl: "https://example.com/tvtokyo",
-            logoSvg: "tvtokyo"
+            name: "プロスパーマテリアル株式会社",
+            category: "建築資材・鉄鋼建材",
+            tagline: "高強度資材の安定供給で現場の工期短縮を実現",
+            websiteUrl: "#",
+            logoSvg: "prosper"
           },
           {
             id: "p-8",
-            name: "野村建設不動産",
-            category: "都市開発・不動産管理",
-            tagline: "豊かな都市空間の創造と不動産総合管理",
-            websiteUrl: "https://example.com/nomura",
-            logoSvg: "nomura"
+            name: "フロンティア都市開発株式会社",
+            category: "都市開発・不動産企画",
+            tagline: "持続可能な街づくりをデザインする総合開発",
+            websiteUrl: "#",
+            logoSvg: "frontier"
           }
         ];
 
-        const { data } = await supabase
-          .from("companies")
-          .select("id, name, corporate_number")
-          .order("created_at", { ascending: false })
-          .limit(8);
-
-        if (data && data.length > 0) {
-          const formatted: PartnerCompanyPR[] = data.map((c, idx) => ({
-            id: c.id,
-            name: c.name,
-            category: dummyPartners[idx % dummyPartners.length].category,
-            tagline: dummyPartners[idx % dummyPartners.length].tagline,
-            websiteUrl: "https://www.google.com/search?q=" + encodeURIComponent(c.name),
-            logoSvg: dummyPartners[idx % dummyPartners.length].logoSvg
-          }));
-          setPartnerCompanies(formatted.concat(dummyPartners.slice(formatted.length)));
-        } else {
-          setPartnerCompanies(dummyPartners);
-        }
+        // 弁護士提示およびコンプライアンスの観点から、完全な架空企業サンプルで統一
+        setPartnerCompanies(dummyPartners);
       } catch (err) {
         console.error("Partner companies fetch error:", err);
       }
@@ -306,60 +289,93 @@ export default function DashboardPage() {
                     className="h-12 sm:h-14 px-4 sm:px-6 rounded-lg bg-white border border-slate-200/90 hover:border-slate-400 hover:shadow-xs transition-all shrink-0 flex items-center justify-center group/item cursor-pointer"
                     title={`${comp.name} (${comp.category})`}
                   >
-                    {/* SVG / タイポグラフィ ロゴレンダリング */}
-                    {comp.logoSvg === "toto" ? (
-                      <div className="flex items-center tracking-tighter font-black text-xl sm:text-2xl text-[#004098] font-sans select-none">
-                        TOTO
+                    {/* 完全オリジナルの架空企業SVGロゴ */}
+                    {comp.logoSvg === "acros" ? (
+                      <div className="flex items-center gap-2 select-none">
+                        <svg className="w-5 h-5 text-slate-800 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                          <polygon points="12 2 21 7 21 17 12 22 3 17 3 7" opacity="0.15" />
+                          <polygon points="12 4 19 8 19 16 12 20 5 16 5 8" fill="none" stroke="currentColor" strokeWidth="2" />
+                          <path d="M12 4 L12 20 M5 8 L19 16 M19 8 L5 16" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+                        </svg>
+                        <div className="flex flex-col">
+                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">ACROS</span>
+                          <span className="text-[7px] text-slate-500 font-bold tracking-widest mt-0.5">アクロスクリエイト</span>
+                        </div>
                       </div>
-                    ) : comp.logoSvg === "cat" ? (
-                      <div className="flex items-center bg-[#FFCD11] text-black px-2.5 py-1 rounded-sm gap-1.5 select-none font-black text-xs sm:text-sm">
-                        <span className="text-[11px] sm:text-xs tracking-tight">日本キャタピラー</span>
-                        <span className="bg-black text-[#FFCD11] px-1 py-0.2 text-[10px] font-black rounded-xs tracking-widest">CAT</span>
-                      </div>
-                    ) : comp.logoSvg === "toyota" ? (
-                      <div className="flex items-center tracking-wider font-extrabold text-base sm:text-lg text-[#EB0A1E] font-sans select-none">
-                        TOYOTA
-                      </div>
-                    ) : comp.logoSvg === "mitsubishi" ? (
-                      <div className="flex items-center gap-1.5 select-none">
-                        {/* スリーダイヤマーク */}
-                        <div className="w-4 h-4 relative flex items-center justify-center shrink-0">
-                          <div className="w-1.5 h-1.5 bg-[#E60012] rotate-45 transform mb-2" />
+                    ) : comp.logoSvg === "nextline" ? (
+                      <div className="flex items-center gap-2 select-none">
+                        <div className="w-5 h-5 rounded bg-[#F59E0B] flex items-center justify-center font-black text-slate-950 text-[10px] shrink-0 shadow-2xs">
+                          NL
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-extrabold text-xs sm:text-sm text-slate-900 tracking-tight leading-none">MITSUBISHI</span>
-                          <span className="text-[7px] text-slate-500 italic scale-90 -ml-1">Changes for the Better</span>
+                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">NEXT LINE</span>
+                          <span className="text-[7px] text-amber-700 font-bold tracking-widest mt-0.5">ネクストライン重機</span>
                         </div>
                       </div>
-                    ) : comp.logoSvg === "sompo" ? (
-                      <div className="flex items-center gap-1.5 select-none">
-                        <div className="w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-[#981424] to-[#C8102E] border border-[#780e1a] shrink-0" />
-                        <span className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight">
-                          SOMPOホールディングス
-                        </span>
-                      </div>
-                    ) : comp.logoSvg === "tvtokyo" ? (
-                      <div className="flex items-center font-black select-none text-base sm:text-lg">
-                        <span className="text-[#E6002D] font-extrabold mr-0.5">テレ</span>
-                        <span className="text-[#002B7F] font-black tracking-tight">東</span>
-                      </div>
-                    ) : comp.logoSvg === "yamato" ? (
-                      <div className="flex items-center gap-1.5 select-none">
-                        <div className="w-5 h-5 rounded-sm bg-slate-900 text-white font-bold text-[10px] flex items-center justify-center">
-                          大
+                    ) : comp.logoSvg === "grandaxis" ? (
+                      <div className="flex items-center gap-2 select-none">
+                        <svg className="w-5 h-5 text-sky-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <circle cx="12" cy="12" r="9" />
+                          <circle cx="12" cy="12" r="4" fill="currentColor" />
+                        </svg>
+                        <div className="flex flex-col">
+                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">GRAND AXIS</span>
+                          <span className="text-[7px] text-sky-600 font-bold tracking-widest mt-0.5">グランアクシス工営</span>
                         </div>
-                        <span className="font-extrabold text-xs sm:text-sm text-slate-900 tracking-tight">
-                          大和総合建設
-                        </span>
+                      </div>
+                    ) : comp.logoSvg === "lexis" ? (
+                      <div className="flex items-center gap-2 select-none">
+                        <div className="w-5 h-5 rounded bg-emerald-600 flex items-center justify-center text-white shrink-0">
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">LEXIS LOGI</span>
+                          <span className="text-[7px] text-emerald-700 font-bold tracking-widest mt-0.5">レクシス運送</span>
+                        </div>
+                      </div>
+                    ) : comp.logoSvg === "solid" ? (
+                      <div className="flex items-center gap-2 select-none">
+                        <svg className="w-5 h-5 text-slate-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                        </svg>
+                        <div className="flex flex-col">
+                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">SOLID ARCH</span>
+                          <span className="text-[7px] text-slate-500 font-bold tracking-widest mt-0.5">ソリッドアーキテクト</span>
+                        </div>
+                      </div>
+                    ) : comp.logoSvg === "versus" ? (
+                      <div className="flex items-center gap-2 select-none">
+                        <div className="w-5 h-5 rounded bg-indigo-600 flex items-center justify-center font-black text-white text-[10px] italic shrink-0">
+                          V
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">VERSUS ELEC</span>
+                          <span className="text-[7px] text-indigo-600 font-bold tracking-widest mt-0.5">ヴェルサス電設</span>
+                        </div>
+                      </div>
+                    ) : comp.logoSvg === "prosper" ? (
+                      <div className="flex items-center gap-2 select-none">
+                        <svg className="w-5 h-5 text-orange-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <polygon points="6 3 18 3 22 9 12 22 2 9" />
+                        </svg>
+                        <div className="flex flex-col">
+                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">PROSPER</span>
+                          <span className="text-[7px] text-orange-700 font-bold tracking-widest mt-0.5">プロスパーマテリアル</span>
+                        </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 select-none">
-                        <div className="w-5 h-5 rounded-sm bg-[#0f2d59] text-white font-black text-[10px] flex items-center justify-center">
-                          野
+                      <div className="flex items-center gap-2 select-none">
+                        <svg className="w-5 h-5 text-teal-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="4" y="2" width="16" height="20" rx="2" />
+                          <path d="M9 22v-4h6v4M8 6h.01M16 6h.01M8 10h.01M16 10h.01" />
+                        </svg>
+                        <div className="flex flex-col">
+                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">FRONTIER</span>
+                          <span className="text-[7px] text-teal-700 font-bold tracking-widest mt-0.5">フロンティア都市開発</span>
                         </div>
-                        <span className="font-bold text-xs sm:text-sm text-slate-900 tracking-tight">
-                          野村建設不動産
-                        </span>
                       </div>
                     )}
                   </a>

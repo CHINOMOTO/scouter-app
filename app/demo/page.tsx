@@ -216,24 +216,24 @@ export default function DemoLandingPage() {
             <div className="company__loop" style={{ marginTop: "24px", overflow: "hidden", width: "100%", maxWidth: "100%" }}>
               <div className="company__marquee">
                 <div className="company__list">
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/szc_logo.png" alt="清水建設株式会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/hhp_logo.png" alt="阪急阪神不動産株式会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tto_logo.png" alt="TOTO株式会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/cat_logo.png" alt="日本キャタピラー合同会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tvt_logo-1.png" alt="株式会社テレビ東京" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tyt_logo.png" alt="トヨタ自動車株式会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/shl_logo.png" alt="SOMPOひまわり生命保険株式会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/mbd_logo.png" alt="三菱電機株式会社" />
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">アクロスクリエイト株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">ネクストライン重機株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">グランアクシス工営株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">レクシスロジスティクス株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">ソリッドアーキテクト株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">ヴェルサス電設株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">プロスパーマテリアル株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">フロンティア都市開発株式会社</span>
                 </div>
                 <div className="company__list" aria-hidden="true">
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/szc_logo.png" alt="清水建設株式会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/hhp_logo.png" alt="阪急阪神不動産株式会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tto_logo.png" alt="TOTO株式会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/cat_logo.png" alt="日本キャタピラー合同会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tvt_logo-1.png" alt="株式会社テレビ東京" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/tyt_logo.png" alt="トヨタ自動車株式会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/shl_logo.png" alt="SOMPOひまわり生命保険株式会社" />
-                  <img className="swiper-slide" src="https://www.kaonavi.jp/wp/wp-content/uploads/mbd_logo.png" alt="三菱電機株式会社" />
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">アクロスクリエイト株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">ネクストライン重機株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">グランアクシス工営株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">レクシスロジスティクス株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">ソリッドアーキテクト株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">ヴェルサス電設株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">プロスパーマテリアル株式会社</span>
+                  <span className="swiper-slide px-4 py-2 font-bold text-slate-700 text-sm whitespace-nowrap">フロンティア都市開発株式会社</span>
                 </div>
               </div>
             </div>
