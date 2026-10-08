@@ -157,6 +157,19 @@ export default function CreditCaseDetailPage() {
     const isOwner = caseData.registered_by_company_id === currentCompanyId;
     const isResolved = caseData.payment_status === "resolved";
 
+    // 支払期日からの経過日数（遅延日数）の算出
+    let currentDelayDays = 0;
+    if (caseData.due_date) {
+        const target = new Date(caseData.due_date);
+        if (!isNaN(target.getTime())) {
+            const today = new Date();
+            const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const targetDate = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+            const diffTime = todayDate.getTime() - targetDate.getTime();
+            currentDelayDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        }
+    }
+
     return (
         <RequireAuth>
             <Toast toast={toast} onClose={() => setToast(null)} />
@@ -229,7 +242,9 @@ export default function CreditCaseDetailPage() {
                                             <AlertTriangle className="w-4 h-4 text-rose-600" />
                                             <span>未払い・支払遅延中</span>
                                         </div>
-                                        <div className="text-[11px] text-rose-600 mt-0.5">未入金</div>
+                                        <div className="text-[11px] text-rose-600 mt-0.5 font-bold">
+                                            {currentDelayDays > 0 ? `遅延 ${currentDelayDays}日目` : "未入金"}
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -247,9 +262,17 @@ export default function CreditCaseDetailPage() {
                             </div>
                             <div className="text-right">
                                 <span className="text-xs font-bold text-slate-500 block mb-1">当初支払期日</span>
-                                <span className="text-lg font-bold text-slate-900 font-mono">
-                                    {caseData.due_date.replace(/-/g, "/")}
-                                </span>
+                                <div className="flex flex-col items-end">
+                                    <span className="text-lg font-bold text-slate-900 font-mono">
+                                        {caseData.due_date.replace(/-/g, "/")}
+                                    </span>
+                                    {!isResolved && currentDelayDays > 0 && (
+                                        <span className="mt-1 text-[11px] font-bold text-rose-700 bg-rose-100/70 border border-rose-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                            期日から {currentDelayDays}日 遅れ
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 

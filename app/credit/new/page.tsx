@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
@@ -14,6 +14,7 @@ import {
     Building2,
     Calendar,
     Coins,
+    Clock,
     X
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
@@ -47,6 +48,46 @@ export default function NewCreditCasePage() {
     const [agreedRule3, setAgreedRule3] = useState(false); // 入金時は5日以内に解決報告する
 
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    // 支払期日からの遅延日数・状況の動的計算
+    const delayInfo = useMemo(() => {
+        if (!dueDate) return null;
+        const target = new Date(dueDate);
+        if (isNaN(target.getTime())) return null;
+
+        const today = new Date();
+        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const targetDate = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+
+        const diffTime = todayDate.getTime() - targetDate.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 0) {
+            return {
+                type: "delayed" as const,
+                days: diffDays,
+                text: `期日から ${diffDays}日 遅れ`,
+                badgeClass: "bg-rose-50 text-rose-700 border-rose-200",
+                note: `期日（${dueDate.replace(/-/g, "/")}）から ${diffDays}日 経過（支払遅延中）`
+            };
+        } else if (diffDays === 0) {
+            return {
+                type: "today" as const,
+                days: 0,
+                text: "本日が支払期日",
+                badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+                note: "本日が支払期日です"
+            };
+        } else {
+            return {
+                type: "future" as const,
+                days: Math.abs(diffDays),
+                text: `期日まで あと${Math.abs(diffDays)}日`,
+                badgeClass: "bg-slate-100 text-slate-700 border-slate-200",
+                note: `期日まで あと${Math.abs(diffDays)}日です`
+            };
+        }
+    }, [dueDate]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -369,21 +410,54 @@ export default function NewCreditCasePage() {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5 sm:space-y-2">
-                                    <label className="text-xs sm:text-sm font-bold text-slate-800">
-                                        当初の支払期日 <span className="text-red-500">*</span>
-                                    </label>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs sm:text-sm font-bold text-slate-800">
+                                            当初の支払期日 <span className="text-red-500">*</span>
+                                        </label>
+                                        {delayInfo && (
+                                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${delayInfo.badgeClass}`}>
+                                                {delayInfo.type === "delayed" && (
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                                )}
+                                                {delayInfo.text}
+                                            </span>
+                                        )}
+                                    </div>
                                     <input
                                         type="date"
                                         required
                                         value={dueDate}
                                         onChange={(e) => setDueDate(e.target.value)}
-                                        className="input-field"
+                                        className={`input-field ${
+                                            delayInfo?.type === "delayed"
+                                                ? "border-rose-300 focus:border-rose-500 bg-rose-50/20"
+                                                : ""
+                                        }`}
                                     />
+                                    {delayInfo && delayInfo.type === "delayed" && (
+                                        <p className="text-[11px] font-bold text-rose-600 flex items-center gap-1.5 pt-0.5">
+                                            <Clock className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                                            <span>期日から {delayInfo.days}日 経過（支払遅延中）</span>
+                                        </p>
+                                    )}
+                                    {delayInfo && delayInfo.type === "today" && (
+                                        <p className="text-[11px] font-bold text-amber-600 flex items-center gap-1.5 pt-0.5">
+                                            <Clock className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+                                            <span>本日が支払期日です</span>
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="col-span-1 sm:col-span-2 space-y-2">
-                                    <label className="text-xs font-bold text-slate-700">
-                                        請求日（請求書の発行日）
-                                    </label>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-bold text-slate-700">
+                                            請求日（請求書の発行日）
+                                        </label>
+                                        {invoiceDate && dueDate && invoiceDate > dueDate && (
+                                            <span className="text-[10px] text-amber-600 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                                                ※支払期日が請求書発行日より前です
+                                            </span>
+                                        )}
+                                    </div>
                                     <input
                                         type="date"
                                         value={invoiceDate}
