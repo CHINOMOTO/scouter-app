@@ -49,21 +49,20 @@ const renderRegistryBadge = (status?: string | null, closeCause?: string | null)
     switch (status) {
         case "closed":
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     <span>公的登記: 閉鎖（{closeCause || "清算結了等"}）</span>
                 </span>
             );
         case "sole_proprietor":
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     <span>個人事業主（法人登記なし）</span>
                 </span>
             );
         case "active":
         default:
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     <span>公的登記: 登記中（存続）</span>
                 </span>
             );
@@ -75,31 +74,31 @@ const renderBusinessStatusBadge = (status?: string | null) => {
     switch (status) {
         case "unreachable":
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     <span>営業実態: 音信不通</span>
                 </span>
             );
         case "relocated":
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     <span>営業実態: 事務所閉鎖・所在不明</span>
                 </span>
             );
         case "bankrupt":
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-900 text-rose-300 border border-slate-700 font-extrabold">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     <span>営業実態: 倒産・破産中</span>
                 </span>
             );
         case "active":
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     <span>営業実態: 連絡可・協議中</span>
                 </span>
             );
         default:
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     <span>営業実態: 不明</span>
                 </span>
             );
