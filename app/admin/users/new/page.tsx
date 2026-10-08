@@ -63,6 +63,19 @@ export default function NewUserPage() {
         plan: string;
     } | null>(null);
     const [copied, setCopied] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+            const mobileUa = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+            const mobileWidth = typeof window !== "undefined" && window.innerWidth <= 768;
+            setIsMobile(mobileUa || mobileWidth);
+        };
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     useEffect(() => {
         const fetchCompanies = async () => {
@@ -553,45 +566,92 @@ ${name} 様
                             </div>
 
                             <div className="space-y-2">
-                                {/* メイン: Gmailで送信ボタン */}
-                                <a
-                                    href={getGmailComposeUrl()}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                                >
-                                    <Mail className="w-4 h-4" />
-                                    <span>Gmail で案内メールを送信</span>
-                                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-                                </a>
+                                {isMobile ? (
+                                    /* スマホ表示: メールアプリ（Gmail/標準メール）が直接起動する mailto をメインに */
+                                    <>
+                                        <a
+                                            href={getMailtoUrl()}
+                                            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                                        >
+                                            <Mail className="w-4 h-4" />
+                                            <span>メールアプリで案内を送信</span>
+                                            <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                                        </a>
 
-                                {/* 案内文コピー */}
-                                <button
-                                    onClick={copyCredentials}
-                                    className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
-                                >
-                                    {copied ? (
-                                        <>
-                                            <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                            <span>案内文をコピーしました</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy className="w-3.5 h-3.5" />
-                                            <span>案内文をコピー</span>
-                                        </>
-                                    )}
-                                </button>
+                                        {/* 案内文コピー */}
+                                        <button
+                                            onClick={copyCredentials}
+                                            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                                        >
+                                            {copied ? (
+                                                <>
+                                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                                    <span>案内文をコピーしました</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="w-3.5 h-3.5" />
+                                                    <span>案内文をコピー</span>
+                                                </>
+                                            )}
+                                        </button>
 
-                                {/* その他のメールソフト（控えめリンク） */}
-                                <div className="pt-1">
-                                    <a
-                                        href={getMailtoUrl()}
-                                        className="text-[11px] text-slate-500 hover:text-slate-800 hover:underline inline-flex items-center justify-center gap-1"
-                                    >
-                                        <span>その他のメールソフト（Outlook等）で開く</span>
-                                    </a>
-                                </div>
+                                        {/* サブ: ブラウザ版Gmailリンク */}
+                                        <div className="pt-1">
+                                            <a
+                                                href={getGmailComposeUrl()}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[11px] text-slate-500 hover:text-slate-800 hover:underline inline-flex items-center justify-center gap-1"
+                                            >
+                                                <span>ブラウザ版 Gmail で開く</span>
+                                                <ExternalLink className="w-3 h-3 opacity-60" />
+                                            </a>
+                                        </div>
+                                    </>
+                                ) : (
+                                    /* PC表示: ブラウザ版 Gmail Compose をメインに */
+                                    <>
+                                        <a
+                                            href={getGmailComposeUrl()}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                                        >
+                                            <Mail className="w-4 h-4" />
+                                            <span>Gmail で案内メールを送信</span>
+                                            <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                                        </a>
+
+                                        {/* 案内文コピー */}
+                                        <button
+                                            onClick={copyCredentials}
+                                            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                                        >
+                                            {copied ? (
+                                                <>
+                                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                                    <span>案内文をコピーしました</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="w-3.5 h-3.5" />
+                                                    <span>案内文をコピー</span>
+                                                </>
+                                            )}
+                                        </button>
+
+                                        {/* サブ: その他のメールソフトリンク */}
+                                        <div className="pt-1">
+                                            <a
+                                                href={getMailtoUrl()}
+                                                className="text-[11px] text-slate-500 hover:text-slate-800 hover:underline inline-flex items-center justify-center gap-1"
+                                            >
+                                                <span>その他のメールソフト（Outlook等）で開く</span>
+                                            </a>
+                                        </div>
+                                    </>
+                                )}
 
                                 <div className="pt-2 border-t border-slate-100">
                                     <button
