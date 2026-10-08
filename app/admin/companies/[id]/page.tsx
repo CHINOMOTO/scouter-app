@@ -170,9 +170,9 @@ export default function EditCompanyPage() {
                                             onChange={() => setPlanType('full')}
                                             className="sr-only"
                                         />
-                                        <div className="font-bold text-slate-900 text-sm mb-1">両方セット</div>
+                                        <div className="font-bold text-slate-900 text-sm mb-1">FULLプラン</div>
                                         <div className="text-xs font-bold text-blue-600 mb-2">月額 30,000円</div>
-                                        <div className="text-[11px] text-slate-600 leading-tight">就業情報 ＋ 未払い企業情報</div>
+                                        <div className="text-[11px] text-slate-600 leading-tight">MIERIS WORK ＋ CREDIT</div>
                                     </label>
 
                                     <label className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${planType === 'employment' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>
@@ -184,9 +184,9 @@ export default function EditCompanyPage() {
                                             onChange={() => setPlanType('employment')}
                                             className="sr-only"
                                         />
-                                        <div className="font-bold text-slate-900 text-sm mb-1">就業情報のみ</div>
+                                        <div className="font-bold text-slate-900 text-sm mb-1">MIERIS WORK</div>
                                         <div className="text-xs font-bold text-slate-700 mb-2">月額 18,000円</div>
-                                        <div className="text-[11px] text-slate-600 leading-tight">就業トラブル共有のみ</div>
+                                        <div className="text-[11px] text-slate-600 leading-tight">就業情報・人物トラブル共有のみ</div>
                                     </label>
 
                                     <label className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${planType === 'credit' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>
@@ -198,9 +198,9 @@ export default function EditCompanyPage() {
                                             onChange={() => setPlanType('credit')}
                                             className="sr-only"
                                         />
-                                        <div className="font-bold text-slate-900 text-sm mb-1">クレジットのみ</div>
+                                        <div className="font-bold text-slate-900 text-sm mb-1">MIERIS CREDIT</div>
                                         <div className="text-xs font-bold text-slate-700 mb-2">月額 15,000円</div>
-                                        <div className="text-[11px] text-slate-600 leading-tight">未払い企業共有のみ</div>
+                                        <div className="text-[11px] text-slate-600 leading-tight">企業信用・未払い企業共有のみ</div>
                                     </label>
                                 </div>
                             </div>

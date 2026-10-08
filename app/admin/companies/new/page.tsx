@@ -127,7 +127,7 @@ export default function NewCompanyPage() {
                                     契約プラン <span className="text-red-500">*</span>
                                 </label>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    {/* フルセット */}
+                                    {/* FULLプラン */}
                                     <label className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${planType === 'full' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>
                                         <input
                                             type="radio"
@@ -137,12 +137,12 @@ export default function NewCompanyPage() {
                                             onChange={() => setPlanType('full')}
                                             className="sr-only"
                                         />
-                                        <div className="font-bold text-slate-900 text-sm mb-1">両方セット</div>
+                                        <div className="font-bold text-slate-900 text-sm mb-1">FULLプラン</div>
                                         <div className="text-xs font-bold text-blue-600 mb-2">月額 30,000円</div>
-                                        <div className="text-[11px] text-slate-600 leading-tight">就業情報 ＋ 未払い企業情報 すべて利用可能</div>
+                                        <div className="text-[11px] text-slate-600 leading-tight">MIERIS WORK ＋ CREDIT（全機能利用可能）</div>
                                     </label>
 
-                                    {/* 就業情報のみ */}
+                                    {/* MIERIS WORK */}
                                     <label className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${planType === 'employment' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>
                                         <input
                                             type="radio"
@@ -152,12 +152,12 @@ export default function NewCompanyPage() {
                                             onChange={() => setPlanType('employment')}
                                             className="sr-only"
                                         />
-                                        <div className="font-bold text-slate-900 text-sm mb-1">就業情報のみ</div>
+                                        <div className="font-bold text-slate-900 text-sm mb-1">MIERIS WORK</div>
                                         <div className="text-xs font-bold text-slate-700 mb-2">月額 18,000円</div>
-                                        <div className="text-[11px] text-slate-600 leading-tight">作業員・応募者トラブル共有のみ</div>
+                                        <div className="text-[11px] text-slate-600 leading-tight">就業情報・人物トラブル共有のみ</div>
                                     </label>
 
-                                    {/* クレジットのみ */}
+                                    {/* MIERIS CREDIT */}
                                     <label className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${planType === 'credit' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>
                                         <input
                                             type="radio"
@@ -167,9 +167,9 @@ export default function NewCompanyPage() {
                                             onChange={() => setPlanType('credit')}
                                             className="sr-only"
                                         />
-                                        <div className="font-bold text-slate-900 text-sm mb-1">クレジットのみ</div>
+                                        <div className="font-bold text-slate-900 text-sm mb-1">MIERIS CREDIT</div>
                                         <div className="text-xs font-bold text-slate-700 mb-2">月額 15,000円</div>
-                                        <div className="text-[11px] text-slate-600 leading-tight">未払い企業・取引先情報共有のみ</div>
+                                        <div className="text-[11px] text-slate-600 leading-tight">企業信用・未払い企業情報共有のみ</div>
                                     </label>
                                 </div>
                             </div>

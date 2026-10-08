@@ -578,7 +578,7 @@ export default function DashboardPage() {
                     </span>
                     <span className="text-xs text-slate-400">|</span>
                     <h3 className="text-sm font-bold text-slate-900">
-                      取引先信用管理「ミエリスクレジット」を追加しませんか？
+                      企業信用管理「MIERIS CREDIT」を追加しませんか？
                     </h3>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">
@@ -609,7 +609,7 @@ export default function DashboardPage() {
                     </span>
                     <span className="text-xs text-slate-400">|</span>
                     <h3 className="text-sm font-bold text-slate-900">
-                      採用・就業トラブル防止「人物情報プラン」を追加しませんか？
+                      採用・就業トラブル防止「MIERIS WORK」を追加しませんか？
                     </h3>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">

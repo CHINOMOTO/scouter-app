@@ -40,9 +40,9 @@ export default function SignUpPage() {
         }
 
         const planLabels: Record<string, string> = {
-            full: "両方セット（就業情報 ＋ ミエリスクレジット / 月額30,000円）",
-            employment: "就業情報プランのみ（月額18,000円）",
-            credit: "ミエリスクレジットのみ（月額15,000円）"
+            full: "FULLプラン（MIERIS WORK ＋ MIERIS CREDIT / 月額30,000円）",
+            employment: "MIERIS WORK（就業情報・人物信用 / 月額18,000円）",
+            credit: "MIERIS CREDIT（企業信用・未払い防止 / 月額15,000円）"
         };
 
         const inquiryMessage = `【新規利用お申し込み】
@@ -172,9 +172,9 @@ ${notes.trim() || "なし"}`;
                                             onChange={() => setPlanType('full')}
                                             className="sr-only"
                                         />
-                                        <div className="font-bold text-slate-900 text-xs">両方セット</div>
+                                        <div className="font-bold text-slate-900 text-xs">FULLプラン</div>
                                         <div className="text-xs font-bold text-blue-600">30,000円/月</div>
-                                        <div className="text-[10px] text-slate-500 mt-1">就業 ＋ 未払い企業</div>
+                                        <div className="text-[10px] text-slate-500 mt-1">WORK ＋ CREDIT</div>
                                     </label>
 
                                     <label className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${planType === 'employment' ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}>
@@ -186,7 +186,7 @@ ${notes.trim() || "なし"}`;
                                             onChange={() => setPlanType('employment')}
                                             className="sr-only"
                                         />
-                                        <div className="font-bold text-slate-900 text-xs">就業情報のみ</div>
+                                        <div className="font-bold text-slate-900 text-xs">MIERIS WORK</div>
                                         <div className="text-xs font-bold text-slate-700">18,000円/月</div>
                                         <div className="text-[10px] text-slate-500 mt-1">就業トラブル対策</div>
                                     </label>
@@ -200,7 +200,7 @@ ${notes.trim() || "なし"}`;
                                             onChange={() => setPlanType('credit')}
                                             className="sr-only"
                                         />
-                                        <div className="font-bold text-slate-900 text-xs">クレジットのみ</div>
+                                        <div className="font-bold text-slate-900 text-xs">MIERIS CREDIT</div>
                                         <div className="text-xs font-bold text-slate-700">15,000円/月</div>
                                         <div className="text-[10px] text-slate-500 mt-1">未払い企業情報</div>
                                     </label>

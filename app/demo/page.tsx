@@ -360,7 +360,7 @@ export default function DemoLandingPage() {
                     <span style={{ fontSize: "11px", fontWeight: "bold", color: "#737378" }}>就業照会 ＆ 企業信用</span>
                   </div>
                   <p className="desc" style={{ fontSize: "14px", color: "#56575b", lineHeight: "1.8" }}>
-                    就業トラブルを防ぐ「MIERIS WORK」、取引先の焦げ付きを防ぐ「MIERIS CREDIT」、両方を網羅する「MIERIS FULL」の3つの契約形態をご用意。現場の課題に即した導入が可能です。
+                    就業トラブルを防ぐ「MIERIS WORK」、取引先の焦げ付きを防ぐ「MIERIS CREDIT」、両方を網羅する「FULLプラン」の3つの契約形態をご用意。現場の課題に即した導入が可能です。
                   </p>
                 </li>
 
@@ -585,7 +585,7 @@ export default function DemoLandingPage() {
                           className="member-select"
                           style={{ fontSize: "14px", fontWeight: "bold", paddingLeft: "14px" }}
                         >
-                          <option value="full">MIERIS FULL（就業照会＋企業信用 両用セット）</option>
+                          <option value="full">FULLプラン（就業照会＋企業信用 両用セット）</option>
                           <option value="employment">MIERIS WORK（応募者・就業情報プラン）</option>
                           <option value="credit">MIERIS CREDIT（企業信用情報プラン）</option>
                         </select>

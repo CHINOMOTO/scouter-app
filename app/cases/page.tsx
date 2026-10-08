@@ -262,11 +262,11 @@ export default function CasesPage() {
                 <Lock className="w-6 h-6" />
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
-                応募者照会・人物情報プラン 未加入です
+                MIERIS WORK（就業信用管理）未加入です
               </h2>
               <p className="text-xs text-slate-600 leading-relaxed mb-6">
-                現在のご契約プラン（ミエリスクレジット専用）では、応募者照会・就業トラブル防止機能をご利用いただけません。<br />
-                就業トラブルデータの確認や登録を行うには、プラン追加のお申し込みが必要です。
+                現在のご契約プラン（MIERIS CREDIT）では、MIERIS WORK（応募者照会・就業トラブル防止機能）をご利用いただけません。<br />
+                就業トラブルデータの確認や登録を行うには、プラン追加（またはFULLプランへの変更）のお申し込みが必要です。
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link

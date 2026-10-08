@@ -33,10 +33,10 @@ const PAGE_SIZE = 15;
 const getPlanName = (allowedPlan?: string | null, companyPlan?: string | null) => {
     const plan = allowedPlan || companyPlan || 'full';
     switch (plan) {
-        case 'employment': return "就業情報のみ";
-        case 'credit': return "クレジットのみ";
+        case 'employment': return "MIERIS WORK";
+        case 'credit': return "MIERIS CREDIT";
         case 'full':
-        default: return "両方セット";
+        default: return "FULLプラン";
     }
 };
 
@@ -46,20 +46,20 @@ const getPlanBadge = (allowedPlan?: string | null, companyPlan?: string | null) 
         case 'employment':
             return (
                 <span className="shrink-0 inline-flex items-center text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold border border-slate-300">
-                    就業情報のみ
+                    MIERIS WORK
                 </span>
             );
         case 'credit':
             return (
                 <span className="shrink-0 inline-flex items-center text-[10px] bg-amber-50 text-amber-800 px-2 py-0.5 rounded font-bold border border-amber-200">
-                    クレジットのみ
+                    MIERIS CREDIT
                 </span>
             );
         case 'full':
         default:
             return (
                 <span className="shrink-0 inline-flex items-center text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold border border-blue-200">
-                    両方セット
+                    FULLプラン
                 </span>
             );
     }

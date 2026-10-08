@@ -375,16 +375,16 @@ export default function CreditSearchPage() {
                                 <Lock className="w-6 h-6" />
                             </div>
                             <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
-                                ミエリスクレジット 未加入プランです
+                                MIERIS CREDIT 未加入プランです
                             </h2>
                             <p className="text-xs text-slate-600 leading-relaxed mb-6">
-                                現在のアカウントは「就業情報プラン」のため、企業信用情報の照会・登録をご利用いただけません。<br />
-                                「ミエリスクレジット」または「両方セットプラン」へのアップグレードで、全データをご利用いただけます。
+                                現在のアカウントは「MIERIS WORK」のため、企業信用情報の照会・登録をご利用いただけません。<br />
+                                「MIERIS CREDIT」または「FULLプラン」への変更で、全機能をご利用いただけます。
                             </p>
                             <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs text-slate-700 max-w-md mx-auto mb-6 text-left space-y-1.5">
                                 <div className="font-bold text-slate-900 mb-1">【プラン変更のご案内】</div>
-                                <div>・ミエリスクレジット単体: 月額 15,000円</div>
-                                <div>・就業情報 ＋ クレジット 両方セット: 月額 30,000円（おすすめ）</div>
+                                <div>・MIERIS CREDIT: 月額 15,000円</div>
+                                <div>・FULLプラン（MIERIS WORK ＋ MIERIS CREDIT）: 月額 30,000円（おすすめ）</div>
                             </div>
                             <Link href="/contact" className="btn-primary px-6 py-2.5 rounded-lg font-bold text-xs inline-block">
                                 プラン変更をお問い合わせ

@@ -74,20 +74,20 @@ export default function AdminCompaniesPage() {
             case "employment":
                 return (
                     <span className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full border border-slate-300 font-bold">
-                        就業情報のみ (1.8万/月)
+                        MIERIS WORK (1.8万/月)
                     </span>
                 );
             case "credit":
                 return (
                     <span className="text-[11px] bg-amber-50 text-amber-800 px-2.5 py-0.5 rounded-full border border-amber-200 font-bold">
-                        クレジットのみ (1.5万/月)
+                        MIERIS CREDIT (1.5万/月)
                     </span>
                 );
             case "full":
             default:
                 return (
                     <span className="text-[11px] bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full border border-blue-200 font-bold">
-                        両方セット (3万/月)
+                        FULLプラン (3万/月)
                     </span>
                 );
         }
