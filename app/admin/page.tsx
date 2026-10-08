@@ -8,6 +8,7 @@ import { RequireAdmin } from "@/components/RequireAdmin";
 
 export default function AdminDashboardPage() {
     const [pendingCount, setPendingCount] = useState<number | null>(null);
+    const [pendingCreditCount, setPendingCreditCount] = useState<number | null>(null);
     const [pendingUserCount, setPendingUserCount] = useState<number | null>(null);
     const [approvedUserCount, setApprovedUserCount] = useState<number | null>(null);
     const [companyCount, setCompanyCount] = useState<number | null>(null);
@@ -18,6 +19,12 @@ export default function AdminDashboardPage() {
     useEffect(() => {
         const fetchCounts = async () => {
             setLoading(true);
+
+            // 企業信用審査待ち件数
+            const creditQuery = supabase
+                .from("credit_cases")
+                .select("*", { count: "exact", head: true })
+                .eq("status", "pending");
 
             // ケースの承認待ち件数
             const casesQuery = supabase
@@ -53,7 +60,8 @@ export default function AdminDashboardPage() {
                 .from("audit_logs")
                 .select("*", { count: "exact", head: true });
 
-            const [casesResult, usersResult, approvedUsersResult, companiesResult, inquiriesResult, auditResult] = await Promise.all([
+            const [creditResult, casesResult, usersResult, approvedUsersResult, companiesResult, inquiriesResult, auditResult] = await Promise.all([
+                creditQuery,
                 casesQuery,
                 usersQuery,
                 approvedUsersQuery,
@@ -62,6 +70,7 @@ export default function AdminDashboardPage() {
                 auditQuery
             ]);
 
+            if (!creditResult.error) setPendingCreditCount(creditResult.count);
             if (!casesResult.error) setPendingCount(casesResult.count);
             if (!usersResult.error) setPendingUserCount(usersResult.count);
             if (!approvedUsersResult.error) setApprovedUserCount(approvedUsersResult.count);
@@ -97,8 +106,12 @@ export default function AdminDashboardPage() {
                                     <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-200">
                                         <FileSpreadsheet className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
                                     </div>
-                                    <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-slate-100 text-slate-800 text-[10px] sm:text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-xs">
-                                        Credit Review
+                                    <span className={`px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold rounded-lg border uppercase tracking-wider shadow-xs ${
+                                        (pendingCreditCount || 0) > 0
+                                            ? "bg-rose-500 text-white border-rose-600 animate-pulse"
+                                            : "bg-slate-100 text-slate-800 border-slate-200"
+                                    }`}>
+                                        {(pendingCreditCount || 0) > 0 ? `${pendingCreditCount}件 審査待ち` : "Credit Review"}
                                     </span>
                                 </div>
                                 <h2 className="text-lg sm:text-2xl font-bold text-slate-900 mb-1.5 sm:mb-2 group-hover:text-blue-600 transition-colors duration-200">
@@ -107,6 +120,21 @@ export default function AdminDashboardPage() {
                                 <p className="text-slate-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
                                     加盟企業から申請された企業信用（遅延・未払い）情報およびエビデンス資料の審査を行います。
                                 </p>
+
+                                <div className="mt-auto">
+                                    <div className="text-3xl sm:text-5xl font-bold text-slate-900">
+                                        {loading ? (
+                                            <span className="text-xl sm:text-2xl text-slate-600 animate-pulse">...</span>
+                                        ) : (
+                                            <>
+                                                {pendingCreditCount || 0}
+                                                <span className="text-sm sm:text-lg text-slate-500 font-normal ml-2 tracking-widest">
+                                                    CASE
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </Link>
 

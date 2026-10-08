@@ -38,8 +38,39 @@ export default function Navigation() {
     const [userName, setUserName] = useState<string | null>(null);
     const [companyName, setCompanyName] = useState<string | null>(null);
     const [notificationCount, setNotificationCount] = useState(0);
+    const [pendingCaseCount, setPendingCaseCount] = useState(0);
+    const [pendingCreditCount, setPendingCreditCount] = useState(0);
+    const [pendingUserCount, setPendingUserCount] = useState(0);
     const [allowedPlan, setAllowedPlan] = useState<string>("full");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const fetchNotifications = async () => {
+        try {
+            const { count: userCount } = await supabase
+                .from("app_users")
+                .select("*", { count: "exact", head: true })
+                .eq("is_approved", false);
+            const { count: caseCount } = await supabase
+                .from("blacklist_cases")
+                .select("*", { count: "exact", head: true })
+                .eq("status", "pending");
+            const { count: creditCount } = await supabase
+                .from("credit_cases")
+                .select("*", { count: "exact", head: true })
+                .eq("status", "pending");
+
+            const u = userCount || 0;
+            const c = caseCount || 0;
+            const cr = creditCount || 0;
+
+            setPendingUserCount(u);
+            setPendingCaseCount(c);
+            setPendingCreditCount(cr);
+            setNotificationCount(u + c + cr);
+        } catch (err) {
+            console.error("fetchNotifications error:", err);
+        }
+    };
+
 
     // アコーディオンメニューの開閉ステート
     const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
@@ -61,24 +92,18 @@ export default function Navigation() {
         if (pathname.startsWith("/admin")) {
             setOpenMenus(prev => ({ ...prev, admin: true }));
         }
-    }, [pathname]);
+
+        if (isAdmin) {
+            fetchNotifications();
+        }
+    }, [pathname, isAdmin]);
 
     const toggleMenu = (key: string) => {
         setOpenMenus(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
     useEffect(() => {
-        const fetchNotifications = async (userId: string) => {
-            const { count: userCount } = await supabase
-                .from("app_users")
-                .select("*", { count: "exact", head: true })
-                .eq("is_approved", false);
-            const { count: caseCount } = await supabase
-                .from("blacklist_cases")
-                .select("*", { count: "exact", head: true })
-                .eq("status", "pending");
-            setNotificationCount((userCount || 0) + (caseCount || 0));
-        };
+        
 
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -90,7 +115,7 @@ export default function Navigation() {
                 setIsAdmin(isUserAdmin);
 
                 if (isUserAdmin) {
-                    fetchNotifications(session.user.id);
+                    fetchNotifications();
                 }
             } else {
                 setIsAdmin(false);
@@ -119,7 +144,7 @@ export default function Navigation() {
                 setIsAdmin(isUserAdmin);
 
                 if (isUserAdmin) {
-                    fetchNotifications(session.user.id);
+                    fetchNotifications();
                 }
             } else {
                 setIsAdmin(false);
@@ -421,6 +446,7 @@ export default function Navigation() {
                                         active={pathname.startsWith("/admin/cases")}
                                         icon={<ShieldAlert className="w-3.5 h-3.5" />}
                                         label="就業トラブル審査"
+                                        badge={pendingCaseCount > 0 ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-500 text-white tabular-nums shadow-xs">{pendingCaseCount}</span> : undefined}
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
@@ -428,6 +454,7 @@ export default function Navigation() {
                                         active={pathname.startsWith("/admin/credit-cases")}
                                         icon={<Building2 className="w-3.5 h-3.5" />}
                                         label="企業信用審査"
+                                        badge={pendingCreditCount > 0 ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-500 text-white tabular-nums shadow-xs">{pendingCreditCount}</span> : undefined}
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
@@ -435,6 +462,7 @@ export default function Navigation() {
                                         active={pathname === "/admin/users" || pathname.startsWith("/admin/users/new")}
                                         icon={<Users className="w-3.5 h-3.5" />}
                                         label="ユーザー承認待ち"
+                                        badge={pendingUserCount > 0 ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-500 text-white tabular-nums shadow-xs">{pendingUserCount}</span> : undefined}
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
