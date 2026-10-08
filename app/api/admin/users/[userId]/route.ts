@@ -45,7 +45,37 @@ export async function DELETE(
             return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
         }
 
-        // 3. app_usersテーブルから削除
+        // 3. 関連データの外部キー制約を安全に解決（投稿データや問い合わせデータは保持）
+        // 3-1. 監査ログ（ユーザー自身のログを削除）
+        await supabaseAdmin
+            .from('audit_logs')
+            .delete()
+            .eq('user_id', userId);
+
+        // 3-2. お問い合わせ（ユーザーID紐付けを解除して問い合わせ本文は保持）
+        await supabaseAdmin
+            .from('contact_inquiries')
+            .update({ user_id: null })
+            .eq('user_id', userId);
+
+        // 3-3. お知らせ（作成者を現在操作中の管理者に移管）
+        await supabaseAdmin
+            .from('announcements')
+            .update({ created_by: user.id })
+            .eq('created_by', userId);
+
+        // 3-4. トラブルケース（承認者紐付けを解除、登録者を管理者に移管してケース自体は保持）
+        await supabaseAdmin
+            .from('blacklist_cases')
+            .update({ approved_by: null })
+            .eq('approved_by', userId);
+
+        await supabaseAdmin
+            .from('blacklist_cases')
+            .update({ registered_by_user_id: user.id })
+            .eq('registered_by_user_id', userId);
+
+        // 4. app_usersテーブルから削除
         const { error: appUserError } = await supabaseAdmin
             .from('app_users')
             .delete()
@@ -53,14 +83,15 @@ export async function DELETE(
 
         if (appUserError) {
             console.error("app_users delete error:", appUserError);
-            // 続行する
+            throw new Error(`プロフィールの削除に失敗しました: ${appUserError.message}`);
         }
 
-        // 4. Auth(Supabase認証)からユーザー削除
-        const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+        // 5. Auth(Supabase認証)からユーザー削除
+        const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
-        if (error) {
-            return NextResponse.json({ error: error.message }, { status: 400 });
+        if (authDeleteError) {
+            console.error("auth delete error:", authDeleteError);
+            throw new Error(`認証アカウントの削除に失敗しました: ${authDeleteError.message}`);
         }
 
         return NextResponse.json({ success: true });
