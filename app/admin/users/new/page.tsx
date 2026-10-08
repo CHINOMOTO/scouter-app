@@ -50,7 +50,6 @@ export default function NewUserPage() {
 
     // 確認画面モーダル
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [sendEmail, setSendEmail] = useState(true);
     const [emailSubject, setEmailSubject] = useState("【MIERIS】アカウント発行およびログイン情報のご案内");
     const [emailBody, setEmailBody] = useState("");
     const [showPasswordInModal, setShowPasswordInModal] = useState(false);
@@ -62,11 +61,6 @@ export default function NewUserPage() {
         name: string; 
         companyName: string;
         plan: string;
-    } | null>(null);
-    const [emailDeliveryResult, setEmailDeliveryResult] = useState<{ 
-        attempted: boolean; 
-        sent: boolean; 
-        message: string 
     } | null>(null);
     const [copied, setCopied] = useState(false);
 
@@ -184,9 +178,7 @@ ${name} 様
                     companyId: selectedCompanyId,
                     allowedPlan: allowedPlan,
                     role: role,
-                    sendEmail: sendEmail,
-                    emailSubject: emailSubject.trim(),
-                    emailBody: emailBody
+                    sendEmail: false // Gmail/メールソフト経由で確実に送信するため直接発行
                 })
             });
 
@@ -203,7 +195,6 @@ ${name} 様
                 companyName: comp?.name || "登録会社",
                 plan: allowedPlan
             });
-            setEmailDeliveryResult(data.emailDelivery || null);
 
         } catch (err: any) {
             setError(err.message || "アカウント作成エラー");
@@ -227,6 +218,22 @@ ${name} 様
         setTimeout(() => setCopied(false), 3000);
     };
 
+    // Gmail作成画面を開くURL（Web Gmail Compose）
+    const getGmailComposeUrl = () => {
+        if (!createdUser) return "#";
+        const to = encodeURIComponent(createdUser.email);
+        const su = encodeURIComponent(emailSubject);
+        const body = encodeURIComponent(emailBody || buildEmailBody(
+            createdUser.email, 
+            createdUser.pass, 
+            createdUser.name, 
+            createdUser.companyName, 
+            createdUser.plan
+        ));
+        return `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${su}&body=${body}`;
+    };
+
+    // その他のメールアプリ（Outlook / Mac Mail等）用 mailto URL
     const getMailtoUrl = () => {
         if (!createdUser) return "#";
         const subject = encodeURIComponent(emailSubject);
@@ -481,33 +488,18 @@ ${name} 様
                                 </div>
                             </div>
 
-                            {/* メール送信チェック */}
-                            <div className="mb-4">
-                                <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-800">
-                                    <input
-                                        type="checkbox"
-                                        checked={sendEmail}
-                                        onChange={(e) => setSendEmail(e.target.checked)}
-                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                    />
-                                    <span>登録メールアドレス宛てに案内メールを送信する</span>
-                                </label>
-                            </div>
-
-                            {/* メール本文プレビュー（送信ON時） */}
-                            {sendEmail && (
-                                <div className="space-y-1.5 mb-5">
-                                    <div className="text-[11px] text-slate-500 font-bold">
-                                        メール本文（必要に応じて編集できます）
-                                    </div>
-                                    <textarea
-                                        value={emailBody}
-                                        onChange={(e) => setEmailBody(e.target.value)}
-                                        rows={7}
-                                        className="w-full text-[11px] font-mono bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 leading-relaxed focus:bg-white focus:outline-none focus:border-slate-400"
-                                    />
+                            {/* メール本文プレビュー */}
+                            <div className="space-y-1.5 mb-5">
+                                <div className="text-[11px] text-slate-500 font-bold">
+                                    案内メール本文（必要に応じて編集できます）
                                 </div>
-                            )}
+                                <textarea
+                                    value={emailBody}
+                                    onChange={(e) => setEmailBody(e.target.value)}
+                                    rows={7}
+                                    className="w-full text-[11px] font-mono bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 leading-relaxed focus:bg-white focus:outline-none focus:border-slate-400"
+                                />
+                            </div>
 
                             {/* モーダルボタン */}
                             <div className="flex items-center justify-end gap-2.5 pt-1 border-t border-slate-100">
@@ -528,10 +520,10 @@ ${name} 様
                                     {submitting ? (
                                         <>
                                             <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                            <span>処理中...</span>
+                                            <span>発行処理中...</span>
                                         </>
                                     ) : (
-                                        <span>{sendEmail ? "アカウント発行・メール送信" : "アカウント発行"}</span>
+                                        <span>アカウント発行</span>
                                     )}
                                 </button>
                             </div>
@@ -553,24 +545,6 @@ ${name} 様
                                 {createdUser.companyName}（{createdUser.name} 様）
                             </p>
 
-                            {/* メール送信状況の案内 */}
-                            {emailDeliveryResult && emailDeliveryResult.attempted && (
-                                <div className={`p-2.5 rounded-xl border text-xs mb-4 text-left ${
-                                    emailDeliveryResult.sent 
-                                        ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
-                                        : "bg-amber-50 border-amber-200 text-amber-800"
-                                }`}>
-                                    <span className="font-bold block">
-                                        {emailDeliveryResult.sent ? "案内メールを送信しました" : "※メール自動送信未完了"}
-                                    </span>
-                                    <span className="text-[11px] block mt-0.5">
-                                        {emailDeliveryResult.sent 
-                                            ? `宛先: ${createdUser.email}`
-                                            : "設定が未完了のため、下記のボタンから送信してください。"}
-                                    </span>
-                                </div>
-                            )}
-
                             {/* ログイン情報 */}
                             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs font-mono text-left space-y-1.5 mb-5">
                                 <div><span className="text-slate-400">ログインID:</span> <span className="font-bold text-slate-900">{createdUser.email}</span></div>
@@ -579,18 +553,22 @@ ${name} 様
                             </div>
 
                             <div className="space-y-2">
+                                {/* メイン: Gmailで送信ボタン */}
                                 <a
-                                    href={getMailtoUrl()}
-                                    className="w-full py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                                    href={getGmailComposeUrl()}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                                 >
-                                    <Mail className="w-3.5 h-3.5" />
-                                    <span>メールソフトで送信</span>
-                                    <ExternalLink className="w-3 h-3 opacity-70" />
+                                    <Mail className="w-4 h-4" />
+                                    <span>Gmail で案内メールを送信</span>
+                                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
                                 </a>
 
+                                {/* 案内文コピー */}
                                 <button
                                     onClick={copyCredentials}
-                                    className="w-full py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                                    className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
                                 >
                                     {copied ? (
                                         <>
@@ -605,15 +583,27 @@ ${name} 様
                                     )}
                                 </button>
 
-                                <button
-                                    onClick={() => {
-                                        setCreatedUser(null);
-                                        router.push("/admin/users");
-                                    }}
-                                    className="btn-secondary w-full py-2 text-xs font-medium cursor-pointer"
-                                >
-                                    ユーザー一覧へ戻る
-                                </button>
+                                {/* その他のメールソフト（控えめリンク） */}
+                                <div className="pt-1">
+                                    <a
+                                        href={getMailtoUrl()}
+                                        className="text-[11px] text-slate-500 hover:text-slate-800 hover:underline inline-flex items-center justify-center gap-1"
+                                    >
+                                        <span>その他のメールソフト（Outlook等）で開く</span>
+                                    </a>
+                                </div>
+
+                                <div className="pt-2 border-t border-slate-100">
+                                    <button
+                                        onClick={() => {
+                                            setCreatedUser(null);
+                                            router.push("/admin/users");
+                                        }}
+                                        className="btn-secondary w-full py-2 text-xs font-medium cursor-pointer"
+                                    >
+                                        ユーザー一覧へ戻る
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
