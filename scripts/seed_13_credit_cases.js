@@ -98,8 +98,8 @@ async function seed13CreditCases() {
       created_at: new Date(now - 5 * dayMs).toISOString(),
     },
     {
-      company_name: "株式会社サンライズ商事",
-      corporate_number: "2010601996004",
+      company_name: "東雲アーバントレード株式会社",
+      corporate_number: "9011101998011",
       location: "神奈川県横浜市中区元町一丁目",
       invoice_date: "2024-06-20",
       amount: 920000,
@@ -162,8 +162,8 @@ async function seed13CreditCases() {
       created_at: new Date(now - 18 * dayMs).toISOString(),
     },
     {
-      company_name: "アスカテクノロジー株式会社",
-      corporate_number: "9010401045678",
+      company_name: "アスカフィールドテクノロジー株式会社",
+      corporate_number: "7011101998012",
       location: "東京都千代田区神田錦町三丁目",
       invoice_date: "2024-07-01",
       amount: 850000,

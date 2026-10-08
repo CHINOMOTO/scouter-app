@@ -79,8 +79,8 @@ async function seedCreditCases() {
       created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
-      company_name: "株式会社サンライズ商事",
-      corporate_number: "2010601996004",
+      company_name: "東雲アーバントレード株式会社",
+      corporate_number: "9011101998011",
       location: "福岡県福岡市博多区博多駅前一丁目",
       invoice_date: "2024-06-01",
       amount: 920000,
