@@ -108,6 +108,42 @@ export default function Resend3DDemoPage() {
             };
         };
 
+        // --- MIERIS ロゴテクスチャ生成 ---
+        let frontCanvasTexture: THREE.CanvasTexture | null = null;
+        let backCanvasTexture: THREE.CanvasTexture | null = null;
+
+        const createLogoTexture = (imgSrc: string, callback: (tex: THREE.CanvasTexture) => void) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = 768;
+                canvas.height = 768;
+                const ctx = canvas.getContext("2d")!;
+
+                // 白ベースの美しいプレート背景
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, 768, 768);
+
+                // 微細なエッジのグラデーション
+                const grad = ctx.createRadialGradient(384, 384, 100, 384, 384, 384);
+                grad.addColorStop(0, "rgba(255, 255, 255, 1)");
+                grad.addColorStop(1, "rgba(241, 245, 249, 1)");
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 768, 768);
+
+                // ロゴを描画 (マージン12%でバランス良く中央配置)
+                const pad = 96;
+                ctx.drawImage(img, pad, pad, 768 - pad * 2, 768 - pad * 2);
+
+                const tex = new THREE.CanvasTexture(canvas);
+                tex.generateMipmaps = true;
+                tex.minFilter = THREE.LinearMipmapLinearFilter;
+                callback(tex);
+            };
+            img.src = imgSrc;
+        };
+
         const pieceMeshes: THREE.Mesh[] = [];
 
         const createCubeMaterials = (x: number, y: number, z: number, mode: "resend" | "vibrant" | "monochrome") => {
@@ -130,13 +166,46 @@ export default function Resend3DDemoPage() {
                 reflectivity: 0.9,
             });
 
+            // 正面 (+Z): ミエリスのシンボルマーク (logo-mark.png) を3x3パズルとして貼り付け
+            let frontMat: THREE.Material = makeFaceMat(pal.front);
+            if (z === 1 && frontCanvasTexture) {
+                const tex = frontCanvasTexture.clone();
+                tex.repeat.set(1 / 3, 1 / 3);
+                tex.offset.set((x + 1) / 3, (y + 1) / 3);
+                tex.needsUpdate = true;
+                frontMat = new THREE.MeshPhysicalMaterial({
+                    map: tex,
+                    metalness: 0.1,
+                    roughness: 0.15,
+                    clearcoat: 1.0,
+                    clearcoatRoughness: 0.1,
+                });
+            }
+
+            // 裏面 (-Z): ミエリスのブランドロゴ (logo-brand.png) を3x3パズルとして貼り付け
+            let backMat: THREE.Material = makeFaceMat(pal.back);
+            if (z === -1 && backCanvasTexture) {
+                const tex = backCanvasTexture.clone();
+                tex.repeat.set(1 / 3, 1 / 3);
+                // 裏面視点のため横反転を考慮
+                tex.offset.set((1 - x) / 3, (y + 1) / 3);
+                tex.needsUpdate = true;
+                backMat = new THREE.MeshPhysicalMaterial({
+                    map: tex,
+                    metalness: 0.1,
+                    roughness: 0.15,
+                    clearcoat: 1.0,
+                    clearcoatRoughness: 0.1,
+                });
+            }
+
             return [
                 x === 1 ? makeFaceMat(pal.right) : bodyMat,  // +X (右)
                 x === -1 ? makeFaceMat(pal.left) : bodyMat,  // -X (左)
                 y === 1 ? makeFaceMat(pal.top) : bodyMat,    // +Y (上)
                 y === -1 ? makeFaceMat(pal.bottom) : bodyMat,// -Y (下)
-                z === 1 ? makeFaceMat(pal.front) : bodyMat,  // +Z (前)
-                z === -1 ? makeFaceMat(pal.back) : bodyMat,  // -Z (後)
+                z === 1 ? frontMat : bodyMat,                // +Z (前: ミエリスシンボル)
+                z === -1 ? backMat : bodyMat,                // -Z (後: ミエリスブランドロゴ)
             ];
         };
 
@@ -151,7 +220,6 @@ export default function Resend3DDemoPage() {
             for (let x = -1; x <= 1; x++) {
                 for (let y = -1; y <= 1; y++) {
                     for (let z = -1; z <= 1; z++) {
-                        // 中心核 (0,0,0) は見えないので省略可能だが、一貫性のため配置
                         const materials = createCubeMaterials(x, y, z, mode);
                         const mesh = new THREE.Mesh(geometry, materials);
                         mesh.position.set(x * step, y * step, z * step);
@@ -165,7 +233,18 @@ export default function Resend3DDemoPage() {
             }
         };
 
+        // 初期構築
         buildRubiksCube(colorModeRef.current);
+
+        // ロゴテクスチャをロード後、キューブに反映
+        createLogoTexture("/logo-mark.png", (tex) => {
+            frontCanvasTexture = tex;
+            buildRubiksCube(colorModeRef.current);
+        });
+        createLogoTexture("/logo-brand.png", (tex) => {
+            backCanvasTexture = tex;
+            buildRubiksCube(colorModeRef.current);
+        });
 
         // --- 4. マウスインタラクション & ドラッグ回転 ---
         let mouseX = 0;
