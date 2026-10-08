@@ -120,9 +120,26 @@ h6 {
   transition: all 0.2s ease;
 }
 
-input[type="date"].input-field {
-  display: block;
+/* iOS Safari / モバイル向け input[type=date] はみ出し完全防止 */
+input[type="date"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  margin: 0 !important;
   min-height: 44px;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.25em;
+  padding: 0;
+  margin: 0;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
 }
 
 .input-field::placeholder {

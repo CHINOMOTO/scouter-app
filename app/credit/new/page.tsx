@@ -209,8 +209,8 @@ export default function NewCreditCasePage() {
 
     return (
         <RequireAuth>
-            <div className="min-h-screen pt-16 sm:pt-20 md:pt-10 pb-16 px-3.5 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
-                <div className="max-w-3xl w-full">
+            <div className="min-h-screen pt-16 sm:pt-20 md:pt-10 pb-16 px-3.5 sm:px-6 bg-[#f8fafc] flex flex-col items-center overflow-x-hidden w-full max-w-full">
+                <div className="max-w-3xl w-full min-w-0">
 
                     {/* ナビゲーション */}
                     <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-in flex-wrap gap-2.5">
@@ -243,7 +243,7 @@ export default function NewCreditCasePage() {
                     </div>
 
                     {/* コンプライアンス遵守ボックス（確実に視認可能なコントラスト設計） */}
-                    <div className="bg-slate-900 text-slate-100 p-4.5 sm:p-6 rounded-xl mb-6 shadow-2xs border border-slate-800 animate-fade-in">
+                    <div className="bg-slate-900 text-slate-100 p-4 sm:p-6 rounded-xl mb-6 shadow-2xs border border-slate-800 animate-fade-in w-full max-w-full overflow-hidden">
                         <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3 border-b border-slate-800 pb-2.5 sm:pb-3">
                             <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
                             <span className="text-xs sm:text-sm font-bold tracking-wide text-white">
@@ -260,8 +260,8 @@ export default function NewCreditCasePage() {
                     </div>
 
                     {/* 申請フォーム */}
-                    <div className="bg-white p-4.5 sm:p-9 rounded-2xl border border-slate-200 shadow-2xs animate-fade-in">
-                        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+                    <div className="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs animate-fade-in w-full max-w-full overflow-hidden">
+                        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6 w-full min-w-0">
 
                             {/* 対象企業名 */}
                             <div className="space-y-1.5 sm:space-y-2">
@@ -388,12 +388,12 @@ export default function NewCreditCasePage() {
                             </div>
 
                             {/* 未払い金額 & 支払期日 */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 min-w-0">
-                                <div className="space-y-1.5 sm:space-y-2 min-w-0">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 w-full min-w-0 max-w-full overflow-hidden">
+                                <div className="space-y-1.5 sm:space-y-2 w-full min-w-0 max-w-full">
                                     <label className="text-xs sm:text-sm font-bold text-slate-800">
                                         未払い・遅延金額（税込） <span className="text-red-500">*</span>
                                     </label>
-                                    <div className="relative flex items-center min-w-0">
+                                    <div className="relative flex items-center w-full min-w-0">
                                         <span className="absolute left-3.5 text-slate-400 font-bold text-base pointer-events-none select-none">¥</span>
                                         <input
                                             type="text"
@@ -409,7 +409,7 @@ export default function NewCreditCasePage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-1.5 sm:space-y-2 min-w-0">
+                                <div className="space-y-1.5 sm:space-y-2 w-full min-w-0 max-w-full">
                                     <div className="flex flex-wrap items-center justify-between gap-1.5">
                                         <label className="text-xs sm:text-sm font-bold text-slate-800">
                                             当初の支払期日 <span className="text-red-500">*</span>
@@ -423,17 +423,26 @@ export default function NewCreditCasePage() {
                                             </span>
                                         )}
                                     </div>
-                                    <input
-                                        type="date"
-                                        required
-                                        value={dueDate}
-                                        onChange={(e) => setDueDate(e.target.value)}
-                                        className={`input-field w-full min-w-0 max-w-full block ${
-                                            delayInfo?.type === "delayed"
-                                                ? "border-rose-300 focus:border-rose-500 bg-rose-50/20"
-                                                : ""
-                                        }`}
-                                    />
+                                    <div className="relative w-full min-w-0 max-w-full">
+                                        <input
+                                            type="date"
+                                            required
+                                            value={dueDate}
+                                            onChange={(e) => setDueDate(e.target.value)}
+                                            style={{
+                                                width: "100%",
+                                                maxWidth: "100%",
+                                                minWidth: "0",
+                                                boxSizing: "border-box",
+                                                display: "block"
+                                            }}
+                                            className={`w-full max-w-full min-w-0 box-border bg-white border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors ${
+                                                delayInfo?.type === "delayed"
+                                                    ? "border-rose-300 focus:border-rose-500 bg-rose-50/20"
+                                                    : "border-slate-300"
+                                            }`}
+                                        />
+                                    </div>
                                     {delayInfo && delayInfo.type === "delayed" && (
                                         <p className="text-[11px] font-bold text-rose-600 flex items-center gap-1.5 pt-0.5">
                                             <Clock className="w-3.5 h-3.5 shrink-0 text-rose-500" />
@@ -447,7 +456,7 @@ export default function NewCreditCasePage() {
                                         </p>
                                     )}
                                 </div>
-                                <div className="col-span-1 sm:col-span-2 space-y-2 min-w-0">
+                                <div className="col-span-1 sm:col-span-2 space-y-2 w-full min-w-0 max-w-full">
                                     <div className="flex flex-wrap items-center justify-between gap-1.5">
                                         <label className="text-xs font-bold text-slate-700">
                                             請求日（請求書の発行日）
@@ -458,12 +467,21 @@ export default function NewCreditCasePage() {
                                             </span>
                                         )}
                                     </div>
-                                    <input
-                                        type="date"
-                                        value={invoiceDate}
-                                        onChange={(e) => setInvoiceDate(e.target.value)}
-                                        className="input-field w-full min-w-0 max-w-full block"
-                                    />
+                                    <div className="relative w-full min-w-0 max-w-full">
+                                        <input
+                                            type="date"
+                                            value={invoiceDate}
+                                            onChange={(e) => setInvoiceDate(e.target.value)}
+                                            style={{
+                                                width: "100%",
+                                                maxWidth: "100%",
+                                                minWidth: "0",
+                                                boxSizing: "border-box",
+                                                display: "block"
+                                            }}
+                                            className="w-full max-w-full min-w-0 box-border bg-white border border-slate-300 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
