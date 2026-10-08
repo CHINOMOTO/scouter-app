@@ -14,7 +14,8 @@ import {
     Filter,
     RotateCcw,
     Building2,
-    Shield
+    Shield,
+    Mail
 } from "lucide-react";
 
 type AppUser = {
@@ -237,24 +238,24 @@ export default function AdminUsersManagementPage() {
                 <div className="max-w-5xl w-full">
 
                     {/* ページヘッダー */}
-                    <div className="flex items-center justify-between mb-8 animate-fade-in flex-wrap sm:flex-nowrap gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 animate-fade-in gap-4">
                         <div>
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">ユーザー管理</h1>
+                            <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+                                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">ユーザー管理</h1>
                                 {!loading && (
                                     <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full font-mono">
                                         {hasActiveFilters ? `該当 ${filteredUsers.length} 件 / 全 ${users.length} 件` : `全 ${users.length} 件`}
                                     </span>
                                 )}
                             </div>
-                            <p className="text-slate-600 text-sm mt-1">登録ユーザーの利用プラン・権限確認、所属企業の管理を行います</p>
+                            <p className="text-slate-600 text-xs sm:text-sm mt-1">登録ユーザーの利用プラン・権限確認、所属企業の管理を行います</p>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center font-bold">
-                                管理者メニューへ戻る
+                        <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                            <Link href="/admin" className="flex-1 sm:flex-initial btn-secondary text-xs h-10 px-3.5 sm:px-4 flex items-center justify-center font-bold">
+                                管理者メニュー
                             </Link>
-                            <Link href="/admin/users/new" className="btn-primary flex items-center gap-2 px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-sm shadow-xs">
-                                <Plus className="w-4 h-4" />
+                            <Link href="/admin/users/new" className="flex-1 sm:flex-initial btn-primary flex items-center justify-center gap-1.5 px-4 sm:px-5 h-10 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-xs sm:text-sm shadow-xs whitespace-nowrap">
+                                <Plus className="w-4 h-4 shrink-0" />
                                 <span>アカウント新規発行</span>
                             </Link>
                         </div>
@@ -280,9 +281,9 @@ export default function AdminUsersManagementPage() {
                             </div>
 
                             {/* フィルターセレクト群 */}
-                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 lg:flex items-center gap-2.5">
                                 {/* プラン別フィルター */}
-                                <div className="relative min-w-[150px] flex-1 sm:flex-initial">
+                                <div className="relative flex-1 lg:min-w-[150px]">
                                     <select
                                         value={planFilter}
                                         onChange={(e) => {
@@ -302,7 +303,7 @@ export default function AdminUsersManagementPage() {
                                 </div>
 
                                 {/* 会社別フィルター */}
-                                <div className="relative min-w-[170px] flex-1 sm:flex-initial">
+                                <div className="relative flex-1 lg:min-w-[170px]">
                                     <select
                                         value={companyFilter}
                                         onChange={(e) => {
@@ -324,7 +325,7 @@ export default function AdminUsersManagementPage() {
                                 </div>
 
                                 {/* 権限別フィルター */}
-                                <div className="relative min-w-[130px] flex-1 sm:flex-initial">
+                                <div className="relative flex-1 lg:min-w-[130px]">
                                     <select
                                         value={roleFilter}
                                         onChange={(e) => {
@@ -347,7 +348,7 @@ export default function AdminUsersManagementPage() {
                                     <button
                                         type="button"
                                         onClick={resetFilters}
-                                        className="shrink-0 text-xs text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100/80 border border-rose-200/80 px-3 py-2.5 rounded-xl font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
+                                        className="col-span-1 sm:col-span-3 lg:col-span-1 shrink-0 text-xs text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100/80 border border-rose-200/80 px-3 py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
                                         title="絞り込み条件をリセット"
                                     >
                                         <RotateCcw className="w-3.5 h-3.5" />
@@ -375,38 +376,51 @@ export default function AdminUsersManagementPage() {
                         <div className="space-y-4">
                             <div className="space-y-3 animate-fade-in">
                                 {paginatedUsers.map((user) => (
-                                    <div key={user.id} className="glass-panel rounded-2xl border border-slate-200 hover:border-slate-300 transition-all p-5">
-                                        <div className="flex items-center justify-between gap-4">
+                                    <div key={user.id} className="glass-panel rounded-2xl border border-slate-200 hover:border-slate-300 transition-all p-4 sm:p-5">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                                             {/* 左側：ユーザー情報 */}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                                {/* 上段：ユーザー名 & 権限・プランバッジ */}
+                                                <div className="flex items-center gap-2 mb-2 flex-wrap">
                                                     <h3 className="text-slate-900 font-bold text-base truncate">
                                                         {user.display_name || "未設定"}
                                                     </h3>
-                                                    <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin' ? "bg-purple-50 text-purple-700 border border-purple-200" : "bg-slate-100 text-slate-700 border border-slate-200" }`}>
-                                                        {user.role}
+                                                    <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${
+                                                        user.role === 'admin' 
+                                                            ? "bg-purple-50 text-purple-700 border border-purple-200" 
+                                                            : "bg-slate-100 text-slate-700 border border-slate-200" 
+                                                    }`}>
+                                                        {user.role === 'admin' ? "管理者" : "一般ユーザー"}
                                                     </span>
                                                     {getPlanBadge(user.allowed_plan, user.companies?.plan_type)}
                                                 </div>
-                                                <div className="flex items-center gap-4 text-xs text-slate-600">
-                                                    <span>{user.companies?.name || "未所属"}</span>
-                                                    <span className="text-slate-400">|</span>
-                                                    <span className="font-mono">{user.email || "—"}</span>
+
+                                                {/* 中段：所属会社 & メールアドレス */}
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 text-xs text-slate-600">
+                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                                        <span className="font-semibold text-slate-800 break-words">{user.companies?.name || "未所属"}</span>
+                                                    </div>
+                                                    <span className="hidden sm:inline text-slate-300">|</span>
+                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                        <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                                        <span className="font-mono text-slate-500 break-all">{user.email || "—"}</span>
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            {/* 右側：操作ボタン */}
-                                            <div className="flex items-center gap-2 shrink-0">
+                                            {/* 操作ボタン */}
+                                            <div className="flex items-center gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 shrink-0">
                                                 <button
                                                     onClick={() => handleToggleRole(user)}
-                                                    className="whitespace-nowrap text-xs text-slate-600 hover:text-slate-900 border border-slate-300 hover:bg-slate-100 px-3 py-1.5 rounded-lg transition-colors font-medium"
-                                                    title={user.role === 'admin' ? "一般ユーザーに降格" : "管理者に昇格"}
+                                                    className="flex-1 sm:flex-initial text-center justify-center whitespace-nowrap text-xs text-slate-700 hover:text-slate-900 border border-slate-300 hover:bg-slate-100 bg-white px-3.5 py-2 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors font-medium cursor-pointer"
+                                                    title={user.role === 'admin' ? "一般ユーザーに変更" : "管理者に昇格"}
                                                 >
                                                     権限変更
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteUser(user.id)}
-                                                    className="whitespace-nowrap text-xs text-rose-600 hover:text-white border border-rose-200 hover:bg-rose-600 px-3 py-1.5 rounded-lg transition-colors font-bold"
+                                                    className="flex-1 sm:flex-initial text-center justify-center whitespace-nowrap text-xs text-rose-600 hover:text-white border border-rose-200 hover:bg-rose-600 bg-rose-50/50 hover:bg-rose-600 px-3.5 py-2 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors font-bold cursor-pointer"
                                                 >
                                                     削除
                                                 </button>

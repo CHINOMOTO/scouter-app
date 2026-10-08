@@ -108,6 +108,9 @@ h6 {
 /* 入力フィールド */
 .input-field {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background-color: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 0.75rem;
@@ -115,6 +118,11 @@ h6 {
   color: #0f172a;
   font-size: 0.875rem;
   transition: all 0.2s ease;
+}
+
+input[type="date"].input-field {
+  display: block;
+  min-height: 44px;
 }
 
 .input-field::placeholder {

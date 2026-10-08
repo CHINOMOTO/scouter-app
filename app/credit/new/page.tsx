@@ -388,12 +388,12 @@ export default function NewCreditCasePage() {
                             </div>
 
                             {/* 未払い金額 & 支払期日 */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200">
-                                <div className="space-y-1.5 sm:space-y-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 min-w-0">
+                                <div className="space-y-1.5 sm:space-y-2 min-w-0">
                                     <label className="text-xs sm:text-sm font-bold text-slate-800">
                                         未払い・遅延金額（税込） <span className="text-red-500">*</span>
                                     </label>
-                                    <div className="relative flex items-center">
+                                    <div className="relative flex items-center min-w-0">
                                         <span className="absolute left-3.5 text-slate-400 font-bold text-base pointer-events-none select-none">¥</span>
                                         <input
                                             type="text"
@@ -404,18 +404,18 @@ export default function NewCreditCasePage() {
                                                 setAmount(val ? Number(val).toLocaleString() : "");
                                             }}
                                             style={{ paddingLeft: "2.25rem" }}
-                                            className="input-field font-extrabold text-base sm:text-lg font-mono"
+                                            className="input-field font-extrabold text-base sm:text-lg font-mono w-full min-w-0"
                                             placeholder="500,000"
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-1.5 sm:space-y-2">
-                                    <div className="flex items-center justify-between">
+                                <div className="space-y-1.5 sm:space-y-2 min-w-0">
+                                    <div className="flex flex-wrap items-center justify-between gap-1.5">
                                         <label className="text-xs sm:text-sm font-bold text-slate-800">
                                             当初の支払期日 <span className="text-red-500">*</span>
                                         </label>
                                         {delayInfo && (
-                                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${delayInfo.badgeClass}`}>
+                                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 shrink-0 ${delayInfo.badgeClass}`}>
                                                 {delayInfo.type === "delayed" && (
                                                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
                                                 )}
@@ -428,7 +428,7 @@ export default function NewCreditCasePage() {
                                         required
                                         value={dueDate}
                                         onChange={(e) => setDueDate(e.target.value)}
-                                        className={`input-field ${
+                                        className={`input-field w-full min-w-0 max-w-full block ${
                                             delayInfo?.type === "delayed"
                                                 ? "border-rose-300 focus:border-rose-500 bg-rose-50/20"
                                                 : ""
@@ -447,13 +447,13 @@ export default function NewCreditCasePage() {
                                         </p>
                                     )}
                                 </div>
-                                <div className="col-span-1 sm:col-span-2 space-y-2">
-                                    <div className="flex items-center justify-between">
+                                <div className="col-span-1 sm:col-span-2 space-y-2 min-w-0">
+                                    <div className="flex flex-wrap items-center justify-between gap-1.5">
                                         <label className="text-xs font-bold text-slate-700">
                                             請求日（請求書の発行日）
                                         </label>
                                         {invoiceDate && dueDate && invoiceDate > dueDate && (
-                                            <span className="text-[10px] text-amber-600 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                                            <span className="text-[10px] text-amber-600 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded shrink-0">
                                                 ※支払期日が請求書発行日より前です
                                             </span>
                                         )}
@@ -462,7 +462,7 @@ export default function NewCreditCasePage() {
                                         type="date"
                                         value={invoiceDate}
                                         onChange={(e) => setInvoiceDate(e.target.value)}
-                                        className="input-field"
+                                        className="input-field w-full min-w-0 max-w-full block"
                                     />
                                 </div>
                             </div>
