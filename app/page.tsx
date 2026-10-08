@@ -136,9 +136,9 @@ export default function Home() {
             <Link href="/forgot-password" className="text-slate-500 hover:text-slate-900 transition-colors">
               パスワードをお忘れの方はこちら
             </Link>
-            <Link href="/signup" className="text-slate-700 hover:text-blue-600 font-bold transition-colors">
+            {/* <Link href="/signup" className="text-slate-700 hover:text-blue-600 font-bold transition-colors">
               新規アカウント登録（お申し込み）はこちら →
-            </Link>
+            </Link> */}
           </div>
         </div>
       </main>
