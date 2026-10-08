@@ -249,8 +249,8 @@ export default function Resend3DDemoPage() {
         // --- 4. マウスインタラクション & ドラッグ回転 ---
         let mouseX = 0;
         let mouseY = 0;
-        let targetRotationX = 0.5;
-        let targetRotationY = 0.7;
+        let targetRotationX = 0.15;
+        let targetRotationY = 0.25;
 
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };

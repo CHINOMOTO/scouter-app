@@ -206,7 +206,7 @@ export default function Navigation() {
         }
     };
 
-    // ログイン・サインアップ・デモ等の公開ページでは非表示
+    // ログイン・サインアップ・デモ等の公開ページ、および3Dテスト画面では非表示
     const isPublicPage = 
         pathname === "/" || 
         pathname === "/signup" || 
@@ -214,7 +214,8 @@ export default function Navigation() {
         pathname === "/demo" || 
         pathname === "/forgot-password" || 
         pathname === "/update-password" || 
-        pathname === "/pending-approval";
+        pathname === "/pending-approval" ||
+        pathname === "/admin/test";
 
     if (isPublicPage || !session) return null;
 
