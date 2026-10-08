@@ -411,13 +411,8 @@ export default function Navigation() {
                     {/* 管理者メニュー（管理者のみ） */}
                     {isAdmin && (
                         <div>
-                            <div className="px-3 mb-2 text-[10px] font-extrabold text-slate-400 tracking-wider uppercase font-mono flex items-center justify-between">
-                                <span>システム管理</span>
-                                {notificationCount > 0 && (
-                                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
-                                        {notificationCount}
-                                    </span>
-                                )}
+                            <div className="px-3 mb-2 text-[10px] font-extrabold text-slate-400 tracking-wider uppercase font-mono">
+                                システム管理
                             </div>
                             <nav className="space-y-1">
                                 <AccordionGroup
@@ -428,10 +423,8 @@ export default function Navigation() {
                                     onToggle={() => toggleMenu("admin")}
                                     onLinkClick={() => setIsMobileMenuOpen(false)}
                                     isParentActive={pathname.startsWith("/admin")}
-                                    badge={notificationCount > 0 ? (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold tabular-nums bg-red-500 text-white animate-pulse">
-                                            {notificationCount}件
-                                        </span>
+                                    badge={!openMenus.admin && notificationCount > 0 ? (
+                                        <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse" title={`未対応 ${notificationCount}件`} />
                                     ) : undefined}
                                 >
                                     <SubmenuLink 
