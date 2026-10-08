@@ -215,7 +215,7 @@ export default function Navigation() {
         pathname === "/forgot-password" || 
         pathname === "/update-password" || 
         pathname === "/pending-approval" ||
-        pathname === "/admin/test";
+        pathname.startsWith("/admin/test");
 
     if (isPublicPage || !session) return null;
 
