@@ -15,13 +15,50 @@ type AppUser = {
     companies: {
         id: string;
         name: string;
+        plan_type?: string;
     } | null;
     is_approved: boolean;
     email?: string;
     created_at?: string;
+    allowed_plan?: string | null;
 };
 
 const PAGE_SIZE = 15;
+
+const getPlanName = (allowedPlan?: string | null, companyPlan?: string | null) => {
+    const plan = allowedPlan || companyPlan || 'full';
+    switch (plan) {
+        case 'employment': return "就業情報のみ";
+        case 'credit': return "クレジットのみ";
+        case 'full':
+        default: return "両方セット";
+    }
+};
+
+const getPlanBadge = (allowedPlan?: string | null, companyPlan?: string | null) => {
+    const plan = allowedPlan || companyPlan || 'full';
+    switch (plan) {
+        case 'employment':
+            return (
+                <span className="shrink-0 inline-flex items-center text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold border border-slate-300">
+                    就業情報のみ
+                </span>
+            );
+        case 'credit':
+            return (
+                <span className="shrink-0 inline-flex items-center text-[10px] bg-amber-50 text-amber-800 px-2 py-0.5 rounded font-bold border border-amber-200">
+                    クレジットのみ
+                </span>
+            );
+        case 'full':
+        default:
+            return (
+                <span className="shrink-0 inline-flex items-center text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold border border-blue-200">
+                    両方セット
+                </span>
+            );
+    }
+};
 
 export default function RegisteredUsersPage() {
     const [users, setUsers] = useState<AppUser[]>([]);
@@ -88,7 +125,9 @@ export default function RegisteredUsersPage() {
             const email = (u.email || "").toLowerCase();
             const comp = (u.companies?.name || "").toLowerCase();
             const role = (u.role || "").toLowerCase();
-            return name.includes(q) || email.includes(q) || comp.includes(q) || role.includes(q);
+            const plan = (u.allowed_plan || u.companies?.plan_type || "").toLowerCase();
+            const planLabel = getPlanName(u.allowed_plan, u.companies?.plan_type).toLowerCase();
+            return name.includes(q) || email.includes(q) || comp.includes(q) || role.includes(q) || plan.includes(q) || planLabel.includes(q);
         });
     }, [users, searchTerm]);
 
@@ -137,7 +176,7 @@ export default function RegisteredUsersPage() {
                                     setSearchTerm(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                placeholder="名前・メールアドレス・所属企業名で絞り込み..."
+                                placeholder="名前・メールアドレス・所属企業名・プラン名で絞り込み..."
                                 style={{ paddingLeft: '2.5rem' }}
                                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 focus:bg-white transition-all placeholder:text-slate-400"
                             />
@@ -160,13 +199,14 @@ export default function RegisteredUsersPage() {
                                         <div className="flex items-center justify-between gap-4">
                                             {/* 左側：ユーザー情報 */}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-3 mb-1.5">
+                                                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                                                     <h3 className="text-slate-900 font-bold text-base truncate">
                                                         {user.display_name || "未設定"}
                                                     </h3>
-                                                    <span className={`shrink-0 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin' ? "bg-purple-50 text-purple-700 border border-purple-200" : "bg-slate-100 text-slate-700 border border-slate-200" }`}>
+                                                    <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin' ? "bg-purple-50 text-purple-700 border border-purple-200" : "bg-slate-100 text-slate-700 border border-slate-200" }`}>
                                                         {user.role}
                                                     </span>
+                                                    {getPlanBadge(user.allowed_plan, user.companies?.plan_type)}
                                                 </div>
                                                 <div className="flex items-center gap-4 text-xs text-slate-600">
                                                     <span>{user.companies?.name || "未所属"}</span>

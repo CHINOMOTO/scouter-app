@@ -48,7 +48,8 @@ export async function GET(request: Request) {
                 role,
                 display_name,
                 is_approved,
-                companies ( id, name )
+                allowed_plan,
+                companies ( id, name, plan_type )
             `)
             .eq("is_approved", true);
 
