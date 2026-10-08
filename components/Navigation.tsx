@@ -27,7 +27,8 @@ import {
     ExternalLink,
     Activity,
     BookmarkCheck,
-    UserCheck
+    UserCheck,
+    Sparkles
 } from "lucide-react";
 
 export default function Navigation() {
@@ -479,6 +480,13 @@ export default function Navigation() {
                                         active={pathname.startsWith("/admin/audit")}
                                         icon={<Activity className="w-3.5 h-3.5" />}
                                         label="監査ログ・照会履歴"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    />
+                                    <SubmenuLink 
+                                        href="/admin/test"
+                                        active={pathname === "/admin/test"}
+                                        icon={<Sparkles className="w-3.5 h-3.5 text-indigo-400" />}
+                                        label="ﾃｽﾄ"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                 </AccordionGroup>
