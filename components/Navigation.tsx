@@ -379,7 +379,6 @@ export default function Navigation() {
                                         label="企業信用 検索・照会"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
-                                    {/* 取引先ウォッチは検証中のため一時非表示 */}
                                     <SubmenuLink 
                                         href="/credit/new"
                                         active={pathname === "/credit/new"}
@@ -452,17 +451,10 @@ export default function Navigation() {
                                     />
                                     <SubmenuLink 
                                         href="/admin/users"
-                                        active={pathname === "/admin/users" || pathname.startsWith("/admin/users/new")}
+                                        active={pathname.startsWith("/admin/users") || pathname.startsWith("/admin/registered-users")}
                                         icon={<Users className="w-3.5 h-3.5" />}
-                                        label="ユーザー承認待ち"
+                                        label="ユーザー管理"
                                         badge={pendingUserCount > 0 ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-500 text-white tabular-nums shadow-xs">{pendingUserCount}</span> : undefined}
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    />
-                                    <SubmenuLink 
-                                        href="/admin/registered-users"
-                                        active={pathname.startsWith("/admin/registered-users")}
-                                        icon={<UserCheck className="w-3.5 h-3.5" />}
-                                        label="登録ユーザー一覧"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 

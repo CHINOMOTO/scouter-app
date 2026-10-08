@@ -73,7 +73,6 @@ export default function DashboardPage() {
   const [companyName, setCompanyName] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [watchlistAlertCount, setWatchlistAlertCount] = useState<number>(0);
   const [partnerCompanies, setPartnerCompanies] = useState<PartnerCompanyPR[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -130,28 +129,6 @@ export default function DashboardPage() {
         }
       } catch (err) {
         console.error("Announcements fetch error:", err);
-      }
-    };
-
-    const loadWatchlistAlerts = async () => {
-      try {
-        const session = (await supabase.auth.getSession()).data.session;
-        if (!session) return;
-
-        const res = await fetch("/api/credit/watchlist", {
-          headers: {
-            "Authorization": `Bearer ${session.access_token}`
-          }
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data && typeof data.warning_count === "number") {
-            setWatchlistAlertCount(data.warning_count);
-          }
-        }
-      } catch {
-        // ignore silently
       }
     };
 
@@ -233,7 +210,6 @@ export default function DashboardPage() {
 
     loadUserData();
     loadAnnouncements();
-    loadWatchlistAlerts();
     loadPartnerCompanies();
   }, []);
 
@@ -392,9 +368,6 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-
-          {/* 取引先ウォッチ警告バナー（検証中のため非表示） */}
-          {/* watchlistAlertCount > 0 && (...) */}
 
           {/* お知らせ・ニュース（最新の1件を表示） */}
           {announcements.length > 0 && (

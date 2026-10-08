@@ -179,88 +179,52 @@ export default function AdminDashboardPage() {
                             </div>
                         </Link>
 
-                        {/* ユーザー承認タイル */}
+                        {/* ユーザー管理タイル */}
                         <Link
                             href="/admin/users"
                             className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 glass-panel hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
                         >
-                            <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                            <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="p-3 rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
-     <UserCheck className="w-8 h-8" strokeWidth={1.5} />
-   </div>
-                                    <span className="px-3 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-sm">
-                                        Review
-                                    </span>
-                                </div>
-
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
-                                    新規ユーザー承認
-                                </h2>
-                                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
-                                    アカウント利用申請を確認し、利用を許可します。
-                                </p>
-
-                                <div className="mt-auto">
-                                    <div className="text-5xl font-bold text-slate-900">
-                                        {loading ? (
-                                            <span className="text-2xl text-slate-600 animate-pulse">...</span>
-                                        ) : (
-                                            <>
-                                                <span className={pendingUserCount && pendingUserCount > 0 ? "text-slate-900" : ""}>
-                                                    {pendingUserCount ?? 0}
-                                                </span>
-                                                <span className="text-lg text-slate-500 font-normal ml-2 tracking-widest">
-                                                    USER
-                                                </span>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </Link>
-
-                        {/* 登録済みユーザー一覧タイル */}
-                        <Link
-                            href="/admin/registered-users"
-                            className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 glass-panel hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
-                        >
                             <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                            <div className="relative z-10">
+                            <div className="relative z-10 flex flex-col h-full">
                                 <div className="flex items-center justify-between mb-4 sm:mb-6">
                                     <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all duration-200">
                                         <Users className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
                                     </div>
-                                    <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-slate-100 text-slate-800 text-[10px] sm:text-xs font-bold rounded-lg border border-slate-200 uppercase tracking-wider shadow-xs">
-                                        Member
+                                    <span className={`px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold rounded-lg border uppercase tracking-wider shadow-xs ${
+                                        (pendingUserCount || 0) > 0
+                                            ? "bg-rose-500 text-white border-rose-600 animate-pulse"
+                                            : "bg-slate-100 text-slate-800 border-slate-200"
+                                    }`}>
+                                        {(pendingUserCount || 0) > 0 ? `${pendingUserCount}件 承認待ち` : "User Management"}
                                     </span>
                                 </div>
 
                                 <h2 className="text-lg sm:text-2xl font-bold text-slate-900 mb-1.5 sm:mb-2 group-hover:text-blue-600 transition-colors duration-200">
-                                    登録ユーザー一覧
+                                    ユーザー管理
                                 </h2>
                                 <p className="text-slate-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
-                                    現在承認されている全ユーザーを確認します。
+                                    登録ユーザーの権限変更・削除、新規利用申請の承認を行います。
                                 </p>
 
-                                <div className="mt-auto">
-                                    <div className="text-3xl sm:text-5xl font-bold text-slate-900">
+                                <div className="mt-auto flex items-baseline justify-between pt-2 border-t border-slate-100">
+                                    <div className="text-3xl sm:text-4xl font-bold text-slate-900">
                                         {loading ? (
                                             <span className="text-xl sm:text-2xl text-slate-600 animate-pulse">...</span>
                                         ) : (
                                             <>
-                                                <span>
-                                                    {approvedUserCount ?? 0}
-                                                </span>
-                                                <span className="text-sm sm:text-lg text-slate-500 font-normal ml-2 tracking-widest">
-                                                    ACTIVE
+                                                <span>{approvedUserCount ?? 0}</span>
+                                                <span className="text-xs sm:text-sm text-slate-500 font-normal ml-1.5 tracking-wider">
+                                                    登録済
                                                 </span>
                                             </>
                                         )}
                                     </div>
+                                    {(pendingUserCount || 0) > 0 && (
+                                        <span className="text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
+                                            未承認 {pendingUserCount} 件
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </Link>
@@ -415,18 +379,6 @@ export default function AdminDashboardPage() {
                                 </div>
                             </div>
                         </Link>
-
-                        {/* デモ */}
-                        <Link
-                            href="/demo"
-                            target="_blank"
-                            className="block group p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] flex items-center justify-center min-h-[120px] sm:min-h-[160px] shadow-2xs"
-                        >
-                            <span className="text-lg sm:text-xl font-bold text-slate-700 group-hover:text-blue-600 transition-colors">
-                                デモ
-                            </span>
-                        </Link>
-
                     </div>
                 </div>
             </div>
