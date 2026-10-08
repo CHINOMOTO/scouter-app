@@ -10,7 +10,11 @@ import {
     Users, 
     Search, 
     Plus, 
-    ArrowLeft 
+    ArrowLeft,
+    Filter,
+    RotateCcw,
+    Building2,
+    Shield
 } from "lucide-react";
 
 type AppUser = {
@@ -69,8 +73,24 @@ export default function AdminUsersManagementPage() {
     const [users, setUsers] = useState<AppUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [planFilter, setPlanFilter] = useState<string>("all");
+    const [companyFilter, setCompanyFilter] = useState<string>("all");
+    const [roleFilter, setRoleFilter] = useState<string>("all");
     const [currentPage, setCurrentPage] = useState(1);
     const [toast, setToast] = useState<ToastMessage | null>(null);
+
+    // 所属企業の一覧（重複排除＆五十音ソート）
+    const uniqueCompanies = useMemo(() => {
+        const map = new Map<string, string>();
+        users.forEach(u => {
+            if (u.companies?.id && u.companies?.name) {
+                map.set(u.companies.id, u.companies.name);
+            }
+        });
+        return Array.from(map.entries())
+            .map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name, "ja"));
+    }, [users]);
 
     // 登録ユーザー一覧取得
     const fetchUsers = async () => {
@@ -157,20 +177,52 @@ export default function AdminUsersManagementPage() {
         }
     };
 
-    // 検索フィルタリング
+    // 複合フィルタリング（プラン別・会社別・権限別・キーワード）
     const filteredUsers = useMemo(() => {
-        if (!searchTerm.trim()) return users;
-        const q = searchTerm.trim().toLowerCase();
         return users.filter(u => {
-            const name = (u.display_name || "").toLowerCase();
-            const email = (u.email || "").toLowerCase();
-            const comp = (u.companies?.name || "").toLowerCase();
-            const role = (u.role || "").toLowerCase();
-            const plan = (u.allowed_plan || u.companies?.plan_type || "").toLowerCase();
-            const planLabel = getPlanName(u.allowed_plan, u.companies?.plan_type).toLowerCase();
-            return name.includes(q) || email.includes(q) || comp.includes(q) || role.includes(q) || plan.includes(q) || planLabel.includes(q);
+            // プラン判定
+            const effectivePlan = u.allowed_plan || u.companies?.plan_type || "full";
+            if (planFilter !== "all" && effectivePlan !== planFilter) {
+                return false;
+            }
+
+            // 所属会社判定
+            if (companyFilter !== "all" && u.companies?.id !== companyFilter) {
+                return false;
+            }
+
+            // 権限判定
+            if (roleFilter !== "all" && u.role !== roleFilter) {
+                return false;
+            }
+
+            // キーワード検索
+            if (searchTerm.trim()) {
+                const q = searchTerm.trim().toLowerCase();
+                const name = (u.display_name || "").toLowerCase();
+                const email = (u.email || "").toLowerCase();
+                const comp = (u.companies?.name || "").toLowerCase();
+                const role = (u.role || "").toLowerCase();
+                const plan = effectivePlan.toLowerCase();
+                const planLabel = getPlanName(u.allowed_plan, u.companies?.plan_type).toLowerCase();
+                if (!name.includes(q) && !email.includes(q) && !comp.includes(q) && !role.includes(q) && !plan.includes(q) && !planLabel.includes(q)) {
+                    return false;
+                }
+            }
+
+            return true;
         });
-    }, [users, searchTerm]);
+    }, [users, searchTerm, planFilter, companyFilter, roleFilter]);
+
+    const hasActiveFilters = searchTerm.trim() !== "" || planFilter !== "all" || companyFilter !== "all" || roleFilter !== "all";
+
+    const resetFilters = () => {
+        setSearchTerm("");
+        setPlanFilter("all");
+        setCompanyFilter("all");
+        setRoleFilter("all");
+        setCurrentPage(1);
+    };
 
     const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE) || 1;
     const paginatedUsers = useMemo(() => {
@@ -191,7 +243,7 @@ export default function AdminUsersManagementPage() {
                                 <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">ユーザー管理</h1>
                                 {!loading && (
                                     <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full font-mono">
-                                        全 {filteredUsers.length} 件
+                                        {hasActiveFilters ? `該当 ${filteredUsers.length} 件 / 全 ${users.length} 件` : `全 ${users.length} 件`}
                                     </span>
                                 )}
                             </div>
@@ -208,22 +260,134 @@ export default function AdminUsersManagementPage() {
                         </div>
                     </div>
 
-                    {/* 検索バー */}
-                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs mb-6 animate-fade-in">
-                        <div className="relative w-full max-w-md">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => {
-                                    setSearchTerm(e.target.value);
-                                    setCurrentPage(1);
-                                }}
-                                placeholder="名前・メールアドレス・所属企業名・プラン名で絞り込み..."
-                                style={{ paddingLeft: '2.5rem' }}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 focus:bg-white transition-all placeholder:text-slate-400"
-                            />
+                    {/* 検索・フィルターバー */}
+                    <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs mb-6 animate-fade-in space-y-3.5">
+                        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+                            {/* キーワード検索 */}
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    placeholder="名前・メールアドレス・所属企業名等で検索..."
+                                    style={{ paddingLeft: '2.5rem' }}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-500 focus:bg-white transition-all placeholder:text-slate-400"
+                                />
+                            </div>
+
+                            {/* フィルターセレクト群 */}
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+                                {/* プラン別フィルター */}
+                                <div className="relative min-w-[150px] flex-1 sm:flex-initial">
+                                    <select
+                                        value={planFilter}
+                                        onChange={(e) => {
+                                            setPlanFilter(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        className="w-full appearance-none bg-slate-50 hover:bg-slate-100/80 border border-slate-200 text-slate-800 text-xs font-medium rounded-xl pl-3.5 pr-8 py-2.5 cursor-pointer focus:outline-none focus:border-slate-500 transition-colors"
+                                    >
+                                        <option value="all">すべてのプラン</option>
+                                        <option value="full">FULLプラン</option>
+                                        <option value="employment">MIERIS WORK</option>
+                                        <option value="credit">MIERIS CREDIT</option>
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                                        <Filter className="w-3.5 h-3.5" />
+                                    </div>
+                                </div>
+
+                                {/* 会社別フィルター */}
+                                <div className="relative min-w-[170px] flex-1 sm:flex-initial">
+                                    <select
+                                        value={companyFilter}
+                                        onChange={(e) => {
+                                            setCompanyFilter(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        className="w-full appearance-none bg-slate-50 hover:bg-slate-100/80 border border-slate-200 text-slate-800 text-xs font-medium rounded-xl pl-3.5 pr-8 py-2.5 cursor-pointer focus:outline-none focus:border-slate-500 transition-colors truncate"
+                                    >
+                                        <option value="all">すべての所属会社</option>
+                                        {uniqueCompanies.map(c => (
+                                            <option key={c.id} value={c.id}>
+                                                {c.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                                        <Building2 className="w-3.5 h-3.5" />
+                                    </div>
+                                </div>
+
+                                {/* 権限別フィルター */}
+                                <div className="relative min-w-[130px] flex-1 sm:flex-initial">
+                                    <select
+                                        value={roleFilter}
+                                        onChange={(e) => {
+                                            setRoleFilter(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        className="w-full appearance-none bg-slate-50 hover:bg-slate-100/80 border border-slate-200 text-slate-800 text-xs font-medium rounded-xl pl-3.5 pr-8 py-2.5 cursor-pointer focus:outline-none focus:border-slate-500 transition-colors"
+                                    >
+                                        <option value="all">すべての権限</option>
+                                        <option value="admin">管理者のみ</option>
+                                        <option value="viewer">一般ユーザー</option>
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                                        <Shield className="w-3.5 h-3.5" />
+                                    </div>
+                                </div>
+
+                                {/* フィルターリセットボタン */}
+                                {hasActiveFilters && (
+                                    <button
+                                        type="button"
+                                        onClick={resetFilters}
+                                        className="shrink-0 text-xs text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100/80 border border-rose-200/80 px-3 py-2.5 rounded-xl font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
+                                        title="絞り込み条件をリセット"
+                                    >
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        <span>リセット</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
+
+                        {/* アクティブな絞り込みのサマリー表示 */}
+                        {hasActiveFilters && (
+                            <div className="flex items-center justify-between text-xs pt-2.5 border-t border-slate-100 text-slate-500 flex-wrap gap-2">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-bold text-slate-600 text-[11px]">適用中:</span>
+                                    {planFilter !== "all" && (
+                                        <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md font-semibold text-[11px] border border-slate-200">
+                                            プラン: {planFilter === "full" ? "FULLプラン" : planFilter === "employment" ? "MIERIS WORK" : "MIERIS CREDIT"}
+                                        </span>
+                                    )}
+                                    {companyFilter !== "all" && (
+                                        <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md font-semibold text-[11px] border border-slate-200">
+                                            会社: {uniqueCompanies.find(c => c.id === companyFilter)?.name || "指定会社"}
+                                        </span>
+                                    )}
+                                    {roleFilter !== "all" && (
+                                        <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md font-semibold text-[11px] border border-slate-200">
+                                            権限: {roleFilter === "admin" ? "管理者" : "一般ユーザー"}
+                                        </span>
+                                    )}
+                                    {searchTerm.trim() && (
+                                        <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md font-semibold text-[11px] border border-slate-200">
+                                            キーワード: &quot;{searchTerm.trim()}&quot;
+                                        </span>
+                                    )}
+                                </div>
+                                <span className="text-slate-600 font-mono font-bold shrink-0 text-[11px]">
+                                    {filteredUsers.length} 件 ヒット
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* ユーザー一覧 */}

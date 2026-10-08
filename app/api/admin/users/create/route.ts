@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
         // リクエストボディの取得
         const body = await request.json();
-        const { email, password, displayName, companyId, allowedPlan, role } = body;
+        const { email, password, displayName, companyId, allowedPlan, role, sendEmail, emailSubject, emailBody } = body;
 
         if (!email || !password || !displayName || !companyId) {
             return NextResponse.json({ error: "メールアドレス、パスワード、担当者名、所属会社は必須です" }, { status: 400 });
@@ -112,6 +112,61 @@ export async function POST(request: Request) {
             throw insertError;
         }
 
+        // メール送信の実行（指定されている場合）
+        let emailDelivery = {
+            attempted: Boolean(sendEmail),
+            sent: false,
+            message: "メール送信は指定されていません"
+        };
+
+        if (sendEmail) {
+            const resendApiKey = process.env.RESEND_API_KEY;
+            if (resendApiKey) {
+                try {
+                    const { Resend } = await import("resend");
+                    const resend = new Resend(resendApiKey);
+                    const fromEmail = process.env.RESEND_FROM_EMAIL || "MIERIS 運営事務局 <onboarding@resend.dev>";
+                    const subject = emailSubject || "【MIERIS】アカウント発行およびログイン情報のご案内";
+                    const content = emailBody || "アカウントが発行されました。";
+
+                    const emailResult = await resend.emails.send({
+                        from: fromEmail,
+                        to: [email.trim()],
+                        subject: subject,
+                        text: content,
+                    });
+
+                    if (emailResult.error) {
+                        console.error("Resend delivery error:", emailResult.error);
+                        emailDelivery = {
+                            attempted: true,
+                            sent: false,
+                            message: `送信エラー: ${emailResult.error.message}`
+                        };
+                    } else {
+                        emailDelivery = {
+                            attempted: true,
+                            sent: true,
+                            message: "メールを正常に送信しました"
+                        };
+                    }
+                } catch (err: any) {
+                    console.error("Email send exception:", err);
+                    emailDelivery = {
+                        attempted: true,
+                        sent: false,
+                        message: `送信処理中にエラーが発生しました: ${err.message}`
+                    };
+                }
+            } else {
+                emailDelivery = {
+                    attempted: true,
+                    sent: false,
+                    message: "RESEND_API_KEY が未設定のため自動送信は保留されました（案内テキストをコピーまたはメーラーから送信可能です）"
+                };
+            }
+        }
+
         return NextResponse.json({
             success: true,
             user: {
@@ -120,7 +175,8 @@ export async function POST(request: Request) {
                 displayName: displayName.trim(),
                 companyId: companyId,
                 allowedPlan: allowedPlan || "full"
-            }
+            },
+            emailDelivery
         });
 
     } catch (error: any) {
