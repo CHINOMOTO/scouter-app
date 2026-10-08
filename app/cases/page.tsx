@@ -107,40 +107,46 @@ export default function CasesPage() {
 
   useEffect(() => {
     const init = async () => {
-      // 1. Check Admin Role
+      // 1. Check Admin Role via DB app_users
       const { data: { user } } = await supabase.auth.getUser();
-      const isUserAdmin = user?.app_metadata?.role === 'admin';
-
-      if (user) {
-        setIsAdmin(isUserAdmin);
+      if (!user) {
+        setIsLoading(false);
+        return;
       }
+
+      const { data: appUser } = await supabase
+        .from("app_users")
+        .select("company_id, allowed_plan, role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const isUserAdmin = appUser?.role === 'admin' || user?.app_metadata?.role === 'admin';
+      setIsAdmin(isUserAdmin);
 
       // 2. Fetch Cases
       try {
+        // クレジット専用プランの場合はアクセス制限（管理者を除く）
+        if (!isUserAdmin && appUser && appUser.allowed_plan === "credit") {
+          setPlanRestricted(true);
+          setIsLoading(false);
+          return;
+        }
+
         let query = supabase
           .from("blacklist_cases")
           .select("id, full_name, full_name_kana, birth_date, occurrence_date, phone_last4, reason_text, status, created_at, registered_company_id")
           .order("created_at", { ascending: false });
 
-        // 一般ユーザーは自社登録データのみ表示（個人情報保護法対応）
-        if (!isUserAdmin && user) {
-          const { data: appUser } = await supabase
-            .from("app_users")
-            .select("company_id, allowed_plan, role")
-            .eq("id", user.id)
-            .maybeSingle();
-
-          // クレジット専用プランの場合はアクセス制限
-          if (appUser && appUser.allowed_plan === "credit" && appUser.role !== "admin") {
-            setPlanRestricted(true);
+        // 管理者以外は一覧の垂れ流しを防止（自社登録データのみに厳格制限）
+        if (!isUserAdmin) {
+          if (appUser?.company_id) {
+            query = query.eq("registered_company_id", appUser.company_id);
+          } else {
+            // 所属企業がない一般ユーザーには他社データを絶対に垂れ流さない
+            setCases([]);
             setIsLoading(false);
             return;
           }
-
-          if (appUser?.company_id) {
-            query = query.eq("registered_company_id", appUser.company_id);
-          }
-          // 自社のデータは審査中(pending)や却下(rejected)も含めて表示するため status 制限は設けない
         }
 
         const { data, error } = await query;
@@ -227,7 +233,9 @@ export default function CasesPage() {
                 )}
               </div>
               <p className="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
-                共有データベースに登録されている就業トラブル情報の一覧です。
+                {isAdmin 
+                  ? "共有データベースに登録されている就業トラブル情報の一覧です（管理者モード）。" 
+                  : "貴社が登録申請した就業トラブル情報の管理一覧です（※他社登録の照会は「応募者 検索・照会」画面より実行してください）。"}
               </p>
             </div>
             <div className="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto">

@@ -111,6 +111,7 @@ export default function CreditCasesListPage() {
     const router = useRouter();
     const [cases, setCases] = useState<CreditCaseItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<"all" | "unpaid" | "resolved">("all");
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" }>({
@@ -138,8 +139,18 @@ export default function CreditCasesListPage() {
                 return;
             }
 
-            // all=true を指定してテスト検証用に全件取得
-            const res = await fetch("/api/credit-cases?all=true", {
+            // ユーザー情報とロール確認
+            const { data: appUser } = await supabase
+                .from("app_users")
+                .select("role")
+                .eq("id", session.user.id)
+                .maybeSingle();
+
+            const isUserAdmin = appUser?.role === "admin";
+            setIsAdmin(isUserAdmin);
+
+            // 管理者以外は一覧垂れ流しを防止（API側で自社登録データのみに制限される）
+            const res = await fetch(isUserAdmin ? "/api/credit-cases?all=true" : "/api/credit-cases", {
                 headers: {
                     "Authorization": `Bearer ${session.access_token}`
                 }
@@ -276,7 +287,9 @@ export default function CreditCasesListPage() {
                                 </span>
                             </div>
                             <p className="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
-                                登録・共有されている取引先企業の未払い・支払遅延データ一覧です。
+                                {isAdmin 
+                                    ? "共有データベースに登録されている取引先企業の未払い・支払遅延データ一覧です（管理者モード）。"
+                                    : "貴社が登録申請した未払い・支払遅延企業の管理一覧です（※他社データの照会は「企業信用 検索・照会」画面より実行してください）。"}
                             </p>
                         </div>
                         <div className="shrink-0 w-full sm:w-auto">

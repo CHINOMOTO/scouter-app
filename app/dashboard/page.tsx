@@ -456,7 +456,7 @@ export default function DashboardPage() {
 
               {/* 内部カードエリア */}
               <div className="p-4 sm:p-6 bg-slate-50/50">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+                <div className={`grid grid-cols-1 ${isAdmin ? "md:grid-cols-3" : "md:grid-cols-2"} gap-3.5 sm:gap-4`}>
                   {/* 応募者検索・照会 */}
                   <MenuCard
                     title="応募者 検索・照会"
@@ -465,16 +465,6 @@ export default function DashboardPage() {
                     actionText="照会画面を開く"
                     icon={<IcPersonSearch className="w-12 h-12" />}
                     onClick={() => router.push("/search")}
-                  />
-
-                  {/* 登録データ一覧 */}
-                  <MenuCard
-                    title="登録データ一覧"
-                    description="現在データベースに登録・共有されているトラブル人材の一覧を確認します。"
-                    badge="一覧"
-                    actionText="一覧を見る"
-                    icon={<IcStatutoryLedgers className="w-12 h-12" />}
-                    onClick={() => router.push("/cases")}
                   />
 
                   {/* 人物を新規登録 */}
@@ -486,6 +476,18 @@ export default function DashboardPage() {
                     icon={<IcDailyReport className="w-12 h-12" />}
                     onClick={() => router.push("/cases/new")}
                   />
+
+                  {/* 登録データ一覧（管理者のみ） */}
+                  {isAdmin && (
+                    <MenuCard
+                      title="登録データ一覧（管理者）"
+                      description="データベースに登録されている全トラブル人材のレコード一覧を確認・管理します。"
+                      badge="管理者"
+                      actionText="一覧を見る"
+                      icon={<IcStatutoryLedgers className="w-12 h-12" />}
+                      onClick={() => router.push("/cases")}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -526,27 +528,16 @@ export default function DashboardPage() {
 
               {/* 内部カードエリア */}
               <div className="p-4 sm:p-6 bg-slate-50/50">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+                <div className={`grid grid-cols-1 ${isAdmin ? "md:grid-cols-3" : "md:grid-cols-2"} gap-3.5 sm:gap-4`}>
                   {/* 企業信用照会 */}
                   <MenuCard
                     title="企業信用 検索・照会"
-                    description="法人番号から未払い金額や過去の支払遅延記録を照会し、貸倒れを防ぎます。"
+                    description="法人番号や会社名から未払い金額や過去の支払遅延記録を照会し、貸倒れを防ぎます。"
                     badge="信用照会"
                     theme="blue"
                     actionText="照会を実行"
                     icon={<IcCorporateTrust className="w-12 h-12" />}
                     onClick={() => router.push("/credit")}
-                  />
-
-                  {/* 登録データ一覧 */}
-                  <MenuCard
-                    title="登録データ一覧"
-                    description="現在データベースに登録・共有されている取引先企業の遅延・未払いデータの一覧を確認します。"
-                    badge="一覧"
-                    theme="blue"
-                    actionText="一覧を見る"
-                    icon={<IcProject className="w-12 h-12" />}
-                    onClick={() => router.push("/credit/cases")}
                   />
 
                   {/* 遅延・未払いを新規登録 */}
@@ -559,6 +550,19 @@ export default function DashboardPage() {
                     icon={<IcWorkflow className="w-12 h-12" />}
                     onClick={() => router.push("/credit/new")}
                   />
+
+                  {/* 登録データ一覧（管理者のみ） */}
+                  {isAdmin && (
+                    <MenuCard
+                      title="登録データ一覧（管理者）"
+                      description="データベースに登録されている取引先企業の全遅延・未払いデータの一覧を確認・管理します。"
+                      badge="管理者"
+                      theme="blue"
+                      actionText="一覧を見る"
+                      icon={<IcProject className="w-12 h-12" />}
+                      onClick={() => router.push("/credit/cases")}
+                    />
+                  )}
                 </div>
               </div>
             </div>

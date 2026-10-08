@@ -94,9 +94,27 @@ export async function GET(request: Request) {
             .select(selectFieldsWithStatus)
             .order('created_at', { ascending: false });
 
-        // 一般ユーザーは承認済みデータ、または自社が登録したデータのみ閲覧可（テスト用all=true時は全件閲覧可）
-        if (!isAdmin && !showAll) {
-            query = query.or(`status.eq.approved,registered_by_company_id.eq.${appUser?.company_id}`);
+        const isSearching = !!(q.trim() || corporateNumber.trim());
+
+        // 管理者以外は一覧の垂れ流しを防止（検索でのみ該当データを照会可能）
+        if (!isAdmin) {
+            if (isSearching) {
+                // 検索時は承認済みデータまたは自社登録データのみ照会可能
+                if (appUser?.company_id) {
+                    query = query.or(`status.eq.approved,registered_by_company_id.eq.${appUser.company_id}`);
+                } else {
+                    query = query.eq('status', 'approved');
+                }
+            } else {
+                // 検索条件なし（一覧表示要求時）は自社登録データのみに限定（他社データは絶対に垂れ流さない）
+                if (appUser?.company_id) {
+                    query = query.eq('registered_by_company_id', appUser.company_id);
+                } else {
+                    return NextResponse.json({ cases: [] });
+                }
+            }
+        } else if (!showAll) {
+            // 管理者でも all=true でない場合は通常のフィルタリング
         }
 
         // 検索フィルター
@@ -117,8 +135,20 @@ export async function GET(request: Request) {
                 .select(selectFieldsBase)
                 .order('created_at', { ascending: false });
 
-            if (!isAdmin && !showAll) {
-                fallbackQuery = fallbackQuery.or(`status.eq.approved,registered_by_company_id.eq.${appUser?.company_id}`);
+            if (!isAdmin) {
+                if (isSearching) {
+                    if (appUser?.company_id) {
+                        fallbackQuery = fallbackQuery.or(`status.eq.approved,registered_by_company_id.eq.${appUser.company_id}`);
+                    } else {
+                        fallbackQuery = fallbackQuery.eq('status', 'approved');
+                    }
+                } else {
+                    if (appUser?.company_id) {
+                        fallbackQuery = fallbackQuery.eq('registered_by_company_id', appUser.company_id);
+                    } else {
+                        return NextResponse.json({ cases: [] });
+                    }
+                }
             }
             if (q.trim()) {
                 fallbackQuery = fallbackQuery.or(`company_name.ilike.%${q.trim()}%,location.ilike.%${q.trim()}%`);
