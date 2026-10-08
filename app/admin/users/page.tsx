@@ -356,38 +356,6 @@ export default function AdminUsersManagementPage() {
                                 )}
                             </div>
                         </div>
-
-                        {/* アクティブな絞り込みのサマリー表示 */}
-                        {hasActiveFilters && (
-                            <div className="flex items-center justify-between text-xs pt-2.5 border-t border-slate-100 text-slate-500 flex-wrap gap-2">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="font-bold text-slate-600 text-[11px]">適用中:</span>
-                                    {planFilter !== "all" && (
-                                        <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md font-semibold text-[11px] border border-slate-200">
-                                            プラン: {planFilter === "full" ? "FULLプラン" : planFilter === "employment" ? "MIERIS WORK" : "MIERIS CREDIT"}
-                                        </span>
-                                    )}
-                                    {companyFilter !== "all" && (
-                                        <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md font-semibold text-[11px] border border-slate-200">
-                                            会社: {uniqueCompanies.find(c => c.id === companyFilter)?.name || "指定会社"}
-                                        </span>
-                                    )}
-                                    {roleFilter !== "all" && (
-                                        <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md font-semibold text-[11px] border border-slate-200">
-                                            権限: {roleFilter === "admin" ? "管理者" : "一般ユーザー"}
-                                        </span>
-                                    )}
-                                    {searchTerm.trim() && (
-                                        <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md font-semibold text-[11px] border border-slate-200">
-                                            キーワード: &quot;{searchTerm.trim()}&quot;
-                                        </span>
-                                    )}
-                                </div>
-                                <span className="text-slate-600 font-mono font-bold shrink-0 text-[11px]">
-                                    {filteredUsers.length} 件 ヒット
-                                </span>
-                            </div>
-                        )}
                     </div>
 
                     {/* ユーザー一覧 */}

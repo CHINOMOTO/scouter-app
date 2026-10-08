@@ -127,7 +127,7 @@ export async function POST(request: Request) {
                     const resend = new Resend(resendApiKey);
                     const fromEmail = process.env.RESEND_FROM_EMAIL || "MIERIS 運営事務局 <onboarding@resend.dev>";
                     const subject = emailSubject || "【MIERIS】アカウント発行およびログイン情報のご案内";
-                    const content = emailBody || "アカウントが発行されました。";
+                    const content = emailBody || `アカウントが発行されました。\nログインURL: https://www.m-m-m-mieris0610.com/\nメールアドレス: ${email.trim()}`;
 
                     const emailResult = await resend.emails.send({
                         from: fromEmail,
