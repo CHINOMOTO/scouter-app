@@ -269,8 +269,10 @@ export default function LoadingCubeDemoPage() {
         // アニメーションループ
         let animationFrameId: number;
         let lastTime = performance.now();
-        let targetRotationY = 0.25;
-        let targetRotationX = 0.15;
+        let targetRotationY = 0.0;
+        let targetRotationX = 0.06;
+        let prevCompleted = false;
+        let flashIntensity = 0;
 
         const animate = (time: number) => {
             animationFrameId = requestAnimationFrame(animate);
@@ -281,24 +283,61 @@ export default function LoadingCubeDemoPage() {
             const completed = isCompleteRef.current;
 
             if (!completed) {
-                // ローディング中：高速自転 ＆ 0.3秒おきに連続スライス回転
+                // --- ローディング中：高速自転 ＆ 0.28秒おきに連続スライス回転（ロゴがパズル状に崩れる） ---
                 timeSinceLastSlice += dt;
-                if (timeSinceLastSlice > 0.35 && !sliceAnimating) {
+                if (timeSinceLastSlice > 0.28 && !sliceAnimating) {
                     timeSinceLastSlice = 0;
                     startSliceRotation();
                 }
 
-                targetRotationY += 1.4 * dt;
-                targetRotationX += 0.8 * dt;
+                targetRotationY += 1.6 * dt;
+                targetRotationX += 0.9 * dt;
+
+                // 通常光量
+                keyLight.intensity = 2.8;
+                cyanLight.intensity = 4.0;
+                purpleLight.intensity = 3.5;
+
             } else {
-                // 完了後：正面を向いてゆったり優雅にアイドリング
-                targetRotationY = 0.25;
-                targetRotationX = 0.15;
+                // --- 100%完了時：パズルが解かれ、ミエリスロゴが正面でカチッと完成！ ---
+                if (!prevCompleted) {
+                    // 完了の瞬間に発光フラッシュを発動
+                    flashIntensity = 1.0;
+                    sliceAnimating = false;
+                }
+
+                // 各小ピースを初期の完成位置・姿勢へ一斉に吸い付かせる (Lerp & Slerp)
+                const identityQuat = new THREE.Quaternion();
+                pieceMeshes.forEach((mesh) => {
+                    const origPos = new THREE.Vector3(
+                        mesh.userData.origX * step,
+                        mesh.userData.origY * step,
+                        mesh.userData.origZ * step
+                    );
+                    mesh.position.lerp(origPos, 0.16);
+                    mesh.quaternion.slerp(identityQuat, 0.16);
+                });
+
+                // キューブ全体をミエリスロゴが真っ正面に見える角度へスナップ
+                targetRotationY = 0.0;
+                targetRotationX = 0.06;
+
+                // フラッシュ光の減衰 (完了の瞬間にキラリと光る)
+                if (flashIntensity > 0) {
+                    flashIntensity -= dt * 2.2;
+                    if (flashIntensity < 0) flashIntensity = 0;
+                }
+
+                keyLight.intensity = 2.8 + flashIntensity * 4.0;
+                cyanLight.intensity = 4.0 + flashIntensity * 8.0;
+                purpleLight.intensity = 3.5 + flashIntensity * 4.0;
             }
 
+            prevCompleted = completed;
+
             // スライス回転アニメーション (高速でカチャッと回る)
-            if (sliceAnimating) {
-                const turnSpeed = Math.PI * 5.0; // 超高速スピン
+            if (sliceAnimating && !completed) {
+                const turnSpeed = Math.PI * 6.0; // 超高速スピン
                 const stepAngle = turnSpeed * dt;
                 sliceAngle += stepAngle;
 
@@ -322,12 +361,13 @@ export default function LoadingCubeDemoPage() {
                 }
             }
 
-            // 全体回転の補間
-            rubiksGroup.rotation.y += (targetRotationY - rubiksGroup.rotation.y) * 0.1;
-            rubiksGroup.rotation.x += (targetRotationX - rubiksGroup.rotation.x) * 0.1;
+            // 全体回転の補間 (完了時は正面へスムーズにスナップ)
+            const snapSpeed = completed ? 0.14 : 0.08;
+            rubiksGroup.rotation.y += (targetRotationY - rubiksGroup.rotation.y) * snapSpeed;
+            rubiksGroup.rotation.x += (targetRotationX - rubiksGroup.rotation.x) * snapSpeed;
 
             // 浮遊上下アニメーション
-            rubiksGroup.position.y = Math.sin(time * 0.003) * 0.1;
+            rubiksGroup.position.y = Math.sin(time * 0.003) * 0.08;
 
             renderer.render(scene, camera);
         };
