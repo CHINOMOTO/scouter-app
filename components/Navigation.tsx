@@ -40,15 +40,10 @@ export default function Navigation() {
     const [notificationCount, setNotificationCount] = useState(0);
     const [pendingCaseCount, setPendingCaseCount] = useState(0);
     const [pendingCreditCount, setPendingCreditCount] = useState(0);
-    const [pendingUserCount, setPendingUserCount] = useState(0);
     const [allowedPlan, setAllowedPlan] = useState<string>("full");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const fetchNotifications = async () => {
         try {
-            const { count: userCount } = await supabase
-                .from("app_users")
-                .select("*", { count: "exact", head: true })
-                .eq("is_approved", false);
             const { count: caseCount } = await supabase
                 .from("blacklist_cases")
                 .select("*", { count: "exact", head: true })
@@ -58,14 +53,12 @@ export default function Navigation() {
                 .select("*", { count: "exact", head: true })
                 .eq("status", "pending");
 
-            const u = userCount || 0;
             const c = caseCount || 0;
             const cr = creditCount || 0;
 
-            setPendingUserCount(u);
             setPendingCaseCount(c);
             setPendingCreditCount(cr);
-            setNotificationCount(u + c + cr);
+            setNotificationCount(c + cr);
         } catch (err) {
             console.error("fetchNotifications error:", err);
         }
@@ -454,7 +447,6 @@ export default function Navigation() {
                                         active={pathname.startsWith("/admin/users") || pathname.startsWith("/admin/registered-users")}
                                         icon={<Users className="w-3.5 h-3.5" />}
                                         label="ユーザー管理"
-                                        badge={pendingUserCount > 0 ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-500 text-white tabular-nums shadow-xs">{pendingUserCount}</span> : undefined}
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                     <SubmenuLink 
