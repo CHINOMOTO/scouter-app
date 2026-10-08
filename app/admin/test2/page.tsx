@@ -138,8 +138,15 @@ export default function LoadingCubeDemoPage() {
                 ctx.fillStyle = grad;
                 ctx.fillRect(0, 0, 768, 768);
 
-                const pad = 96;
-                ctx.drawImage(img, pad, pad, 768 - pad * 2, 768 - pad * 2);
+                // アスペクト比を維持してバランス良く中央配置
+                const maxDim = 768 * 0.82;
+                const scale = Math.min(maxDim / img.width, maxDim / img.height);
+                const drawW = img.width * scale;
+                const drawH = img.height * scale;
+                const offsetX = (768 - drawW) / 2;
+                const offsetY = (768 - drawH) / 2;
+
+                ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
 
                 const tex = new THREE.CanvasTexture(canvas);
                 tex.generateMipmaps = true;
@@ -166,7 +173,7 @@ export default function LoadingCubeDemoPage() {
                 clearcoat: 1.0,
             });
 
-            // 正面: ミエリスシンボル
+            // 正面: MIERIS文字入りブランドロゴ (logo-brand.png) を3x3パズルとして貼り付け
             let frontMat: THREE.Material = makeFaceMat(0x00f0ff);
             if (z === 1 && frontCanvasTexture) {
                 const tex = frontCanvasTexture.clone();
@@ -181,7 +188,7 @@ export default function LoadingCubeDemoPage() {
                 });
             }
 
-            // 裏面: ミエリスブランドロゴ
+            // 裏面: ミエリスシンボルマーク (logo-mark.png) を3x3パズルとして貼り付け
             let backMat: THREE.Material = makeFaceMat(0x6366f1);
             if (z === -1 && backCanvasTexture) {
                 const tex = backCanvasTexture.clone();
@@ -201,8 +208,8 @@ export default function LoadingCubeDemoPage() {
                 x === -1 ? makeFaceMat(0xa855f7) : bodyMat, // 左
                 y === 1 ? makeFaceMat(0xf8fafc) : bodyMat,  // 上
                 y === -1 ? makeFaceMat(0x1e293b) : bodyMat, // 下
-                z === 1 ? frontMat : bodyMat,               // 前 (ロゴ)
-                z === -1 ? backMat : bodyMat,               // 後 (ロゴ)
+                z === 1 ? frontMat : bodyMat,               // 前 (MIERIS文字入りロゴ)
+                z === -1 ? backMat : bodyMat,               // 後 (シンボルマーク)
             ];
         };
 
@@ -231,11 +238,12 @@ export default function LoadingCubeDemoPage() {
 
         buildRubiksCube();
 
-        createLogoTexture("/logo-mark.png", (tex) => {
+        // 正面に MIERIS 文字入りブランドロゴ、裏面にシンボルマークを割り当て
+        createLogoTexture("/logo-brand.png", (tex) => {
             frontCanvasTexture = tex;
             buildRubiksCube();
         });
-        createLogoTexture("/logo-brand.png", (tex) => {
+        createLogoTexture("/logo-mark.png", (tex) => {
             backCanvasTexture = tex;
             buildRubiksCube();
         });
