@@ -87,10 +87,6 @@ export async function GET(request: Request) {
             query = query.eq('status', 'approved');
         }
 
-        // 氏名またはカナによる曖昧検索（スペース除去対応）
-        const cleanName = nameQuery.replace(/\s+/g, '');
-        query = query.or(`full_name.ilike.%${cleanName}%,full_name_kana.ilike.%${cleanName}%`);
-
         const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) {
@@ -98,7 +94,49 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'データの照会に失敗しました: ' + error.message }, { status: 500 });
         }
 
-        return NextResponse.json({ results: data || [] });
+        // 文字列の正規化関数（半角・全角スペース除去、カタカナ→ひらがな統一、NFKC正規化）
+        const normalize = (str?: string | null): string => {
+            if (!str) return '';
+            return str
+                .toLowerCase()
+                .replace(/[\s　]+/g, '')
+                .replace(/[ァ-ン]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0x60))
+                .normalize('NFKC');
+        };
+
+        const targetQuery = normalize(nameQuery);
+        const queryTokens = nameQuery
+            .trim()
+            .split(/[\s　]+/)
+            .map(t => normalize(t))
+            .filter(Boolean);
+
+        // スペース有無・全角半角・カナひらがなに関わらず柔軟に照合
+        const matchedResults = (data || []).filter((item: any) => {
+            const itemFullName = normalize(item.full_name);
+            const itemKana = normalize(item.full_name_kana);
+
+            // 1. スペース完全除去での一致または部分一致
+            if (itemFullName.includes(targetQuery) || targetQuery.includes(itemFullName)) {
+                return true;
+            }
+            if (itemKana.includes(targetQuery) || targetQuery.includes(itemKana)) {
+                return true;
+            }
+
+            // 2. 姓名をスペース区切りで入力した場合、全トークンが含まれているか
+            if (queryTokens.length > 1) {
+                const matchAllTokensName = queryTokens.every(token => itemFullName.includes(token));
+                const matchAllTokensKana = queryTokens.every(token => itemKana.includes(token));
+                if (matchAllTokensName || matchAllTokensKana) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        return NextResponse.json({ results: matchedResults });
 
     } catch (e: any) {
         console.error('Search API unexpected error:', e);

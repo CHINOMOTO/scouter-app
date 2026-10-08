@@ -486,7 +486,7 @@ export default function Navigation() {
                                         href="/admin/test"
                                         active={pathname === "/admin/test"}
                                         icon={<Sparkles className="w-3.5 h-3.5 text-indigo-400" />}
-                                        label="ﾃｽﾄ"
+                                        label="test"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                 </AccordionGroup>

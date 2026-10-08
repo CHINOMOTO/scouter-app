@@ -361,7 +361,7 @@ export default function AdminDashboardPage() {
                             </div>
                         </Link>
 
-                        {/* ﾃｽﾄ (Resend風3D体験ラボ) タイル */}
+                        {/* test タイル */}
                         <Link
                             href="/admin/test"
                             className="block group relative p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-indigo-200/80 transition-all duration-200 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/40 hover:-translate-y-1 hover:border-indigo-400 hover:shadow-md active:scale-[0.98] flex flex-col overflow-hidden shadow-2xs"
@@ -374,19 +374,19 @@ export default function AdminDashboardPage() {
                                     </div>
                                     <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 bg-indigo-100 text-indigo-800 text-[10px] sm:text-xs font-bold rounded-lg border border-indigo-200 uppercase tracking-wider shadow-xs">
                                         <Sparkles className="w-3 h-3 text-indigo-600" />
-                                        <span>3D Lab</span>
+                                        <span>test</span>
                                     </span>
                                 </div>
                                 <h2 className="text-lg sm:text-2xl font-extrabold text-slate-900 mb-1.5 sm:mb-2 group-hover:text-indigo-600 transition-colors duration-200">
-                                    ﾃｽﾄ
+                                    test
                                 </h2>
                                 <p className="text-slate-600 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
-                                    Resend風の3Dルービックキューブおよび先端WebGLアニメーションの動作確認です。
+                                    3Dインタラクティブテスト
                                 </p>
 
                                 <div className="mt-auto">
                                     <div className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 group-hover:translate-x-1 transition-transform">
-                                        <span>3D実験室を開く →</span>
+                                        <span>開く →</span>
                                     </div>
                                 </div>
                             </div>

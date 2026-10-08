@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Sparkles, RefreshCw, Eye, Move3D, Layers, ShieldCheck, Zap } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import * as THREE from "three";
 
 export default function Resend3DDemoPage() {
@@ -341,7 +341,7 @@ export default function Resend3DDemoPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#050508] text-white flex flex-col justify-between selection:bg-indigo-500 selection:text-white relative overflow-hidden font-sans">
+        <div className="h-screen w-screen bg-[#050508] text-white flex flex-col items-center justify-center selection:bg-indigo-500 selection:text-white relative overflow-hidden font-sans">
             
             {/* 1. 背景グリッドとアンビエントライティング (Resend Style) */}
             <div 
@@ -354,131 +354,24 @@ export default function Resend3DDemoPage() {
                     backgroundSize: '40px 40px'
                 }}
             />
-            {/* 上部中央のグラデーショングロー */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-indigo-600/20 via-sky-500/10 to-transparent blur-[120px] pointer-events-none" />
+            {/* 中央のグラデーショングロー */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[500px] bg-gradient-to-b from-indigo-600/15 via-sky-500/10 to-transparent blur-[140px] pointer-events-none" />
             
-            {/* 2. ヘッダーナビゲーション */}
-            <header className="relative z-20 px-6 py-5 flex items-center justify-between border-b border-white/[0.08] backdrop-blur-md bg-black/30">
-                <div className="flex items-center gap-3">
-                    <Link
-                        href="/admin"
-                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs text-white/80 hover:text-white transition-all group"
-                    >
-                        <ArrowLeft className="w-3.5 h-3.5 text-white/60 group-hover:-translate-x-0.5 transition-transform" />
-                        <span>管理画面へ戻る</span>
-                    </Link>
-                    <span className="text-white/20 text-xs">|</span>
-                    <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-xs font-mono tracking-wider text-white/70 uppercase">
-                            Resend 3D Experience Lab
-                        </span>
-                    </div>
-                </div>
+            {/* 2. ミニマルな戻るボタン (左上) */}
+            <Link
+                href="/admin"
+                className="absolute top-6 left-6 z-30 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs text-white/60 hover:text-white transition-all backdrop-blur-md"
+            >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>戻る</span>
+            </Link>
 
-                <div className="hidden sm:flex items-center gap-3 text-xs text-white/60">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
-                        <Move3D className="w-3.5 h-3.5 text-sky-400" />
-                        <span>ドラッグで360°回転</span>
-                    </span>
-                </div>
-            </header>
-
-            {/* 3. メインビジュアルエリア */}
-            <main className="relative flex-1 flex flex-col items-center justify-center px-4 py-8 z-10">
-                
-                {/* ヒーロータイトル帯 */}
-                <div className="text-center max-w-xl mx-auto mb-4 pointer-events-none select-none">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-sky-500/10 border border-white/10 text-[11px] font-semibold text-white/80 mb-3 backdrop-blur-md">
-                        <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                        <span>Next.js ＋ Three.js WebGL Engine</span>
-                    </div>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-b from-white via-white/90 to-white/40 bg-clip-text text-transparent pb-1">
-                        インタラクティブ 3D キューブ
-                    </h1>
-                    <p className="text-xs sm:text-sm text-white/60 mt-2 leading-relaxed">
-                        マウスを動かすと視点が追従し、ドラッグで自由に回転できます。<br />
-                        ボタン操作でカチャッとスライス回転（シャッフル）させることが可能です。
-                    </p>
-                </div>
-
-                {/* 3D キャンバス配置コンテナ */}
-                <div 
-                    ref={containerRef}
-                    className="w-full max-w-2xl h-[360px] sm:h-[420px] md:h-[460px] cursor-grab active:cursor-grabbing relative"
-                    title="ドラッグして回転 / マウスで傾き追従"
-                />
-
-                {/* コントロールパネル (フロートドック) */}
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5 p-2 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl shadow-2xl z-20">
-                    
-                    {/* シャッフル (スライス回転) */}
-                    <button
-                        onClick={triggerShuffle}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-xs font-bold transition-all text-white shadow-lg shadow-indigo-600/30"
-                    >
-                        <RefreshCw className="w-3.5 h-3.5" />
-                        <span>1面カチャッと回す</span>
-                    </button>
-
-                    {/* 自動回転 トグル */}
-                    <button
-                        onClick={() => setIsRotating(!isRotating)}
-                        className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-semibold transition-all ${
-                            isRotating 
-                                ? "bg-white/10 border-white/20 text-white" 
-                                : "bg-transparent border-white/10 text-white/60 hover:text-white"
-                        }`}
-                    >
-                        <Zap className="w-3.5 h-3.5 text-amber-400" />
-                        <span>自動自転: {isRotating ? "ON" : "OFF"}</span>
-                    </button>
-
-                    {/* スタイル切替 */}
-                    <div className="flex items-center bg-black/40 rounded-xl p-0.5 border border-white/10 text-xs">
-                        <button
-                            onClick={() => { setColorMode("resend"); colorModeRef.current = "resend"; }}
-                            className={`px-3 py-1.5 rounded-lg transition-all ${
-                                colorMode === "resend" 
-                                    ? "bg-white/15 text-white font-bold" 
-                                    : "text-white/50 hover:text-white"
-                            }`}
-                        >
-                            Resend Cyber
-                        </button>
-                        <button
-                            onClick={() => { setColorMode("vibrant"); colorModeRef.current = "vibrant"; }}
-                            className={`px-3 py-1.5 rounded-lg transition-all ${
-                                colorMode === "vibrant" 
-                                    ? "bg-white/15 text-white font-bold" 
-                                    : "text-white/50 hover:text-white"
-                            }`}
-                        >
-                            Classic
-                        </button>
-                        <button
-                            onClick={() => { setColorMode("monochrome"); colorModeRef.current = "monochrome"; }}
-                            className={`px-3 py-1.5 rounded-lg transition-all ${
-                                colorMode === "monochrome" 
-                                    ? "bg-white/15 text-white font-bold" 
-                                    : "text-white/50 hover:text-white"
-                            }`}
-                        >
-                            Monochrome
-                        </button>
-                    </div>
-                </div>
-
-            </main>
-
-            {/* 4. フッター */}
-            <footer className="relative z-20 px-6 py-4 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between text-[11px] text-white/40 gap-2">
-                <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>MIERIS 管理者専用 実験室（Sandbox）</span>
-                </div>
-                <span>Inspired by Resend.com Design System</span>
-            </footer>
+            {/* 3. 画面中央いっぱいの 3D キャンバス (クリックでシャッフル、ドラッグで回転) */}
+            <div 
+                ref={containerRef}
+                onClick={triggerShuffle}
+                className="w-full h-full cursor-grab active:cursor-grabbing relative z-10 flex items-center justify-center"
+            />
 
         </div>
     );
