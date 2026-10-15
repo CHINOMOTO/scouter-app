@@ -546,8 +546,10 @@ export default function AdminCreditCaseDetailPage() {
                                 <h3 className="text-lg font-bold">企業信用審査の承認</h3>
                             </div>
                             <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                                この企業信用登録申請を承認しますか？<br />
-                                承認すると、システム全体の企業信用照会で加盟企業に情報が開示されます。
+                                この申請を承認しますか？<br />
+                                <span className="text-[11px] text-slate-500 mt-1 block">
+                                    承認すると申請企業へ通知メールが自動送信され、システム全体の企業信用照会で加盟企業に情報が開示されます。
+                                </span>
                             </p>
 
                             <div className="mb-4">
@@ -594,8 +596,8 @@ export default function AdminCreditCaseDetailPage() {
                 {/* 却下確認モーダル */}
                 {showRejectModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-                        <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-200">
-                            <div className="flex items-center gap-3 mb-4 text-rose-600">
+                        <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200">
+                            <div className="flex items-center gap-3 mb-3 text-rose-600">
                                 <div className="p-2.5 rounded-full bg-rose-50 text-rose-600">
                                     <XCircle className="w-6 h-6" />
                                 </div>
@@ -603,18 +605,42 @@ export default function AdminCreditCaseDetailPage() {
                             </div>
                             <p className="text-xs text-slate-600 mb-4 leading-relaxed">
                                 この企業信用登録申請を却下しますか？<br />
-                                却下された情報は一般の照会一覧には公開されません。
+                                <span className="font-semibold text-rose-600">入力された却下理由は申請企業への通知メールおよび申請者画面に提示されます。</span>
                             </p>
+
+                            {/* 定型理由クイック選択 */}
+                            <div className="mb-3">
+                                <label className="text-[11px] font-bold text-slate-700 mb-1.5 block">
+                                    定型理由クイック選択（クリックで自動挿入）:
+                                </label>
+                                <div className="flex flex-col gap-1.5">
+                                    {[
+                                        "裏付け資料（契約書・発注書・請求書・督促履歴等）が不足または未添付のため",
+                                        "法人番号や商号、本社所在地などの登録情報に不備・誤りがあるため",
+                                        "すでに債務の弁済・入金が完了していることが確認されたため",
+                                        "当社規定の登録要件（確定債権・支払期日の経過等）を満たしていないため",
+                                    ].map((preset, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => setAdminNotes(preset)}
+                                            className="text-left text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 text-slate-700 hover:text-rose-700 transition-colors"
+                                        >
+                                            • {preset}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
 
                             <div className="mb-4">
                                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                                    却下理由 / 管理者メモ <span className="text-rose-500 font-bold">*</span>
+                                    却下理由 <span className="text-rose-500 font-bold">*</span>
                                 </label>
                                 <textarea
                                     value={adminNotes}
                                     onChange={(e) => setAdminNotes(e.target.value)}
-                                    placeholder="例: 提出書類の請求期日と申請内容が不一致のため"
-                                    className="input-field text-xs min-h-[90px] resize-none"
+                                    placeholder="例: 裏付け資料（請求書・督促履歴等）が添付されていないため"
+                                    className="input-field text-xs min-h-[80px] resize-none"
                                 />
                             </div>
 

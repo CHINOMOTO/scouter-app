@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendCaseReviewNotification } from '@/lib/notificationService';
 
 // PATCH: 管理者による審査（承認 / 却下）
 export async function PATCH(
@@ -49,6 +50,10 @@ export async function PATCH(
             return NextResponse.json({ error: 'ステータスが不正です' }, { status: 400 });
         }
 
+        if (status === 'rejected' && !adminNotes?.trim()) {
+            return NextResponse.json({ error: '却下理由を入力してください' }, { status: 400 });
+        }
+
         const { data: updatedCase, error } = await supabaseAdmin
             .from('credit_cases')
             .update({
@@ -62,6 +67,21 @@ export async function PATCH(
 
         if (error) {
             return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        // 申請者企業へ通知メールを送信 (承認または却下の場合)
+        if (status === 'approved' || status === 'rejected') {
+            try {
+                await sendCaseReviewNotification({
+                    type: 'credit',
+                    status,
+                    targetName: updatedCase.company_name,
+                    reason: adminNotes || undefined,
+                    registeredCompanyId: updatedCase.registered_by_company_id,
+                });
+            } catch (notifErr) {
+                console.error('Failed to send credit review notification:', notifErr);
+            }
         }
 
         return NextResponse.json({ success: true, case: updatedCase });

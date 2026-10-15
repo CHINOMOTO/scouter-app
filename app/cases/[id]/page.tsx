@@ -17,6 +17,7 @@ type CaseDetail = {
     occurrence_date: string;
     reason_text: string;
     status: "pending" | "approved" | "rejected";
+    rejected_reason?: string | null;
     created_at: string;
     evidence_urls?: string[];
     registered_company_id?: string;
@@ -110,7 +111,7 @@ export default function CaseDetailPage() {
             const { data, error } = await supabase
                 .from("blacklist_cases")
                 .select(
-                    "id, full_name, full_name_kana, gender, birth_date, phone_last4, occurrence_date, reason_text, status, created_at, evidence_urls, registered_company_id, registered_by_user_id, risk_score"
+                    "id, full_name, full_name_kana, gender, birth_date, phone_last4, occurrence_date, reason_text, status, rejected_reason, created_at, evidence_urls, registered_company_id, registered_by_user_id, risk_score"
                 )
                 .eq("id", id)
                 .maybeSingle();
@@ -252,6 +253,19 @@ export default function CaseDetailPage() {
                                         <p className="text-slate-600 font-medium">{caseDetail.full_name_kana || ""}</p>
                                     </div>
                                 </div>
+
+                                {/* 審査却下の理由アラート */}
+                                {caseDetail.status === "rejected" && caseDetail.rejected_reason && (
+                                    <div className="p-4 md:p-5 rounded-xl bg-rose-50 border border-rose-200 mb-6">
+                                        <div className="flex items-center gap-2 font-bold text-rose-800 text-sm mb-1.5">
+                                            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                                            <span>この登録申請は却下されました</span>
+                                        </div>
+                                        <div className="text-xs sm:text-sm text-rose-900 leading-relaxed font-medium pl-6">
+                                            <span className="font-bold">理由: </span>{caseDetail.rejected_reason}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Info Grid */}
                                 <div className="grid md:grid-cols-2 gap-8">

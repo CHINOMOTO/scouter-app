@@ -65,6 +65,7 @@ export async function GET(request: Request) {
             resolved_delay_days,
             counterparty_claim,
             status,
+            admin_notes,
             business_status,
             registry_status,
             registry_close_date,
@@ -85,6 +86,7 @@ export async function GET(request: Request) {
             resolved_delay_days,
             counterparty_claim,
             status,
+            admin_notes,
             created_at,
             companies:registered_by_company_id ( id, name )
         `;

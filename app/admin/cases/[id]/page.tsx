@@ -149,6 +149,13 @@ export default function AdminCaseDetailPage() {
     fetchDetail();
   }, [id]);
 
+  const REJECT_PRESETS = [
+    "裏付け資料（契約書・誓約書・勤務実績等）が添付されていない、または不鮮明なため",
+    "入力された対象者情報（氏名・生年月日・連絡先等）に不備・誤りがあるため",
+    "すでにトラブルが解決（弁済・和解・示談等）済みと確認されたため",
+    "当社規定の登録要件（客観的事実の確認）を満たしていないため",
+  ];
+
   const executeApprove = async () => {
     if (!caseDetail) return;
     setFormError(null);
@@ -156,28 +163,28 @@ export default function AdminCaseDetailPage() {
 
     try {
       const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-      if (userError || !user) {
-        setFormError("ログイン情報を取得できませんでした。再度ログインしてください。");
+      if (sessionError || !session) {
+        setFormError("ログインセッションを取得できませんでした。再度ログインしてください。");
         setIsProcessing(false);
         return;
       }
 
-      const { error: updateError } = await supabase
-        .from("blacklist_cases")
-        .update({
-          status: "approved",
-          approved_by: user.id,
-          approved_at: new Date().toISOString(),
-          rejected_reason: null,
-        })
-        .eq("id", caseDetail.id);
+      const res = await fetch(`/api/admin/cases/${caseDetail.id}/review`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ status: "approved" }),
+      });
 
-      if (updateError) {
-        setFormError(updateError.message || "承認に失敗しました。");
+      const resData = await res.json();
+      if (!res.ok) {
+        setFormError(resData.error || "承認に失敗しました。");
         setIsProcessing(false);
         return;
       }
@@ -187,8 +194,8 @@ export default function AdminCaseDetailPage() {
       setShowApproveModal(false);
       setShowSuccessModal({ type: 'approved' });
 
-    } catch {
-      setFormError("予期せぬエラーが発生しました。");
+    } catch (err: any) {
+      setFormError(err.message || "予期せぬエラーが発生しました。");
       setIsProcessing(false);
     }
   };
@@ -198,7 +205,6 @@ export default function AdminCaseDetailPage() {
 
     if (!rejectReason.trim()) {
       setFormError("却下理由を入力してください。");
-      // モーダルは閉じない
       return;
     }
 
@@ -207,28 +213,31 @@ export default function AdminCaseDetailPage() {
 
     try {
       const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-      if (userError || !user) {
-        setFormError("ログイン情報を取得できませんでした。再度ログインしてください。");
+      if (sessionError || !session) {
+        setFormError("ログインセッションを取得できませんでした。再度ログインしてください。");
         setIsProcessing(false);
         return;
       }
 
-      const { error: updateError } = await supabase
-        .from("blacklist_cases")
-        .update({
+      const res = await fetch(`/api/admin/cases/${caseDetail.id}/review`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
           status: "rejected",
-          approved_by: user.id,
-          approved_at: new Date().toISOString(),
-          rejected_reason: rejectReason.trim(),
-        })
-        .eq("id", caseDetail.id);
+          rejectedReason: rejectReason.trim(),
+        }),
+      });
 
-      if (updateError) {
-        setFormError(updateError.message || "却下に失敗しました。");
+      const resData = await res.json();
+      if (!res.ok) {
+        setFormError(resData.error || "却下に失敗しました。");
         setIsProcessing(false);
         return;
       }
@@ -238,8 +247,8 @@ export default function AdminCaseDetailPage() {
       setShowRejectModal(false);
       setShowSuccessModal({ type: 'rejected' });
 
-    } catch {
-      setFormError("予期せぬエラーが発生しました。");
+    } catch (err: any) {
+      setFormError(err.message || "予期せぬエラーが発生しました。");
       setIsProcessing(false);
     }
   };
@@ -396,24 +405,26 @@ export default function AdminCaseDetailPage() {
 
           {/* Approve Confirmation Modal */}
           {showApproveModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
-              <div className="bg-white border border-slate-300 p-8 rounded-2xl max-w-sm w-full shadow-md">
-                <h3 className="text-xl font-bold text-slate-900 mb-4">承認の確認</h3>
-                <p className="text-slate-700 mb-8">
-                  この申請を承認しますか？<br />
-                  <span className="text-xs text-slate-500">承認すると、すべてのユーザーがこのデータを閲覧できるようになります。</span>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4">
+              <div className="bg-white border border-slate-300 p-6 sm:p-8 rounded-2xl max-w-sm w-full shadow-xl">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-3">承認の確認</h3>
+                <p className="text-xs sm:text-sm text-slate-600 mb-6 leading-relaxed">
+                  この就業トラブル申請を承認しますか？<br />
+                  <span className="text-[11px] text-slate-500 mt-1 block">
+                    承認すると申請者に通知メールが自動送信され、データベースに公開・反映されます。
+                  </span>
                 </p>
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                   <button
                     onClick={() => setShowApproveModal(false)}
-                    className="flex-1 py-2 rounded border border-slate-600 text-slate-600 hover:bg-slate-100"
+                    className="flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-colors"
                   >
                     キャンセル
                   </button>
                   <button
                     onClick={executeApprove}
                     disabled={isProcessing}
-                    className="flex-1 py-2 rounded bg-[#0f172a] text-white font-bold hover:bg-[#0f172a]/80 shadow-md"
+                    className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white text-xs sm:text-sm font-bold hover:bg-slate-800 shadow-md transition-all disabled:opacity-50"
                   >
                     {isProcessing ? "処理中..." : "承認確定"}
                   </button>
@@ -424,39 +435,73 @@ export default function AdminCaseDetailPage() {
 
           {/* Reject Input Modal */}
           {showRejectModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
-              <div className="bg-white border border-red-500 p-8 rounded-2xl max-w-md w-full shadow-[0_0_30px_rgba(239,68,68,0.3)]">
-                <h3 className="text-xl font-bold text-slate-900 mb-4">却下の確認</h3>
-                <p className="text-slate-700 mb-4">
-                  この申請を却下しますか？<br />
-                  <span className="text-xs text-slate-500">却下理由を入力してください。申請ユーザーには通知されませんが、記録として残ります。</span>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4">
+              <div className="bg-white border border-red-300 p-6 sm:p-8 rounded-2xl max-w-lg w-full shadow-2xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900">申請却下の確認</h3>
+                </div>
+                <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+                  却下理由を入力してください。<span className="font-semibold text-red-600">入力された理由は申請者への通知メールおよび申請者画面に提示されます。</span>
                 </p>
 
-                <textarea
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  rows={3}
-                  className="w-full bg-slate-950 border border-slate-200 rounded-md px-3 py-2 text-slate-900 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-all mb-4"
-                  placeholder="例: 情報不足のため、本人確認が取れないため等"
-                />
+                {/* 定型理由クイック選択 */}
+                <div className="mb-3">
+                  <label className="text-[11px] font-bold text-slate-700 mb-1.5 block">
+                    定型理由クイック選択（クリックで自動挿入）:
+                  </label>
+                  <div className="flex flex-col gap-1.5">
+                    {REJECT_PRESETS.map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setRejectReason(preset)}
+                        className="text-left text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-200 text-slate-700 hover:text-red-700 transition-colors"
+                      >
+                        • {preset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="text-[11px] font-bold text-slate-700 mb-1 block">
+                    却下理由（申請者へ通知されます）:
+                  </label>
+                  <textarea
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    rows={3}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-slate-900 text-xs sm:text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-all"
+                    placeholder="例: 裏付け資料（雇用契約書・督促履歴等）が添付されていないため"
+                  />
+                </div>
+
                 {formError && (
-                  <div className="mb-4 text-xs text-red-600 font-medium"><span className="inline-flex items-center gap-1.5"><AlertCircle className="w-4 h-4 shrink-0" /><span>{formError}</span></span></div>
+                  <div className="mb-4 text-xs text-red-600 font-medium p-2.5 rounded-lg bg-red-50 border border-red-200">
+                    <span className="inline-flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{formError}</span>
+                    </span>
+                  </div>
                 )}
 
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                   <button
                     onClick={() => {
                       setShowRejectModal(false);
                       setFormError(null);
                     }}
-                    className="flex-1 py-2 rounded border border-slate-600 text-slate-600 hover:bg-slate-100"
+                    className="flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-colors"
                   >
                     キャンセル
                   </button>
                   <button
                     onClick={executeReject}
                     disabled={isProcessing}
-                    className="flex-1 py-2 rounded bg-red-600 text-white font-bold hover:bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"
+                    className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-xs sm:text-sm font-bold hover:bg-red-500 shadow-md transition-all disabled:opacity-50"
                   >
                     {isProcessing ? "処理中..." : "却下確定"}
                   </button>

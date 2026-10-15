@@ -11,6 +11,7 @@ import {
     ArrowRight,
     AlertTriangle, 
     CheckCircle2, 
+    XCircle, 
     Clock, 
     ArrowUpDown, 
     FileText, 
@@ -33,6 +34,7 @@ type CreditCaseItem = {
     resolved_delay_days: number | null;
     counterparty_claim: string | null;
     status: "approved" | "pending" | "rejected";
+    admin_notes?: string | null;
     business_status?: string | null;
     registry_status?: string | null;
     registry_close_date?: string | null;
@@ -430,13 +432,32 @@ export default function CreditCasesListPage() {
                                                              </span>
                                                          )}
                                                          {c.status === "pending" && (
-                                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                                                 <Clock className="w-3 h-3 text-amber-600" />
-                                                                 <span>審査待ち</span>
-                                                             </span>
-                                                         )}
-                                                     </div>
-                                                 </div>
+                                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                                <Clock className="w-3 h-3 text-amber-600" />
+                                                                <span>審査待ち</span>
+                                                            </span>
+                                                        )}
+                                                        {c.status === "rejected" && (
+                                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                                <XCircle className="w-3 h-3 text-rose-600" />
+                                                                <span>却下（見送り）</span>
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* 却下理由アラート */}
+                                                {c.status === "rejected" && c.admin_notes && (
+                                                    <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs">
+                                                        <div className="flex items-center gap-1.5 font-bold text-rose-800 mb-1">
+                                                            <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                                                            <span>審査却下の理由:</span>
+                                                        </div>
+                                                        <p className="text-rose-900 leading-relaxed font-medium">
+                                                            {c.admin_notes}
+                                                        </p>
+                                                    </div>
+                                                )}
 
                                                  {/* 2軸ステータス表示（公的登記 & 営業実態） */}
                                                  <div className="flex flex-wrap items-center gap-1.5 mb-3">

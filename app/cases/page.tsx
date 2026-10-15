@@ -33,6 +33,7 @@ type BlacklistCase = {
   phone_last4?: string | null;
   reason_text: string;
   status: string;
+  rejected_reason?: string | null;
   created_at: string;
 };
 
@@ -134,7 +135,7 @@ export default function CasesPage() {
 
         let query = supabase
           .from("blacklist_cases")
-          .select("id, full_name, full_name_kana, birth_date, occurrence_date, phone_last4, reason_text, status, created_at, registered_company_id")
+          .select("id, full_name, full_name_kana, birth_date, occurrence_date, phone_last4, reason_text, status, rejected_reason, created_at, registered_company_id")
           .order("created_at", { ascending: false });
 
         // 管理者以外は一覧の垂れ流しを防止（自社登録データのみに厳格制限）
@@ -424,11 +425,24 @@ export default function CasesPage() {
                           {c.status === "rejected" && (
                             <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
                               <XCircle className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-                              <span>却下</span>
+                              <span>却下（見送り）</span>
                             </span>
                           )}
                         </div>
                       </div>
+
+                      {/* 却下理由アラート */}
+                      {c.status === "rejected" && c.rejected_reason && (
+                        <div className="mb-3.5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs">
+                          <div className="flex items-center gap-1.5 font-bold text-rose-800 mb-1">
+                            <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                            <span>審査却下の理由:</span>
+                          </div>
+                          <p className="text-rose-900 leading-relaxed font-medium">
+                            {c.rejected_reason}
+                          </p>
+                        </div>
+                      )}
 
                       {/* インフォボックス */}
                       <div className="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200/80 mb-3 sm:mb-3.5 space-y-1.5 sm:space-y-2 text-xs">
