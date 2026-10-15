@@ -58,16 +58,13 @@ export default function Home() {
 
         {/* Brand Header - ロゴ＝タイトル統合デザイン */}
         <div className="text-center mb-6 sm:mb-8 flex flex-col items-center">
-          <div className="w-44 sm:w-52 md:w-56">
+          <div className="w-44 sm:w-52 md:w-56 mb-4 sm:mb-5">
             <img 
               src="/logo-brand.png" 
               alt="MIERIS ミエリス" 
               className="w-full h-auto object-contain select-none pointer-events-none" 
             />
           </div>
-          <p className="text-[11px] sm:text-xs font-bold text-slate-400 tracking-[0.35em] uppercase mt-1 mb-4 sm:mb-5">
-            ミエリス
-          </p>
           <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
             採る前に、事実を知る。
           </h2>

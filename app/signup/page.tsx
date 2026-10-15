@@ -113,11 +113,8 @@ ${notes.trim() || "なし"}`;
                         <img 
                             src="/logo-brand.png" 
                             alt="MIERIS ミエリス" 
-                            className="w-36 h-auto object-contain select-none pointer-events-none mb-1" 
+                            className="w-36 h-auto object-contain select-none pointer-events-none" 
                         />
-                        <p className="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">
-                            ミエリス
-                        </p>
                     </Link>
                     <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-2 sm:mt-3 whitespace-nowrap">
                         利用お申し込み・資料請求
