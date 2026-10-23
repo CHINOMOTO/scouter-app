@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
 import { Toast, ToastMessage } from "@/components/Toast";
+import { detectOfficialSource } from "@/lib/officialSources";
 import {
     ArrowLeft,
     Building2,
@@ -368,8 +369,19 @@ export default function AdminCreditCaseDetailPage() {
                                     <span className="font-mono font-medium text-slate-900">{caseDetail.invoice_date?.replace(/-/g, "/") || "-"}</span>
                                 </div>
                                 <div className="bg-slate-50/60 p-3.5 rounded-lg border border-slate-100">
-                                    <span className="text-xs text-slate-500 block mb-0.5">登録申請元企業</span>
-                                    <span className="font-bold text-slate-900">{caseDetail.companies?.name || "加盟企業"}</span>
+                                    {(() => {
+                                        const src = detectOfficialSource(caseDetail);
+                                        return (
+                                            <>
+                                                <span className="text-xs text-slate-500 block mb-0.5">
+                                                    {src.isOfficial ? "公表機関・情報元" : "登録申請元企業"}
+                                                </span>
+                                                <span className="font-bold text-slate-900">
+                                                    {src.isOfficial ? "🏛️ " + src.sourceName : (caseDetail.companies?.name || "加盟企業")}
+                                                </span>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                                 <div className="bg-slate-50/60 p-3.5 rounded-lg border border-slate-100">
                                     <span className="text-xs text-slate-500 block mb-0.5">申請日時</span>

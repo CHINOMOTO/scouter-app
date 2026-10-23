@@ -13,9 +13,11 @@ import {
     Calendar, 
     ShieldCheck, 
     Check,
-    Clock
+    Clock,
+    ExternalLink
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
+import { detectOfficialSource, OfficialSourceInfo } from "@/lib/officialSources";
 
 type CreditCaseDetail = {
     id: string;
@@ -28,6 +30,7 @@ type CreditCaseDetail = {
     payment_status: "unpaid" | "resolved";
     resolved_delay_days?: number | null;
     counterparty_claim?: string | null;
+    admin_notes?: string | null;
     registered_by_company_id: string;
     evidence_urls?: string[];
     status: "pending" | "approved" | "rejected";
@@ -36,6 +39,8 @@ type CreditCaseDetail = {
     registry_close_date?: string | null;
     registry_close_cause?: string | null;
     created_at: string;
+    is_official_record?: boolean;
+    official_source?: OfficialSourceInfo;
     companies?: {
         id: string;
         name: string;
@@ -156,6 +161,7 @@ export default function CreditCaseDetailPage() {
 
     const isOwner = caseData.registered_by_company_id === currentCompanyId;
     const isResolved = caseData.payment_status === "resolved";
+    const sourceInfo = caseData.official_source || detectOfficialSource(caseData);
 
     // 支払期日からの経過日数（遅延日数）の算出
     let currentDelayDays = 0;
@@ -316,12 +322,12 @@ export default function CreditCaseDetailPage() {
                             </div>
 
                             {/* 2. 相手方の営業実態（被害企業報告 または 公的処分記録） */}
-                            {(caseData.is_official_record || (caseData.counterparty_claim && caseData.counterparty_claim.startsWith('【'))) ? (
+                            {sourceInfo.isOfficial ? (
                                 <div className="p-4 rounded-xl border bg-blue-50/50 border-blue-200">
                                     <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
                                         <span>公的記録ステータス</span>
                                         <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full border border-blue-300">
-                                            行政・裁判所公認記録
+                                            公表元: {sourceInfo.sourceName}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2 mb-1">
@@ -330,7 +336,7 @@ export default function CreditCaseDetailPage() {
                                         </span>
                                     </div>
                                     <p className="text-[11px] text-slate-600 leading-snug">
-                                        省庁・自治体・裁判所等の公的機関が法令に基づき公表した確定処分データです（民間加盟企業からの被害申告ではありません）。
+                                        {sourceInfo.sourceName}が法令に基づき公表した確定公表データです（民間加盟企業からの被害申告ではありません）。
                                     </p>
                                 </div>
                             ) : (
@@ -393,40 +399,78 @@ export default function CreditCaseDetailPage() {
                                     {caseData.registry_status === "closed" ? "閉鎖（清算結了等）" : caseData.registry_status === "sole_proprietor" ? "個人事業主" : "登記中（存続）"}
                                 </span>
                             </div>
-                            <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">相手先営業・連絡実態</span>
-                                <span className="font-bold text-slate-800">
-                                    {caseData.business_status === "unreachable" ? "音信不通" : caseData.business_status === "relocated" ? "事務所引き払い・所在不明" : caseData.business_status === "bankrupt" ? "倒産・破産手続き中" : caseData.business_status === "active" ? "連絡可能（協議中）" : "不明"}
-                                </span>
-                            </div>
+                            {sourceInfo.isOfficial ? (
+                                <div className="flex justify-between py-2.5 border-b border-slate-100">
+                                    <span className="text-slate-500 font-medium">事案分類（公的記録）</span>
+                                    <span className="font-bold text-blue-900">{sourceInfo.sourceCategory}</span>
+                                </div>
+                            ) : (
+                                <div className="flex justify-between py-2.5 border-b border-slate-100">
+                                    <span className="text-slate-500 font-medium">相手先営業・連絡実態</span>
+                                    <span className="font-bold text-slate-800">
+                                        {caseData.business_status === "unreachable" ? "音信不通" : caseData.business_status === "relocated" ? "事務所引き払い・所在不明" : caseData.business_status === "bankrupt" ? "倒産・破産手続き中" : caseData.business_status === "active" ? "連絡可能（協議中）" : "不明"}
+                                    </span>
+                                </div>
+                            )}
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">本社所在地・拠点</span>
                                 <span className="text-slate-800">{caseData.location || "未登録"}</span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">請求日</span>
+                                <span className="text-slate-500 font-medium">
+                                    {sourceInfo.isOfficial ? "公表日 / 処分日" : "請求日"}
+                                </span>
                                 <span className="font-mono text-slate-800">{caseData.invoice_date?.replace(/-/g, "/") || "-"}</span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">入金の有無</span>
+                                <span className="text-slate-500 font-medium">
+                                    {sourceInfo.isOfficial ? "法令違反・処分状況" : "入金の有無"}
+                                </span>
                                 <span className={`font-bold ${isResolved ? "text-emerald-700" : "text-rose-700"}`}>
-                                    {isResolved ? "解決済み" : "未払い"}
+                                    {sourceInfo.isOfficial ? (isResolved ? "是正・履行済" : "処分対象・未是正") : (isResolved ? "解決済み" : "未払い")}
                                 </span>
                             </div>
-                            <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">登録元企業</span>
-                                <span className="text-slate-700">{caseData.companies?.name || "加盟企業"}</span>
-                            </div>
+                            {sourceInfo.isOfficial ? (
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2.5 border-b border-slate-100 gap-1 sm:gap-4">
+                                    <span className="text-slate-500 font-medium shrink-0">公表元・公開機関</span>
+                                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                                        <span className="font-bold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200 text-xs sm:text-sm">
+                                            🏛️ {sourceInfo.sourceName}
+                                        </span>
+                                        {sourceInfo.sourceUrl && (
+                                            <a
+                                                href={sourceInfo.sourceUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                                            >
+                                                <span>公表ソース</span>
+                                                <ExternalLink className="w-3 h-3" />
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex justify-between py-2.5 border-b border-slate-100">
+                                    <span className="text-slate-500 font-medium">登録元企業</span>
+                                    <span className="text-slate-700">{caseData.companies?.name || "加盟企業"}</span>
+                                </div>
+                            )}
                         </div>
 
                         {/* 登録理由 */}
                         <div className="mt-6 p-5 bg-slate-50 rounded-xl border border-slate-200">
                             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
-                                登録理由（未払い・遅延の経緯・相手側の主張）
+                                {sourceInfo.isOfficial ? "公的公表概要・処分内容" : "登録理由（未払い・遅延の経緯・相手側の主張）"}
                             </h3>
                             <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
                                 {caseData.counterparty_claim || "特段の登録理由・相手側の主張は記載されていません。"}
                             </p>
+                            {caseData.admin_notes && (
+                                <div className="mt-3 pt-3 border-t border-slate-200/80 text-xs text-slate-600 leading-relaxed font-mono whitespace-pre-wrap">
+                                    {caseData.admin_notes}
+                                </div>
+                            )}
                         </div>
 
                         {/* 登録日 */}

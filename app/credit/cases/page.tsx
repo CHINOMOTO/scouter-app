@@ -21,6 +21,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Pagination } from "@/components/Pagination";
 import { Toast, ToastMessage } from "@/components/Toast";
+import { detectOfficialSource } from "@/lib/officialSources";
 
 type CreditCaseItem = {
     id: string;
@@ -396,6 +397,7 @@ export default function CreditCasesListPage() {
                                 {paginatedCases.map((c) => {
                                      const isResolved = c.payment_status === "resolved";
                                      const overdueDays = calculateOverdueDays(c.due_date);
+                                     const sourceInfo = detectOfficialSource(c);
                                      return (
                                          <div
                                              key={c.id}
@@ -462,13 +464,13 @@ export default function CreditCasesListPage() {
                                                  {/* 2軸ステータス表示（公的登記 & 営業実態） */}
                                                  <div className="flex flex-wrap items-center gap-1.5 mb-3">
                                                      {renderRegistryBadge(c.registry_status, c.registry_close_cause)}
-                                                     {(c.counterparty_claim && c.counterparty_claim.startsWith('【')) ? (
-                                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                                                          <span>公的機関処分・公認記録</span>
-                                                      </span>
-                                                  ) : (
-                                                      renderBusinessStatusBadge(c.business_status)
-                                                  )}
+                                                     {sourceInfo.isOfficial ? (
+                                                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                                                           <span>🏛️ 公表元: {sourceInfo.sourceName.split('（')[0]}</span>
+                                                       </span>
+                                                   ) : (
+                                                       renderBusinessStatusBadge(c.business_status)
+                                                   )}
                                                  </div>
 
                                                  {/* インフォボックス */}
@@ -480,9 +482,13 @@ export default function CreditCasesListPage() {
                                                          </span>
                                                      </div>
                                                      <div className="flex justify-between items-center">
-                                                         <span className="text-slate-500 font-medium">当初支払期日</span>
-                                                         <span className="font-mono text-slate-800">{c.due_date}</span>
-                                                     </div>
+                                                         <span className="text-slate-500 font-medium">{sourceInfo.isOfficial ? "公表日" : "当初支払期日"}</span>
+                                                          <span className="font-mono text-slate-800">{c.due_date}</span>
+                                                      </div>
+                                                      <div className="flex justify-between items-center">
+                                                          <span className="text-slate-500 font-medium">{sourceInfo.isOfficial ? "公表機関" : "登録元"}</span>
+                                                          <span className="text-slate-700 font-medium truncate max-w-[200px] sm:max-w-[240px] text-right">{sourceInfo.isOfficial ? sourceInfo.sourceName.split('（')[0] : (c.companies?.name || "加盟企業")}</span>
+                                                      </div>
                                                      {c.location && (
                                                          <div className="flex justify-between items-center">
                                                              <span className="text-slate-500 font-medium">所在地</span>

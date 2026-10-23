@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { detectOfficialSource } from '@/lib/officialSources';
 
 // GET: 詳細情報取得
 export async function GET(
@@ -45,15 +46,10 @@ export async function GET(
             return NextResponse.json({ error: '対象データが見つかりません' }, { status: 404 });
         }
 
-        // 公的機関（省庁・裁判所・官報）データかどうかの判定
+        // 公的機関（省庁・裁判所・官報）データかどうかの判定および公表元特定の取得
+        const officialSource = detectOfficialSource(creditCase);
+        const isOfficialData = officialSource.isOfficial;
         const claim = creditCase.counterparty_claim || '';
-        const isOfficialData = claim.includes('【厚生労働省') || 
-                               claim.includes('【公正取引委員会') || 
-                               claim.includes('【国土交通省') || 
-                               claim.includes('【東京都知事') || 
-                               claim.includes('【消費者庁') || 
-                               claim.includes('【官報公告') ||
-                               (Array.isArray(creditCase.evidence_urls) && creditCase.evidence_urls.some((u: string) => typeof u === 'string' && u.includes('.go.jp')));
 
         // 営業実態・公的登記ステータスの補完
         let businessStatus = creditCase.business_status;
@@ -99,6 +95,7 @@ export async function GET(
         const enrichedCase = {
             ...creditCase,
             is_official_record: isOfficialData,
+            official_source: officialSource,
             business_status: businessStatus,
             registry_status: registryStatus
         };
