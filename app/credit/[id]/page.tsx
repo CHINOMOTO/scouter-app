@@ -230,9 +230,19 @@ export default function CreditCaseDetailPage() {
                                 )}
                             </div>
 
-                            {/* 入金ステータスバッジ */}
+                            {/* 入金ステータス / 公的記録バッジ */}
                             <div>
-                                {isResolved ? (
+                                {sourceInfo.isOfficial ? (
+                                    <div className="px-4 py-2.5 rounded-xl bg-blue-50 text-blue-900 border border-blue-200 text-center flex flex-col items-center">
+                                        <div className="flex items-center gap-1.5 text-xs font-extrabold text-blue-900">
+                                            <ShieldCheck className="w-4 h-4 text-blue-700" />
+                                            <span>公的機関 公認処分・確定記録</span>
+                                        </div>
+                                        <div className="text-[11px] text-blue-700 mt-0.5 font-bold">
+                                            公表日: {caseData.due_date?.replace(/-/g, "/")}
+                                        </div>
+                                    </div>
+                                ) : isResolved ? (
                                     <div className="px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-center flex flex-col items-center">
                                         <div className="flex items-center gap-1.5 text-xs font-bold">
                                             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -256,31 +266,55 @@ export default function CreditCaseDetailPage() {
                             </div>
                         </div>
 
-                        {/* 請求・未払い金額ハイライト */}
-                        <div className="p-6 bg-slate-50 rounded-xl border border-slate-200 my-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div>
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                                    未払い金額（税込）
-                                </span>
-                                <span className="text-4xl font-extrabold text-slate-900 font-mono">
-                                    ¥{caseData.amount.toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="text-right">
-                                <span className="text-xs font-bold text-slate-500 block mb-1">当初支払期日</span>
-                                <div className="flex flex-col items-end">
-                                    <span className="text-lg font-bold text-slate-900 font-mono">
-                                        {caseData.due_date.replace(/-/g, "/")}
+                        {/* 請求・未払い金額 / 公的処分ハイライト */}
+                        {sourceInfo.isOfficial ? (
+                            <div className="p-6 bg-blue-50/50 rounded-xl border border-blue-200/80 my-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div>
+                                    <span className="text-xs font-bold text-blue-700 uppercase tracking-wider block mb-1">
+                                        {caseData.amount > 0 ? "公表不払認定額（概算）" : "処分区分・措置概要"}
                                     </span>
-                                    {!isResolved && currentDelayDays > 0 && (
-                                        <span className="mt-1 text-[11px] font-bold text-rose-700 bg-rose-100/70 border border-rose-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                                            期日から {currentDelayDays}日 遅れ
+                                    <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">
+                                        {caseData.amount > 0 ? `¥${caseData.amount.toLocaleString()}` : "行政処分・公認記録"}
+                                    </span>
+                                </div>
+                                <div className="text-left sm:text-right">
+                                    <span className="text-xs font-bold text-slate-500 block mb-1">公表日 / 処分発令日</span>
+                                    <div className="flex flex-col sm:items-end">
+                                        <span className="text-lg font-bold text-slate-900 font-mono">
+                                            {caseData.due_date?.replace(/-/g, "/")}
                                         </span>
-                                    )}
+                                        <span className="mt-1 text-[11px] font-bold text-blue-700 bg-blue-100/70 border border-blue-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                                            確定公表情報（民間債権遅延ではありません）
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="p-6 bg-slate-50 rounded-xl border border-slate-200 my-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div>
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                                        未払い金額（税込）
+                                    </span>
+                                    <span className="text-4xl font-extrabold text-slate-900 font-mono">
+                                        ¥{caseData.amount.toLocaleString()}
+                                    </span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-xs font-bold text-slate-500 block mb-1">当初支払期日</span>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-lg font-bold text-slate-900 font-mono">
+                                            {caseData.due_date.replace(/-/g, "/")}
+                                        </span>
+                                        {!isResolved && currentDelayDays > 0 && (
+                                            <span className="mt-1 text-[11px] font-bold text-rose-700 bg-rose-100/70 border border-rose-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                                期日から {currentDelayDays}日 遅れ
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* 2軸ステータスカード（公的登記ステータス × 相手先の営業実態） */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-6">

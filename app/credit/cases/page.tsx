@@ -422,7 +422,12 @@ export default function CreditCasesListPage() {
                                                          )}
                                                      </div>
                                                      <div className="flex flex-col items-start sm:items-end gap-1.5 shrink-0 self-start sm:self-auto">
-                                                         {isResolved ? (
+                                                         {sourceInfo.isOfficial ? (
+                                                             <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                                                                 <ShieldCheck className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-blue-700" />
+                                                                 <span>公的確定処分</span>
+                                                             </span>
+                                                         ) : isResolved ? (
                                                              <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                                  <CheckCircle2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                                                                  <span>遅延解決 {c.resolved_delay_days ? `(${c.resolved_delay_days}日)` : ""}</span>
@@ -433,18 +438,6 @@ export default function CreditCasesListPage() {
                                                                  <span>現在未払い {overdueDays > 0 ? `(${overdueDays}日超過)` : ""}</span>
                                                              </span>
                                                          )}
-                                                         {c.status === "pending" && (
-                                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                                                <Clock className="w-3 h-3 text-amber-600" />
-                                                                <span>審査待ち</span>
-                                                            </span>
-                                                        )}
-                                                        {c.status === "rejected" && (
-                                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                                <XCircle className="w-3 h-3 text-rose-600" />
-                                                                <span>却下（見送り）</span>
-                                                            </span>
-                                                        )}
                                                     </div>
                                                 </div>
 
@@ -476,10 +469,12 @@ export default function CreditCasesListPage() {
                                                  {/* インフォボックス */}
                                                  <div className="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200/80 mb-3 sm:mb-3.5 space-y-1.5 sm:space-y-2 text-xs">
                                                      <div className="flex justify-between items-center">
-                                                         <span className="text-slate-500 font-medium">請求金額</span>
-                                                         <span className="text-slate-900 font-extrabold text-sm sm:text-base font-mono">
-                                                             ¥{c.amount.toLocaleString()}
-                                                         </span>
+                                                         <span className="text-slate-500 font-medium">
+                                                              {sourceInfo.isOfficial ? (c.amount > 0 ? "公表不払額" : "処分区分") : "請求金額"}
+                                                          </span>
+                                                          <span className="text-slate-900 font-extrabold text-sm sm:text-base font-mono">
+                                                              {sourceInfo.isOfficial && c.amount === 0 ? "行政処分・公認記録" : `¥${c.amount.toLocaleString()}`}
+                                                          </span>
                                                      </div>
                                                      <div className="flex justify-between items-center">
                                                          <span className="text-slate-500 font-medium">{sourceInfo.isOfficial ? "公表日" : "当初支払期日"}</span>

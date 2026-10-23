@@ -937,18 +937,23 @@ export default function CreditSearchPage() {
                                                                 )}
                                                             </div>
                                                             <div className="shrink-0 self-start sm:self-auto">
-                                                                {isResolved ? (
-                                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                                        <CheckCircle2 className="w-3 h-3" />
-                                                                        <span>遅延解決 {c.resolved_delay_days ? `(${c.resolved_delay_days}日)` : ""}</span>
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                                        <AlertTriangle className="w-3 h-3" />
-                                                                        <span>現在未払い {calculateOverdueDays(c.due_date) > 0 ? `(${calculateOverdueDays(c.due_date)}日超過)` : ""}</span>
-                                                                    </span>
-                                                                )}
-                                                            </div>
+                                                                {sourceInfo.isOfficial ? (
+                                                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                                                                            <ShieldCheck className="w-3 h-3 text-blue-700" />
+                                                                            <span>公的確定処分</span>
+                                                                        </span>
+                                                                    ) : isResolved ? (
+                                                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                            <CheckCircle2 className="w-3 h-3" />
+                                                                            <span>遅延解決 {c.resolved_delay_days ? `(${c.resolved_delay_days}日)` : ""}</span>
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                                            <AlertTriangle className="w-3 h-3" />
+                                                                            <span>現在未払い {calculateOverdueDays(c.due_date) > 0 ? `(${calculateOverdueDays(c.due_date)}日超過)` : ""}</span>
+                                                                        </span>
+                                                                    )}
+                                                                </div>
                                                         </div>
 
                                                         {/* 2軸ステータス表示（公的登記 & 営業実態） */}
@@ -965,8 +970,12 @@ export default function CreditSearchPage() {
 
                                                         <div className="bg-slate-50 p-3 sm:p-3.5 rounded-lg border border-slate-200/80 mb-3 space-y-1.5 text-xs">
                                                             <div className="flex justify-between items-center">
-                                                                <span className="text-slate-500 font-medium">請求金額</span>
-                                                                <span className="text-slate-900 font-extrabold text-sm font-mono">¥{c.amount.toLocaleString()}</span>
+                                                                <span className="text-slate-500 font-medium">
+                                                                    {sourceInfo.isOfficial ? (c.amount > 0 ? "公表不払額" : "処分区分") : "請求金額"}
+                                                                </span>
+                                                                <span className="text-slate-900 font-extrabold text-sm font-mono">
+                                                                    {sourceInfo.isOfficial && c.amount === 0 ? "行政処分・公認記録" : `¥${c.amount.toLocaleString()}`}
+                                                                </span>
                                                             </div>
                                                             <div className="flex justify-between items-center">
                                                                 <span className="text-slate-500 font-medium">{sourceInfo.isOfficial ? "公表日" : "当初支払期日"}</span>
