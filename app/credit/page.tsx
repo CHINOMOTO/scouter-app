@@ -273,17 +273,16 @@ export default function CreditSearchPage() {
 
         const normalizedQuery = searchQuery.trim();
 
-        // 番号も社名もどちらも未入力の場合はエラー
-        if (!normalizedCorp && !normalizedQuery) {
-            const msg = "法人番号・インボイス番号、または企業名・商号のいずれかを入力してください。";
+        // 弁護士法務要件：同名企業の誤認混同・名誉毀損防止のため、照会には法人番号（13桁）が必須
+        if (!normalizedCorp) {
+            const msg = "同名企業との誤認防止のため、法人番号（13桁）またはインボイス番号（T+13桁）の入力が必須です。社名を入力すると候補から番号をセットできます。";
             setErrorMsg(msg);
             setToast({ type: "error", text: msg });
             return;
         }
 
-        // 番号が入力されている場合は13桁チェック
-        if (normalizedCorp && normalizedCorp.length !== 13) {
-            const msg = "法人番号・インボイス登録番号は13桁の数字で入力してください。";
+        if (normalizedCorp.length !== 13) {
+            const msg = "法人番号・インボイス登録番号は13桁の半角数字で入力してください。";
             setErrorMsg(msg);
             setToast({ type: "error", text: msg });
             return;
@@ -550,10 +549,10 @@ export default function CreditSearchPage() {
                                 </div>
                             </div>
 
-                            {/* 照会条件カード（法人番号・インボイス番号・社名によるハイブリッド照会） */}
+                            {/* 照会条件カード（法人番号必須） */}
                             <div className="bg-white p-4.5 sm:p-7 rounded-xl border border-slate-200 shadow-2xs mb-6">
                                 <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 leading-relaxed mb-5">
-                                    法人番号（13桁）、インボイス登録番号（T+13桁）、または「企業名・商号」から公的処分・労働基準関係法令違反・下請法違反・未払い事故情報を照会できます。
+                                    ※同名企業との誤認防止および信用情報の適正管理の観点から、弁護士法務要件に基づき照会には<strong>「法人番号（13桁）」または「インボイス番号（T+13桁）」の入力が必須</strong>となっています。社名を入力すると候補からワンタップでセットできます。
                                 </div>
 
                                 {errorMsg && (
@@ -567,18 +566,19 @@ export default function CreditSearchPage() {
 
                                 <form onSubmit={handleSearch} className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* 法人番号 または インボイス番号 */}
+                                        {/* 法人番号 または インボイス番号（必須） */}
                                         <div>
                                             <div className="flex justify-between items-center mb-1.5">
                                                 <label className="text-xs font-bold text-slate-700">
-                                                    法人番号 または インボイス番号
+                                                    法人番号 または インボイス番号（13桁）
                                                 </label>
-                                                <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 font-bold">
-                                                    推奨（特定照会）
+                                                <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">
+                                                    必須
                                                 </span>
                                             </div>
                                             <input
                                                 type="text"
+                                                required
                                                 maxLength={14}
                                                 value={corpFilter}
                                                 onChange={(e) => {
@@ -589,7 +589,7 @@ export default function CreditSearchPage() {
                                                 className="input-field font-mono py-2.5 text-sm"
                                             />
                                             <p className="text-[11px] text-slate-500 mt-1">
-                                                国税庁13桁法人番号、または適格請求書発行番号（T+13桁）
+                                                国税庁13桁法人番号、またはインボイス登録番号（ハイフン不要）
                                             </p>
                                         </div>
 
@@ -597,16 +597,16 @@ export default function CreditSearchPage() {
                                         <div className="relative">
                                             <div className="flex justify-between items-center mb-1.5">
                                                 <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                                                    <span>企業名・商号</span>
+                                                    <span>企業名・商号（法人番号の検索補助）</span>
                                                     <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200 font-semibold">
-                                                        経産省公的検索対応
+                                                        経産省サジェスト
                                                     </span>
                                                 </label>
                                                 {isSearchingGbiz ? (
                                                     <span className="text-[10px] text-blue-600 animate-pulse font-medium">候補検索中...</span>
                                                 ) : (
                                                     <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
-                                                        社名のみ検索も可能
+                                                        2文字で候補表示
                                                     </span>
                                                 )}
                                             </div>
@@ -615,11 +615,11 @@ export default function CreditSearchPage() {
                                                 value={searchQuery}
                                                 onChange={(e) => handleSearchQueryChange(e.target.value)}
                                                 onFocus={() => { if (searchCandidates.length > 0) setShowSearchCandidates(true); }}
-                                                placeholder="例: トヨタ、メルカリ、個人事業主名..."
+                                                placeholder="例: トヨタ、メルカリ..."
                                                 className="input-field py-2.5 text-sm"
                                             />
                                             <p className="text-[11px] text-slate-500 mt-1">
-                                                入力すると候補法人番号が表示されます。社名のみでも検索実行可能です
+                                                社名を入力すると法人番号の候補が表示され、ワンタップでセットできます
                                             </p>
 
                                             {/* サジェストドロップダウン */}
@@ -693,10 +693,10 @@ export default function CreditSearchPage() {
                                             <Building2 className="w-6 h-6" />
                                         </div>
                                         <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1 leading-snug">
-                                            法人番号・インボイス番号、または企業名を入力して照会してください
+                                            照会対象企業の「法人番号」を入力して照会してください
                                         </h3>
                                         <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed mt-1">
-                                            13桁の法人番号、インボイス登録番号（T+13桁）、または企業名・商号から、公的処分・労働基準関係法令違反・下請法違反・未払い事故情報を一括照会できます。
+                                            同名企業との誤認混同防止および厳格な信用情報管理のため、13桁の法人番号による特定照会を採用しています。右側の企業名欄から候補を選択するか、法人番号を直接入力してください。
                                         </p>
                                     </div>
 
