@@ -17,7 +17,8 @@ import {
     Calendar,
     CircleDollarSign,
     Search,
-    ArrowUpDown
+    ArrowUpDown,
+    RefreshCw
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { Pagination } from "@/components/Pagination";
@@ -55,6 +56,7 @@ export default function AdminCreditCasesPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [toast, setToast] = useState<ToastMessage | null>(null);
+    const [syncLoading, setSyncLoading] = useState(false);
 
     const handleSort = (key: "created_at" | "company_name" | "amount" | "due_date") => {
         let direction: "asc" | "desc" = "asc";
@@ -62,6 +64,40 @@ export default function AdminCreditCasesPage() {
             direction = "desc";
         }
         setSortConfig({ key, direction });
+    };
+
+        const handleSyncPublicData = async () => {
+        if (!confirm("各省庁（厚労省・公取委・国交省・消費者庁・官報）の公的公表データを最新状態に同期しますか？")) return;
+        setSyncLoading(true);
+        try {
+            const session = (await supabase.auth.getSession()).data.session;
+            if (!session) return;
+
+            const res = await fetch("/api/admin/sync-public-data", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${session.access_token}`
+                }
+            });
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setToast({
+                    type: "success",
+                    text: `公的データの同期完了: 新規 ${data.totalNew}件 / 総件数 ${data.currentTotalCount}件`
+                });
+                fetchCases();
+            } else {
+                setToast({
+                    type: "error",
+                    text: data.error || "同期に失敗しました"
+                });
+            }
+        } catch (err: any) {
+            setToast({ type: "error", text: "同期エラー: " + err.message });
+        } finally {
+            setSyncLoading(false);
+        }
     };
 
     const fetchCases = async () => {
@@ -195,10 +231,21 @@ export default function AdminCreditCasesPage() {
                                 加盟企業から申請された企業信用（遅延・未払い）情報・エビデンス資料の審査を行います。
                             </p>
                         </div>
-                        <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center justify-center gap-1.5 w-full sm:w-auto transition-colors whitespace-nowrap shrink-0 active:scale-[0.98]">
-                            <ArrowLeft className="w-4 h-4 shrink-0" />
-                            <span className="whitespace-nowrap">管理者メニューへ戻る</span>
-                        </Link>
+                        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto">
+                            <button
+                                onClick={handleSyncPublicData}
+                                disabled={syncLoading}
+                                className="btn-secondary text-xs h-10 px-4 flex items-center justify-center gap-1.5 w-full sm:w-auto transition-colors whitespace-nowrap shrink-0 active:scale-[0.98] border-blue-200 text-blue-700 bg-blue-50/60 hover:bg-blue-100/80"
+                                title="各省庁の最新公表データを即座に同期・取り込みます"
+                            >
+                                <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${syncLoading ? 'animate-spin text-blue-600' : ''}`} />
+                                <span>{syncLoading ? "公的データ同期中..." : "公的データ最新同期"}</span>
+                            </button>
+                            <Link href="/admin" className="btn-secondary text-xs h-10 px-4 flex items-center justify-center gap-1.5 w-full sm:w-auto transition-colors whitespace-nowrap shrink-0 active:scale-[0.98]">
+                                <ArrowLeft className="w-4 h-4 shrink-0" />
+                                <span className="whitespace-nowrap">管理者メニューへ戻る</span>
+                            </Link>
+                        </div>
                     </div>
 
                     {/* コントロールバー（タブ & 検索 & ソート） */}
