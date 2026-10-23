@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MIERIS 弁護士面談シート（厳選4大論点）</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --tag-bg: #eff6ff;
+      --tag-text: #1d4ed8;
+      --accent-warn: #ea580c;
+      --accent-warn-bg: #fff7ed;
+      --accent-green: #16a34a;
+      --accent-green-bg: #f0fdf4;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding-bottom: 80px;
+    }
+
+    /* 固定ヘッダー */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      color: #ffffff;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-badge {
+      background: #2563eb;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .progress-bar-container {
+      height: 3px;
+      background: rgba(255, 255, 255, 0.2);
+      width: 100%;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #38bdf8;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .container {
+      padding: 14px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* イントロ注意書きカード */
+    .notice-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+      border-left: 4px solid var(--primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .notice-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* 論点カード */
+    .topic-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+      transition: transform 0.1s ease;
+    }
+
+    .topic-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .topic-number {
+      background: var(--text-main);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 13px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .topic-title {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--text-main);
+    }
+
+    /* 懸念点ボックス */
+    .issue-box {
+      background: var(--accent-warn-bg);
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+
+    .issue-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-warn);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .issue-text {
+      font-size: 13px;
+      color: #9a3412;
+      line-height: 1.45;
+    }
+
+    /* 質問スクリプトボックス（そのまま読み上げる用） */
+    .ask-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .ask-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ask-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e3a8a;
+      line-height: 1.5;
+    }
+
+    /* 詳細チェックリスト */
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 8px 0;
+      padding: 8px;
+      border-radius: 8px;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+
+    .check-item:active {
+      background: #f1f5f9;
+    }
+
+    .check-checkbox {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .check-label {
+      font-size: 13px;
+      color: var(--text-main);
+      line-height: 1.45;
+      flex-grow: 1;
+    }
+
+    /* メモ欄 */
+    .memo-section {
+      margin-top: 12px;
+    }
+
+    .memo-textarea {
+      width: 100%;
+      height: 70px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+      background: #ffffff;
+      color: var(--text-main);
+    }
+
+    .memo-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+    /* 下部固定バー */
+    .footer-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .footer-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .footer-btn {
+      background: var(--text-main);
+      color: #ffffff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .footer-btn:active {
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 固定ヘッダー -->
+  <div class="header">
+    <div class="header-title">
+      <span>MIERIS 弁護士面談シート</span>
+      <span class="header-badge">厳選4大論点</span>
+    </div>
+    <div style="font-size: 12px; color: #94a3b8;" id="check-counter">0 / 8 完了</div>
+  </div>
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+
+  <div class="container">
+
+    <div class="notice-card">
+      <p>📱 <strong>スマホ用面談ガイド</strong><br>
+      明日の打ち合わせ中にスマホを手元に置き、青枠の<strong>【そのまま質問する言葉】</strong>を読み上げて弁護士の見解を確認してください。チェックやメモはスマホ端末に自動保存されます。</p>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- 論点 1: 退職代行・労基法 -->
+    <!-- ============================================== -->
+    <div class="topic-card">
+      <div class="topic-header">
+        <div class="topic-number">1</div>
+        <div class="topic-title">退職代行・労働紛争（労基法等）との関連</div>
+      </div>
+
+      <div class="issue-box">
+        <div class="issue-title">⚠️ 法的懸念</div>
+        <div class="issue-text">
+          労働者側の「即日退職」「欠勤」「バックレ」をトラブルとして企業間で共有・照会することが、民法627条（退職の自由）や労働基準法、職業安定法等に抵触し、不法行為や労働組合からの抗議対象にならないか。
+        </div>
+      </div>
+
+      <div class="ask-box">
+        <div class="ask-label">🗣️ 弁護士へそのまま聞く質問</div>
+        <div class="ask-text">
+          「業務委託ではなく『正社員やアルバイトの即日退職・無断欠勤』をトラブル情報として登録・照会できるようにした場合、労基法や退職の自由の観点から問題になりますでしょうか？対象を『業務委託・商取引の未払い・契約不履行』に限定すべきでしょうか？」
+        </div>
+      </div>
+
+      <div class="check-item" onclick="toggleCheck('c1')">
+        <input type="checkbox" id="c1" class="check-checkbox" onchange="updateProgress()">
+        <label for="c1" class="check-label">雇用契約（労使関係）と業務委託（商取引）の法的リスクの差を確認した</label>
+      </div>
+
+      <div class="check-item" onclick="toggleCheck('c2')">
+        <input type="checkbox" id="c2" class="check-checkbox" onchange="updateProgress()">
+        <label for="c2" class="check-label">労働者側の退職代行利用をトラブル登録することの是非を確認した</label>
+      </div>
+
+      <div class="memo-section">
+        <textarea class="memo-textarea" id="memo1" placeholder="弁護士の回答メモを入力..." oninput="saveMemo('memo1')"></textarea>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- 論点 2: 投稿者の全責任担保・免責条項 -->
+    <!-- ============================================== -->
+    <div class="topic-card">
+      <div class="topic-header">
+        <div class="topic-number">2</div>
+        <div class="topic-title">投稿者の全責任担保・運営の免責条項</div>
+      </div>
+
+      <div class="issue-box">
+        <div class="issue-title">⚠️ 法的懸念</div>
+        <div class="issue-text">
+          ・「虚偽申告・嫌がらせ・誹謗中傷を行った場合、投稿者が全損害（弁護士費用含む）を賠償する」条項は法的に有効か。<br>
+          ・「運営が審査を通過させても真実性を保証しない」という免責条項で、運営会社の過失責任をどこまで回避できるか。
+        </div>
+      </div>
+
+      <div class="ask-box">
+        <div class="ask-label">🗣️ 弁護士へそのまま聞く質問</div>
+        <div class="ask-text">
+          「利用規約で『虚偽申告があった場合は投稿者が弁護士費用を含む全損害を賠償する』とし、さらに『運営は真実性を保証しない』と定めた場合、万一の訴訟時に運営会社が共同不法行為責任を問われない防壁として有効に機能しますでしょうか？」
+        </div>
+      </div>
+
+      <div class="check-item" onclick="toggleCheck('c3')">
+        <input type="checkbox" id="c3" class="check-checkbox" onchange="updateProgress()">
+        <label for="c3" class="check-label">虚偽投稿に対する求償条項（弁護士費用負担）の法的有効性を確認した</label>
+      </div>
+
+      <div class="check-item" onclick="toggleCheck('c4')">
+        <input type="checkbox" id="c4" class="check-checkbox" onchange="updateProgress()">
+        <label for="c4" class="check-label">「真実性を保証しない」免責条項が公序良俗等で無効化されないか確認した</label>
+      </div>
+
+      <div class="memo-section">
+        <textarea class="memo-textarea" id="memo2" placeholder="弁護士の回答メモを入力..." oninput="saveMemo('memo2')"></textarea>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- 論点 3: 証拠画像の開示範囲・プライバシー -->
+    <!-- ============================================== -->
+    <div class="topic-card">
+      <div class="topic-header">
+        <div class="topic-number">3</div>
+        <div class="topic-title">証拠画像の閲覧可否（他社非公開・運営限定）</div>
+      </div>
+
+      <div class="issue-box">
+        <div class="issue-title">⚠️ 法的懸念</div>
+        <div class="issue-text">
+          ユーザーがアップロードした証拠（LINE履歴、契約書、身分証、請求書）を他の会員企業に見せると、プライバシー権侵害・著作権侵害・個人情報漏洩のリスクが極めて高くなる。
+        </div>
+      </div>
+
+      <div class="ask-box">
+        <div class="ask-label">🗣️ 弁護士へそのまま聞く質問</div>
+        <div class="ask-text">
+          「アップロードされた証拠画像（LINEや契約書）は『運営の審査のためだけ』に厳重保管し、他の会員企業には一切非公開（トラブルの要約テキストと金額・ステータスのみ表示）にする仕様を考えています。この仕様でプライバシー侵害リスクはクリアできますか？」
+        </div>
+      </div>
+
+      <div class="check-item" onclick="toggleCheck('c5')">
+        <input type="checkbox" id="c5" class="check-checkbox" onchange="updateProgress()">
+        <label for="c5" class="check-label">証拠画像を他社会員に非公開とすることでプライバシー侵害を防げるか確認した</label>
+      </div>
+
+      <div class="check-item" onclick="toggleCheck('c6')">
+        <input type="checkbox" id="c6" class="check-checkbox" onchange="updateProgress()">
+        <label for="c6" class="check-label">保険証番号やマイナンバーのマスキング基準・取得禁止ルールを確認した</label>
+      </div>
+
+      <div class="memo-section">
+        <textarea class="memo-textarea" id="memo3" placeholder="弁護士の回答メモを入力..." oninput="saveMemo('memo3')"></textarea>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- 論点 4: 真実性・相当性と運営の確認義務 -->
+    <!-- ============================================== -->
+    <div class="topic-card">
+      <div class="topic-header">
+        <div class="topic-number">4</div>
+        <div class="topic-title">真実性・相当性の証明と運営の調査義務</div>
+      </div>
+
+      <div class="issue-box">
+        <div class="issue-title">⚠️ 法的懸念</div>
+        <div class="issue-text">
+          投稿者が精巧な虚偽証拠を提出して承認させた場合、運営会社に「十分な調査を怠った過失（確認義務違反）」として損害賠償責任が発生するのではないか。
+        </div>
+      </div>
+
+      <div class="ask-box">
+        <div class="ask-label">🗣️ 弁護士へそのまま聞く質問</div>
+        <div class="ask-text">
+          「運営者が『確認義務違反』による過失責任を問われないために、審査時に最低限チェック・保存しておくべきエビデンス（契約書原本、督促送達記録、内容証明、判決文等）の法的なボーダーラインはどこでしょうか？手動審査フローの注意点はありますか？」
+        </div>
+      </div>
+
+      <div class="check-item" onclick="toggleCheck('c7')">
+        <input type="checkbox" id="c7" class="check-checkbox" onchange="updateProgress()">
+        <label for="c7" class="check-label">運営側に求められるエビデンス確認義務の最低ラインを確認した</label>
+      </div>
+
+      <div class="check-item" onclick="toggleCheck('c8')">
+        <input type="checkbox" id="c8" class="check-checkbox" onchange="updateProgress()">
+        <label for="c8" class="check-label">現行の管理者手動審査・承認フローで法的過失を回避できるか確認した</label>
+      </div>
+
+      <div class="memo-section">
+        <textarea class="memo-textarea" id="memo4" placeholder="弁護士の回答メモを入力..." oninput="saveMemo('memo4')"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 下部固定バー -->
+  <div class="footer-bar">
+    <div class="footer-text">MIERIS LEGAL GUIDE</div>
+    <button class="footer-btn" onclick="clearAll()">メモ・チェックを消去</button>
+  </div>
+
+  <script>
+    const checkboxes = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8'];
+    const memos = ['memo1', 'memo2', 'memo3', 'memo4'];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      checkboxes.forEach(id => {
+        const val = localStorage.getItem('mieris_legal_' + id);
+        if (val === 'true') {
+          const el = document.getElementById(id);
+          if (el) el.checked = true;
+        }
+      });
+
+      memos.forEach(id => {
+        const val = localStorage.getItem('mieris_legal_' + id);
+        if (val) {
+          const el = document.getElementById(id);
+          if (el) el.value = val;
+        }
+      });
+
+      updateProgress();
+    });
+
+    function toggleCheck(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.checked = !el.checked;
+        updateProgress();
+      }
+    }
+
+    function updateProgress() {
+      let checkedCount = 0;
+      checkboxes.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.checked) {
+          checkedCount++;
+          localStorage.setItem('mieris_legal_' + id, 'true');
+        } else {
+          localStorage.setItem('mieris_legal_' + id, 'false');
+        }
+      });
+
+      const counter = document.getElementById('check-counter');
+      if (counter) counter.innerText = checkedCount + ' / ' + checkboxes.length + ' 完了';
+
+      const bar = document.getElementById('progress-bar');
+      if (bar) bar.style.width = (checkedCount / checkboxes.length * 100) + '%';
+    }
+
+    function saveMemo(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        localStorage.setItem('mieris_legal_' + id, el.value);
+      }
+    }
+
+    function clearAll() {
+      if (confirm('入力したメモとチェックをすべてリセットしますか？')) {
+        localStorage.clear();
+        checkboxes.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.checked = false;
+        });
+        memos.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        updateProgress();
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,26 +1,132 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// GET: 法人番号（13桁）から企業名を検索・取得するAPI
+// GET: 法人番号または社名から企業情報を検索・取得するAPI（gBizINFO公的オープンデータ連携）
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const number = (searchParams.get('number') || '').trim().replace(/[^0-9]/g, '');
+        const queryName = (searchParams.get('q') || searchParams.get('name') || '').trim();
 
+        const gbizToken = process.env.GBIZINFO_API_TOKEN;
+
+        // ========================================================
+        // A. 社名によるオートコンプリート・候補検索 (?q=社名)
+        // ========================================================
+        if (queryName && !number) {
+            if (queryName.length < 2) {
+                return NextResponse.json({ candidates: [] });
+            }
+
+            if (gbizToken) {
+                try {
+                    const gbizUrl = `https://info.gbiz.go.jp/hojin/v1/hojin?name=${encodeURIComponent(queryName)}&limit=6`;
+                    const gbizRes = await fetch(gbizUrl, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-hojinInfo-api-token': gbizToken,
+                            'User-Agent': 'MIERIS-Credit-System/1.0'
+                        }
+                    });
+
+                    if (gbizRes.ok) {
+                        const data = await gbizRes.json();
+                        const list = data['hojin-infos'] || [];
+                        const candidates = list.map((c: any) => ({
+                            corporate_number: c.corporate_number,
+                            name: c.name,
+                            location: c.location,
+                            status: c.status
+                        }));
+
+                        return NextResponse.json({ candidates, source: 'gbizinfo_api' });
+                    }
+                } catch (gbizErr) {
+                    console.error('gBizINFO name search error:', gbizErr);
+                }
+            }
+
+            // フォールバック: 内部DBから社名あいまい検索
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+            const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+            const supabase = createClient(supabaseUrl, supabaseKey);
+
+            const { data: dbCases } = await supabase
+                .from('credit_cases')
+                .select('corporate_number, company_name, location')
+                .ilike('company_name', `%${queryName}%`)
+                .limit(5);
+
+            const internalCandidates = (dbCases || [])
+                .filter(c => c.corporate_number)
+                .map(c => ({
+                    corporate_number: c.corporate_number,
+                    name: c.company_name,
+                    location: c.location,
+                    status: 'active'
+                }));
+
+            return NextResponse.json({ candidates: internalCandidates, source: 'internal_db' });
+        }
+
+        // ========================================================
+        // B. 13桁の法人番号による詳細プロファイル照会 (?number=13桁)
+        // ========================================================
         if (number.length !== 13) {
             return NextResponse.json({ error: '法人番号は13桁の半角数字を指定してください' }, { status: 400 });
         }
 
+        // 1. gBizINFO API が利用可能な場合は公的データを最優先で取得
+        if (gbizToken) {
+            try {
+                const gbizUrl = `https://info.gbiz.go.jp/hojin/v1/hojin/${number}`;
+                const gbizRes = await fetch(gbizUrl, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-hojinInfo-api-token': gbizToken,
+                        'User-Agent': 'MIERIS-Credit-System/1.0'
+                    }
+                });
+
+                if (gbizRes.ok) {
+                    const data = await gbizRes.json();
+                    const info = data['hojin-infos']?.[0] || data;
+
+                    if (info && (info.name || info.corporate_number)) {
+                        const isClosed = info.status === '閉鎖' || info.status === '清算' || false;
+                        return NextResponse.json({
+                            found: true,
+                            source: 'gbizinfo_api',
+                            name: info.name,
+                            kana: info.kana,
+                            corporate_number: info.corporate_number || number,
+                            location: info.location,
+                            postal_code: info.postal_code,
+                            representative_name: info.representative_name,
+                            capital_stock: info.capital_stock ? Number(info.capital_stock) : null,
+                            employee_number: info.employee_number ? Number(info.employee_number) : null,
+                            date_of_establishment: info.date_of_establishment,
+                            company_url: info.company_url,
+                            business_summary: info.business_summary,
+                            registry_status: isClosed ? 'closed' : 'active',
+                            registry_close_date: isClosed ? info.update_date : null,
+                            registry_close_cause: isClosed ? info.status : null
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('gBizINFO lookup error:', err);
+            }
+        }
+
+        // 2. 内部DB（credit_cases / companies）に該当の法人番号が存在するか確認
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
 
-        const supabase = createClient(supabaseUrl, supabaseServiceRoleKey || supabaseAnonKey);
-
-        // 1. システム内部（credit_cases）に該当の法人番号が存在するか確認
         const { data: creditCase } = await supabase
             .from('credit_cases')
-            .select('company_name')
+            .select('company_name, location')
             .eq('corporate_number', number)
             .limit(1)
             .maybeSingle();
@@ -30,6 +136,7 @@ export async function GET(request: Request) {
             return NextResponse.json({
                 found: true,
                 name: creditCase.company_name,
+                location: creditCase.location,
                 source: 'internal_db',
                 registry_status: isClosed ? 'closed' : 'active',
                 registry_close_date: isClosed ? '2025-12-20' : null,
@@ -37,10 +144,9 @@ export async function GET(request: Request) {
             });
         }
 
-        // 2. companies テーブルに該当の法人番号が存在するか確認
         const { data: company } = await supabase
             .from('companies')
-            .select('name')
+            .select('name, corporate_number')
             .eq('corporate_number', number)
             .limit(1)
             .maybeSingle();
@@ -54,7 +160,7 @@ export async function GET(request: Request) {
             });
         }
 
-        // 3. 国税庁 Web-API の呼び出し（環境変数に NTA_APP_ID がある場合）
+        // 3. 国税庁 Web-API のフォールバック（環境変数に NTA_APP_ID がある場合）
         const ntaAppId = process.env.NTA_APP_ID;
         if (ntaAppId) {
             try {
@@ -64,7 +170,7 @@ export async function GET(request: Request) {
                 if (ntaRes.ok) {
                     const xml = await ntaRes.text();
                     const matchName = xml.match(/<name>(.*?)<\/name>/);
-                    const matchStatus = xml.match(/<status>(.*?)<\/status>/); // 01:登記中, 02:閉鎖等
+                    const matchStatus = xml.match(/<status>(.*?)<\/status>/);
                     const matchCloseDate = xml.match(/<closeDate>(.*?)<\/closeDate>/);
                     const matchCloseCause = xml.match(/<closeCause>(.*?)<\/closeCause>/);
 

@@ -127,6 +127,23 @@ export default function CreditSearchPage() {
     const [lookupRegistryStatus, setLookupRegistryStatus] = useState<string | null>(null);
     const [lookupCloseDetails, setLookupCloseDetails] = useState<{ date?: string; cause?: string } | null>(null);
 
+    // gBizINFO 公的法人詳細プロファイル
+    const [gbizProfile, setGbizProfile] = useState<{
+        name?: string;
+        corporate_number?: string;
+        location?: string;
+        representative_name?: string;
+        capital_stock?: number | null;
+        employee_number?: number | null;
+        date_of_establishment?: string | null;
+        company_url?: string | null;
+    } | null>(null);
+
+    // 社名入力時のgBizINFOサジェスト候補
+    const [searchCandidates, setSearchCandidates] = useState<Array<{ corporate_number: string; name: string; location: string }>>([]);
+    const [isSearchingGbiz, setIsSearchingGbiz] = useState(false);
+    const [showSearchCandidates, setShowSearchCandidates] = useState(false);
+
     // プラン制限チェック用
     const [planRestricted, setPlanRestricted] = useState(false);
 
@@ -196,6 +213,41 @@ export default function CreditSearchPage() {
         init();
     }, []);
 
+    // 社名入力時のサジェスト検索
+    const handleSearchQueryChange = async (val: string) => {
+        setSearchQuery(val);
+        if (val.trim().length >= 2) {
+            setIsSearchingGbiz(true);
+            try {
+                const res = await fetch(`/api/credit/corporate-lookup?q=${encodeURIComponent(val.trim())}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.candidates && data.candidates.length > 0) {
+                        setSearchCandidates(data.candidates);
+                        setShowSearchCandidates(true);
+                    } else {
+                        setSearchCandidates([]);
+                        setShowSearchCandidates(false);
+                    }
+                }
+            } catch (e) {
+                console.warn("gBizINFO search error:", e);
+            } finally {
+                setIsSearchingGbiz(false);
+            }
+        } else {
+            setSearchCandidates([]);
+            setShowSearchCandidates(false);
+        }
+    };
+
+    const selectSearchCandidate = (c: { corporate_number: string; name: string; location: string }) => {
+        setCorpFilter(c.corporate_number);
+        setSearchQuery(c.name);
+        setDiscoveredCompanyName(c.name);
+        setShowSearchCandidates(false);
+    };
+
     // 法人番号必須の照会実行
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -225,6 +277,7 @@ export default function CreditSearchPage() {
         setCases([]);
         setLookupRegistryStatus(null);
         setLookupCloseDetails(null);
+        setGbizProfile(null);
 
         try {
             const session = (await supabase.auth.getSession()).data.session;
@@ -289,13 +342,13 @@ export default function CreditSearchPage() {
     // 照会対象の国税庁登記ステータス確認
     const checkCorporateRegistry = async (corpNum: string, currentCases: CreditCase[]) => {
         try {
-            // 国税庁lookupを呼び出して、登記ステータス（存続/閉鎖/清算等）と社名を取得
+            // gBizINFO・公的登記lookupを呼び出して、企業プロファイルと登記ステータスを取得
             try {
                 const lookupRes = await fetch(`/api/credit/corporate-lookup?number=${corpNum}`);
                 if (lookupRes.ok) {
                     const lookupData = await lookupRes.json();
                     if (lookupData.found) {
-                        if (lookupData.name && !discoveredCompanyName) {
+                        if (lookupData.name) {
                             setDiscoveredCompanyName(lookupData.name);
                         }
                         if (lookupData.registry_status) {
@@ -307,6 +360,17 @@ export default function CreditSearchPage() {
                                 cause: lookupData.close_cause
                             });
                         }
+                        // gBizINFO公的プロファイルの保持
+                        setGbizProfile({
+                            name: lookupData.name,
+                            corporate_number: lookupData.corporate_number || corpNum,
+                            location: lookupData.location,
+                            representative_name: lookupData.representative_name,
+                            capital_stock: lookupData.capital_stock,
+                            employee_number: lookupData.employee_number,
+                            date_of_establishment: lookupData.date_of_establishment,
+                            company_url: lookupData.company_url
+                        });
                     }
                 }
             } catch (lookupErr) {
@@ -483,26 +547,72 @@ export default function CreditSearchPage() {
                                             </p>
                                         </div>
 
-                                        {/* 企業名・商号（任意） */}
-                                        <div>
+                                        {/* 企業名・商号（gBizINFO自動サジェスト対応） */}
+                                        <div className="relative">
                                             <div className="flex justify-between items-center mb-1.5">
-                                                <label className="text-xs font-bold text-slate-700">
-                                                    企業名・商号 または 所在地
+                                                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                                    <span>企業名・商号</span>
+                                                    <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200 font-semibold">
+                                                        経産省公的検索対応
+                                                    </span>
                                                 </label>
-                                                <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
-                                                    任意
-                                                </span>
+                                                {isSearchingGbiz ? (
+                                                    <span className="text-[10px] text-blue-600 animate-pulse font-medium">候補検索中...</span>
+                                                ) : (
+                                                    <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
+                                                        2文字でサジェスト
+                                                    </span>
+                                                )}
                                             </div>
                                             <input
                                                 type="text"
                                                 value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                placeholder="例: 株式会社〇〇建設、東京都中央区..."
+                                                onChange={(e) => handleSearchQueryChange(e.target.value)}
+                                                onFocus={() => { if (searchCandidates.length > 0) setShowSearchCandidates(true); }}
+                                                placeholder="例: トヨタ、メルカリ..."
                                                 className="input-field py-2.5 text-sm"
                                             />
                                             <p className="text-[11px] text-slate-500 mt-1">
-                                                法人番号と併せて企業名で絞り込む場合に入力します
+                                                社名を入力すると法人番号の候補が表示され、ワンタップでセットできます
                                             </p>
+
+                                            {/* サジェストドロップダウン */}
+                                            {showSearchCandidates && searchCandidates.length > 0 && (
+                                                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-fade-in text-left">
+                                                    <div className="p-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-bold px-3">
+                                                        <span>公的法人候補（クリックで法人番号を自動入力）</span>
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setShowSearchCandidates(false)}
+                                                            className="text-slate-400 hover:text-slate-600 text-xs"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                    <div className="max-h-56 overflow-y-auto divide-y divide-slate-100">
+                                                        {searchCandidates.map((c) => (
+                                                            <div
+                                                                key={c.corporate_number}
+                                                                onClick={() => selectSearchCandidate(c)}
+                                                                className="p-2.5 hover:bg-blue-50/70 cursor-pointer transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-1"
+                                                            >
+                                                                <div>
+                                                                    <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                                                        <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                                                        <span>{c.name}</span>
+                                                                    </div>
+                                                                    <div className="text-[11px] text-slate-500">
+                                                                        {c.location || "所在地未設定"}
+                                                                    </div>
+                                                                </div>
+                                                                <span className="font-mono text-[10px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded shrink-0 self-start sm:self-center font-bold">
+                                                                    {c.corporate_number}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -636,6 +746,42 @@ export default function CreditSearchPage() {
                                                 <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed mb-4">
                                                     データベース上に該当する未払い・支払遅延の記録は存在しません。安心してお取引をご検討いただけます。
                                                 </p>
+
+                                                {/* gBizINFO 公的法人プロファイルカード */}
+                                                {gbizProfile && (
+                                                    <div className="max-w-xl mx-auto my-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-left">
+                                                        <div className="text-[11px] font-bold text-blue-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5 pb-2 border-b border-slate-200">
+                                                            <Building2 className="w-3.5 h-3.5" />
+                                                            <span>経済産業省 gBizINFO 公的法人プロファイル</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                                                            <div>
+                                                                <span className="text-slate-400 text-[11px] block">代表者名</span>
+                                                                <span className="font-bold text-slate-800">{gbizProfile.representative_name || "公表なし"}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-slate-400 text-[11px] block">資本金</span>
+                                                                <span className="font-bold text-slate-800 font-mono">
+                                                                    {gbizProfile.capital_stock ? `${gbizProfile.capital_stock.toLocaleString()} 円` : "公表なし"}
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-slate-400 text-[11px] block">従業員数</span>
+                                                                <span className="font-bold text-slate-800 font-mono">
+                                                                    {gbizProfile.employee_number ? `${gbizProfile.employee_number.toLocaleString()} 名` : "公表なし"}
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-slate-400 text-[11px] block">設立年月日</span>
+                                                                <span className="font-bold text-slate-800 font-mono">{gbizProfile.date_of_establishment || "公表なし"}</span>
+                                                            </div>
+                                                            <div className="sm:col-span-2">
+                                                                <span className="text-slate-400 text-[11px] block">本店所在地</span>
+                                                                <span className="font-medium text-slate-700">{gbizProfile.location || "公表なし"}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </>
                                         )}
                                     </div>

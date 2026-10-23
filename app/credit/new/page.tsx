@@ -31,6 +31,11 @@ export default function NewCreditCasePage() {
     const [dueDate, setDueDate] = useState("");
     const [counterpartyClaim, setCounterpartyClaim] = useState("");
     
+    // gBizINFO 公的法人サジェスト候補
+    const [companyCandidates, setCompanyCandidates] = useState<Array<{ corporate_number: string; name: string; location: string }>>([]);
+    const [isSearchingGbiz, setIsSearchingGbiz] = useState(false);
+    const [showCandidates, setShowCandidates] = useState(false);
+    
     // 営業実態ステータス & 公的登記ステータス
     const [businessStatus, setBusinessStatus] = useState<string>("unreachable");
     const [registryStatus, setRegistryStatus] = useState<string>("active");
