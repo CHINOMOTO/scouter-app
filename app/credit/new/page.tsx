@@ -42,6 +42,15 @@ export default function NewCreditCasePage() {
     const [registryCloseDate, setRegistryCloseDate] = useState<string>("");
     const [registryCloseCause, setRegistryCloseCause] = useState<string>("");
     const [isSoleProprietor, setIsSoleProprietor] = useState(false);
+
+    // インボイス登録番号 & リアルタイム公的検証
+    const [invoiceNumber, setInvoiceNumber] = useState('');
+    const [invoiceVerification, setInvoiceVerification] = useState<{
+        checking: boolean;
+        valid?: boolean;
+        label?: string;
+        note?: string;
+    } | null>(null);
     
     // エビデンスファイル（同意書、請求書、督促書）
     const [files, setFiles] = useState<File[]>([]);
@@ -98,6 +107,51 @@ export default function NewCreditCasePage() {
         if (e.target.files) {
             const newFiles = Array.from(e.target.files);
             setFiles(prev => [...prev, ...newFiles]);
+        }
+    };
+
+        // インボイス登録番号（T+13桁）のリアルタイム公的検証
+    const handleInvoiceNumberChange = async (val: string) => {
+        setInvoiceNumber(val);
+        const cleaned = val.replace(/[^0-9]/g, '');
+        if (cleaned.length === 13) {
+            setInvoiceVerification({ checking: true });
+            try {
+                const res = await fetch(`/api/credit/invoice-lookup?number=${cleaned}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.valid) {
+                        setInvoiceVerification({
+                            checking: false,
+                            valid: true,
+                            label: data.business_type_label,
+                            note: data.verification_note
+                        });
+                        if (data.corporate_profile?.name && !companyName) {
+                            setCompanyName(data.corporate_profile.name);
+                        }
+                        if (data.corporate_profile?.location && !location) {
+                            setLocation(data.corporate_profile.location);
+                        }
+                    } else {
+                        setInvoiceVerification({
+                            checking: false,
+                            valid: false,
+                            note: data.error || '形式が正しくありません'
+                        });
+                    }
+                } else {
+                    setInvoiceVerification({
+                        checking: false,
+                        valid: false,
+                        note: '番号の形式が正しくありません'
+                    });
+                }
+            } catch {
+                setInvoiceVerification(null);
+            }
+        } else {
+            setInvoiceVerification(null);
         }
     };
 
@@ -159,7 +213,7 @@ export default function NewCreditCasePage() {
                 },
                 body: JSON.stringify({
                     companyName: companyName.trim(),
-                    corporateNumber: isSoleProprietor ? null : (cleanCorpNum || null),
+                    corporateNumber: isSoleProprietor ? (invoiceNumber ? invoiceNumber.replace(/[^0-9]/g, "") : null) : (cleanCorpNum || null),
                     location: location.trim() || null,
                     invoiceDate: invoiceDate || null,
                     amount: numAmount,
@@ -329,9 +383,48 @@ export default function NewCreditCasePage() {
                                         </div>
                                     )}
                                     {isSoleProprietor && (
-                                        <p className="text-[10px] sm:text-[11px] text-blue-600 font-medium">
-                                            ※個人事業主（屋号等）として登録されます
-                                        </p>
+                                        <div className="space-y-2 mt-2 pt-2 border-t border-slate-100">
+                                            <p className="text-[10px] sm:text-[11px] text-blue-600 font-medium">
+                                                ※個人事業主（屋号等）として登録されます
+                                            </p>
+                                            <div className="flex items-center justify-between mt-2">
+                                                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                                    <span>インボイス登録番号（T番号）</span>
+                                                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 font-bold">
+                                                        任意・公的確認
+                                                    </span>
+                                                </label>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                maxLength={14}
+                                                value={invoiceNumber}
+                                                onChange={(e) => handleInvoiceNumberChange(e.target.value)}
+                                                className="input-field font-mono py-2 text-xs sm:text-sm"
+                                                placeholder="例: T1234567890123"
+                                            />
+                                            {invoiceVerification && (
+                                                <div className={`p-2.5 rounded-lg text-xs flex items-start gap-2 border ${
+                                                    invoiceVerification.checking 
+                                                        ? 'bg-slate-50 text-slate-600 border-slate-200'
+                                                        : invoiceVerification.valid 
+                                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                                                            : 'bg-amber-50 text-amber-800 border-amber-200'
+                                                }`}>
+                                                    {invoiceVerification.checking ? (
+                                                        <span>国税庁アルゴリズム照合中...</span>
+                                                    ) : (
+                                                        <div>
+                                                            <div className="font-bold flex items-center gap-1">
+                                                                {invoiceVerification.valid ? '✅ ' : '⚠️ '}
+                                                                {invoiceVerification.label || 'インボイス照合結果'}
+                                                            </div>
+                                                            <div className="text-[11px] mt-0.5">{invoiceVerification.note}</div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                                 <div className="space-y-1.5 sm:space-y-2">

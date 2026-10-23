@@ -127,6 +127,15 @@ export default function CreditSearchPage() {
     const [lookupRegistryStatus, setLookupRegistryStatus] = useState<string | null>(null);
     const [lookupCloseDetails, setLookupCloseDetails] = useState<{ date?: string; cause?: string } | null>(null);
 
+    // インボイス照会結果（T番号/適格請求書発行事業者判定）
+    const [invoiceInfo, setInvoiceInfo] = useState<{
+        valid: boolean;
+        invoice_number?: string;
+        business_type_label?: string;
+        checksum_verified?: boolean;
+        verification_note?: string;
+    } | null>(null);
+
     // gBizINFO 公的法人詳細プロファイル
     const [gbizProfile, setGbizProfile] = useState<{
         name?: string;
@@ -248,25 +257,33 @@ export default function CreditSearchPage() {
         setShowSearchCandidates(false);
     };
 
-    // 法人番号必須の照会実行
+    // 法人番号 / インボイス番号 / 社名によるハイブリッド照会実行
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
         setErrorMsg(null);
 
-        // 全角数字を半角に正規化し、数字のみ抽出
-        const normalizedCorp = corpFilter
+        // 全角数字を半角に正規化し、先頭のT/tを除いた数字を抽出
+        let rawCorp = corpFilter.trim();
+        if (rawCorp.startsWith('T') || rawCorp.startsWith('t')) {
+            rawCorp = rawCorp.slice(1);
+        }
+        const normalizedCorp = rawCorp
             .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
             .replace(/[^0-9]/g, "");
 
-        if (!normalizedCorp) {
-            const msg = "照会対象企業の法人番号（13桁）を入力してください。";
+        const normalizedQuery = searchQuery.trim();
+
+        // 番号も社名もどちらも未入力の場合はエラー
+        if (!normalizedCorp && !normalizedQuery) {
+            const msg = "法人番号・インボイス番号、または企業名・商号のいずれかを入力してください。";
             setErrorMsg(msg);
             setToast({ type: "error", text: msg });
             return;
         }
 
-        if (normalizedCorp.length !== 13) {
-            const msg = "法人番号は13桁の半角数字で入力してください。";
+        // 番号が入力されている場合は13桁チェック
+        if (normalizedCorp && normalizedCorp.length !== 13) {
+            const msg = "法人番号・インボイス登録番号は13桁の数字で入力してください。";
             setErrorMsg(msg);
             setToast({ type: "error", text: msg });
             return;
@@ -278,6 +295,7 @@ export default function CreditSearchPage() {
         setLookupRegistryStatus(null);
         setLookupCloseDetails(null);
         setGbizProfile(null);
+        setInvoiceInfo(null);
 
         try {
             const session = (await supabase.auth.getSession()).data.session;
@@ -288,9 +306,11 @@ export default function CreditSearchPage() {
             }
 
             const params = new URLSearchParams();
-            params.append("corp", normalizedCorp);
-            if (searchQuery.trim()) {
-                params.append("q", searchQuery.trim());
+            if (normalizedCorp) {
+                params.append("corp", normalizedCorp);
+            }
+            if (normalizedQuery) {
+                params.append("q", normalizedQuery);
             }
 
             const res = await fetch(`/api/credit-cases?${params.toString()}`, {
@@ -309,10 +329,18 @@ export default function CreditSearchPage() {
 
             setCases(fetchedCases);
             setHasSearched(true);
-            setSearchedCorp(normalizedCorp);
+            setSearchedCorp(normalizedCorp || null);
 
-            // 社名・国税庁登記ステータス補完
-            checkCorporateRegistry(normalizedCorp, fetchedCases);
+            // 法人番号・インボイス番号がある場合は公的プロファイル・インボイス照会
+            if (normalizedCorp) {
+                checkCorporateRegistry(normalizedCorp, fetchedCases);
+                checkInvoiceRegistry(normalizedCorp);
+            } else if (fetchedCases.length > 0) {
+                // 社名検索で見つかった場合は先頭の社名をセット
+                setDiscoveredCompanyName(fetchedCases[0].company_name);
+            } else {
+                setDiscoveredCompanyName(normalizedQuery);
+            }
 
             // 照会監査ログの保存 (POST /api/audit)
             try {
@@ -324,7 +352,7 @@ export default function CreditSearchPage() {
                     },
                     body: JSON.stringify({
                         action_type: "SEARCH_CREDIT",
-                        target_id: `法人番号: ${normalizedCorp}${searchQuery.trim() ? ` (${searchQuery.trim()})` : ""}`
+                        target_id: `${normalizedCorp ? `番号: ${normalizedCorp}` : ""}${normalizedQuery ? ` 社名: ${normalizedQuery}` : ""}`.trim()
                     })
                 });
             } catch (auditErr) {
@@ -336,6 +364,27 @@ export default function CreditSearchPage() {
             setToast({ type: "error", text: err.message || "照会中にエラーが発生しました。" });
         } finally {
             setSearching(false);
+        }
+    };
+
+    // 国税庁インボイス登録番号の検証
+    const checkInvoiceRegistry = async (corpNum: string) => {
+        try {
+            const res = await fetch(`/api/credit/invoice-lookup?number=${corpNum}`);
+            if (res.ok) {
+                const invData = await res.json();
+                if (invData.valid) {
+                    setInvoiceInfo({
+                        valid: true,
+                        invoice_number: invData.invoice_number,
+                        business_type_label: invData.business_type_label,
+                        checksum_verified: invData.checksum_verified,
+                        verification_note: invData.verification_note
+                    });
+                }
+            }
+        } catch (e) {
+            console.warn("Invoice registry check error:", e);
         }
     };
 
@@ -501,10 +550,10 @@ export default function CreditSearchPage() {
                                 </div>
                             </div>
 
-                            {/* 照会条件カード（法人番号必須） */}
+                            {/* 照会条件カード（法人番号・インボイス番号・社名によるハイブリッド照会） */}
                             <div className="bg-white p-4.5 sm:p-7 rounded-xl border border-slate-200 shadow-2xs mb-6">
                                 <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 leading-relaxed mb-5">
-                                    ※同名企業との誤認防止および信用情報の適正管理の観点から、照会には<strong>「法人番号（13桁）」</strong>の入力が必須となっています。
+                                    法人番号（13桁）、インボイス登録番号（T+13桁）、または「企業名・商号」から公的処分・労働基準関係法令違反・下請法違反・未払い事故情報を照会できます。
                                 </div>
 
                                 {errorMsg && (
@@ -518,32 +567,29 @@ export default function CreditSearchPage() {
 
                                 <form onSubmit={handleSearch} className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* 法人番号（必須） */}
+                                        {/* 法人番号 または インボイス番号 */}
                                         <div>
                                             <div className="flex justify-between items-center mb-1.5">
                                                 <label className="text-xs font-bold text-slate-700">
-                                                    法人番号（13桁）
+                                                    法人番号 または インボイス番号
                                                 </label>
-                                                <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">
-                                                    必須
+                                                <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 font-bold">
+                                                    推奨（特定照会）
                                                 </span>
                                             </div>
                                             <input
                                                 type="text"
-                                                required
-                                                maxLength={13}
-                                                inputMode="numeric"
+                                                maxLength={14}
                                                 value={corpFilter}
                                                 onChange={(e) => {
-                                                    // 数字と全角数字のみ許可
                                                     const val = e.target.value;
                                                     setCorpFilter(val);
                                                 }}
-                                                placeholder="例: 1234567890123 (半角数字13桁)"
+                                                placeholder="例: 1234567890123 または T1234567890123"
                                                 className="input-field font-mono py-2.5 text-sm"
                                             />
                                             <p className="text-[11px] text-slate-500 mt-1">
-                                                国税庁が指定した13桁の法人番号を入力してください（ハイフン不要）
+                                                国税庁13桁法人番号、または適格請求書発行番号（T+13桁）
                                             </p>
                                         </div>
 
@@ -560,7 +606,7 @@ export default function CreditSearchPage() {
                                                     <span className="text-[10px] text-blue-600 animate-pulse font-medium">候補検索中...</span>
                                                 ) : (
                                                     <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
-                                                        2文字でサジェスト
+                                                        社名のみ検索も可能
                                                     </span>
                                                 )}
                                             </div>
@@ -569,11 +615,11 @@ export default function CreditSearchPage() {
                                                 value={searchQuery}
                                                 onChange={(e) => handleSearchQueryChange(e.target.value)}
                                                 onFocus={() => { if (searchCandidates.length > 0) setShowSearchCandidates(true); }}
-                                                placeholder="例: トヨタ、メルカリ..."
+                                                placeholder="例: トヨタ、メルカリ、個人事業主名..."
                                                 className="input-field py-2.5 text-sm"
                                             />
                                             <p className="text-[11px] text-slate-500 mt-1">
-                                                社名を入力すると法人番号の候補が表示され、ワンタップでセットできます
+                                                入力すると候補法人番号が表示されます。社名のみでも検索実行可能です
                                             </p>
 
                                             {/* サジェストドロップダウン */}
@@ -647,10 +693,10 @@ export default function CreditSearchPage() {
                                             <Building2 className="w-6 h-6" />
                                         </div>
                                         <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1 leading-snug">
-                                            照会対象企業の「法人番号」を入力して照会してください
+                                            法人番号・インボイス番号、または企業名を入力して照会してください
                                         </h3>
                                         <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed mt-1">
-                                            本システムは厳格な信用情報管理のため、13桁の法人番号による特定照会を採用しています。上記の入力欄に法人番号を入力して「企業信用情報を照会する」を押してください。
+                                            13桁の法人番号、インボイス登録番号（T+13桁）、または企業名・商号から、公的処分・労働基準関係法令違反・下請法違反・未払い事故情報を一括照会できます。
                                         </p>
                                     </div>
 
@@ -747,6 +793,36 @@ export default function CreditSearchPage() {
                                                     データベース上に該当する未払い・支払遅延の記録は存在しません。安心してお取引をご検討いただけます。
                                                 </p>
 
+                                                {/* インボイス公的判定カード（国税庁 適格請求書発行事業者） */}
+                                                {invoiceInfo && invoiceInfo.valid && (
+                                                    <div className="max-w-xl mx-auto my-3 p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-left">
+                                                        <div className="flex items-center justify-between mb-1.5 pb-1.5 border-b border-emerald-200/60">
+                                                            <div className="text-[11px] font-bold text-emerald-800 flex items-center gap-1.5">
+                                                                <BookmarkCheck className="w-4 h-4 text-emerald-600" />
+                                                                <span>国税庁 インボイス登録公表検証</span>
+                                                            </div>
+                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                                                {invoiceInfo.business_type_label}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex flex-wrap items-center gap-3 text-xs">
+                                                            <div>
+                                                                <span className="text-slate-500 text-[10px] block">登録番号</span>
+                                                                <span className="font-mono font-bold text-slate-900">{invoiceInfo.invoice_number}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-slate-500 text-[10px] block">検査数字検証（モジュラス9/11）</span>
+                                                                <span className="font-semibold text-emerald-700">
+                                                                    {invoiceInfo.checksum_verified ? "✅ 適合（国税庁公式アルゴリズム）" : "形式確認済み"}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
+                                                            {invoiceInfo.verification_note}
+                                                        </p>
+                                                    </div>
+                                                )}
+
                                                 {/* gBizINFO 公的法人プロファイルカード */}
                                                 {gbizProfile && (
                                                     <div className="max-w-xl mx-auto my-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-left">
@@ -830,7 +906,7 @@ export default function CreditSearchPage() {
                                 <div>
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                                         <span className="text-xs font-bold text-slate-700">
-                                            照会結果: {cases.length} 件の記録が見つかりました（法人番号: <span className="font-mono">{searchedCorp}</span>）
+                                            照会結果: {cases.length} 件の記録が見つかりました（{searchedCorp ? `番号: ${searchedCorp}` : `社名照会: ${searchQuery}`}）
                                         </span>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
