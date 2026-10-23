@@ -275,7 +275,7 @@ export default function CreditSearchPage() {
 
         // 弁護士法務要件：同名企業の誤認混同・名誉毀損防止のため、照会には法人番号（13桁）が必須
         if (!normalizedCorp) {
-            const msg = "同名企業との誤認防止のため、法人番号（13桁）またはインボイス番号（T+13桁）の入力が必須です。社名を入力すると候補から番号をセットできます。";
+            const msg = "同名企業との誤認を防ぐため、法人番号（13桁）またはインボイス番号を入力してください（社名から自動セットも可能です）。";
             setErrorMsg(msg);
             setToast({ type: "error", text: msg });
             return;
@@ -552,7 +552,7 @@ export default function CreditSearchPage() {
                             {/* 照会条件カード（法人番号必須） */}
                             <div className="bg-white p-4.5 sm:p-7 rounded-xl border border-slate-200 shadow-2xs mb-6">
                                 <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 leading-relaxed mb-5">
-                                    ※同名企業との誤認防止および信用情報の適正管理の観点から、弁護士法務要件に基づき照会には<strong>「法人番号（13桁）」または「インボイス番号（T+13桁）」の入力が必須</strong>となっています。社名を入力すると候補からワンタップでセットできます。
+                                    ※同名企業との誤認を防ぐため、照会には<strong>法人番号（13桁）</strong>または<strong>インボイス番号</strong>が必要です（社名から候補を選んで自動セットできます）。
                                 </div>
 
                                 {errorMsg && (
