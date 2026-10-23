@@ -315,47 +315,66 @@ export default function CreditCaseDetailPage() {
                                 </p>
                             </div>
 
-                            {/* 2. 相手方の営業実態（被害企業報告） */}
-                            <div className="p-4 rounded-xl border bg-slate-50 border-slate-200">
-                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
-                                    <span>相手方の営業実態（被害企業報告）</span>
-                                    <span className="text-[10px] font-normal text-slate-400">現場実態</span>
-                                </div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    {caseData.business_status === "unreachable" ? (
-                                        <span className="text-sm font-extrabold text-rose-700">
-                                            音信不通（電話不通・連絡拒絶）
+                            {/* 2. 相手方の営業実態（被害企業報告 または 公的処分記録） */}
+                            {(caseData.is_official_record || (caseData.counterparty_claim && caseData.counterparty_claim.startsWith('【'))) ? (
+                                <div className="p-4 rounded-xl border bg-blue-50/50 border-blue-200">
+                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                                        <span>公的記録ステータス</span>
+                                        <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full border border-blue-300">
+                                            行政・裁判所公認記録
                                         </span>
-                                    ) : caseData.business_status === "relocated" ? (
-                                        <span className="text-sm font-extrabold text-purple-700">
-                                            事務所引き払い・所在不明
-                                        </span>
-                                    ) : caseData.business_status === "bankrupt" ? (
+                                    </div>
+                                    <div className="flex items-center gap-2 mb-1">
                                         <span className="text-sm font-extrabold text-slate-900">
-                                            倒産・破産手続き中
+                                            公的機関による処分・命令記録
                                         </span>
-                                    ) : caseData.business_status === "active" ? (
-                                        <span className="text-sm font-extrabold text-emerald-700">
-                                            連絡可能（督促・協議継続中）
-                                        </span>
-                                    ) : (
-                                        <span className="text-sm font-extrabold text-slate-700">
-                                            不明・未申告
-                                        </span>
-                                    )}
+                                    </div>
+                                    <p className="text-[11px] text-slate-600 leading-snug">
+                                        省庁・自治体・裁判所等の公的機関が法令に基づき公表した確定処分データです（民間加盟企業からの被害申告ではありません）。
+                                    </p>
                                 </div>
-                                <p className="text-[11px] text-slate-600 leading-snug">
-                                    {caseData.business_status === "unreachable"
-                                        ? "請求・督促に対して電話拒否、LINEブロック、着信不通など連絡が取れない状態です。"
-                                        : caseData.business_status === "relocated"
-                                        ? "登録されている所在地から退去・不在となっており、連絡がつかない状態です。"
-                                        : caseData.business_status === "bankrupt"
-                                        ? "弁護士等による受任通知や破産申し立て手続きが行われている状態です。"
-                                        : caseData.business_status === "active"
-                                        ? "連絡自体は取れているものの、約束期日に入金が履行されていない状態です。"
-                                        : "現在の営業実態に関する明確な申告はありません。"}
-                                </p>
-                            </div>
+                            ) : (
+                                <div className="p-4 rounded-xl border bg-slate-50 border-slate-200">
+                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                                        <span>相手方の営業実態（加盟企業報告）</span>
+                                        <span className="text-[10px] font-normal text-slate-400">現場実態</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        {caseData.business_status === "unreachable" ? (
+                                            <span className="text-sm font-extrabold text-rose-700">
+                                                音信不通（電話不通・連絡拒絶）
+                                            </span>
+                                        ) : caseData.business_status === "relocated" ? (
+                                            <span className="text-sm font-extrabold text-purple-700">
+                                                事務所引き払い・所在不明
+                                            </span>
+                                        ) : caseData.business_status === "bankrupt" ? (
+                                            <span className="text-sm font-extrabold text-slate-900">
+                                                倒産・破産手続き中
+                                            </span>
+                                        ) : caseData.business_status === "active" ? (
+                                            <span className="text-sm font-extrabold text-emerald-700">
+                                                連絡可能（督促・協議継続中）
+                                            </span>
+                                        ) : (
+                                            <span className="text-sm font-extrabold text-slate-700">
+                                                不明・未申告
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-[11px] text-slate-600 leading-snug">
+                                        {caseData.business_status === "unreachable"
+                                            ? "請求・督促に対して電話着信拒否など連絡が一切取れない状態です。"
+                                            : caseData.business_status === "relocated"
+                                            ? "登録所在地から退去・不在となっており、連絡がつかない状態です。"
+                                            : caseData.business_status === "bankrupt"
+                                            ? "弁護士受任通知や破産申し立て手続きが行われている状態です。"
+                                            : caseData.business_status === "active"
+                                            ? "連絡自体は取れているものの、約束期日に入金が履行されていない状態です。"
+                                            : "現在の営業実態に関する明確な申告はありません。"}
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         {/* 7項目詳細リスト */}

@@ -953,7 +953,13 @@ export default function CreditSearchPage() {
                                                         {/* 2軸ステータス表示（公的登記 & 営業実態） */}
                                                         <div className="flex flex-wrap items-center gap-1.5 mb-3">
                                                             {renderRegistryBadge(c.registry_status, c.registry_close_cause)}
-                                                            {renderBusinessStatusBadge(c.business_status)}
+                                                            {(c.counterparty_claim && c.counterparty_claim.startsWith('【')) ? (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                                                    <span>公的機関処分・公認記録</span>
+                                                                </span>
+                                                            ) : (
+                                                                renderBusinessStatusBadge(c.business_status)
+                                                            )}
                                                         </div>
 
                                                         <div className="bg-slate-50 p-3 sm:p-3.5 rounded-lg border border-slate-200/80 mb-3 space-y-1.5 text-xs">
