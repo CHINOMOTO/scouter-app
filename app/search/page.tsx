@@ -201,7 +201,7 @@ export default function SearchPage() {
                 採用や契約前に過去のトラブルや問題行動の記録を照会し、トラブルを未然に防ぎます。
               </p>
             </div>
-            <div className={`grid ${isAdmin ? "grid-cols-3" : "grid-cols-2"} sm:flex items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto`}>
+            <div className="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto">
               <Link 
                 href="/dashboard" 
                 className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
@@ -209,15 +209,13 @@ export default function SearchPage() {
                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                 <span>戻る</span>
               </Link>
-              {isAdmin && (
-                <Link
-                  href="/cases"
-                  className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
-                >
-                  <ClipboardList className="w-3.5 h-3.5 shrink-0" />
-                  <span>登録一覧</span>
-                </Link>
-              )}
+              <Link
+                href="/cases"
+                className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
+              >
+                <ClipboardList className="w-3.5 h-3.5 shrink-0" />
+                <span>{isAdmin ? "登録一覧" : "自社登録一覧"}</span>
+              </Link>
               <Link
                 href="/cases/new"
                 className="btn-primary flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"

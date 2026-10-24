@@ -346,15 +346,13 @@ export default function Navigation() {
                                         label="トラブル情報を新規登録"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
-                                    {isAdmin && (
-                                        <SubmenuLink 
-                                            href="/cases"
-                                            active={pathname === "/cases"}
-                                            icon={<FileText className="w-3.5 h-3.5" />}
-                                            label="登録データ一覧（管理者）"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        />
-                                    )}
+                                    <SubmenuLink 
+                                        href="/cases"
+                                        active={pathname === "/cases"}
+                                        icon={<FileText className="w-3.5 h-3.5" />}
+                                        label={isAdmin ? "登録データ一覧（管理者）" : "自社登録トラブル一覧"}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    />
                                 </AccordionGroup>
                             )}
 
@@ -388,6 +386,13 @@ export default function Navigation() {
                                         active={pathname === "/credit/cases"}
                                         icon={<FileText className="w-3.5 h-3.5" />}
                                         label="公的処分・登録データ一覧"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    />
+                                    <SubmenuLink 
+                                        href="/credit/watchlist"
+                                        active={pathname === "/credit/watchlist"}
+                                        icon={<BookmarkCheck className="w-3.5 h-3.5" />}
+                                        label="取引先ウォッチリスト"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                 </AccordionGroup>

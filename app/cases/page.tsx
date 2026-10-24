@@ -479,19 +479,21 @@ export default function CasesPage() {
                     <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
                       <span>登録日: {new Date(c.created_at).toLocaleDateString()}</span>
                       <div className="flex items-center gap-3">
-                        {isAdmin && (
+                        {(isAdmin || c.status === "pending" || c.status === "rejected") && (
                           <div className="flex items-center gap-1 mr-1">
-                            <Link
-                              href={`/cases/${c.id}/edit`}
-                              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                              title="編集"
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </Link>
+                            {isAdmin && (
+                              <Link
+                                href={`/cases/${c.id}/edit`}
+                                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                title="編集"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Link>
+                            )}
                             <button
                               onClick={() => handleDelete(c.id)}
                               className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                              title="削除"
+                              title={isAdmin ? "削除" : "申請を取り下げる（削除）"}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>

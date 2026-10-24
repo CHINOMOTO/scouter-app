@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { FileText, AlertCircle, ArrowLeft } from "lucide-react";
+import { FileText, AlertCircle, ArrowLeft, Search } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 
 type CaseDetail = {
@@ -218,9 +218,14 @@ export default function CaseDetailPage() {
             <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center">
                 <div className="max-w-3xl w-full">
 
-                    <div className="mb-4 animate-fade-in">
-                        <Link href="/cases" className="btn-secondary text-sm inline-flex items-center gap-2 px-4 py-2 hover:bg-slate-100 transition-colors mb-4">
-                            一覧へ戻る
+                    <div className="mb-4 animate-fade-in flex items-center gap-2.5 flex-wrap">
+                        <Link href="/search" className="btn-secondary text-xs inline-flex items-center gap-1.5 px-3.5 h-9 rounded-lg hover:bg-slate-100 transition-colors">
+                            <Search className="w-3.5 h-3.5 shrink-0" />
+                            <span>応募者照会へ戻る</span>
+                        </Link>
+                        <Link href="/cases" className="btn-secondary text-xs inline-flex items-center gap-1.5 px-3.5 h-9 rounded-lg hover:bg-slate-100 transition-colors">
+                            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                            <span>登録一覧へ戻る</span>
                         </Link>
                     </div>
 

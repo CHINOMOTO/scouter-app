@@ -14,7 +14,8 @@ import {
     ShieldCheck, 
     Check,
     Clock,
-    ExternalLink
+    ExternalLink,
+    FileText
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { detectOfficialSource, OfficialSourceInfo } from "@/lib/officialSources";
@@ -185,13 +186,22 @@ export default function CreditCaseDetailPage() {
 
                     {/* ナビゲーション */}
                     <div className="flex items-center justify-between mb-8 gap-4 flex-wrap sm:flex-nowrap">
-                        <Link 
-                            href="/credit" 
-                            className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
-                        >
-                            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                            <span className="whitespace-nowrap">企業信用照会へ戻る</span>
-                        </Link>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Link 
+                                href="/credit" 
+                                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
+                            >
+                                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                                <span className="whitespace-nowrap">企業信用照会へ戻る</span>
+                            </Link>
+                            <Link 
+                                href="/credit/cases" 
+                                className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 font-medium border border-slate-300 hover:border-slate-400 bg-white text-slate-700 transition-colors whitespace-nowrap shrink-0 shadow-2xs hover:shadow-xs"
+                            >
+                                <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                <span className="whitespace-nowrap">公的処分・信用情報一覧</span>
+                            </Link>
+                        </div>
                         {isOwner && !isResolved && (
                             <button
                                 onClick={() => setShowResolveModal(true)}
