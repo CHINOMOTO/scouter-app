@@ -142,3 +142,38 @@ export function detectOfficialSource(item?: {
         sourceCategory: '民間取引先 債権未払い被害申告'
     };
 }
+
+/**
+ * 公表元機関の表示用短縮名称を取得（安全ガード付き）
+ */
+export function getCleanOfficialSourceName(
+    sourceInfo?: OfficialSourceInfo | null,
+    fallback: string = '公的機関'
+): string {
+    if (!sourceInfo || !sourceInfo.sourceName || typeof sourceInfo.sourceName !== 'string') {
+        return fallback;
+    }
+    const name = sourceInfo.sourceName.trim();
+    if (name.includes('（')) {
+        return name.split('（')[0] || fallback;
+    }
+    if (name.includes('(')) {
+        return name.split('(')[0] || fallback;
+    }
+    return name || fallback;
+}
+
+/**
+ * 登録元または公表元の安全な表示文字列を取得
+ */
+export function getSourceDisplayName(
+    sourceInfo?: OfficialSourceInfo | null,
+    companyName?: string | null,
+    defaultFallback: string = '加盟企業'
+): string {
+    if (sourceInfo?.isOfficial) {
+        return getCleanOfficialSourceName(sourceInfo, '公的機関');
+    }
+    return companyName?.trim() || defaultFallback;
+}
+

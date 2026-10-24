@@ -21,7 +21,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Pagination } from "@/components/Pagination";
 import { Toast, ToastMessage } from "@/components/Toast";
-import { detectOfficialSource } from "@/lib/officialSources";
+import { detectOfficialSource, getCleanOfficialSourceName, getSourceDisplayName } from "@/lib/officialSources";
 
 type CreditCaseItem = {
     id: string;
@@ -124,10 +124,11 @@ export default function CreditCasesListPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [toast, setToast] = useState<ToastMessage | null>(null);
 
-    // 期日超過日数の計算
+    // 期日超過日数の計算（Null-Safe & NaN防止）
     const calculateOverdueDays = (dueDateStr?: string | null) => {
         if (!dueDateStr) return 0;
         const due = new Date(dueDateStr).getTime();
+        if (isNaN(due)) return 0;
         const now = new Date().getTime();
         const diff = Math.floor((now - due) / (1000 * 60 * 60 * 24));
         return diff > 0 ? diff : 0;
@@ -207,18 +208,24 @@ export default function CreditCasesListPage() {
             });
         }
 
-        // ソート
+        // ソート（全キー完全Null-Safe）
         result.sort((a, b) => {
             const dir = sortConfig.direction === "asc" ? 1 : -1;
             switch (sortConfig.key) {
-                case "created_at":
-                    return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
-                case "due_date":
-                    return (new Date(a.due_date).getTime() - new Date(b.due_date).getTime()) * dir;
+                case "created_at": {
+                    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                    return ((isNaN(timeA) ? 0 : timeA) - (isNaN(timeB) ? 0 : timeB)) * dir;
+                }
+                case "due_date": {
+                    const timeA = a.due_date ? new Date(a.due_date).getTime() : 0;
+                    const timeB = b.due_date ? new Date(b.due_date).getTime() : 0;
+                    return ((isNaN(timeA) ? 0 : timeA) - (isNaN(timeB) ? 0 : timeB)) * dir;
+                }
                 case "company_name":
                     return (a.company_name || "").localeCompare(b.company_name || "") * dir;
                 case "amount":
-                    return (a.amount - b.amount) * dir;
+                    return ((a.amount ?? 0) - (b.amount ?? 0)) * dir;
                 case "payment_status":
                     return (a.payment_status || "").localeCompare(b.payment_status || "") * dir;
                 default:
@@ -459,7 +466,7 @@ export default function CreditCasesListPage() {
                                                      {renderRegistryBadge(c.registry_status, c.registry_close_cause)}
                                                      {sourceInfo.isOfficial ? (
                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
-                                                           <span>🏛️ 公表元: {(sourceInfo?.sourceName || '').split('（')[0] || '公的機関'}</span>
+                                                           <span>🏛️ 公表元: {getCleanOfficialSourceName(sourceInfo)}</span>
                                                        </span>
                                                    ) : (
                                                        renderBusinessStatusBadge(c.business_status)
@@ -478,11 +485,11 @@ export default function CreditCasesListPage() {
                                                      </div>
                                                      <div className="flex justify-between items-center">
                                                          <span className="text-slate-500 font-medium">{sourceInfo.isOfficial ? "公表日" : "当初支払期日"}</span>
-                                                          <span className="font-mono text-slate-800">{c.due_date}</span>
+                                                          <span className="font-mono text-slate-800">{c.due_date || "-"}</span>
                                                       </div>
                                                       <div className="flex justify-between items-center">
                                                           <span className="text-slate-500 font-medium">{sourceInfo.isOfficial ? "公表機関" : "登録元"}</span>
-                                                          <span className="text-slate-700 font-medium truncate max-w-[200px] sm:max-w-[240px] text-right">{sourceInfo.isOfficial ? sourceInfo.sourceName.split('（')[0] : (c.companies?.name || "加盟企業")}</span>
+                                                          <span className="text-slate-700 font-medium truncate max-w-[200px] sm:max-w-[240px] text-right">{getSourceDisplayName(sourceInfo, c.companies?.name)}</span>
                                                       </div>
                                                      {c.location && (
                                                          <div className="flex justify-between items-center">
@@ -503,7 +510,7 @@ export default function CreditCasesListPage() {
 
                                             {/* フッター */}
                                             <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-                                                <span>登録日: {new Date(c.created_at).toLocaleDateString()}</span>
+                                                <span>登録日: {c.created_at ? new Date(c.created_at).toLocaleDateString() : "-"}</span>
                                                 <Link
                                                     href={`/credit/${c.id}`}
                                                     className="text-blue-600 hover:text-blue-700 font-bold group-hover:translate-x-0.5 transition-all flex items-center gap-1"
