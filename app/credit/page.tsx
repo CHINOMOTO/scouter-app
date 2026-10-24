@@ -911,7 +911,7 @@ export default function CreditSearchPage() {
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {cases.map((c) => {
-                                            const sourceInfo = detectOfficialSource(c);
+                                            const sourceInfo = detectOfficialSource(c) || { isOfficial: false, sourceName: "加盟企業", sourceCategory: "被害申告" };
                                             const isResolved = c.payment_status === "resolved";
                                             return (
                                                 <Link
@@ -961,7 +961,7 @@ export default function CreditSearchPage() {
                                                             {renderRegistryBadge(c.registry_status, c.registry_close_cause)}
                                                             {sourceInfo.isOfficial ? (
                                                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
-                                                                    <span>🏛️ 公表元: {sourceInfo.sourceName.split('（')[0]}</span>
+                                                                    <span>🏛️ 公表元: {(sourceInfo?.sourceName || '').split('（')[0] || '公的機関'}</span>
                                                                 </span>
                                                             ) : (
                                                                 renderBusinessStatusBadge(c.business_status)
@@ -974,7 +974,7 @@ export default function CreditSearchPage() {
                                                                     {sourceInfo.isOfficial ? (c.amount > 0 ? "公表不払額" : "処分区分") : "請求金額"}
                                                                 </span>
                                                                 <span className="text-slate-900 font-extrabold text-sm font-mono">
-                                                                    {sourceInfo.isOfficial && c.amount === 0 ? "行政処分・公認記録" : `¥${c.amount.toLocaleString()}`}
+                                                                    {sourceInfo.isOfficial && c.amount === 0 ? "行政処分・公認記録" : `¥${(c.amount ?? 0).toLocaleString()}`}
                                                                 </span>
                                                             </div>
                                                             <div className="flex justify-between items-center">

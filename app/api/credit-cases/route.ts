@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { detectOfficialSource } from '@/lib/officialSources';
 
 // GET: 未払い企業情報の検索・一覧取得
 export async function GET(request: Request) {

@@ -377,7 +377,7 @@ export default function AdminCreditCaseDetailPage() {
                                                     {src.isOfficial ? "公表機関・情報元" : "登録申請元企業"}
                                                 </span>
                                                 <span className="font-bold text-slate-900">
-                                                    {src.isOfficial ? "🏛️ " + src.sourceName : (caseDetail.companies?.name || "加盟企業")}
+                                                    {src.isOfficial ? "🏛️ " + src?.sourceName || '' : (caseDetail.companies?.name || "加盟企業")}
                                                 </span>
                                             </>
                                         );

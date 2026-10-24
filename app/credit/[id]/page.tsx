@@ -161,7 +161,7 @@ export default function CreditCaseDetailPage() {
 
     const isOwner = caseData.registered_by_company_id === currentCompanyId;
     const isResolved = caseData.payment_status === "resolved";
-    const sourceInfo = caseData.official_source || detectOfficialSource(caseData);
+    const sourceInfo = caseData.official_source || detectOfficialSource(caseData) || { isOfficial: false, sourceName: "加盟企業", sourceCategory: "被害申告" };
 
     // 支払期日からの経過日数（遅延日数）の算出
     let currentDelayDays = 0;
@@ -239,7 +239,7 @@ export default function CreditCaseDetailPage() {
                                             <span>公的機関 公認処分・確定記録</span>
                                         </div>
                                         <div className="text-[11px] text-blue-700 mt-0.5 font-bold">
-                                            公表日: {caseData.due_date?.replace(/-/g, "/")}
+                                            公表日: {caseData.due_date?.replace(/-/g, "/") || "-"}
                                         </div>
                                     </div>
                                 ) : isResolved ? (
@@ -281,7 +281,7 @@ export default function CreditCaseDetailPage() {
                                     <span className="text-xs font-bold text-slate-500 block mb-1">公表日 / 処分発令日</span>
                                     <div className="flex flex-col sm:items-end">
                                         <span className="text-lg font-bold text-slate-900 font-mono">
-                                            {caseData.due_date?.replace(/-/g, "/")}
+                                            {caseData.due_date?.replace(/-/g, "/") || "-"}
                                         </span>
                                         <span className="mt-1 text-[11px] font-bold text-blue-700 bg-blue-100/70 border border-blue-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
                                             確定公表情報（民間債権遅延ではありません）
@@ -296,14 +296,14 @@ export default function CreditCaseDetailPage() {
                                         未払い金額（税込）
                                     </span>
                                     <span className="text-4xl font-extrabold text-slate-900 font-mono">
-                                        ¥{caseData.amount.toLocaleString()}
+                                        ¥{(caseData.amount ?? 0).toLocaleString()}
                                     </span>
                                 </div>
                                 <div className="text-right">
                                     <span className="text-xs font-bold text-slate-500 block mb-1">当初支払期日</span>
                                     <div className="flex flex-col items-end">
                                         <span className="text-lg font-bold text-slate-900 font-mono">
-                                            {caseData.due_date.replace(/-/g, "/")}
+                                            {caseData.due_date?.replace(/-/g, "/") || "-"}
                                         </span>
                                         {!isResolved && currentDelayDays > 0 && (
                                             <span className="mt-1 text-[11px] font-bold text-rose-700 bg-rose-100/70 border border-rose-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1">

@@ -9,15 +9,23 @@ export interface OfficialSourceInfo {
     sourceUrl?: string;
 }
 
-export function detectOfficialSource(item: {
+export function detectOfficialSource(item?: {
     counterparty_claim?: string | null;
     evidence_urls?: string[] | null;
     admin_notes?: string | null;
     companies?: { name?: string } | null;
-}): OfficialSourceInfo {
-    const claim = item?.counterparty_claim || '';
-    const notes = item?.admin_notes || '';
-    const urls = Array.isArray(item?.evidence_urls) ? item.evidence_urls : [];
+} | null): OfficialSourceInfo {
+    if (!item) {
+        return {
+            isOfficial: false,
+            sourceName: '加盟企業',
+            sourceCategory: '民間取引先 被害申告'
+        };
+    }
+
+    const claim = typeof item.counterparty_claim === 'string' ? item.counterparty_claim : '';
+    const notes = typeof item.admin_notes === 'string' ? item.admin_notes : '';
+    const urls = Array.isArray(item.evidence_urls) ? item.evidence_urls : [];
 
     // 1. 厚生労働省（労働局・労働基準監督署）
     if (
@@ -47,7 +55,7 @@ export function detectOfficialSource(item: {
             isOfficial: true,
             sourceName: `${agencyName} ネガティブ情報検索システム`,
             sourceCategory: '宅地建物取引業法・建築基準法に基づく監督処分',
-            sourceUrl: urls.find(u => typeof u === 'string' && u.includes('mlit.go.jp')) || 'https://www.mlit.go.jp/nega-inf/'
+            sourceUrl: urls.find(u => typeof u === 'string' && (u.includes('mlit.go.jp') || u.includes('nega-inf'))) || 'https://www.mlit.go.jp/nega-inf/'
         };
     }
 
