@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { detectOfficialSource, OfficialSourceInfo } from "@/lib/officialSources";
+import { OfficialDataNotice } from "@/components/OfficialDataNotice";
 
 type CreditCaseDetail = {
     id: string;
@@ -369,9 +370,14 @@ export default function CreditCaseDetailPage() {
                                             公的機関による処分・命令記録
                                         </span>
                                     </div>
-                                    <p className="text-[11px] text-slate-600 leading-snug">
-                                        {sourceInfo.sourceName}が法令に基づき公表した確定公表データです（民間加盟企業からの被害申告ではありません）。
-                                    </p>
+                                    <div className="space-y-1 text-[11px] text-slate-600 leading-snug">
+                                        <p>
+                                            {sourceInfo.sourceName}が法令に基づき公表した公認確定記録をもとにMIERISが独自に抽出・加工して掲載しています（民間申告データではありません）。
+                                        </p>
+                                        <p className="text-[10px] text-slate-400">
+                                            ※国・各省庁が本サービスを直接保証・認証したものではありません。是正措置の完了等による最新状況は公表元一次資料をご確認ください。
+                                        </p>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="p-4 rounded-xl border bg-slate-50 border-slate-200">
@@ -515,6 +521,11 @@ export default function CreditCaseDetailPage() {
                                 <span>運営管理者承認済み</span>
                             </span>
                         </div>
+                    </div>
+
+                    {/* 公的オープンデータ出典および利用規約（免責事項） */}
+                    <div className="mt-6">
+                        <OfficialDataNotice />
                     </div>
                 </div>
 

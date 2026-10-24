@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { detectOfficialSource, getCleanOfficialSourceName, getSourceDisplayName } from "@/lib/officialSources";
+import { OfficialDataNotice } from "@/components/OfficialDataNotice";
 import { 
     Search, 
     Plus, 
@@ -1023,6 +1024,11 @@ export default function CreditSearchPage() {
                             )}
                         </>
                     )}
+
+                    {/* 公的オープンデータ出典および利用規約（免責事項） */}
+                    <div className="mt-8">
+                        <OfficialDataNotice />
+                    </div>
                 </div>
             </div>
         </RequireAuth>

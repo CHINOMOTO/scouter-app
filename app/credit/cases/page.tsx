@@ -23,6 +23,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { Pagination } from "@/components/Pagination";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { detectOfficialSource, getCleanOfficialSourceName, getSourceDisplayName } from "@/lib/officialSources";
+import { OfficialDataNotice } from "@/components/OfficialDataNotice";
 
 type CreditCaseItem = {
     id: string;
@@ -536,6 +537,11 @@ export default function CreditCasesListPage() {
                             />
                         </div>
                     )}
+
+                    {/* 公的オープンデータ出典および利用規約（免責事項） */}
+                    <div className="mt-8 animate-fade-in">
+                        <OfficialDataNotice />
+                    </div>
                 </div>
             </div>
         </RequireAuth>
