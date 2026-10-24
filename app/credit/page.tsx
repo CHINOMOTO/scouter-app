@@ -335,7 +335,7 @@ export default function CreditSearchPage() {
 
             setCases(fetchedCases);
             setHasSearched(true);
-            setSearchedCorp(normalizedCorp || null);
+            setSearchedCorp(normalizedCorp || "");
 
             // 法人番号・インボイス番号がある場合は公的プロファイル・インボイス照会
             if (normalizedCorp) {

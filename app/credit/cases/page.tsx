@@ -15,7 +15,8 @@ import {
     Clock, 
     ArrowUpDown, 
     FileText, 
-    ExternalLink
+    ExternalLink,
+    ShieldCheck
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
