@@ -479,6 +479,13 @@ export default function CreditSearchPage() {
                                 <span>戻る</span>
                             </Link>
                             <Link
+                                href="/credit/cases"
+                                className="btn-secondary flex items-center justify-center gap-1.5 px-3 sm:px-3.5 h-9 rounded-lg font-bold text-xs border border-slate-300 hover:border-slate-400 bg-white text-slate-800 transition-all whitespace-nowrap shadow-2xs hover:shadow-xs"
+                            >
+                                <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                <span>公的処分・信用情報一覧</span>
+                            </Link>
+                            <Link
                                 href="/credit/new"
                                 className="btn-primary flex items-center justify-center gap-1.5 px-3 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
                             >
@@ -514,19 +521,25 @@ export default function CreditSearchPage() {
                         <>
                             {/* 統計サマリーカード */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                                <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-2xs">
+                                <Link 
+                                    href="/credit/cases"
+                                    className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-2xs hover:border-blue-400 hover:shadow-xs transition-all group block"
+                                >
                                     <div className="flex items-center justify-between text-slate-500 mb-1.5 sm:mb-2">
-                                        <span className="text-xs font-bold tracking-wider text-slate-600">事故情報 登録企業</span>
-                                        <Building2 className="w-4 h-4 text-slate-400" />
+                                        <span className="text-xs font-bold tracking-wider text-slate-600 group-hover:text-blue-600 transition-colors">公的処分・登録データ一覧</span>
+                                        <Building2 className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
                                     </div>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 font-mono tabular-nums">
+                                        <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 font-mono tabular-nums group-hover:text-blue-600 transition-colors">
                                             {totalCases}
                                         </span>
                                         <span className="text-xs font-bold text-slate-500 ml-1">社 / 件</span>
                                     </div>
-                                    <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1">過去に未払い・遅延の発生が報告された企業</p>
-                                </div>
+                                    <p className="text-[10px] sm:text-[11px] text-blue-600 font-medium mt-1 flex items-center gap-0.5">
+                                        <span>一覧データを閲覧する</span>
+                                        <ArrowRight className="w-3 h-3" />
+                                    </p>
+                                </Link>
 
                                 <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-2xs">
                                     <div className="flex items-center justify-between text-slate-500 mb-1.5 sm:mb-2">

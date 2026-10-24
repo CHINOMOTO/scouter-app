@@ -288,13 +288,22 @@ export default function NewCreditCasePage() {
 
                     {/* ナビゲーション */}
                     <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-in flex-wrap gap-2.5">
-                        <Link 
-                            href="/credit" 
-                            className="btn-secondary text-xs h-9 px-3 sm:px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
-                        >
-                            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                            <span className="whitespace-nowrap">企業信用照会へ戻る</span>
-                        </Link>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Link 
+                                href="/credit" 
+                                className="btn-secondary text-xs h-9 px-3 sm:px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
+                            >
+                                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                                <span className="whitespace-nowrap">企業信用照会へ戻る</span>
+                            </Link>
+                            <Link 
+                                href="/credit/cases" 
+                                className="btn-secondary text-xs h-9 px-3 sm:px-3.5 rounded-lg flex items-center gap-1.5 font-medium border border-slate-300 hover:border-slate-400 bg-white text-slate-700 transition-colors whitespace-nowrap shrink-0 shadow-2xs hover:shadow-xs"
+                            >
+                                <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                <span className="whitespace-nowrap">公的処分・登録データ一覧</span>
+                            </Link>
+                        </div>
                         <div className="flex items-center gap-2">
                             <span className="text-[11px] font-extrabold text-blue-600 uppercase tracking-widest font-mono">
                                 MIERIS CREDIT
