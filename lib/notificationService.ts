@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import nodemailer from "nodemailer";
 
 export type ReviewNotificationParams = {
   type: "work" | "credit"; // 就業トラブル(work) または 企業信用(credit)
@@ -64,7 +65,6 @@ export async function sendCaseReviewNotification(params: ReviewNotificationParam
     }
 
     const typeLabel = type === "work" ? "就業トラブル情報" : "企業信用（未払い）情報";
-    const statusLabel = status === "approved" ? "承認" : "却下（見送り）";
     const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.m-m-m-mieris0610.com";
 
     const subject = status === "approved"
@@ -123,29 +123,57 @@ MIERIS 運営事務局
 ──────────────────────────────`;
     }
 
+    // A. Gmail / SMTP 設定がある場合（Gmail から直接送信）
+    const gmailUser = process.env.GMAIL_USER || process.env.SMTP_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASSWORD;
+
+    if (gmailUser && gmailPass) {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: gmailUser,
+          pass: gmailPass,
+        },
+      });
+
+      const fromAddress = process.env.EMAIL_FROM || `MIERIS 運営事務局 <${gmailUser}>`;
+
+      const info = await transporter.sendMail({
+        from: fromAddress,
+        to: recipientEmails,
+        subject: subject,
+        text: textContent,
+      });
+
+      console.log(`[GMAIL SENT] Email sent via Gmail (${gmailUser}) to: ${recipientEmails.join(", ")} messageId: ${info.messageId}`);
+      return { sent: true, provider: "gmail", messageId: info.messageId, recipients: recipientEmails };
+    }
+
+    // B. Resend 設定がある場合
     const resendApiKey = process.env.RESEND_API_KEY;
-    if (!resendApiKey) {
-      console.log(`[SIMULATED EMAIL] RESEND_API_KEY not set. Email would be sent to: ${recipientEmails.join(", ")}\nSubject: ${subject}\nContent:\n${textContent}`);
-      return { sent: true, simulated: true, recipients: recipientEmails };
+    if (resendApiKey) {
+      const { Resend } = await import("resend");
+      const resend = new Resend(resendApiKey);
+      const fromEmail = process.env.RESEND_FROM_EMAIL || "MIERIS 運営事務局 <onboarding@resend.dev>";
+
+      const emailResult = await resend.emails.send({
+        from: fromEmail,
+        to: recipientEmails,
+        subject: subject,
+        text: textContent,
+      });
+
+      if (emailResult.error) {
+        console.error("Resend error in case review notification:", emailResult.error);
+        return { sent: false, error: emailResult.error.message };
+      }
+
+      return { sent: true, provider: "resend", recipients: recipientEmails, id: emailResult.data?.id };
     }
 
-    const { Resend } = await import("resend");
-    const resend = new Resend(resendApiKey);
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "MIERIS 運営事務局 <onboarding@resend.dev>";
-
-    const emailResult = await resend.emails.send({
-      from: fromEmail,
-      to: recipientEmails,
-      subject: subject,
-      text: textContent,
-    });
-
-    if (emailResult.error) {
-      console.error("Resend error in case review notification:", emailResult.error);
-      return { sent: false, error: emailResult.error.message };
-    }
-
-    return { sent: true, recipients: recipientEmails, id: emailResult.data?.id };
+    // C. いずれも未設定の場合はログ出力（シミュレーション）
+    console.log(`[SIMULATED EMAIL] No email credentials set (GMAIL_USER or RESEND_API_KEY). Email would be sent to: ${recipientEmails.join(", ")}\nSubject: ${subject}\nContent:\n${textContent}`);
+    return { sent: true, simulated: true, recipients: recipientEmails };
 
   } catch (error: any) {
     console.error("Error in sendCaseReviewNotification:", error);
