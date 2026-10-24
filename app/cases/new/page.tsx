@@ -240,7 +240,7 @@ export default function NewCasePage() {
               管理者の承認をお待ちください。
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+            <div className="flex flex-col sm:flex-row gap-3.5 justify-center relative z-10 flex-wrap">
               <button
                 onClick={() => {
                   setIsSubmitted(false);
@@ -259,11 +259,14 @@ export default function NewCasePage() {
                   setSelectedFiles([]);
                   window.scrollTo(0, 0);
                 }}
-                className="btn-secondary py-3 px-6"
+                className="btn-secondary py-3 px-6 text-xs sm:text-sm font-bold"
               >
                 続けて登録する
               </button>
-              <Link href="/dashboard" className="btn-primary py-3 px-6">
+              <Link href="/cases" className="btn-secondary py-3 px-6 text-xs sm:text-sm font-bold border border-slate-300 hover:border-slate-400 bg-white text-slate-800">
+                自社登録トラブル一覧へ
+              </Link>
+              <Link href="/dashboard" className="btn-primary py-3 px-6 text-xs sm:text-sm font-bold">
                 ダッシュボードへ戻る
               </Link>
             </div>

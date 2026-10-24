@@ -486,13 +486,6 @@ export default function CreditSearchPage() {
                                 <span>公的処分・信用情報一覧</span>
                             </Link>
                             <Link
-                                href="/credit/watchlist"
-                                className="btn-secondary flex items-center justify-center gap-1.5 px-3 sm:px-3.5 h-9 rounded-lg font-bold text-xs border border-slate-300 hover:border-slate-400 bg-white text-slate-800 transition-all whitespace-nowrap shadow-2xs hover:shadow-xs"
-                            >
-                                <BookmarkCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                <span>取引先ウォッチリスト</span>
-                            </Link>
-                            <Link
                                 href="/credit/new"
                                 className="btn-primary flex items-center justify-center gap-1.5 px-3 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
                             >

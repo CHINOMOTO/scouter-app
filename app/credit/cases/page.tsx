@@ -292,7 +292,7 @@ export default function CreditCasesListPage() {
                         <div>
                             <div className="flex items-center gap-2.5 sm:gap-3">
                                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                                    企業信用 登録データ一覧
+                                    公的処分・企業信用 登録データ一覧
                                 </h1>
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
                                     全 {filteredCases.length} 件
@@ -300,8 +300,8 @@ export default function CreditCasesListPage() {
                             </div>
                             <p className="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
                                 {isAdmin 
-                                    ? "共有データベースに登録されている取引先企業の未払い・支払遅延データ一覧です（管理者モード）。"
-                                    : "貴社が登録申請した未払い・支払遅延企業の管理一覧です（※他社データの照会は「企業信用 検索・照会」画面より実行してください）。"}
+                                    ? "共有データベースに登録されている取引先企業の全遅延・未払いデータおよび公的処分一覧です（管理者モード）。"
+                                    : "国土交通省・厚生労働省等の公的確定処分データ、および貴社が登録申請した信用管理データの全件一覧です。"}
                             </p>
                         </div>
                         <div className="shrink-0 w-full sm:w-auto">
