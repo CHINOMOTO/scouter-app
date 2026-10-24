@@ -102,40 +102,54 @@ export default function NewCasePage() {
         throw new Error("所属会社情報が見つかりません。");
       }
 
-      if (nameKana && !/^[ァ-ヶー\s　]*$/.test(nameKana)) {
+      if (!name.trim()) {
+        throw new Error("氏名を入力してください。");
+      }
+      if (!nameKana.trim()) {
+        throw new Error("氏名（カナ）を入力してください。");
+      }
+      if (!/^[ァ-ヶー\s　]+$/.test(nameKana.trim())) {
         throw new Error("氏名（カナ）は全角カタカナで入力してください。");
+      }
+      if (!birthYear || !birthMonth || !birthDay) {
+        throw new Error("生年月日（年・月・日）をすべて入力してください。");
+      }
+      if (!gender) {
+        throw new Error("性別を選択してください。");
+      }
+      if (!phoneLast4 || phoneLast4.length !== 4) {
+        throw new Error("携帯電話番号（下4桁）を正確に4桁で入力してください。");
+      }
+      if (!city.trim()) {
+        throw new Error("住所（市区町村）を入力してください。");
+      }
+      if (!occurrenceYear || !occurrenceMonth || !occurrenceDay) {
+        throw new Error("トラブル発生時期（年・月・日）をすべて入力してください。");
+      }
+      if (!reason.trim()) {
+        throw new Error("登録理由 / 詳細を入力してください。");
+      }
+      if (selectedFiles.length === 0) {
+        throw new Error("裏付けとなる添付資料（身分証、勤怠表、やり取り画像、損害資料等）を必ず1点以上添付してください。");
       }
 
       // 共通の日付バリデーション関数
       const validateDate = (y: string, m: string, d: string, label: string) => {
-        if (!y && !m && !d) return; // 空ならOK
-        if (!y || !m || !d) {
-          throw new Error(`${label}は「年・月・日」すべてを入力するか、すべて空にしてください。`);
-        }
         const yearInt = parseInt(y, 10);
         const monthInt = parseInt(m, 10);
         const dayInt = parseInt(d, 10);
         
         const dateObj = new Date(yearInt, monthInt - 1, dayInt);
-        // Dateオブジェクトが自動補正した結果が元の値と異なる場合は無効な日付（例: 2月30日 -> 3月2日）
         if (dateObj.getFullYear() !== yearInt || dateObj.getMonth() + 1 !== monthInt || dateObj.getDate() !== dayInt) {
           throw new Error(`${label}に存在しない日付（${yearInt}年${monthInt}月${dayInt}日）が入力されています。正しい日付を入力してください。`);
         }
-        
-        // 常識的な年の範囲チェック
         if (yearInt < 1900 || yearInt > 2100) {
           throw new Error(`${label}の「年」は1900〜2100の範囲で入力してください。`);
         }
       };
 
-      // 生年月日と発生時期のバリデーションを実行
       validateDate(birthYear, birthMonth, birthDay, "生年月日");
       validateDate(occurrenceYear, occurrenceMonth, occurrenceDay, "トラブル発生時期");
-
-      // 電話番号のバリデーション
-      if (phoneLast4 && phoneLast4.length !== 4) {
-        throw new Error("電話番号（下4桁）は必ず4桁の数字で入力してください。");
-      }
 
       // ファイルアップロード処理
       const uploadedUrls: string[] = [];
@@ -312,7 +326,7 @@ export default function NewCasePage() {
                     />
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
-                    <Label>氏名（カナ）</Label>
+                    <Label required>氏名（カナ）</Label>
                     <input
                       type="text"
                       value={nameKana}
@@ -324,7 +338,7 @@ export default function NewCasePage() {
                     />
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
-                    <Label>生年月日</Label>
+                    <Label required>生年月日</Label>
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <div className="flex-1 flex items-center gap-1">
                         <input
@@ -365,7 +379,7 @@ export default function NewCasePage() {
                     </div>
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
-                    <Label>性別</Label>
+                    <Label required>性別</Label>
                     <select
                       value={gender}
                       onChange={(e) => setGender(e.target.value)}
@@ -384,7 +398,7 @@ export default function NewCasePage() {
               <Section title="トラブル情報">
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
                   <div className="space-y-2">
-                    <Label>携帯電話番号（下4桁）</Label>
+                    <Label required>携帯電話番号（下4桁）</Label>
                     <input
                       type="text"
                       maxLength={4}
@@ -400,7 +414,7 @@ export default function NewCasePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>住所（市区町村）</Label>
+                    <Label required>住所（市区町村）</Label>
                     <input
                       type="text"
                       value={city}
@@ -410,7 +424,7 @@ export default function NewCasePage() {
                     />
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
-                    <Label>発生日</Label>
+                    <Label required>発生日</Label>
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <div className="flex-1 flex items-center gap-1">
                         <input
@@ -464,7 +478,7 @@ export default function NewCasePage() {
                 </div>
 
                 <div className="space-y-2 mt-4">
-                  <Label>添付資料（画像・PDF等）</Label>
+                  <Label required>添付資料（身分証・タイムカード・画像等の証拠添付が必須です）</Label>
                   <div className="border border-dashed border-slate-300 rounded-xl p-5 sm:p-6 text-center hover:bg-slate-50 transition-colors relative">
                     <input
                       type="file"

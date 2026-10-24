@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendCaseReviewNotification } from '@/lib/notificationService';
 
-// PATCH: 管理者による審査（承認 / 却下）
+// PATCH: 管理者による審査（承認 / 却下）および登録内容の直接編集（誤字脱字修正用）
 export async function PATCH(
     request: Request,
     context: { params: Promise<{ id: string }> }
@@ -44,23 +44,48 @@ export async function PATCH(
         }
 
         const body = await request.json();
-        const { status, adminNotes } = body;
+        const {
+            status,
+            adminNotes,
+            company_name,
+            corporate_number,
+            location,
+            invoice_date,
+            amount,
+            due_date,
+            business_status,
+            counterparty_claim
+        } = body;
 
-        if (!status || !['approved', 'rejected', 'pending'].includes(status)) {
-            return NextResponse.json({ error: 'ステータスが不正です' }, { status: 400 });
+        const updatePayload: Record<string, any> = {
+            updated_at: new Date().toISOString()
+        };
+
+        if (status !== undefined) {
+            if (!['approved', 'rejected', 'pending'].includes(status)) {
+                return NextResponse.json({ error: 'ステータスが不正です' }, { status: 400 });
+            }
+            if (status === 'rejected' && !adminNotes?.trim()) {
+                return NextResponse.json({ error: '却下理由を入力してください' }, { status: 400 });
+            }
+            updatePayload.status = status;
+            updatePayload.admin_notes = adminNotes || null;
+        } else if (adminNotes !== undefined) {
+            updatePayload.admin_notes = adminNotes || null;
         }
 
-        if (status === 'rejected' && !adminNotes?.trim()) {
-            return NextResponse.json({ error: '却下理由を入力してください' }, { status: 400 });
-        }
+        if (company_name !== undefined) updatePayload.company_name = company_name.trim();
+        if (corporate_number !== undefined) updatePayload.corporate_number = corporate_number?.trim() || null;
+        if (location !== undefined) updatePayload.location = location?.trim() || null;
+        if (invoice_date !== undefined) updatePayload.invoice_date = invoice_date || null;
+        if (amount !== undefined) updatePayload.amount = Number(amount) || 0;
+        if (due_date !== undefined) updatePayload.due_date = due_date;
+        if (business_status !== undefined) updatePayload.business_status = business_status;
+        if (counterparty_claim !== undefined) updatePayload.counterparty_claim = counterparty_claim?.trim() || null;
 
         const { data: updatedCase, error } = await supabaseAdmin
             .from('credit_cases')
-            .update({
-                status,
-                admin_notes: adminNotes || null,
-                updated_at: new Date().toISOString()
-            })
+            .update(updatePayload)
             .eq('id', id)
             .select()
             .single();

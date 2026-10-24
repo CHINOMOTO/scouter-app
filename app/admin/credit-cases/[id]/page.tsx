@@ -22,7 +22,9 @@ import {
     X,
     File,
     Download,
-    Eye
+    Eye,
+    Edit3,
+    Save
 } from "lucide-react";
 
 type CreditCaseDetail = {
@@ -36,6 +38,7 @@ type CreditCaseDetail = {
     payment_status: "unpaid" | "resolved";
     resolved_delay_days?: number | null;
     counterparty_claim?: string | null;
+    business_status?: string | null;
     evidence_urls?: string[];
     status: "pending" | "approved" | "rejected";
     admin_notes?: string | null;
@@ -75,6 +78,18 @@ export default function AdminCreditCaseDetailPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [toast, setToast] = useState<ToastMessage | null>(null);
 
+    // 編集モード用ステート（誤字脱字・表現修正用）
+    const [isEditing, setIsEditing] = useState(false);
+    const [editCompanyName, setEditCompanyName] = useState("");
+    const [editCorporateNumber, setEditCorporateNumber] = useState("");
+    const [editLocation, setEditLocation] = useState("");
+    const [editInvoiceDate, setEditInvoiceDate] = useState("");
+    const [editAmount, setEditAmount] = useState("");
+    const [editDueDate, setEditDueDate] = useState("");
+    const [editBusinessStatus, setEditBusinessStatus] = useState("unreachable");
+    const [editCounterpartyClaim, setEditCounterpartyClaim] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
+
     const fetchDetail = async () => {
         if (!id) return;
         setLoading(true);
@@ -111,6 +126,14 @@ export default function AdminCreditCaseDetailPage() {
             const c = data.case as CreditCaseDetail;
             setCaseDetail(c);
             setAdminNotes(c.admin_notes || "");
+            setEditCompanyName(c.company_name || "");
+            setEditCorporateNumber(c.corporate_number || "");
+            setEditLocation(c.location || "");
+            setEditInvoiceDate(c.invoice_date || "");
+            setEditAmount(String(c.amount ?? 0));
+            setEditDueDate(c.due_date || "");
+            setEditBusinessStatus(c.business_status || "unreachable");
+            setEditCounterpartyClaim(c.counterparty_claim || "");
 
             // 証拠ファイルの署名付きURLを取得
             if (c.evidence_urls && Array.isArray(c.evidence_urls) && c.evidence_urls.length > 0) {

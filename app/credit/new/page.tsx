@@ -180,6 +180,21 @@ export default function NewCreditCasePage() {
             return;
         }
 
+        if (!location.trim()) {
+            setErrorMsg("本社所在地または現場拠点の住所を入力してください。");
+            return;
+        }
+
+        if (!invoiceDate) {
+            setErrorMsg("請求日（または契約・発注日）を入力してください。");
+            return;
+        }
+
+        if (files.length === 0) {
+            setErrorMsg("債権の存在を証明する裏付け資料（請求書、契約書、督促状、同意書等）を必ず1点以上添付してください。");
+            return;
+        }
+
         setUploading(true);
 
         try {
@@ -429,10 +444,11 @@ export default function NewCreditCasePage() {
                                 </div>
                                 <div className="space-y-1.5 sm:space-y-2">
                                     <label className="text-xs sm:text-sm font-bold text-slate-800">
-                                        本社所在地 / 現場拠点
+                                        本社所在地 / 現場拠点 <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
+                                        required
                                         value={location}
                                         onChange={(e) => setLocation(e.target.value)}
                                         className="input-field py-2.5 sm:py-3 text-sm sm:text-base"
@@ -551,7 +567,7 @@ export default function NewCreditCasePage() {
                                 <div className="col-span-1 sm:col-span-2 space-y-2 w-full min-w-0">
                                     <div className="flex flex-wrap items-center justify-between gap-1.5">
                                         <label className="text-xs font-bold text-slate-700">
-                                            請求日（請求書の発行日）
+                                            請求日（請求書の発行日） <span className="text-red-500">*</span>
                                         </label>
                                         {invoiceDate && dueDate && invoiceDate > dueDate && (
                                             <span className="text-[10px] text-amber-600 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded shrink-0">
@@ -562,6 +578,7 @@ export default function NewCreditCasePage() {
                                     <div className="relative flex items-center w-full min-w-0">
                                         <input
                                             type="date"
+                                            required
                                             value={invoiceDate}
                                             onChange={(e) => setInvoiceDate(e.target.value)}
                                             className="w-full min-w-0 bg-white border border-slate-300 rounded-xl pl-3.5 pr-10 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors"

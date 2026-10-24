@@ -109,11 +109,11 @@ export async function GET(request: Request) {
                     query = query.eq('status', 'approved');
                 }
             } else {
-                // 検索条件なし（一覧表示要求時）は自社登録データのみに限定（他社データは絶対に垂れ流さない）
+                // 一覧表示時: 自社登録データ ＋ 公的確定処分データ（国交省・厚労省・官報等の公表記録）
                 if (appUser?.company_id) {
-                    query = query.eq('registered_by_company_id', appUser.company_id);
+                    query = query.or(`registered_by_company_id.eq.${appUser.company_id},and(status.eq.approved,counterparty_claim.ilike.%【%)`);
                 } else {
-                    return NextResponse.json({ cases: [] });
+                    query = query.eq('status', 'approved').ilike('counterparty_claim', '%【%');
                 }
             }
         } else if (!showAll) {
@@ -147,9 +147,9 @@ export async function GET(request: Request) {
                     }
                 } else {
                     if (appUser?.company_id) {
-                        fallbackQuery = fallbackQuery.eq('registered_by_company_id', appUser.company_id);
+                        fallbackQuery = fallbackQuery.or(`registered_by_company_id.eq.${appUser.company_id},and(status.eq.approved,counterparty_claim.ilike.%【%)`);
                     } else {
-                        return NextResponse.json({ cases: [] });
+                        fallbackQuery = fallbackQuery.eq('status', 'approved').ilike('counterparty_claim', '%【%');
                     }
                 }
             }

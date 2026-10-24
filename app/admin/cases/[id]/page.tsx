@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { FileText, AlertCircle } from "lucide-react";
+import { FileText, AlertCircle, Edit3, Save, X } from "lucide-react";
 import { RequireAdmin } from "@/components/RequireAdmin";
 
 type CaseDetail = {
@@ -78,6 +78,17 @@ export default function AdminCaseDetailPage() {
 
   // Storage files
   const [evidenceFiles, setEvidenceFiles] = useState<EvidenceFile[]>([]);
+  // 編集モード用ステート（誤字脱字・表現修正用）
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editNameKana, setEditNameKana] = useState("");
+  const [editGender, setEditGender] = useState("");
+  const [editBirthDate, setEditBirthDate] = useState("");
+  const [editPhoneLast4, setEditPhoneLast4] = useState("");
+  const [editOccurrenceDate, setEditOccurrenceDate] = useState("");
+  const [editReasonText, setEditReasonText] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
 
   useEffect(() => {
     if (!id) return;
@@ -107,6 +118,13 @@ export default function AdminCaseDetailPage() {
       }
 
       setCaseDetail(data as CaseDetail);
+      setEditName(data.full_name || "");
+      setEditNameKana(data.full_name_kana || "");
+      setEditGender(data.gender || "male");
+      setEditBirthDate(data.birth_date || "");
+      setEditPhoneLast4(data.phone_last4 || "");
+      setEditOccurrenceDate(data.occurrence_date || "");
+      setEditReasonText(data.reason_text || "");
 
       // Fetch Company Name if exists
       if (data.registered_company_id) {
@@ -155,6 +173,57 @@ export default function AdminCaseDetailPage() {
     "すでにトラブルが解決（弁済・和解・示談等）済みと確認されたため",
     "当社規定の登録要件（客観的事実の確認）を満たしていないため",
   ];
+
+  const handleSaveEdit = async () => {
+    if (!caseDetail) return;
+    setIsSaving(true);
+    setFormError(null);
+
+    try {
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session) throw new Error("セッションがありません");
+
+      const res = await fetch(`/api/admin/cases/${caseDetail.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          full_name: editName,
+          full_name_kana: editNameKana,
+          gender: editGender,
+          birth_date: editBirthDate,
+          phone_last4: editPhoneLast4,
+          occurrence_date: editOccurrenceDate,
+          reason_text: editReasonText,
+        }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || "更新に失敗しました");
+      }
+
+      setCaseDetail((prev) => prev ? {
+        ...prev,
+        full_name: editName,
+        full_name_kana: editNameKana,
+        gender: editGender as any,
+        birth_date: editBirthDate,
+        phone_last4: editPhoneLast4,
+        occurrence_date: editOccurrenceDate,
+        reason_text: editReasonText,
+      } : null);
+
+      setIsEditing(false);
+      alert("投稿内容を更新・保存しました。");
+    } catch (err: any) {
+      setFormError(err.message || "更新エラーが発生しました");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const executeApprove = async () => {
     if (!caseDetail) return;
@@ -290,6 +359,108 @@ export default function AdminCaseDetailPage() {
                 </div>
               )}
 
+              {isEditing ? (
+                  <div className="bg-blue-50/40 p-4.5 sm:p-6 rounded-2xl border-2 border-blue-200 space-y-4">
+                    <div className="flex items-center justify-between border-b border-blue-200 pb-2">
+                      <h2 className="text-sm font-bold text-blue-900 flex items-center gap-1.5">
+                        <Edit3 className="w-4 h-4 text-blue-600" />
+                        <span>投稿内容の直接編集（管理者モード）</span>
+                      </h2>
+                      <span className="text-[11px] text-blue-700 font-medium">誤字脱字・不適切表現の修正を行えます</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">氏名</label>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="input-field py-2 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">氏名（カナ）</label>
+                        <input
+                          type="text"
+                          value={editNameKana}
+                          onChange={(e) => setEditNameKana(e.target.value)}
+                          className="input-field py-2 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">性別</label>
+                        <select
+                          value={editGender}
+                          onChange={(e) => setEditGender(e.target.value)}
+                          className="input-field py-2 text-xs"
+                        >
+                          <option value="male">男性</option>
+                          <option value="female">女性</option>
+                          <option value="other">その他</option>
+                          <option value="unknown">未設定</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">生年月日</label>
+                        <input
+                          type="date"
+                          value={editBirthDate}
+                          onChange={(e) => setEditBirthDate(e.target.value)}
+                          className="input-field py-2 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">電話番号（下4桁）</label>
+                        <input
+                          type="text"
+                          maxLength={4}
+                          value={editPhoneLast4}
+                          onChange={(e) => setEditPhoneLast4(e.target.value)}
+                          className="input-field py-2 text-xs font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">トラブル発生日</label>
+                        <input
+                          type="date"
+                          value={editOccurrenceDate}
+                          onChange={(e) => setEditOccurrenceDate(e.target.value)}
+                          className="input-field py-2 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <label className="block font-bold text-slate-700 text-xs mb-1">トラブル詳細・理由文</label>
+                      <textarea
+                        rows={6}
+                        value={editReasonText}
+                        onChange={(e) => setEditReasonText(e.target.value)}
+                        className="input-field py-2.5 text-xs leading-relaxed resize-y w-full"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2.5 pt-2 border-t border-blue-200">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="btn-secondary py-2 px-4 text-xs"
+                      >
+                        キャンセル
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveEdit}
+                        disabled={isSaving}
+                        className="btn-primary py-2 px-5 text-xs flex items-center gap-1.5"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        <span>{isSaving ? "保存中..." : "編集内容を保存する"}</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               <div className="space-y-4 mb-8">
                 <div className="bg-white p-4.5 sm:p-6 rounded-xl border border-slate-200">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">基本情報</h2>
