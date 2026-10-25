@@ -4,9 +4,71 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { UploadCloud, X, AlertCircle, ArrowLeft } from "lucide-react";
+import { UploadCloud, X, AlertCircle, ArrowLeft, Check } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 import { recognizeText } from "@/lib/ocr";
+
+type TroubleCategory = {
+  id: string;
+  label: string;
+  desc: string;
+  subItems: string[];
+};
+
+const TROUBLE_CATEGORIES: TroubleCategory[] = [
+  {
+    id: "absence",
+    label: "欠勤",
+    desc: "当日欠勤・連絡の有無",
+    subItems: [
+      "当日欠勤（連絡なし）",
+      "当日欠勤（連絡有り）",
+    ],
+  },
+  {
+    id: "early_leave",
+    label: "途中帰宅",
+    desc: "作業途中の無断・強行帰宅",
+    subItems: [
+      "無断帰宅",
+      "強行突破帰宅",
+    ],
+  },
+  {
+    id: "theft",
+    label: "窃盗",
+    desc: "貸出品未返却・前貸金未精算",
+    subItems: [
+      "貸出品の返却なし",
+      "前貸金が精算されてない",
+    ],
+  },
+  {
+    id: "falsification",
+    label: "虚偽の申告",
+    desc: "身分証・資格証・連絡先の虚偽",
+    subItems: [
+      "偽造身分証、偽造資格証",
+      "住所、緊急連絡先が虚偽",
+    ],
+  },
+  {
+    id: "site_trouble",
+    label: "現場トラブル",
+    desc: "作業中断を伴う問題行動",
+    subItems: [
+      "身体的接触に伴うトラブルにより作業中断",
+      "現場で大声をあげて作業が中断",
+      "飲酒疑惑により作業中断",
+    ],
+  },
+  {
+    id: "other",
+    label: "その他",
+    desc: "上記以外のトラブル事象",
+    subItems: [],
+  },
+];
 
 export default function NewCasePage() {
   const router = useRouter();
@@ -26,11 +88,15 @@ export default function NewCasePage() {
   const [occurrenceYear, setOccurrenceYear] = useState("");
   const [occurrenceMonth, setOccurrenceMonth] = useState("");
   const [occurrenceDay, setOccurrenceDay] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedSubItem, setSelectedSubItem] = useState<string>("");
   const [reason, setReason] = useState("");
 
   // File upload state
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const currentCategoryObj = TROUBLE_CATEGORIES.find((c) => c.id === selectedCategory);
 
   // File upload handling
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB default limit for Supabase
@@ -59,15 +125,15 @@ export default function NewCasePage() {
   };
 
   const handleOCR = async (file: File) => {
-    if (!confirm("画像を解析してテキストを抽出しますか？\\n抽出されたテキストは「登録理由/詳細」に追記されます。")) return;
+    if (!confirm("画像を解析してテキストを抽出しますか？\n抽出されたテキストは「補足詳細 / 登録理由」欄に追記されます。")) return;
 
     setIsAnalyzing(true);
     try {
       const text = await recognizeText(file);
       if (text) {
         // 余分な空白を除去して追記
-        const cleanedText = text.replace(/\\s+/g, ' ').trim();
-        setReason((prev) => prev + (prev ? "\\n\\n" : "") + "[画像解析結果]\\n" + cleanedText);
+        const cleanedText = text.replace(/\s+/g, ' ').trim();
+        setReason((prev) => prev + (prev ? "\n\n" : "") + "[画像解析結果]\n" + cleanedText);
         alert("テキストを抽出しました！");
       } else {
         alert("テキストが見つかりませんでした。");
@@ -126,12 +192,26 @@ export default function NewCasePage() {
       if (!occurrenceYear || !occurrenceMonth || !occurrenceDay) {
         throw new Error("トラブル発生時期（年・月・日）をすべて入力してください。");
       }
-      if (!reason.trim()) {
-        throw new Error("登録理由 / 詳細を入力してください。");
+      if (!selectedCategory) {
+        throw new Error("トラブル事象（大まかな事象ボタン）を選択してください。");
+      }
+      const selectedCatObj = TROUBLE_CATEGORIES.find((c) => c.id === selectedCategory);
+      if (selectedCategory !== "other" && !selectedSubItem) {
+        throw new Error(`「${selectedCatObj?.label}」の詳細事象ボタンを選択してください。`);
+      }
+      if (selectedCategory === "other" && !reason.trim()) {
+        throw new Error("「その他」を選択した場合は、具体的なトラブル内容・詳細を入力してください。");
       }
       if (selectedFiles.length === 0) {
-        throw new Error("裏付けとなる添付資料（身分証、勤怠表、やり取り画像、損害資料等）を必ず1点以上添付してください。");
+        throw new Error("添付資料（同意書必須、あれば証拠のスクショなど）を必ず1点以上添付してください。");
       }
+
+      const finalReasonText =
+        selectedCategory === "other"
+          ? `【その他】${reason.trim()}`
+          : reason.trim()
+            ? `【${selectedCatObj?.label}】${selectedSubItem}\n${reason.trim()}`
+            : `【${selectedCatObj?.label}】${selectedSubItem}`;
 
       // 共通の日付バリデーション関数
       const validateDate = (y: string, m: string, d: string, label: string) => {
@@ -188,7 +268,7 @@ export default function NewCasePage() {
           occurrence_date: (occurrenceYear && occurrenceMonth && occurrenceDay)
             ? `${occurrenceYear}-${occurrenceMonth.padStart(2, '0')}-${occurrenceDay.padStart(2, '0')}`
             : null,
-          reason_text: reason,
+          reason_text: finalReasonText,
           evidence_urls: uploadedUrls, // アップロードしたファイルのパス配列
           status: "pending", // 初期状態は未承認
           registered_by_user_id: user.id,
@@ -255,6 +335,8 @@ export default function NewCasePage() {
                   setOccurrenceYear("");
                   setOccurrenceMonth("");
                   setOccurrenceDay("");
+                  setSelectedCategory("");
+                  setSelectedSubItem("");
                   setReason("");
                   setSelectedFiles([]);
                   window.scrollTo(0, 0);
@@ -468,20 +550,135 @@ export default function NewCasePage() {
                     </div>
                   </div>
                 </div>
+
+                {/* 二重選択式トラブル事象セレクター（未払い機能と同様の選択制UI） */}
+                <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 mb-6">
+                  <div>
+                    <Label required>トラブル事象の選択（2段階選択）</Label>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      ① 大まかな事象ボタンを選択し、続けて ② 詳細事象ボタンを選択してください。
+                    </p>
+                  </div>
+
+                  {/* Step 1: 大まかな事象ボタン */}
+                  <div className="space-y-2">
+                    <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-900 text-white text-[11px] font-bold">1</span>
+                      <span>大まかな事象を選択</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {TROUBLE_CATEGORIES.map((cat) => {
+                        const isSelected = selectedCategory === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCategory(cat.id);
+                              setSelectedSubItem("");
+                            }}
+                            className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between ${
+                              isSelected
+                                ? "ring-2 ring-blue-600 border-blue-600 bg-blue-50/60 shadow-xs"
+                                : "border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50/80"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1 w-full">
+                              <span className={`text-xs sm:text-sm font-bold ${isSelected ? "text-blue-900" : "text-slate-900"}`}>
+                                {cat.label}
+                              </span>
+                              <span
+                                className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                  isSelected ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white"
+                                }`}
+                              >
+                                {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 leading-tight">{cat.desc}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Step 2: 詳細事象ボタン（その他以外のカテゴリ選択時に表示） */}
+                  {currentCategoryObj && currentCategoryObj.id !== "other" && (
+                    <div className="pt-3 border-t border-slate-200/80 space-y-2.5 animate-fade-in">
+                      <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold">2</span>
+                        <span>「{currentCategoryObj.label}」の詳細事象を選択 <span className="text-red-500">*</span></span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {currentCategoryObj.subItems.map((sub) => {
+                          const isSubSelected = selectedSubItem === sub;
+                          return (
+                            <button
+                              key={sub}
+                              type="button"
+                              onClick={() => setSelectedSubItem(sub)}
+                              className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all flex items-center justify-between gap-2 ${
+                                isSubSelected
+                                  ? "ring-2 ring-blue-600 border-blue-600 bg-blue-50/80 shadow-xs"
+                                  : "border-slate-200 bg-white hover:border-slate-400"
+                              }`}
+                            >
+                              <span className={`text-xs sm:text-sm font-bold leading-snug ${isSubSelected ? "text-blue-950" : "text-slate-800"}`}>
+                                {sub}
+                              </span>
+                              <input
+                                type="radio"
+                                name="troubleSubItem"
+                                checked={isSubSelected}
+                                onChange={() => setSelectedSubItem(sub)}
+                                className="w-4 h-4 text-blue-600 focus:ring-blue-500 shrink-0"
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 選択状態のプレビュー表示 */}
+                  {selectedCategory && (selectedCategory === "other" || selectedSubItem) && (
+                    <div className="pt-2">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold">
+                        <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>
+                          選択中の事象:{" "}
+                          {selectedCategory === "other"
+                            ? "【その他】（下の欄に詳細を記入してください）"
+                            : `【${currentCategoryObj?.label}】${selectedSubItem}`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 補足詳細・その他理由入力欄 */}
                 <div className="space-y-1.5 sm:space-y-2">
-                  <Label required>登録理由 / 詳細</Label>
+                  <Label required={selectedCategory === "other"}>
+                    {selectedCategory === "other"
+                      ? "登録理由 / 具体的なトラブル詳細（「その他」選択時は必須）"
+                      : "補足詳細・具体的な状況（任意）"}
+                  </Label>
                   <textarea
-                    required
-                    rows={5}
+                    required={selectedCategory === "other"}
+                    rows={4}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    className="input-field min-h-[120px] text-sm leading-relaxed"
-                    placeholder="具体的なトラブル内容や注意点を記載してください..."
+                    className="input-field min-h-[100px] text-sm leading-relaxed"
+                    placeholder={
+                      selectedCategory === "other"
+                        ? "具体的なトラブル内容や客観的な事実経過を記載してください..."
+                        : "選択した事象に加えて補足すべき事実経過や注意点があれば記載してください（任意）..."
+                    }
                   />
                 </div>
 
                 <div className="space-y-2 mt-4">
-                  <Label required>添付資料（身分証・タイムカード・画像等の証拠添付が必須です）</Label>
+                  <Label required>添付資料（同意書必須、あれば証拠のスクショなど）</Label>
                   <div className="border border-dashed border-slate-300 rounded-xl p-5 sm:p-6 text-center hover:bg-slate-50 transition-colors relative">
                     <input
                       type="file"
@@ -493,7 +690,7 @@ export default function NewCasePage() {
                     <div className="pointer-events-none">
                       <UploadCloud className="w-7 h-7 sm:w-8 sm:h-8 text-slate-400 mx-auto mb-1.5 sm:mb-2" />
                       <p className="text-xs sm:text-sm font-semibold text-slate-700">タップまたはドラッグ＆ドロップで追加</p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">（画像、PDFなど複数可 / 最大50MB）</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">（同意書は必須添付 / 証拠スクショ・画像・PDFなど複数可 / 最大50MB）</p>
                     </div>
                   </div>
 
