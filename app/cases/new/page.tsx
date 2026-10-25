@@ -35,8 +35,8 @@ const TROUBLE_CATEGORIES: TroubleCategory[] = [
     ],
   },
   {
-    id: "theft",
-    label: "窃盗",
+    id: "unreturned",
+    label: "未返却・未精算",
     desc: "貸出品未返却・前貸金未精算",
     subItems: [
       "貸出品の返却なし",
