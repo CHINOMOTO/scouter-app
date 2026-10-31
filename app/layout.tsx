@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 import { AlertTriangle } from "lucide-react";
+
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || "G-WLCD7WVF7C";
 
 export const metadata: Metadata = {
   title: "MIERIS（ミエリス）- 採る前に、事実を知る 就業情報共有システム",
@@ -64,6 +67,18 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet" />
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
       </head>
       <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 overflow-x-hidden min-h-screen selection:bg-slate-900 selection:text-white">
         <AppShell>{children}</AppShell>
