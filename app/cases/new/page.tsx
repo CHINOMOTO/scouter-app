@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { UploadCloud, X, AlertCircle, ArrowLeft, Check } from "lucide-react";
+import { UploadCloud, X, AlertCircle, ArrowLeft, Check, ShieldAlert } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 import { recognizeText } from "@/lib/ocr";
 
@@ -391,6 +391,23 @@ export default function NewCasePage() {
                 <span className="whitespace-nowrap">一覧へ戻る</span>
               </Link>
             </div>
+          </div>
+
+          {/* コンプライアンス遵守ボックス（未払い登録画面と統一した運用ルール表示） */}
+          <div className="bg-slate-900 text-slate-100 p-4 sm:p-6 rounded-xl mb-6 shadow-2xs border border-slate-800 animate-fade-in w-full max-w-full overflow-hidden">
+            <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3 border-b border-slate-800 pb-2.5 sm:pb-3">
+              <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+              <span className="text-xs sm:text-sm font-bold tracking-wide text-white">
+                「晒す」仕組みにしないための運用ルール
+              </span>
+            </div>
+            <ul className="text-xs space-y-2 text-slate-300 list-disc list-inside leading-relaxed">
+              <li><strong className="text-white font-bold">同意書のない相手は登録できません</strong>（採用・就業開始時に本人署名を得た同意書の添付が必須です）</li>
+              <li><strong className="text-white font-bold">評価・推測・伝聞・断定的な犯罪呼称は禁止</strong>（「悪質」「詐欺師」「窃盗犯」等の主観的表現や誹謗中傷は審査で却下されます）</li>
+              <li><strong className="text-white font-bold">客観的な事実および本人の言い分を記録</strong>してください（発生日時・選択事象・具体的な経緯と、本人から連絡や主張があった場合はその内容も記載してください）</li>
+              <li><strong className="text-white font-bold">返却・精算や和解等で解決した場合は速やかに更新・連絡</strong>してください</li>
+              <li><strong className="text-white font-bold">全件、運営管理者の厳格な同意書・エビデンス審査</strong>を経てから共有されます</li>
+            </ul>
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4.5 sm:p-8 md:p-10 animate-fade-in delay-100">
