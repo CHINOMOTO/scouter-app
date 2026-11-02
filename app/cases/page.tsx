@@ -97,7 +97,7 @@ export default function CasesPage() {
     });
 
     return result;
-  }, [cases, searchTerm, sortConfig]);
+  }, [cases, searchTerm, statusFilter, sortConfig]);
 
   const totalPages = Math.ceil(filteredAndSortedCases.length / PAGE_SIZE);
 

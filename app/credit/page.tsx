@@ -209,10 +209,13 @@ export default function CreditSearchPage() {
                     let resolved = 0;
 
                     fetchedCases.forEach((c) => {
-                        if (c.payment_status === "unpaid") {
-                            unpaid++;
-                        } else if (c.payment_status === "resolved") {
-                            resolved++;
+                        const isOfficial = detectOfficialSource(c).isOfficial;
+                        if (!isOfficial) {
+                            if (c.payment_status === "unpaid") {
+                                unpaid++;
+                            } else if (c.payment_status === "resolved") {
+                                resolved++;
+                            }
                         }
                     });
 
