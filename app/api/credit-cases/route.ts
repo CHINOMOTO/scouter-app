@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { detectOfficialSource, isCorporateEntityName } from '@/lib/officialSources';
+import { detectOfficialSource, isCorporateEntityName, getLocationPriorityRank } from '@/lib/officialSources';
 
 // GET: 未払い企業情報の検索・一覧取得
 export async function GET(request: Request) {
@@ -205,6 +205,15 @@ export async function GET(request: Request) {
                 registry_close_date: item.registry_close_date || (registryStatus === 'closed' ? '2024-10-15' : null),
                 registry_close_cause: item.registry_close_cause || (registryStatus === 'closed' ? '清算結了' : null),
             };
+        });
+
+        enrichedCases.sort((a: any, b: any) => {
+            const rankA = getLocationPriorityRank(a.location);
+            const rankB = getLocationPriorityRank(b.location);
+            if (rankA !== rankB) return rankA - rankB;
+            const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
         });
 
         return NextResponse.json({ cases: enrichedCases });

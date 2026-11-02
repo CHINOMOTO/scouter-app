@@ -216,4 +216,59 @@ export function isCorporateEntityName(companyName?: string | null): boolean {
     return corporateKeywords.some(kw => name.includes(kw));
 }
 
+/**
+ * 47都道府県リスト（プルダウン表示順：東京都・神奈川県・埼玉県・千葉県を先頭に配置し、以降は北から順）
+ */
+export const PREFECTURE_OPTIONS = [
+    '東京都', '神奈川県', '埼玉県', '千葉県',
+    '茨城県', '栃木県', '群馬県',
+    '北海道',
+    '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+    '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県',
+    '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
+    '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+    '徳島県', '香川県', '愛媛県', '高知県',
+    '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+] as const;
+
+/**
+ * 所在地文字列から都道府県名を判定する（政令市・主要都市名のみの場合も補完）
+ */
+export function extractPrefectureFromLocation(location?: string | null): string | null {
+    if (!location || typeof location !== 'string') return null;
+    const loc = location.trim();
+    if (!loc) return null;
+
+    for (const pref of PREFECTURE_OPTIONS) {
+        if (loc.includes(pref)) return pref;
+    }
+
+    // 都道府県名が省略され市区町村名から始まっている公的データの補完
+    if (loc.startsWith('横浜') || loc.startsWith('川崎') || loc.startsWith('相模原') || loc.startsWith('横須賀') || loc.startsWith('藤沢') || loc.startsWith('厚木')) return '神奈川県';
+    if (loc.startsWith('さいたま') || loc.startsWith('川口') || loc.startsWith('川越') || loc.startsWith('越谷') || loc.startsWith('所沢')) return '埼玉県';
+    if (loc.startsWith('船橋') || loc.startsWith('松戸') || loc.startsWith('市川') || loc.startsWith('柏市') || loc.startsWith('木更津')) return '千葉県';
+    if (loc.startsWith('名古屋')) return '愛知県';
+    if (loc.startsWith('神戸') || loc.startsWith('姫路') || loc.startsWith('西宮') || loc.startsWith('尼崎')) return '兵庫県';
+    if (loc.startsWith('北九州') || loc.startsWith('久留米')) return '福岡県';
+    if (loc.startsWith('札幌') || loc.startsWith('旭川') || loc.startsWith('函館')) return '北海道';
+    if (loc.startsWith('仙台')) return '宮城県';
+
+    return null;
+}
+
+/**
+ * 初期表示ソート用のエリア優先度ランクを取得（小さいほど上位に表示）
+ * 0: 東京都, 1: 神奈川県, 2: 埼玉県, 3: 千葉県, 4: 北関東(茨城・栃木・群馬), 5: その他全国
+ */
+export function getLocationPriorityRank(location?: string | null): number {
+    const pref = extractPrefectureFromLocation(location);
+    if (pref === '東京都') return 0;
+    if (pref === '神奈川県') return 1;
+    if (pref === '埼玉県') return 2;
+    if (pref === '千葉県') return 3;
+    if (pref === '茨城県' || pref === '栃木県' || pref === '群馬県') return 4;
+    return 5;
+}
+
+
 

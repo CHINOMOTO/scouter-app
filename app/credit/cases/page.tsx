@@ -16,13 +16,22 @@ import {
     ArrowUpDown, 
     FileText, 
     ExternalLink,
-    ShieldCheck
+    ShieldCheck,
+    MapPin
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Pagination } from "@/components/Pagination";
 import { Toast, ToastMessage } from "@/components/Toast";
-import { detectOfficialSource, getCleanOfficialSourceName, getSourceDisplayName, isCorporateEntityName } from "@/lib/officialSources";
+import { 
+    detectOfficialSource, 
+    getCleanOfficialSourceName, 
+    getSourceDisplayName, 
+    isCorporateEntityName,
+    PREFECTURE_OPTIONS,
+    extractPrefectureFromLocation,
+    getLocationPriorityRank
+} from "@/lib/officialSources";
 import { OfficialDataNotice } from "@/components/OfficialDataNotice";
 
 type CreditCaseItem = {
@@ -118,9 +127,10 @@ export default function CreditCasesListPage() {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [prefectureFilter, setPrefectureFilter] = useState<string>("all");
     const [statusFilter, setStatusFilter] = useState<"all" | "unpaid" | "resolved">("all");
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" }>({
-        key: "created_at",
+        key: "priority",
         direction: "desc"
     });
     const [currentPage, setCurrentPage] = useState(1);
@@ -198,6 +208,11 @@ export default function CreditCasesListPage() {
             result = result.filter((c) => c.payment_status === statusFilter);
         }
 
+        // 都道府県フィルター
+        if (prefectureFilter !== "all") {
+            result = result.filter((c) => extractPrefectureFromLocation(c.location) === prefectureFilter);
+        }
+
         // キーワード検索（企業名、法人番号、所在地、登録理由）
         if (searchTerm.trim() !== "") {
             const term = searchTerm.toLowerCase().trim();
@@ -214,6 +229,15 @@ export default function CreditCasesListPage() {
         result.sort((a, b) => {
             const dir = sortConfig.direction === "asc" ? 1 : -1;
             switch (sortConfig.key) {
+                case "priority": {
+                    // 初期表示：東京都 → 神奈川県 → 埼玉県 → 千葉県 → その他関東 → 全国（同一エリア内は最新順）
+                    const rankA = getLocationPriorityRank(a.location);
+                    const rankB = getLocationPriorityRank(b.location);
+                    if (rankA !== rankB) return rankA - rankB;
+                    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                    return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+                }
                 case "created_at": {
                     const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
                     const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
@@ -236,7 +260,7 @@ export default function CreditCasesListPage() {
         });
 
         return result;
-    }, [cases, searchTerm, statusFilter, sortConfig]);
+    }, [cases, searchTerm, prefectureFilter, statusFilter, sortConfig]);
 
     const totalPages = Math.ceil(filteredCases.length / PAGE_SIZE) || 1;
 
@@ -319,20 +343,43 @@ export default function CreditCasesListPage() {
                     <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-2xs mb-6 space-y-3 sm:space-y-4 animate-fade-in">
                         <div className="flex flex-col md:flex-row gap-3 sm:gap-4 justify-between items-center">
                             
-                            {/* 検索窓 */}
-                            <div className="relative w-full md:w-96">
-                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                <input
-                                    type="text"
-                                    value={searchTerm}
-                                    onChange={(e) => {
-                                        setSearchTerm(e.target.value);
-                                        setCurrentPage(1);
-                                    }}
-                                    placeholder="企業名・法人番号・登録理由で絞り込み..."
-                                    style={{ paddingLeft: '2.5rem' }}
-                                    className="w-full bg-white border border-slate-200 rounded-xl pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 transition-colors placeholder:text-slate-400"
-                                />
+                            {/* 検索窓 ＋ 都道府県プルダウン */}
+                            <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto flex-1">
+                                <div className="relative w-full sm:w-80 md:w-88">
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                    <input
+                                        type="text"
+                                        value={searchTerm}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        placeholder="企業名・法人番号・登録理由で絞り込み..."
+                                        style={{ paddingLeft: '2.5rem' }}
+                                        className="w-full bg-white border border-slate-200 rounded-xl pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 transition-colors placeholder:text-slate-400"
+                                    />
+                                </div>
+
+                                {/* 都道府県プルダウン */}
+                                <div className="relative w-full sm:w-44 shrink-0">
+                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                    <select
+                                        value={prefectureFilter}
+                                        onChange={(e) => {
+                                            setPrefectureFilter(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        style={{ paddingLeft: '2.1rem' }}
+                                        className="w-full bg-white border border-slate-200 rounded-xl pr-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
+                                    >
+                                        <option value="all">すべての都道府県</option>
+                                        {PREFECTURE_OPTIONS.map((pref) => (
+                                            <option key={pref} value={pref}>
+                                                {pref}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
                             {/* 支払ステータスタブ */}
