@@ -403,8 +403,8 @@ export default function NewCasePage() {
             </div>
             <ul className="text-xs space-y-2 text-slate-300 list-disc list-inside leading-relaxed">
               <li><strong className="text-white font-bold">同意書のない相手は登録できません</strong>（採用・就業開始時に本人署名を得た同意書の添付が必須です）</li>
-              <li><strong className="text-white font-bold">評価・推測・伝聞・断定的な犯罪呼称は禁止</strong>（「悪質」「詐欺師」「窃盗犯」等の主観的表現や誹謗中傷は審査で却下されます）</li>
-              <li><strong className="text-white font-bold">客観的な事実および本人の言い分を記録</strong>してください（発生日時・選択事象・具体的な経緯と、本人から連絡や主張があった場合はその内容も記載してください）</li>
+              <li><strong className="text-white font-bold">評価・推測・伝聞・断定的な犯罪呼称は禁止</strong>（「悪質」「詐欺師」等の主観的表現や誹謗中傷は審査で却下されます）</li>
+              <li><strong className="text-white font-bold">客観的な経緯と相手側の主張を併記</strong>（公平性担保のため、事実経緯とあわせて本人からの言い分も記載してください）</li>
               <li><strong className="text-white font-bold">返却・精算や和解等で解決した場合は速やかに更新・連絡</strong>してください</li>
               <li><strong className="text-white font-bold">全件、運営管理者の厳格な同意書・エビデンス審査</strong>を経てから共有されます</li>
             </ul>
