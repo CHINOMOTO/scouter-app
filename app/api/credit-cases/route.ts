@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { detectOfficialSource, isCorporateEntityName, getLocationPriorityRank } from '@/lib/officialSources';
+import { detectOfficialSource, isCorporateEntityName, getLocationPriorityRank, buildCompanyQueryVariants } from '@/lib/officialSources';
 
 // GET: 未払い企業情報の検索・一覧取得
 export async function GET(request: Request) {
@@ -122,7 +122,7 @@ export async function GET(request: Request) {
 
         // 検索フィルター
         if (q.trim()) {
-            query = query.or(`company_name.ilike.%${q.trim()}%,location.ilike.%${q.trim()}%`);
+            query = query.or(buildCompanyQueryVariants(q).map(v => `company_name.ilike.%${v}%`).concat(`location.ilike.%${q.trim()}%`).join(','));
         }
         if (corporateNumber.trim()) {
             query = query.eq('corporate_number', corporateNumber.trim().replace(/[^0-9]/g, ''));
@@ -154,7 +154,7 @@ export async function GET(request: Request) {
                 }
             }
             if (q.trim()) {
-                fallbackQuery = fallbackQuery.or(`company_name.ilike.%${q.trim()}%,location.ilike.%${q.trim()}%`);
+                fallbackQuery = fallbackQuery.or(buildCompanyQueryVariants(q).map(v => `company_name.ilike.%${v}%`).concat(`location.ilike.%${q.trim()}%`).join(','));
             }
             if (corporateNumber.trim()) {
                 fallbackQuery = fallbackQuery.eq('corporate_number', corporateNumber.trim().replace(/[^0-9]/g, ''));

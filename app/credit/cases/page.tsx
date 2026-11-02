@@ -30,7 +30,8 @@ import {
     isCorporateEntityName,
     PREFECTURE_OPTIONS,
     extractPrefectureFromLocation,
-    getLocationPriorityRank
+    getLocationPriorityRank,
+    normalizeCompanySearchText
 } from "@/lib/officialSources";
 import { OfficialDataNotice } from "@/components/OfficialDataNotice";
 
@@ -128,7 +129,7 @@ export default function CreditCasesListPage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [prefectureFilter, setPrefectureFilter] = useState<string>("all");
-    const [statusFilter, setStatusFilter] = useState<"all" | "unpaid" | "resolved">("all");
+    const [statusFilter, setStatusFilter] = useState<"all" | "official" | "unpaid" | "resolved">("all");
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" }>({
         key: "priority",
         direction: "desc"
@@ -203,9 +204,13 @@ export default function CreditCasesListPage() {
     const filteredCases = useMemo(() => {
         let result = [...cases];
 
-        // ステータスフィルター（未払い / 解決済み）
-        if (statusFilter !== "all") {
-            result = result.filter((c) => c.payment_status === statusFilter);
+        // ステータスフィルター（公的処分 / 民間未払い中 / 民間解決済み）
+        if (statusFilter === "official") {
+            result = result.filter((c) => detectOfficialSource(c).isOfficial);
+        } else if (statusFilter === "unpaid") {
+            result = result.filter((c) => !detectOfficialSource(c).isOfficial && c.payment_status === "unpaid");
+        } else if (statusFilter === "resolved") {
+            result = result.filter((c) => !detectOfficialSource(c).isOfficial && c.payment_status === "resolved");
         }
 
         // 都道府県フィルター
@@ -213,15 +218,23 @@ export default function CreditCasesListPage() {
             result = result.filter((c) => extractPrefectureFromLocation(c.location) === prefectureFilter);
         }
 
-        // キーワード検索（企業名、法人番号、所在地、登録理由）
+        // キーワード検索（企業名［株式会社⇔（株）正規化対応］、法人番号、所在地、登録理由）
         if (searchTerm.trim() !== "") {
             const term = searchTerm.toLowerCase().trim();
+            const normalizedTerm = normalizeCompanySearchText(searchTerm);
             result = result.filter((c) => {
                 const name = (c.company_name || "").toLowerCase();
+                const normalizedName = normalizeCompanySearchText(c.company_name);
                 const corp = (c.corporate_number || "").toLowerCase();
                 const loc = (c.location || "").toLowerCase();
                 const claim = (c.counterparty_claim || "").toLowerCase();
-                return name.includes(term) || corp.includes(term) || loc.includes(term) || claim.includes(term);
+                return (
+                    name.includes(term) ||
+                    (normalizedTerm && normalizedName.includes(normalizedTerm)) ||
+                    corp.includes(term) ||
+                    loc.includes(term) ||
+                    claim.includes(term)
+                );
             });
         }
 
@@ -382,14 +395,14 @@ export default function CreditCasesListPage() {
                                 </div>
                             </div>
 
-                            {/* 支払ステータスタブ */}
-                            <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto text-xs font-bold">
+                            {/* 種別・支払ステータスタブ */}
+                            <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl w-full md:w-auto text-xs font-bold gap-0.5">
                                 <button
                                     onClick={() => {
                                         setStatusFilter("all");
                                         setCurrentPage(1);
                                     }}
-                                    className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg transition-all ${
+                                    className={`flex-1 md:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                                         statusFilter === "all" 
                                             ? "bg-white text-slate-900 shadow-2xs" 
                                             : "text-slate-600 hover:text-slate-900"
@@ -399,29 +412,42 @@ export default function CreditCasesListPage() {
                                 </button>
                                 <button
                                     onClick={() => {
+                                        setStatusFilter("official");
+                                        setCurrentPage(1);
+                                    }}
+                                    className={`flex-1 md:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
+                                        statusFilter === "official" 
+                                            ? "bg-white text-blue-700 shadow-2xs font-extrabold" 
+                                            : "text-slate-600 hover:text-slate-900"
+                                    }`}
+                                >
+                                    公的処分 ({cases.filter(c => detectOfficialSource(c).isOfficial).length})
+                                </button>
+                                <button
+                                    onClick={() => {
                                         setStatusFilter("unpaid");
                                         setCurrentPage(1);
                                     }}
-                                    className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg transition-all ${
+                                    className={`flex-1 md:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                                         statusFilter === "unpaid" 
                                             ? "bg-white text-rose-700 shadow-2xs font-extrabold" 
                                             : "text-slate-600 hover:text-slate-900"
                                     }`}
                                 >
-                                    未払い中 ({cases.filter(c => c.payment_status === "unpaid").length})
+                                    未払い中 ({cases.filter(c => !detectOfficialSource(c).isOfficial && c.payment_status === "unpaid").length})
                                 </button>
                                 <button
                                     onClick={() => {
                                         setStatusFilter("resolved");
                                         setCurrentPage(1);
                                     }}
-                                    className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg transition-all ${
+                                    className={`flex-1 md:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                                         statusFilter === "resolved" 
                                             ? "bg-white text-emerald-700 shadow-2xs font-extrabold" 
                                             : "text-slate-600 hover:text-slate-900"
                                     }`}
                                 >
-                                    解決済み ({cases.filter(c => c.payment_status === "resolved").length})
+                                    解決済み ({cases.filter(c => !detectOfficialSource(c).isOfficial && c.payment_status === "resolved").length})
                                 </button>
                             </div>
                         </div>

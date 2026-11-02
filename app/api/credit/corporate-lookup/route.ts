@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { buildCompanyQueryVariants } from '@/lib/officialSources';
 
 // GET: 法人番号または社名から企業情報を検索・取得するAPI（gBizINFO公的オープンデータ連携）
 export async function GET(request: Request) {
@@ -20,7 +21,11 @@ export async function GET(request: Request) {
 
             if (gbizToken) {
                 try {
-                    const gbizUrl = `https://info.gbiz.go.jp/hojin/v1/hojin?name=${encodeURIComponent(queryName)}&limit=6`;
+                    const gbizQuery = queryName
+                        .replace(/[（\(]株[）\)]|㈱/g, '株式会社')
+                        .replace(/[（\(]有[）\)]|㈲/g, '有限会社')
+                        .replace(/[（\(]同[）\)]/g, '合同会社');
+                    const gbizUrl = `https://info.gbiz.go.jp/hojin/v1/hojin?name=${encodeURIComponent(gbizQuery)}&limit=6`;
                     const gbizRes = await fetch(gbizUrl, {
                         headers: {
                             'Accept': 'application/json',
@@ -51,10 +56,11 @@ export async function GET(request: Request) {
             const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
             const supabase = createClient(supabaseUrl, supabaseKey);
 
+            const qVariants = buildCompanyQueryVariants(queryName);
             const { data: dbCases } = await supabase
                 .from('credit_cases')
                 .select('corporate_number, company_name, location')
-                .ilike('company_name', `%${queryName}%`)
+                .or(qVariants.map(v => `company_name.ilike.%${v}%`).join(','))
                 .limit(5);
 
             const internalCandidates = (dbCases || [])

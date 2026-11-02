@@ -191,16 +191,16 @@ export function isCorporateEntityName(companyName?: string | null): boolean {
     }
 
     const corporateKeywords = [
-        '株式会社', '（株）', '(株)', '㈱',
-        '有限会社', '（有）', '(有)', '㈲',
-        '合同会社', '（同）', '(同)',
-        '合資会社', '（資）', '(資)',
-        '合名会社', '（名）', '(名)',
-        '（合）', '(合)',
+        '株式会社', '（株）', '(株)', '（株)', '(株）', '㈱',
+        '有限会社', '（有）', '(有)', '（有)', '(有）', '㈲',
+        '合同会社', '（同）', '(同)', '（同)', '(同）',
+        '合資会社', '（資）', '(資)', '（資)', '(資）',
+        '合名会社', '（名）', '(名)', '（名)', '(名）',
+        '（合）', '(合)', '（合)', '(合）',
         '相互会社',
         '協同組合', '協業組合', '企業組合', '森林組合', '農業協同組合', '漁業協同組合', '生活協同組合',
-        '医療法人', '（医）', '(医)',
-        '社会福祉法人', '（福）', '(福)',
+        '医療法人', '（医）', '(医)', '（医)', '(医）',
+        '社会福祉法人', '（福）', '(福)', '（福)', '(福）',
         '一般社団法人', '（一社）', '(一社)',
         '公益社団法人', '（公社）', '(公社)',
         '一般財団法人', '（一財）', '(一財)',
@@ -210,10 +210,77 @@ export function isCorporateEntityName(companyName?: string | null): boolean {
         '特定非営利活動法人', 'NPO法人', 'ＮＰＯ法人',
         '独立行政法人', '地方独立行政法人',
         '弁護士法人', '税理士法人', '司法書士法人', '行政書士法人', '監査法人', '社会保険労務士法人',
-        '労働組合', '管理組合法人', '信用金庫', '信用組合'
+        '労働組合', '管理組合法人', '信用金庫', '信用組合',
+        '環境局', '水道局', '交通局', '市役所', '区役所', '県庁', '都庁', '府庁', '道庁', '公社'
     ];
 
     return corporateKeywords.some(kw => name.includes(kw));
+}
+
+/**
+ * 企業名・検索クエリの揺れ（株式会社 ⇔ （株）、有限会社 ⇔ （有）、全角英数 ⇔ 半角英数、スペース等）を正規化した比較用文字列を返す
+ */
+export function normalizeCompanySearchText(text?: string | null): string {
+    if (!text || typeof text !== 'string') return '';
+    return text
+        .trim()
+        .replace(/[（\(]株[）\)]|㈱/g, '株式会社')
+        .replace(/[（\(]有[）\)]|㈲/g, '有限会社')
+        .replace(/[（\(]同[）\)]/g, '合同会社')
+        .replace(/[（\(]資[）\)]/g, '合資会社')
+        .replace(/[（\(]名[）\)]/g, '合名会社')
+        .replace(/[（\(]医[）\)]/g, '医療法人')
+        .replace(/[（\(]一社[）\)]/g, '一般社団法人')
+        .replace(/[（\(]公社[）\)]/g, '公益社団法人')
+        .replace(/[（\(]一財[）\)]/g, '一般財団法人')
+        .replace(/[（\(]公財[）\)]/g, '公益財団法人')
+        .replace(/[（\(]福[）\)]/g, '社会福祉法人')
+        .replace(/[（\(]宗[）\)]/g, '宗教法人')
+        .replace(/[（\(]学[）\)]/g, '学校法人')
+        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+        .replace(/[\s　・･]/g, '')
+        .replace(/[-－ー―−]/g, '-')
+        .toLowerCase();
+}
+
+/**
+ * 検索クエリから DB 検索（ilike）用のバリエーション配列を生成する
+ * 例: 「株式会社さつま地鶏屋」 -> ["株式会社さつま地鶏屋", "（株）さつま地鶏屋", "さつま地鶏屋（株）", "さつま地鶏屋"]
+ */
+export function buildCompanyQueryVariants(rawQuery?: string | null): string[] {
+    if (!rawQuery || typeof rawQuery !== 'string') return [];
+    const q = rawQuery.trim();
+    if (!q) return [];
+
+    const variants = new Set<string>([q]);
+
+    // 法人格を除いたコア名称を抽出
+    const core = q
+        .replace(/株式会社|[（\(]株[）\)]|㈱/g, '')
+        .replace(/有限会社|[（\(]有[）\)]|㈲/g, '')
+        .replace(/合同会社|[（\(]同[）\)]/g, '')
+        .replace(/合資会社|[（\(]資[）\)]/g, '')
+        .replace(/合名会社|[（\(]名[）\)]/g, '')
+        .replace(/医療法人(?:社団|財団)?|[（\(]医[）\)]/g, '')
+        .trim();
+
+    if (core && core.length >= 2 && core !== q) {
+        variants.add(core);
+    }
+
+    if (q.includes('株式会社')) {
+        variants.add(q.replace(/株式会社/g, '（株）'));
+    } else if (/[（\(]株[）\)]|㈱/.test(q)) {
+        variants.add(q.replace(/[（\(]株[）\)]|㈱/g, '株式会社'));
+    }
+
+    if (q.includes('有限会社')) {
+        variants.add(q.replace(/有限会社/g, '（有）'));
+    } else if (/[（\(]有[）\)]|㈲/.test(q)) {
+        variants.add(q.replace(/[（\(]有[）\)]|㈲/g, '有限会社'));
+    }
+
+    return Array.from(variants);
 }
 
 /**
