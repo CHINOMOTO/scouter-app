@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Toast, ToastMessage } from "@/components/Toast";
-import { detectOfficialSource, getCleanOfficialSourceName, getSourceDisplayName } from "@/lib/officialSources";
+import { detectOfficialSource, getCleanOfficialSourceName, getSourceDisplayName, isCorporateEntityName } from "@/lib/officialSources";
 import { OfficialDataNotice } from "@/components/OfficialDataNotice";
 import { 
     Search, 
@@ -950,6 +950,10 @@ export default function CreditSearchPage() {
                                                                 {c.corporate_number ? (
                                                                     <p className="text-xs text-slate-500 font-mono mt-0.5 ml-5.5">
                                                                         法人番号: {c.corporate_number}
+                                                                    </p>
+                                                                ) : isCorporateEntityName(c.company_name) ? (
+                                                                    <p className="text-[11px] text-slate-500 font-medium mt-0.5 ml-5.5">
+                                                                        法人番号: 公表資料に記載なし（法人）
                                                                     </p>
                                                                 ) : (
                                                                     <p className="text-[11px] text-amber-700 font-semibold mt-0.5 ml-5.5">

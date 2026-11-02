@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { detectOfficialSource } from '@/lib/officialSources';
+import { detectOfficialSource, isCorporateEntityName } from '@/lib/officialSources';
 
 // GET: 詳細情報取得
 export async function GET(
@@ -55,12 +55,14 @@ export async function GET(
         let businessStatus = creditCase.business_status;
         let registryStatus = creditCase.registry_status;
 
+        const isCorporate = isCorporateEntityName(creditCase.company_name);
+
         if (isOfficialData) {
             // 公的機関データの場合、民間の「音信不通（LINEブロック）」のような被害報告ステータスは付与しない
             businessStatus = null;
             if (claim.includes('破産') || claim.includes('清算')) {
                 registryStatus = 'closed';
-            } else if (!creditCase.corporate_number) {
+            } else if (!creditCase.corporate_number && !isCorporate) {
                 registryStatus = 'sole_proprietor';
             } else {
                 registryStatus = 'active';
@@ -82,7 +84,7 @@ export async function GET(
             }
 
             if (!registryStatus) {
-                if (!creditCase.corporate_number) {
+                if (creditCase.company_name?.includes('個人事業主') || (!creditCase.corporate_number && !isCorporate)) {
                     registryStatus = 'sole_proprietor';
                 } else if (businessStatus === 'bankrupt' || claim.includes('清算')) {
                     registryStatus = 'closed';

@@ -177,3 +177,43 @@ export function getSourceDisplayName(
     return companyName?.trim() || defaultFallback;
 }
 
+/**
+ * 企業名（商号・屋号）から法人格（株式会社・有限会社・合同会社・各種法人・組合等）を有する法人かどうかを判定する
+ */
+export function isCorporateEntityName(companyName?: string | null): boolean {
+    if (!companyName || typeof companyName !== 'string') return false;
+    const name = companyName.trim();
+    if (!name) return false;
+
+    // 明示的に個人事業主・一人親方と記載されている場合は個人事業主扱い
+    if (name.includes('個人事業主') || name.includes('一人親方')) {
+        return false;
+    }
+
+    const corporateKeywords = [
+        '株式会社', '（株）', '(株)', '㈱',
+        '有限会社', '（有）', '(有)', '㈲',
+        '合同会社', '（同）', '(同)',
+        '合資会社', '（資）', '(資)',
+        '合名会社', '（名）', '(名)',
+        '（合）', '(合)',
+        '相互会社',
+        '協同組合', '協業組合', '企業組合', '森林組合', '農業協同組合', '漁業協同組合', '生活協同組合',
+        '医療法人', '（医）', '(医)',
+        '社会福祉法人', '（福）', '(福)',
+        '一般社団法人', '（一社）', '(一社)',
+        '公益社団法人', '（公社）', '(公社)',
+        '一般財団法人', '（一財）', '(一財)',
+        '公益財団法人', '（公財）', '(公財)',
+        '宗教法人', '（宗）', '(宗)',
+        '学校法人', '（学）', '(学)',
+        '特定非営利活動法人', 'NPO法人', 'ＮＰＯ法人',
+        '独立行政法人', '地方独立行政法人',
+        '弁護士法人', '税理士法人', '司法書士法人', '行政書士法人', '監査法人', '社会保険労務士法人',
+        '労働組合', '管理組合法人', '信用金庫', '信用組合'
+    ];
+
+    return corporateKeywords.some(kw => name.includes(kw));
+}
+
+

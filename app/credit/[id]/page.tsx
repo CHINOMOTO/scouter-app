@@ -18,7 +18,7 @@ import {
     FileText
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
-import { detectOfficialSource, OfficialSourceInfo } from "@/lib/officialSources";
+import { detectOfficialSource, OfficialSourceInfo, isCorporateEntityName } from "@/lib/officialSources";
 import { OfficialDataNotice } from "@/components/OfficialDataNotice";
 
 type CreditCaseDetail = {
@@ -441,7 +441,9 @@ export default function CreditCaseDetailPage() {
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">法人番号</span>
-                                <span className="font-mono text-slate-800">{caseData.corporate_number || "未登録（個人事業主）"}</span>
+                                <span className="font-mono text-slate-800">
+                                    {caseData.corporate_number || (isCorporateEntityName(caseData.company_name) || caseData.registry_status !== "sole_proprietor" ? "公表資料に記載なし（法人）" : "未登録（個人事業主）")}
+                                </span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">公的登記ステータス</span>

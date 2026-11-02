@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { detectOfficialSource } from '@/lib/officialSources';
+import { detectOfficialSource, isCorporateEntityName } from '@/lib/officialSources';
 
 // GET: 未払い企業情報の検索・一覧取得
 export async function GET(request: Request) {
@@ -191,7 +191,7 @@ export async function GET(request: Request) {
                 // テスト用・デモ用：特定の番号や名前に応じた初期値
                 if (item.company_name?.includes('大和建装') || item.corporate_number === '5011101998002') {
                     registryStatus = 'closed';
-                } else if (item.company_name?.includes('鈴木') || !item.corporate_number || item.corporate_number.startsWith('999')) {
+                } else if (item.company_name?.includes('個人事業主') || (!item.corporate_number && !isCorporateEntityName(item.company_name)) || item.corporate_number?.startsWith('999')) {
                     registryStatus = 'sole_proprietor';
                 } else {
                     registryStatus = 'active';
