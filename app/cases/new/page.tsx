@@ -331,7 +331,7 @@ export default function NewCasePage() {
     return (
       <RequireAuth>
         <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 flex flex-col items-center justify-center">
-          <div className="max-w-xl w-full text-center glass-panel p-10 rounded-3xl animate-fade-in border-t-4 border-t-slate-900 relative overflow-hidden">
+          <div className="max-w-xl w-full text-center bg-white border border-slate-200 shadow-sm p-10 rounded-2xl animate-fade-in relative overflow-hidden">
 
             {/* Background Effect */}
             <div className="absolute inset-0 bg-white/[0.03] pointer-events-none"></div>
@@ -744,7 +744,7 @@ export default function NewCasePage() {
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-500 leading-relaxed">
-                    ※申請後に運営から追加資料（追完）を求められた場合も、マイページの「自社登録トラブル一覧」→該当データの詳細画面からいつでも追加アップロードが可能です。
+                    ※申請後に運営から追加資料を求められた場合も、マイページの「自社登録トラブル一覧」→該当データの詳細画面からいつでも追加アップロードが可能です。
                   </p>
 
                   {selectedFiles.length > 0 && (

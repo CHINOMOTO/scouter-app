@@ -157,6 +157,9 @@ export async function PATCH(
         if (body.resolvedDelayDays !== undefined) updateData.resolved_delay_days = body.resolvedDelayDays;
         if (body.counterpartyClaim !== undefined) updateData.counterparty_claim = body.counterpartyClaim;
         if (Array.isArray(body.evidenceUrls)) updateData.evidence_urls = body.evidenceUrls;
+        if (body.resubmit === true) {
+            updateData.status = 'pending';
+        }
 
         const { data: updatedCase, error: updateErr } = await supabaseAdmin
             .from('credit_cases')

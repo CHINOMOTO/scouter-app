@@ -388,7 +388,7 @@ export default function SearchPage() {
                     return (
                       <div
                         key={item.id}
-                        className={`glass-panel p-4.5 sm:p-6 rounded-2xl border-l-4 flex flex-col md:flex-row justify-between gap-4 sm:gap-6 card-hover group transition-all ${badge.borderLeft}`}
+                        className="glass-panel p-4.5 sm:p-6 rounded-2xl border border-slate-200 flex flex-col md:flex-row justify-between gap-4 sm:gap-6 card-hover group transition-all"
                       >
                         <div className="flex-1">
                           <div className="flex items-start gap-3 sm:gap-4 mb-2.5 sm:mb-3">

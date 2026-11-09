@@ -607,7 +607,7 @@ export default function AdminCaseDetailPage() {
           {/* Reject Input Modal */}
           {showRejectModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4">
-              <div className="bg-white border border-red-300 p-6 sm:p-8 rounded-2xl max-w-lg w-full shadow-2xl">
+              <div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-2xl max-w-lg w-full shadow-2xl">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
                     <AlertCircle className="w-5 h-5" />
@@ -684,13 +684,13 @@ export default function AdminCaseDetailPage() {
           {/* Success Modal */}
           {showSuccessModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
-              <div className={`p-10 rounded-3xl max-w-sm w-full text-center bg-white border-t-4 ${showSuccessModal.type === 'approved' ? 'border-slate-300 shadow-md' : 'border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.2)]'}`}>
+              <div className="p-8 sm:p-10 rounded-2xl max-w-sm w-full text-center bg-white border border-slate-200 shadow-2xl">
                 <h3 className="text-xl font-bold text-slate-900 mb-8">
                   {showSuccessModal.type === 'approved' ? '申請が承認されました。' : '申請が却下されました。'}
                 </h3>
                 <button
                   onClick={() => router.push("/admin/cases")}
-                  className={`w-full py-3 rounded-lg font-bold text-black ${showSuccessModal.type === 'approved' ? 'bg-[#0f172a] hover:bg-[#0f172a]/80' : 'bg-red-500 hover:bg-red-400 text-white'}`}
+                  className={`w-full py-3 rounded-xl font-bold text-white transition-colors ${showSuccessModal.type === 'approved' ? 'bg-slate-900 hover:bg-slate-800' : 'bg-red-600 hover:bg-red-500'}`}
                 >
                   一覧へ戻る
                 </button>

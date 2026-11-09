@@ -67,7 +67,7 @@ export default function CreditCaseDetailPage() {
     const [resolving, setResolving] = useState(false);
     const [toast, setToast] = useState<ToastMessage | null>(null);
 
-    // 追完エビデンス追加アップロード用
+    // 追加資料アップロード用
     const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
     const [uploadingEvidence, setUploadingEvidence] = useState(false);
 
@@ -119,6 +119,7 @@ export default function CreditCaseDetailPage() {
             }
 
             const updatedUrls = [...(caseData.evidence_urls || []), ...newPaths];
+            const isResubmitting = caseData.status === "rejected";
 
             const res = await fetch(`/api/credit-cases/${id}`, {
                 method: "PATCH",
@@ -127,7 +128,8 @@ export default function CreditCaseDetailPage() {
                     "Authorization": `Bearer ${session.access_token}`
                 },
                 body: JSON.stringify({
-                    evidenceUrls: updatedUrls
+                    evidenceUrls: updatedUrls,
+                    resubmit: isResubmitting
                 })
             });
 
@@ -137,7 +139,12 @@ export default function CreditCaseDetailPage() {
             }
 
             setAdditionalFiles([]);
-            setToast({ type: "success", text: "追加資料（追完エビデンス）をアップロードしました。" });
+            setToast({
+                type: "success",
+                text: isResubmitting
+                    ? "追加資料をアップロードし、再審査を申請しました。"
+                    : "追加資料をアップロードしました。"
+            });
             fetchDetail();
         } catch (err: any) {
             setToast({ type: "error", text: err.message || "アップロード中にエラーが発生しました。" });
@@ -308,6 +315,12 @@ export default function CreditCaseDetailPage() {
                                         <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
                                             <Clock className="w-3 h-3" />
                                             <span>審査待ち</span>
+                                        </span>
+                                    )}
+                                    {caseData.status === "rejected" && (
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            <span>却下（差し戻し）</span>
                                         </span>
                                     )}
                                 </div>
@@ -606,16 +619,21 @@ export default function CreditCaseDetailPage() {
                             )}
                         </div>
 
-                        {/* 自社登録または管理者の場合：追加資料（追完エビデンス）のアップロード */}
+                        {/* 自社登録または管理者の場合：追加資料のアップロード */}
                         {!sourceInfo.isOfficial && (isOwner || isAdmin) && (
                             <div className="mt-6 p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                                 <div className="flex items-center justify-between flex-wrap gap-2">
                                     <div>
                                         <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                                            追加資料（追完エビデンス）のアップロード
+                                            追加資料のアップロード
                                         </h3>
                                         <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                                            運営から追加資料の提出（追完）を求められた場合や、後から請求書・契約書・スクリーンショット等を追加したい場合はこちらからアップロードできます（1ファイルあたり最大50MB / 複数ファイル添付可）。
+                                            運営から追加資料の提出を求められた場合や、後から請求書・契約書・スクリーンショット等を追加したい場合はこちらからアップロードできます（1ファイルあたり最大50MB / 複数ファイル添付可）。
+                                            {caseData.status === "rejected" && (
+                                                <span className="block mt-1 font-semibold text-slate-900">
+                                                    ※追加資料をアップロードして保存すると、自動的に「審査待ち」へ戻り再審査が申請されます。
+                                                </span>
+                                            )}
                                         </p>
                                     </div>
                                     {caseData.evidence_urls && caseData.evidence_urls.length > 0 && (
@@ -664,7 +682,11 @@ export default function CreditCaseDetailPage() {
                                             disabled={uploadingEvidence}
                                             className="btn-primary px-5 py-2.5 text-xs font-bold rounded-lg inline-flex items-center gap-1.5"
                                         >
-                                            {uploadingEvidence ? "アップロード中..." : "選択した資料を追加保存する"}
+                                            {uploadingEvidence
+                                                ? "アップロード中..."
+                                                : caseData.status === "rejected"
+                                                ? "追加資料を保存して再審査を申請する"
+                                                : "選択した資料を追加保存する"}
                                         </button>
                                     </div>
                                 )}

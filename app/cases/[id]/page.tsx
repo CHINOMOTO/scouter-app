@@ -136,9 +136,16 @@ export default function CaseDetailPage() {
 
             const updatedUrls = [...(caseDetail.evidence_urls || []), ...newPaths];
 
+            const isRejectedResubmit = caseDetail.status === "rejected";
+            const updatePayload: any = { evidence_urls: updatedUrls };
+            if (isRejectedResubmit) {
+                updatePayload.status = "pending";
+                updatePayload.rejected_reason = null;
+            }
+
             const { error: updateError } = await supabase
                 .from("blacklist_cases")
-                .update({ evidence_urls: updatedUrls })
+                .update(updatePayload)
                 .eq("id", caseDetail.id);
 
             if (updateError) {
@@ -161,10 +168,20 @@ export default function CaseDetailPage() {
                 }
             }
 
-            setCaseDetail({ ...caseDetail, evidence_urls: updatedUrls });
+            setCaseDetail({
+                ...caseDetail,
+                evidence_urls: updatedUrls,
+                status: isRejectedResubmit ? "pending" : caseDetail.status,
+                rejected_reason: isRejectedResubmit ? null : caseDetail.rejected_reason,
+            });
             setEvidenceFiles((prev) => [...prev, ...addedEvidence]);
             setAdditionalFiles([]);
-            setUploadMessage({ type: "success", text: "追加資料（追完エビデンス）をアップロードしました。" });
+            setUploadMessage({
+                type: "success",
+                text: isRejectedResubmit
+                    ? "追加資料をアップロードし、再審査を申請しました。"
+                    : "追加資料をアップロードしました。",
+            });
         } catch (err: any) {
             setUploadMessage({ type: "error", text: err.message || "アップロード中にエラーが発生しました。" });
         } finally {
@@ -449,15 +466,20 @@ export default function CaseDetailPage() {
                                         </div>
                                     )}
 
-                                    {/* 自社または管理者の場合：追加資料（追完エビデンス）アップロード欄 */}
+                                    {/* 自社または管理者の場合：追加資料のアップロード欄 */}
                                     {canUploadEvidence && (
                                         <div className="mt-6 p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                                             <div>
                                                 <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                                                    追加資料（追完エビデンス）のアップロード
+                                                    追加資料のアップロード
                                                 </h3>
                                                 <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                                                    運営から追加資料の提出（追完）を求められた場合や、後から証拠スクリーンショット・PDF等を追加したい場合はこちらからアップロードできます（1ファイルあたり最大50MB / 複数ファイル添付可）。
+                                                    運営から追加資料の提出を求められた場合や、後から証拠スクリーンショット・PDF等を追加したい場合はこちらからアップロードできます（1ファイルあたり最大50MB / 複数ファイル添付可）。
+                                                    {caseDetail.status === "rejected" && (
+                                                        <span className="block font-bold text-slate-800 mt-1">
+                                                            ※追加資料をアップロードすると、自動的に「審査中」に戻り再申請されます。
+                                                        </span>
+                                                    )}
                                                 </p>
                                             </div>
 
@@ -500,7 +522,11 @@ export default function CaseDetailPage() {
                                                         disabled={uploadingEvidence}
                                                         className="btn-primary px-5 py-2.5 text-xs font-bold rounded-lg inline-flex items-center gap-1.5"
                                                     >
-                                                        {uploadingEvidence ? "アップロード中..." : "選択した資料を追加保存する"}
+                                                        {uploadingEvidence
+                                                            ? "アップロード中..."
+                                                            : caseDetail.status === "rejected"
+                                                                ? "追加資料を保存して再審査を申請する"
+                                                                : "選択した資料を追加保存する"}
                                                     </button>
                                                 </div>
                                             )}
