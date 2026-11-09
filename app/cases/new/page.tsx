@@ -15,23 +15,30 @@ type TroubleCategory = {
   subItems: string[];
 };
 
+const LATE_SUB_ITEMS = [
+  "遅刻（連絡なし）",
+  "直近1ヶ月で勤務回数に対して10%-20%未満の遅刻",
+  "直近1ヶ月で勤務回数に対して20%以上の遅刻",
+];
+
 const TROUBLE_CATEGORIES: TroubleCategory[] = [
   {
     id: "absence",
-    label: "欠勤",
-    desc: "当日欠勤・連絡の有無",
+    label: "欠勤、遅刻",
+    desc: "当日欠勤・遅刻の記録",
     subItems: [
       "当日欠勤（連絡なし）",
       "当日欠勤（連絡有り）",
+      ...LATE_SUB_ITEMS,
     ],
   },
   {
     id: "early_leave",
     label: "途中帰宅",
-    desc: "作業途中の無断・強行帰宅",
+    desc: "作業途中の無断帰宅・制止に応じず帰宅",
     subItems: [
       "無断帰宅",
-      "強行突破帰宅",
+      "制止に応じず帰宅",
     ],
   },
   {
@@ -45,11 +52,10 @@ const TROUBLE_CATEGORIES: TroubleCategory[] = [
   },
   {
     id: "falsification",
-    label: "虚偽の申告",
-    desc: "身分証・資格証・連絡先の虚偽",
+    label: "申告内容の相違",
+    desc: "身分証・資格証・住所・緊急連絡先等の相違",
     subItems: [
-      "偽造身分証、偽造資格証",
-      "住所、緊急連絡先が虚偽",
+      "申告内容の相違",
     ],
   },
   {
@@ -59,7 +65,7 @@ const TROUBLE_CATEGORIES: TroubleCategory[] = [
     subItems: [
       "身体的接触に伴うトラブルにより作業中断",
       "現場で大声をあげて作業が中断",
-      "飲酒疑惑により作業中断",
+      "飲酒が確認されて作業が中断した",
     ],
   },
   {
@@ -96,7 +102,16 @@ export default function NewCasePage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // 登録に関する宣誓・同意チェックボックス
+  const [agreedWork1, setAgreedWork1] = useState(false);
+  const [agreedWork2, setAgreedWork2] = useState(false);
+  const [agreedWork3, setAgreedWork3] = useState(false);
+  // 遅刻を選択した時のみの追加同意チェックボックス
+  const [agreedLate1, setAgreedLate1] = useState(false);
+  const [agreedLate2, setAgreedLate2] = useState(false);
+
   const currentCategoryObj = TROUBLE_CATEGORIES.find((c) => c.id === selectedCategory);
+  const isLateSelected = selectedCategory === "absence" && LATE_SUB_ITEMS.includes(selectedSubItem);
 
   // File upload handling
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB default limit for Supabase
@@ -108,7 +123,7 @@ export default function NewCasePage() {
 
       newFiles.forEach(file => {
         if (file.size > MAX_FILE_SIZE) {
-          alert(`ファイル「${file.name}」はサイズが大きすぎます (最大50MB)`);
+          alert(`ファイル「${file.name}」はサイズが大きすぎます (1ファイルあたり最大50MB)`);
         } else {
           validFiles.push(file);
         }
@@ -201,6 +216,15 @@ export default function NewCasePage() {
       }
       if (selectedCategory === "other" && !reason.trim()) {
         throw new Error("「その他」を選択した場合は、具体的なトラブル内容・詳細を入力してください。");
+      }
+      if (isLateSelected && !reason.trim()) {
+        throw new Error("遅刻を選択した場合は、補足欄に「勤務◯回中、遅刻◯回」等の内訳を記載してください。");
+      }
+      if (!agreedWork1 || !agreedWork2 || !agreedWork3) {
+        throw new Error("「登録に関する宣誓・同意」のすべての項目を確認し、チェックを入れてください。");
+      }
+      if (isLateSelected && (!agreedLate1 || !agreedLate2)) {
+        throw new Error("遅刻に関する追加の確認事項（2項目）にすべてチェックを入れてください。");
       }
       if (selectedFiles.length === 0) {
         throw new Error("添付資料（同意書必須、あれば証拠のスクショなど）を必ず1点以上添付してください。");
@@ -339,6 +363,11 @@ export default function NewCasePage() {
                   setSelectedSubItem("");
                   setReason("");
                   setSelectedFiles([]);
+                  setAgreedWork1(false);
+                  setAgreedWork2(false);
+                  setAgreedWork3(false);
+                  setAgreedLate1(false);
+                  setAgreedLate2(false);
                   window.scrollTo(0, 0);
                 }}
                 className="btn-secondary py-3 px-6 text-xs sm:text-sm font-bold"
@@ -675,13 +704,15 @@ export default function NewCasePage() {
 
                 {/* 補足詳細・その他理由入力欄 */}
                 <div className="space-y-1.5 sm:space-y-2">
-                  <Label required={selectedCategory === "other"}>
+                  <Label required={selectedCategory === "other" || isLateSelected}>
                     {selectedCategory === "other"
                       ? "登録理由 / 具体的なトラブル詳細（「その他」選択時は必須）"
-                      : "補足詳細・具体的な状況（任意）"}
+                      : isLateSelected
+                        ? "補足詳細（遅刻選択時は「勤務◯回中、遅刻◯回」の記載が必須）"
+                        : "補足詳細・具体的な状況（任意）"}
                   </Label>
                   <textarea
-                    required={selectedCategory === "other"}
+                    required={selectedCategory === "other" || isLateSelected}
                     rows={4}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
@@ -689,7 +720,9 @@ export default function NewCasePage() {
                     placeholder={
                       selectedCategory === "other"
                         ? "具体的なトラブル内容や客観的な事実経過を記載してください..."
-                        : "選択した事象に加えて補足すべき事実経過や注意点があれば記載してください（任意）..."
+                        : isLateSelected
+                          ? "例: 勤務10回中、遅刻3回（その他、客観的な事実経過があれば記載してください）"
+                          : "選択した事象に加えて補足すべき事実経過や注意点があれば記載してください（任意）..."
                     }
                   />
                 </div>
@@ -707,9 +740,12 @@ export default function NewCasePage() {
                     <div className="pointer-events-none">
                       <UploadCloud className="w-7 h-7 sm:w-8 sm:h-8 text-slate-400 mx-auto mb-1.5 sm:mb-2" />
                       <p className="text-xs sm:text-sm font-semibold text-slate-700">タップまたはドラッグ＆ドロップで追加</p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">（同意書は必須添付 / 証拠スクショ・画像・PDFなど複数可 / 最大50MB）</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">（同意書は必須添付 / 証拠スクショ・画像・PDFなど複数ファイル添付可 / 1ファイルあたり最大50MB）</p>
                     </div>
                   </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    ※申請後に運営から追加資料（追完）を求められた場合も、マイページの「自社登録トラブル一覧」→該当データの詳細画面からいつでも追加アップロードが可能です。
+                  </p>
 
                   {selectedFiles.length > 0 && (
                     <ul className="mt-4 space-y-2">
@@ -738,6 +774,82 @@ export default function NewCasePage() {
                         </li>
                       ))}
                     </ul>
+                  )}
+                </div>
+
+                {/* 登録に関する宣誓・同意チェックボックス */}
+                <div className="space-y-3 pt-5 mt-4 border-t border-slate-200">
+                  <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <span>登録に関する宣誓・同意</span>
+                    <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">
+                      必須
+                    </span>
+                  </div>
+
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={agreedWork1}
+                      onChange={(e) => setAgreedWork1(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 shrink-0"
+                    />
+                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
+                      記載した内容は、当社が直接経験した事実です。推測・伝聞・誇張は含みません。
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={agreedWork2}
+                      onChange={(e) => setAgreedWork2(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 shrink-0"
+                    />
+                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
+                      添付した同意書は、本人が内容を確認し、署名したものです。
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={agreedWork3}
+                      onChange={(e) => setAgreedWork3(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 shrink-0"
+                    />
+                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
+                      虚偽または事実と異なる登録が判明した場合、当該登録の削除、当社の利用停止、およびそれにより生じた損害の負担の対象となることに同意します。
+                    </span>
+                  </label>
+
+                  {isLateSelected && (
+                    <div className="mt-3 p-3.5 sm:p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-2.5 animate-fade-in">
+                      <div className="text-xs font-bold text-blue-950">
+                        遅刻を選択した場合の追加確認事項
+                      </div>
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={agreedLate1}
+                          onChange={(e) => setAgreedLate1(e.target.checked)}
+                          className="mt-0.5 w-4 h-4 rounded border-blue-300 text-blue-700 focus:ring-blue-600 shrink-0"
+                        />
+                        <span className="text-xs text-slate-800 group-hover:text-slate-950 leading-relaxed">
+                          公共交通機関の遅延など、本人の責めに帰すことができない事由による遅刻は、回数に含めていません。
+                        </span>
+                      </label>
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={agreedLate2}
+                          onChange={(e) => setAgreedLate2(e.target.checked)}
+                          className="mt-0.5 w-4 h-4 rounded border-blue-300 text-blue-700 focus:ring-blue-600 shrink-0"
+                        />
+                        <span className="text-xs text-slate-800 group-hover:text-slate-950 leading-relaxed">
+                          補足欄に「勤務◯回中、遅刻◯回」と記載しました。
+                        </span>
+                      </label>
+                    </div>
                   )}
                 </div>
               </Section>

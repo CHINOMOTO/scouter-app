@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { FileText, AlertCircle, ArrowLeft, Search } from "lucide-react";
+import { FileText, AlertCircle, ArrowLeft, Search, UploadCloud, X, Check } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 
 type CaseDetail = {
@@ -78,8 +78,99 @@ export default function CaseDetailPage() {
     const [companyName, setCompanyName] = useState<string | null>(null);
     const [registrantName, setRegistrantName] = useState<string | null>(null);
 
-    // Storage files
+    // Storage files & 追完アップロード用ステート
     const [evidenceFiles, setEvidenceFiles] = useState<EvidenceFile[]>([]);
+    const [canUploadEvidence, setCanUploadEvidence] = useState(false);
+    const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
+    const [uploadingEvidence, setUploadingEvidence] = useState(false);
+    const [uploadMessage, setUploadMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 1ファイルあたり最大50MB
+
+    const handleAdditionalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const newFiles = Array.from(e.target.files);
+            const validFiles: File[] = [];
+            newFiles.forEach((file) => {
+                if (file.size > MAX_FILE_SIZE) {
+                    alert(`ファイル「${file.name}」はサイズが大きすぎます (1ファイルあたり最大50MB)`);
+                } else {
+                    validFiles.push(file);
+                }
+            });
+            if (validFiles.length > 0) {
+                setAdditionalFiles((prev) => [...prev, ...validFiles]);
+            }
+        }
+    };
+
+    const removeAdditionalFile = (index: number) => {
+        setAdditionalFiles((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const handleAdditionalUpload = async () => {
+        if (!caseDetail || additionalFiles.length === 0) return;
+        setUploadingEvidence(true);
+        setUploadMessage(null);
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("ログインセッションが切れました。再ログインしてください。");
+
+            const newPaths: string[] = [];
+            for (const file of additionalFiles) {
+                const fileExt = file.name.split(".").pop();
+                const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+                const { error: uploadError, data: uploadData } = await supabase.storage
+                    .from("case-evidence")
+                    .upload(fileName, file);
+
+                if (uploadError) {
+                    throw new Error(`ファイルのアップロードに失敗しました (${file.name}): ${uploadError.message}`);
+                }
+                if (uploadData?.path) {
+                    newPaths.push(uploadData.path);
+                }
+            }
+
+            const updatedUrls = [...(caseDetail.evidence_urls || []), ...newPaths];
+
+            const { error: updateError } = await supabase
+                .from("blacklist_cases")
+                .update({ evidence_urls: updatedUrls })
+                .eq("id", caseDetail.id);
+
+            if (updateError) {
+                throw new Error(`データ更新に失敗しました: ${updateError.message}`);
+            }
+
+            const addedEvidence: EvidenceFile[] = [];
+            for (const path of newPaths) {
+                const { data: signedData } = await supabase.storage
+                    .from("case-evidence")
+                    .createSignedUrl(path, 3600);
+                if (signedData) {
+                    const isImage = path.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                    addedEvidence.push({
+                        path,
+                        signedUrl: signedData.signedUrl,
+                        type: isImage ? "image" : "other",
+                        name: path.split("/").pop() || "file",
+                    });
+                }
+            }
+
+            setCaseDetail({ ...caseDetail, evidence_urls: updatedUrls });
+            setEvidenceFiles((prev) => [...prev, ...addedEvidence]);
+            setAdditionalFiles([]);
+            setUploadMessage({ type: "success", text: "追加資料（追完エビデンス）をアップロードしました。" });
+        } catch (err: any) {
+            setUploadMessage({ type: "error", text: err.message || "アップロード中にエラーが発生しました。" });
+        } finally {
+            setUploadingEvidence(false);
+        }
+    };
 
     useEffect(() => {
         if (!id) return;
@@ -138,6 +229,7 @@ export default function CaseDetailPage() {
                 return;
             }
 
+            setCanUploadEvidence(currentUser.role === 'admin' || isOwnCompany);
             setCaseDetail(data as CaseDetail);
 
             // アクセスログの保存
@@ -244,7 +336,6 @@ export default function CaseDetailPage() {
                             <div className="space-y-8">
 
                                 {/* Header */}
-                                {/* Header with mieris UI */}
                                 <div className="bg-white p-6 md:p-8 rounded-xl border border-slate-200 relative overflow-hidden mb-6">
 
                                     <div className="relative z-10 max-w-[75%]">
@@ -355,6 +446,75 @@ export default function CaseDetailPage() {
                                                     )}
                                                 </div>
                                             ))}
+                                        </div>
+                                    )}
+
+                                    {/* 自社または管理者の場合：追加資料（追完エビデンス）アップロード欄 */}
+                                    {canUploadEvidence && (
+                                        <div className="mt-6 p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                                            <div>
+                                                <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+                                                    追加資料（追完エビデンス）のアップロード
+                                                </h3>
+                                                <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                                                    運営から追加資料の提出（追完）を求められた場合や、後から証拠スクリーンショット・PDF等を追加したい場合はこちらからアップロードできます（1ファイルあたり最大50MB / 複数ファイル添付可）。
+                                                </p>
+                                            </div>
+
+                                            <div className="border border-dashed border-slate-300 bg-white rounded-xl p-4 text-center hover:bg-slate-50/80 transition-colors relative">
+                                                <input
+                                                    type="file"
+                                                    multiple
+                                                    onChange={handleAdditionalFileChange}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                    accept="image/*,application/pdf"
+                                                />
+                                                <div className="pointer-events-none">
+                                                    <UploadCloud className="w-6 h-6 text-slate-400 mx-auto mb-1" />
+                                                    <p className="text-xs font-semibold text-slate-700">タップまたはドラッグ＆ドロップでファイルを選択</p>
+                                                    <p className="text-[11px] text-slate-400 mt-0.5">（1ファイルあたり最大50MB / 複数ファイル添付可）</p>
+                                                </div>
+                                            </div>
+
+                                            {additionalFiles.length > 0 && (
+                                                <div className="space-y-2">
+                                                    <ul className="space-y-1.5">
+                                                        {additionalFiles.map((file, idx) => (
+                                                            <li key={idx} className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-slate-200 text-xs">
+                                                                <span className="truncate max-w-[75%] text-slate-700 font-medium">
+                                                                    {file.name} ({(file.size / 1024).toFixed(0)}KB)
+                                                                </span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeAdditionalFile(idx)}
+                                                                    className="text-rose-600 hover:text-rose-800 p-1 rounded"
+                                                                >
+                                                                    <X className="w-3.5 h-3.5" />
+                                                                </button>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleAdditionalUpload}
+                                                        disabled={uploadingEvidence}
+                                                        className="btn-primary px-5 py-2.5 text-xs font-bold rounded-lg inline-flex items-center gap-1.5"
+                                                    >
+                                                        {uploadingEvidence ? "アップロード中..." : "選択した資料を追加保存する"}
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {uploadMessage && (
+                                                <div className={`p-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${
+                                                    uploadMessage.type === "success"
+                                                        ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                                        : "bg-rose-50 text-rose-800 border border-rose-200"
+                                                }`}>
+                                                    {uploadMessage.type === "success" ? <Check className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                                                    <span>{uploadMessage.text}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

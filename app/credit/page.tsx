@@ -546,7 +546,7 @@ export default function CreditSearchPage() {
 
                                 <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-2xs">
                                     <div className="flex items-center justify-between text-slate-500 mb-1.5 sm:mb-2">
-                                        <span className="text-xs font-bold tracking-wider text-rose-700">現在未払い（要注意）</span>
+                                        <span className="text-xs font-bold tracking-wider text-rose-700">現在未払い</span>
                                         <AlertTriangle className="w-4 h-4 text-rose-500" />
                                     </div>
                                     <div className="flex items-baseline gap-1">

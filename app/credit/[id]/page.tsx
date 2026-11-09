@@ -15,7 +15,9 @@ import {
     Check,
     Clock,
     ExternalLink,
-    FileText
+    FileText,
+    UploadCloud,
+    X
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { detectOfficialSource, OfficialSourceInfo, isCorporateEntityName } from "@/lib/officialSources";
@@ -64,6 +66,85 @@ export default function CreditCaseDetailPage() {
     const [delayDays, setDelayDays] = useState("");
     const [resolving, setResolving] = useState(false);
     const [toast, setToast] = useState<ToastMessage | null>(null);
+
+    // 追完エビデンス追加アップロード用
+    const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
+    const [uploadingEvidence, setUploadingEvidence] = useState(false);
+
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 1ファイルあたり最大50MB
+
+    const handleAdditionalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const newFiles = Array.from(e.target.files);
+            const validFiles: File[] = [];
+            newFiles.forEach((file) => {
+                if (file.size > MAX_FILE_SIZE) {
+                    alert(`ファイル「${file.name}」はサイズが大きすぎます (1ファイルあたり最大50MB)`);
+                } else {
+                    validFiles.push(file);
+                }
+            });
+            if (validFiles.length > 0) {
+                setAdditionalFiles((prev) => [...prev, ...validFiles]);
+            }
+        }
+    };
+
+    const removeAdditionalFile = (index: number) => {
+        setAdditionalFiles((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const handleAdditionalUpload = async () => {
+        if (!caseData || additionalFiles.length === 0) return;
+        setUploadingEvidence(true);
+
+        try {
+            const session = (await supabase.auth.getSession()).data.session;
+            if (!session) throw new Error("認証セッションがありません");
+
+            const newPaths: string[] = [];
+            for (const file of additionalFiles) {
+                const ext = file.name.split(".").pop();
+                const fileName = `credit-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+                const filePath = `credit_evidence/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from("case_attachments")
+                    .upload(filePath, file);
+
+                if (uploadError) {
+                    throw new Error(`ファイルのアップロードに失敗しました (${file.name}): ${uploadError.message}`);
+                }
+                newPaths.push(filePath);
+            }
+
+            const updatedUrls = [...(caseData.evidence_urls || []), ...newPaths];
+
+            const res = await fetch(`/api/credit-cases/${id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    evidenceUrls: updatedUrls
+                })
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || "更新に失敗しました");
+            }
+
+            setAdditionalFiles([]);
+            setToast({ type: "success", text: "追加資料（追完エビデンス）をアップロードしました。" });
+            fetchDetail();
+        } catch (err: any) {
+            setToast({ type: "error", text: err.message || "アップロード中にエラーが発生しました。" });
+        } finally {
+            setUploadingEvidence(false);
+        }
+    };
 
     const fetchDetail = async () => {
         if (!id) return;
@@ -524,6 +605,71 @@ export default function CreditCaseDetailPage() {
                                 </div>
                             )}
                         </div>
+
+                        {/* 自社登録または管理者の場合：追加資料（追完エビデンス）のアップロード */}
+                        {!sourceInfo.isOfficial && (isOwner || isAdmin) && (
+                            <div className="mt-6 p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                                <div className="flex items-center justify-between flex-wrap gap-2">
+                                    <div>
+                                        <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+                                            追加資料（追完エビデンス）のアップロード
+                                        </h3>
+                                        <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                                            運営から追加資料の提出（追完）を求められた場合や、後から請求書・契約書・スクリーンショット等を追加したい場合はこちらからアップロードできます（1ファイルあたり最大50MB / 複数ファイル添付可）。
+                                        </p>
+                                    </div>
+                                    {caseData.evidence_urls && caseData.evidence_urls.length > 0 && (
+                                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700 shrink-0">
+                                            現在の添付資料: {caseData.evidence_urls.length} 件
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="border border-dashed border-slate-300 bg-white rounded-xl p-4 text-center hover:bg-slate-50/80 transition-colors relative">
+                                    <input
+                                        type="file"
+                                        multiple
+                                        onChange={handleAdditionalFileChange}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        accept="image/*,application/pdf"
+                                    />
+                                    <div className="pointer-events-none">
+                                        <UploadCloud className="w-6 h-6 text-slate-400 mx-auto mb-1" />
+                                        <p className="text-xs font-semibold text-slate-700">タップまたはドラッグ＆ドロップでファイルを選択</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">（1ファイルあたり最大50MB / 複数ファイル添付可）</p>
+                                    </div>
+                                </div>
+
+                                {additionalFiles.length > 0 && (
+                                    <div className="space-y-2">
+                                        <ul className="space-y-1.5">
+                                            {additionalFiles.map((file, idx) => (
+                                                <li key={idx} className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-slate-200 text-xs">
+                                                    <span className="truncate max-w-[75%] text-slate-700 font-medium">
+                                                        {file.name} ({(file.size / 1024).toFixed(0)}KB)
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeAdditionalFile(idx)}
+                                                        className="text-rose-600 hover:text-rose-800 p-1 rounded"
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <button
+                                            type="button"
+                                            onClick={handleAdditionalUpload}
+                                            disabled={uploadingEvidence}
+                                            className="btn-primary px-5 py-2.5 text-xs font-bold rounded-lg inline-flex items-center gap-1.5"
+                                        >
+                                            {uploadingEvidence ? "アップロード中..." : "選択した資料を追加保存する"}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* 登録日 */}
                         <div className="mt-8 pt-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between items-center">

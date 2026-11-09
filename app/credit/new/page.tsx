@@ -637,7 +637,8 @@ export default function NewCreditCasePage() {
                                         className="block w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 cursor-pointer"
                                     />
                                     <p className="text-[11px] text-slate-500 mt-2">
-                                        ※PDFまたは画像ファイルを添付してください。管理者の審査時にエビデンスとして確認されます。
+                                        ※PDFまたは画像ファイルを添付してください（1ファイルあたり最大50MB / 複数ファイル添付可）。管理者の審査時にエビデンスとして確認されます。<br />
+                                        ※申請後に運営から追加資料（追完）を求められた場合も、該当データの詳細画面からいつでも追加アップロードが可能です。
                                     </p>
 
                                     {files.length > 0 && (
