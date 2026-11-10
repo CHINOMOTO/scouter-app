@@ -53,9 +53,12 @@ const TROUBLE_CATEGORIES: TroubleCategory[] = [
   {
     id: "falsification",
     label: "申告内容の相違",
-    desc: "身分証・資格証・住所・緊急連絡先等の相違",
+    desc: "身分証・住所・緊急連絡先・資格証等の相違",
     subItems: [
-      "申告内容の相違",
+      "他人の身分証だった",
+      "住所・緊急連絡先が相違",
+      "資格証の相違",
+      "その他",
     ],
   },
   {
@@ -112,6 +115,7 @@ export default function NewCasePage() {
 
   const currentCategoryObj = TROUBLE_CATEGORIES.find((c) => c.id === selectedCategory);
   const isLateSelected = selectedCategory === "absence" && LATE_SUB_ITEMS.includes(selectedSubItem);
+  const isFalsificationSelected = selectedCategory === "falsification";
 
   // File upload handling
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB default limit for Supabase
@@ -219,6 +223,9 @@ export default function NewCasePage() {
       }
       if (isLateSelected && !reason.trim()) {
         throw new Error("遅刻を選択した場合は、補足欄に「勤務◯回中、遅刻◯回」等の内訳を記載してください。");
+      }
+      if (isFalsificationSelected && !reason.trim()) {
+        throw new Error("「申告内容の相違」を選択した場合は、何が相違だったのか補足詳細を入力してください。");
       }
       if (!agreedWork1 || !agreedWork2 || !agreedWork3) {
         throw new Error("「登録に関する宣誓・同意」のすべての項目を確認し、チェックを入れてください。");
@@ -704,15 +711,17 @@ export default function NewCasePage() {
 
                 {/* 補足詳細・その他理由入力欄 */}
                 <div className="space-y-1.5 sm:space-y-2">
-                  <Label required={selectedCategory === "other" || isLateSelected}>
+                  <Label required={selectedCategory === "other" || isLateSelected || isFalsificationSelected}>
                     {selectedCategory === "other"
                       ? "登録理由 / 具体的なトラブル詳細（「その他」選択時は必須）"
                       : isLateSelected
                         ? "補足詳細（遅刻選択時は「勤務◯回中、遅刻◯回」の記載が必須）"
-                        : "補足詳細・具体的な状況（任意）"}
+                        : isFalsificationSelected
+                          ? "補足詳細（「申告内容の相違」選択時は、何が相違だったのかの記載が必須）"
+                          : "補足詳細・具体的な状況（任意）"}
                   </Label>
                   <textarea
-                    required={selectedCategory === "other" || isLateSelected}
+                    required={selectedCategory === "other" || isLateSelected || isFalsificationSelected}
                     rows={4}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
@@ -722,7 +731,9 @@ export default function NewCasePage() {
                         ? "具体的なトラブル内容や客観的な事実経過を記載してください..."
                         : isLateSelected
                           ? "例: 勤務10回中、遅刻3回（その他、客観的な事実経過があれば記載してください）"
-                          : "選択した事象に加えて補足すべき事実経過や注意点があれば記載してください（任意）..."
+                          : isFalsificationSelected
+                            ? "何が相違だったのか、具体的な相違内容・客観的な事実経過を記載してください..."
+                            : "選択した事象に加えて補足すべき事実経過や注意点があれば記載してください（任意）..."
                     }
                   />
                 </div>
