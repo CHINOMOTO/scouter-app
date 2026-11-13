@@ -42,7 +42,7 @@ export default function SignUpPage() {
         const planLabels: Record<string, string> = {
             full: "FULLプラン（MIERIS WORK ＋ MIERIS CREDIT / 月額30,000円）",
             employment: "MIERIS WORK（就業情報・人物信用 / 月額18,000円）",
-            credit: "MIERIS CREDIT（企業信用・未払い防止 / 月額15,000円）"
+            credit: "MIERIS CREDIT（企業信用・未払い防止 / 月額18,000円）"
         };
 
         const inquiryMessage = `【新規利用お申し込み】
@@ -71,12 +71,12 @@ ${notes.trim() || "なし"}`;
 
             if (insertError) {
                 console.error("Application insert error:", insertError);
-                // テーブル保存エラーでもメールAPIやLINE通知へフォールバック
             }
 
             // LINE通知の送信（管理者へ通知）
+            let notifyOk = false;
             try {
-                await fetch("/api/notify/line", {
+                const notifyRes = await fetch("/api/notify/line", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -88,8 +88,13 @@ ${notes.trim() || "なし"}`;
                         }
                     })
                 });
+                notifyOk = notifyRes.ok;
             } catch (notifyErr) {
                 console.warn("LINE notify skipped or failed:", notifyErr);
+            }
+
+            if (insertError && !notifyOk) {
+                throw new Error("お申し込みデータの保存に失敗しました。お手数ですが時間をおいて再度お試しください。");
             }
 
             setIsSuccess(true);
@@ -102,9 +107,7 @@ ${notes.trim() || "なし"}`;
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-between p-3.5 sm:p-6 bg-[#f8fafc]">
-            <div className="h-2 sm:h-4"></div>
-
+        <div className="min-h-screen flex flex-col items-center justify-center p-3.5 sm:p-6 bg-[#f8fafc]">
             <main className="w-full max-w-[540px] flex flex-col items-center justify-center py-4 sm:py-6 my-auto">
 
                 {/* ヘッダーロゴ */}
@@ -198,7 +201,7 @@ ${notes.trim() || "なし"}`;
                                             className="sr-only"
                                         />
                                         <div className="font-bold text-slate-900 text-xs">MIERIS CREDIT</div>
-                                        <div className="text-xs font-bold text-slate-700">15,000円/月</div>
+                                        <div className="text-xs font-bold text-slate-700">18,000円/月</div>
                                         <div className="text-[10px] text-slate-500 mt-1">未払い企業情報</div>
                                     </label>
                                 </div>
@@ -324,10 +327,6 @@ ${notes.trim() || "なし"}`;
                     </div>
                 )}
             </main>
-
-            <footer className="text-center py-3 text-[11px] text-slate-400 font-medium">
-                © 2026 MIERIS. All rights reserved.
-            </footer>
         </div>
     );
 }

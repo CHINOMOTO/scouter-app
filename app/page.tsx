@@ -51,9 +51,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between p-3.5 sm:p-6 bg-[#f8fafc]">
-      <div className="h-2 sm:h-6"></div>
-
+    <div className="min-h-screen flex flex-col items-center justify-center p-3.5 sm:p-6 bg-[#f8fafc]">
       <main className="w-full max-w-[460px] flex flex-col items-center justify-center py-4 sm:py-8 my-auto">
 
         {/* Brand Header - ロゴ＝タイトル統合デザイン */}
@@ -133,17 +131,9 @@ export default function Home() {
             <Link href="/forgot-password" className="text-slate-500 hover:text-slate-900 transition-colors">
               パスワードをお忘れの方はこちら
             </Link>
-            {/* <Link href="/signup" className="text-slate-700 hover:text-blue-600 font-bold transition-colors">
-              新規アカウント登録（お申し込み）はこちら →
-            </Link> */}
           </div>
         </div>
       </main>
-
-      {/* 画面下部の引き締めフッター */}
-      <footer className="text-center py-3 text-[11px] text-slate-400 font-medium">
-        © 2026 MIERIS. All rights reserved.
-      </footer>
     </div>
   );
 }

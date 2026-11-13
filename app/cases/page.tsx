@@ -23,6 +23,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Pagination } from "@/components/Pagination";
 import { Toast, ToastMessage } from "@/components/Toast";
+import { usePlan } from "@/contexts/PlanContext";
 
 type BlacklistCase = {
   id: string;
@@ -47,6 +48,17 @@ export default function CasesPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [planRestricted, setPlanRestricted] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const { allowedPlan, isAdmin: isContextAdmin } = usePlan();
+
+  // リアルタイムプラン情報の同期（管理者がプラン変更した際に即時反映）
+  useEffect(() => {
+    if (isContextAdmin) {
+      setPlanRestricted(false);
+      setIsAdmin(true);
+    } else {
+      setPlanRestricted(allowedPlan === "credit");
+    }
+  }, [allowedPlan, isContextAdmin]);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "pending" | "rejected">("all");
@@ -188,23 +200,6 @@ export default function CasesPage() {
     }
   };
 
-  const renderSortableHeader = (label: string, key: string, isRightAlign = false) => {
-    const isActive = sortConfig.key === key;
-    return (
-      <th 
-        className={`px-6 py-5 tracking-widest cursor-pointer hover:bg-slate-50 transition-colors select-none ${isRightAlign ? 'text-right' : ''}`}
-        onClick={() => handleSort(key)}
-      >
-        <div className={`flex items-center gap-2 ${isRightAlign ? 'justify-end' : ''}`}>
-          {label}
-          <span className={`text-[10px] ${isActive ? 'text-slate-900' : 'text-slate-600'}`}>
-            {isActive ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '↕'}
-          </span>
-        </div>
-      </th>
-    );
-  };
-
   return (
     <RequireAuth>
       <Toast toast={toast} onClose={() => setToast(null)} />
@@ -227,7 +222,7 @@ export default function CasesPage() {
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                   就業トラブル 登録データ一覧
                 </h1>
-                {!isLoading && (
+                {!isLoading && !planRestricted && (
                   <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full font-mono">
                     全 {filteredAndSortedCases.length} 件
                   </span>
@@ -239,7 +234,7 @@ export default function CasesPage() {
                   : "貴社が登録申請した就業トラブル情報の管理一覧です（※他社登録の照会は「応募者 検索・照会」画面より実行してください）。"}
               </p>
             </div>
-            <div className="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto">
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto">
               <Link 
                 href="/dashboard" 
                 className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
@@ -247,20 +242,24 @@ export default function CasesPage() {
                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                 <span>戻る</span>
               </Link>
-              <Link
-                href="/search"
-                className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
-              >
-                <Search className="w-3.5 h-3.5 shrink-0" />
-                <span>検索・照会</span>
-              </Link>
-              <Link
-                href="/cases/new"
-                className="btn-primary flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
-              >
-                <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span>新規登録</span>
-              </Link>
+              {!planRestricted && (
+                <>
+                  <Link
+                    href="/search"
+                    className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
+                  >
+                    <Search className="w-3.5 h-3.5 shrink-0" />
+                    <span>検索・照会</span>
+                  </Link>
+                  <Link
+                    href="/cases/new"
+                    className="btn-primary flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
+                  >
+                    <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span>新規登録</span>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -483,9 +482,9 @@ export default function CasesPage() {
                           <div className="flex items-center gap-1 mr-1">
                             {isAdmin && (
                               <Link
-                                href={`/cases/${c.id}/edit`}
+                                href={`/admin/cases/${c.id}`}
                                 className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                                title="編集"
+                                title="審査・編集"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                               </Link>
@@ -528,27 +527,5 @@ export default function CasesPage() {
         </div>
       </div>
     </RequireAuth>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  let styles = "bg-slate-100 text-slate-600 border-slate-200";
-  let label = status;
-
-  if (status === "pending") {
-    styles = "bg-amber-50 text-amber-700 border-amber-200";
-    label = "審査中";
-  } else if (status === "approved") {
-    styles = "bg-emerald-50 text-emerald-700 border-emerald-200";
-    label = "承認済み";
-  } else if (status === "rejected") {
-    styles = "bg-rose-50 text-rose-700 border-rose-200";
-    label = "却下";
-  }
-
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${styles}`}>
-      {label}
-    </span>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import * as THREE from "three";
+import { RequireAdmin } from "@/components/RequireAdmin";
 
 export default function Resend3DDemoPage() {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -420,38 +421,40 @@ export default function Resend3DDemoPage() {
     };
 
     return (
-        <div className="h-screen w-screen bg-[#050508] text-white flex flex-col items-center justify-center selection:bg-indigo-500 selection:text-white relative overflow-hidden font-sans">
-            
-            {/* 1. 背景グリッドとアンビエントライティング (Resend Style) */}
-            <div 
-                className="absolute inset-0 pointer-events-none opacity-20"
-                style={{
-                    backgroundImage: `
-                        linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px)
-                    `,
-                    backgroundSize: '40px 40px'
-                }}
-            />
-            {/* 中央のグラデーショングロー */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[500px] bg-gradient-to-b from-indigo-600/15 via-sky-500/10 to-transparent blur-[140px] pointer-events-none" />
-            
-            {/* 2. ミニマルな戻るボタン (左上) */}
-            <Link
-                href="/admin"
-                className="absolute top-6 left-6 z-30 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs text-white/60 hover:text-white transition-all backdrop-blur-md"
-            >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>戻る</span>
-            </Link>
+        <RequireAdmin>
+            <div className="h-screen w-screen bg-[#050508] text-white flex flex-col items-center justify-center selection:bg-indigo-500 selection:text-white relative overflow-hidden font-sans">
+                
+                {/* 1. 背景グリッドとアンビエントライティング (Resend Style) */}
+                <div 
+                    className="absolute inset-0 pointer-events-none opacity-20"
+                    style={{
+                        backgroundImage: `
+                            linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+                            linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px)
+                        `,
+                        backgroundSize: '40px 40px'
+                    }}
+                />
+                {/* 中央のグラデーショングロー */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[500px] bg-gradient-to-b from-indigo-600/15 via-sky-500/10 to-transparent blur-[140px] pointer-events-none" />
+                
+                {/* 2. ミニマルな戻るボタン (左上) */}
+                <Link
+                    href="/admin"
+                    className="absolute top-6 left-6 z-30 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs text-white/60 hover:text-white transition-all backdrop-blur-md"
+                >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>戻る</span>
+                </Link>
 
-            {/* 3. 画面中央いっぱいの 3D キャンバス (クリックでシャッフル、ドラッグで回転) */}
-            <div 
-                ref={containerRef}
-                onClick={triggerShuffle}
-                className="w-full h-full cursor-grab active:cursor-grabbing relative z-10 flex items-center justify-center"
-            />
+                {/* 3. 画面中央いっぱいの 3D キャンバス (クリックでシャッフル、ドラッグで回転) */}
+                <div 
+                    ref={containerRef}
+                    onClick={triggerShuffle}
+                    className="w-full h-full cursor-grab active:cursor-grabbing relative z-10 flex items-center justify-center"
+                />
 
-        </div>
+            </div>
+        </RequireAdmin>
     );
 }

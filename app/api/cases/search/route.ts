@@ -45,15 +45,19 @@ export async function GET(request: Request) {
             ? createClient(supabaseUrl, supabaseServiceRoleKey)
             : supabaseUser;
 
-        // ユーザーのプラン権限チェック
+        // ユーザーのプラン・承認権限チェック
         const { data: appUser } = await supabaseQuery
             .from('app_users')
-            .select('role, company_id, allowed_plan')
+            .select('role, company_id, allowed_plan, is_approved')
             .eq('id', user.id)
             .single();
 
-        const isAdmin = appUser?.role === 'admin';
-        const userPlan = appUser?.allowed_plan || 'full';
+        if (!appUser || appUser.is_approved === false) {
+            return NextResponse.json({ error: '承認されたアカウントが必要です。' }, { status: 403 });
+        }
+
+        const isAdmin = appUser.role === 'admin';
+        const userPlan = appUser.allowed_plan || 'full';
 
         // プランが credit（企業信用のみ）の場合はアクセス制限
         if (!isAdmin && userPlan === 'credit') {
@@ -77,15 +81,15 @@ export async function GET(request: Request) {
                 occurrence_date,
                 reason_text,
                 status,
+                approved_at,
                 created_at,
-                registered_company_id
+                registered_company_id,
+                companies:registered_company_id ( id, name )
             `)
             .eq('birth_date', birthDate);
 
-        // 管理者以外は「承認済み」データのみ照会可能
-        if (!isAdmin) {
-            query = query.eq('status', 'approved');
-        }
+        // 照会検索では「承認済み」データのみ照会可能
+        query = query.eq('status', 'approved');
 
         const { data, error } = await query.order('created_at', { ascending: false });
 

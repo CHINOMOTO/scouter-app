@@ -9,7 +9,7 @@ export async function GET(request: Request) {
         const q = searchParams.get('q') || '';
         const corporateNumber = searchParams.get('corp') || '';
         const status = searchParams.get('status') || 'approved'; // 一般は承認済みのみ
-        const showAll = searchParams.get('all') === 'true'; // テスト検証用：全件表示フラグ
+        const showAll = searchParams.get('all') === 'true'; // 管理者向け全件表示フラグ
 
         const authHeader = request.headers.get('Authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -34,15 +34,19 @@ export async function GET(request: Request) {
             ? createClient(supabaseUrl, supabaseServiceRoleKey)
             : supabaseUser;
 
-        // ユーザーのプラン権限チェック
+        // ユーザーのプラン・承認権限チェック
         const { data: appUser } = await supabaseQuery
             .from('app_users')
-            .select('role, company_id, allowed_plan')
+            .select('role, company_id, allowed_plan, is_approved')
             .eq('id', user.id)
             .single();
 
-        const isAdmin = appUser?.role === 'admin';
-        const userPlan = appUser?.allowed_plan || 'full';
+        if (!appUser || appUser.is_approved === false) {
+            return NextResponse.json({ error: '承認されたアカウントが必要です' }, { status: 403 });
+        }
+
+        const isAdmin = appUser.role === 'admin';
+        const userPlan = appUser.allowed_plan || 'full';
 
         // プランが employment（就業情報のみ）の場合はクレジットへのアクセス制限（管理者を除く）
         if (!isAdmin && userPlan === 'employment') {
@@ -52,7 +56,6 @@ export async function GET(request: Request) {
             }, { status: 403 });
         }
 
-        // クエリ構築
         // クエリ構築（新ステータスカラム対応 + 後方互換フォールバック）
         const selectFieldsWithStatus = `
             id,
@@ -97,17 +100,14 @@ export async function GET(request: Request) {
             .select(selectFieldsWithStatus)
             .order('created_at', { ascending: false });
 
-        const isSearching = !!(q.trim() || corporateNumber.trim());
+        const cleanCorp = corporateNumber.trim().replace(/[^0-9]/g, '');
+        const isSearching = !!(q.trim() || cleanCorp);
 
         // 管理者以外は一覧の垂れ流しを防止（検索でのみ該当データを照会可能）
         if (!isAdmin) {
             if (isSearching) {
-                // 検索時は承認済みデータまたは自社登録データのみ照会可能
-                if (appUser?.company_id) {
-                    query = query.or(`status.eq.approved,registered_by_company_id.eq.${appUser.company_id}`);
-                } else {
-                    query = query.eq('status', 'approved');
-                }
+                // 照会検索時は承認済みデータのみ返す（未承認・却下データの混入防止 & .or()競合防止）
+                query = query.eq('status', 'approved');
             } else {
                 // 一覧表示時: 自社登録データ ＋ 公的確定処分データ（国交省・厚労省・官報等の公表記録）
                 if (appUser?.company_id) {
@@ -117,15 +117,15 @@ export async function GET(request: Request) {
                 }
             }
         } else if (!showAll) {
-            // 管理者でも all=true でない場合は通常のフィルタリング
+            // 管理者でも all=true でない場合（通常の照会・統計取得時）は承認済みのみ対象
+            query = query.eq('status', 'approved');
         }
 
-        // 検索フィルター
-        if (q.trim()) {
+        // 検索フィルター（13桁法人番号がある場合は一意特定のため法人番号で照合し、社名表記揺れによる0件漏れを防ぐ）
+        if (cleanCorp) {
+            query = query.eq('corporate_number', cleanCorp);
+        } else if (q.trim()) {
             query = query.or(buildCompanyQueryVariants(q).map(v => `company_name.ilike.%${v}%`).concat(`location.ilike.%${q.trim()}%`).join(','));
-        }
-        if (corporateNumber.trim()) {
-            query = query.eq('corporate_number', corporateNumber.trim().replace(/[^0-9]/g, ''));
         }
 
         let { data, error } = await query;
@@ -140,11 +140,7 @@ export async function GET(request: Request) {
 
             if (!isAdmin) {
                 if (isSearching) {
-                    if (appUser?.company_id) {
-                        fallbackQuery = fallbackQuery.or(`status.eq.approved,registered_by_company_id.eq.${appUser.company_id}`);
-                    } else {
-                        fallbackQuery = fallbackQuery.eq('status', 'approved');
-                    }
+                    fallbackQuery = fallbackQuery.eq('status', 'approved');
                 } else {
                     if (appUser?.company_id) {
                         fallbackQuery = fallbackQuery.or(`registered_by_company_id.eq.${appUser.company_id},and(status.eq.approved,counterparty_claim.ilike.%【%)`);
@@ -152,12 +148,13 @@ export async function GET(request: Request) {
                         fallbackQuery = fallbackQuery.eq('status', 'approved').ilike('counterparty_claim', '%【%');
                     }
                 }
+            } else if (!showAll) {
+                fallbackQuery = fallbackQuery.eq('status', 'approved');
             }
-            if (q.trim()) {
+            if (cleanCorp) {
+                fallbackQuery = fallbackQuery.eq('corporate_number', cleanCorp);
+            } else if (q.trim()) {
                 fallbackQuery = fallbackQuery.or(buildCompanyQueryVariants(q).map(v => `company_name.ilike.%${v}%`).concat(`location.ilike.%${q.trim()}%`).join(','));
-            }
-            if (corporateNumber.trim()) {
-                fallbackQuery = fallbackQuery.eq('corporate_number', corporateNumber.trim().replace(/[^0-9]/g, ''));
             }
             const fallbackResult = await fallbackQuery;
             data = fallbackResult.data as any;
@@ -183,15 +180,12 @@ export async function GET(request: Request) {
                 } else if (claim.includes('不通') || claim.includes('連絡が取れ') || claim.includes('ブロック')) {
                     businessStatus = 'unreachable';
                 } else {
-                    businessStatus = 'unreachable'; // デフォルトは音信不通（未払い現場の最頻出）
+                    businessStatus = 'unreachable';
                 }
             }
 
             if (!registryStatus) {
-                // テスト用・デモ用：特定の番号や名前に応じた初期値
-                if (item.company_name?.includes('大和建装') || item.corporate_number === '5011101998002') {
-                    registryStatus = 'closed';
-                } else if (item.company_name?.includes('個人事業主') || (!item.corporate_number && !isCorporateEntityName(item.company_name)) || item.corporate_number?.startsWith('999')) {
+                if (item.company_name?.includes('個人事業主') || (!item.corporate_number && !isCorporateEntityName(item.company_name)) || item.corporate_number?.startsWith('999')) {
                     registryStatus = 'sole_proprietor';
                 } else {
                     registryStatus = 'active';
@@ -202,8 +196,8 @@ export async function GET(request: Request) {
                 ...item,
                 business_status: businessStatus,
                 registry_status: registryStatus,
-                registry_close_date: item.registry_close_date || (registryStatus === 'closed' ? '2024-10-15' : null),
-                registry_close_cause: item.registry_close_cause || (registryStatus === 'closed' ? '清算結了' : null),
+                registry_close_date: item.registry_close_date || null,
+                registry_close_cause: item.registry_close_cause || null,
             };
         });
 
@@ -252,9 +246,13 @@ export async function POST(request: Request) {
 
         const { data: appUser } = await supabaseAdmin
             .from('app_users')
-            .select('role, company_id, display_name, allowed_plan, companies(name)')
+            .select('role, company_id, display_name, allowed_plan, is_approved, companies(name)')
             .eq('id', user.id)
             .single();
+
+        if (!appUser || appUser.is_approved === false) {
+            return NextResponse.json({ error: '承認されたアカウントが必要です' }, { status: 403 });
+        }
 
         if (!appUser?.company_id) {
             return NextResponse.json({ error: '所属会社が設定されていません' }, { status: 400 });
@@ -285,6 +283,10 @@ export async function POST(request: Request) {
         // 必須チェック
         if (!companyName || !amount || !dueDate) {
             return NextResponse.json({ error: '企業名・未払い金額・支払期日は必須項目です' }, { status: 400 });
+        }
+
+        if (!Array.isArray(evidenceUrls) || evidenceUrls.length === 0) {
+            return NextResponse.json({ error: '裏付け資料（請求書、契約書、督促状、同意書等）を1点以上添付してください' }, { status: 400 });
         }
 
         const cleanCorpNum = corporateNumber ? corporateNumber.replace(/[^0-9]/g, '') : '';

@@ -149,8 +149,8 @@ ${name} 様
             return;
         }
 
-        if (password.length < 6) {
-            setError("パスワードは6文字以上で設定してください。");
+        if (password.length < 8) {
+            setError("パスワードは8文字以上で設定してください。");
             return;
         }
 
@@ -361,10 +361,11 @@ ${name} 様
                                 <input
                                     type="text"
                                     required
+                                    minLength={8}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-500 focus:bg-white transition-all"
-                                    placeholder="初期パスワード"
+                                    placeholder="初期パスワード（8文字以上）"
                                 />
                             </div>
 
@@ -412,7 +413,7 @@ ${name} 様
                                             className="sr-only"
                                         />
                                         <div className="font-bold text-slate-900 text-xs">MIERIS CREDIT</div>
-                                        <div className="text-[11px] text-slate-700 font-semibold mt-0.5">15,000円/月</div>
+                                        <div className="text-[11px] text-slate-700 font-semibold mt-0.5">18,000円/月</div>
                                         <div className="text-[10px] text-slate-500 mt-1">未払い企業情報</div>
                                     </label>
                                 </div>

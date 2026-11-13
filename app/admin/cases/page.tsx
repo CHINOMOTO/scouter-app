@@ -115,23 +115,28 @@ export default function AdminCaseList() {
         setActionLoading(id);
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            const updatePayload: any = {
-                status: newStatus,
-                approved_by: user?.id || null,
-                approved_at: newStatus === "approved" ? new Date().toISOString() : null,
-                rejected_reason: rejectReason,
-            };
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                throw new Error("ログインセッションが見つかりません。");
+            }
 
-            const { error: updateError } = await supabase
-                .from("blacklist_cases")
-                .update(updatePayload)
-                .eq("id", id);
+            const res = await fetch(`/api/admin/cases/${id}/review`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    status: newStatus,
+                    rejectedReason: rejectReason || undefined
+                })
+            });
 
-            if (updateError) {
-                setToast({ type: "error", text: "更新失敗: " + updateError.message });
+            const resData = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setToast({ type: "error", text: "更新失敗: " + (resData.error || "エラーが発生しました") });
             } else {
-                setToast({ type: "success", text: `ステータスを「${actionLabel}」に更新しました。` });
+                setToast({ type: "success", text: `ステータスを「${actionLabel}」に更新し、通知を送信しました。` });
                 fetchCases();
             }
         } catch (err: any) {

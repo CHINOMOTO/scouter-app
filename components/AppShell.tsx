@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { PlanProvider } from "@/contexts/PlanContext";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname() || "";
@@ -50,17 +51,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <div className="min-h-screen flex">
-            {/* 左サイドバー ＆ モバイルヘッダー */}
-            <Navigation />
+        <PlanProvider>
+            <div className="min-h-screen flex">
+                {/* 左サイドバー ＆ モバイルヘッダー */}
+                <Navigation />
 
-            {/* 右メインコンテンツエリア（サイドバー分インデント） */}
-            <div className="flex-1 flex flex-col min-w-0 md:pl-64">
-                <main className="relative z-10 flex-grow">
-                    {children}
-                </main>
-                <Footer />
+                {/* 右メインコンテンツエリア（サイドバー分インデント） */}
+                <div className="flex-1 flex flex-col min-w-0 md:pl-64">
+                    <main className="relative z-10 flex-grow">
+                        {children}
+                    </main>
+                    <Footer />
+                </div>
             </div>
-        </div>
+        </PlanProvider>
     );
 }

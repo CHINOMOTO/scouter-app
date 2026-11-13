@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { FileText, AlertCircle, ArrowLeft, Search, UploadCloud, X, Check } from "lucide-react";
+import { FileText, AlertCircle, ArrowLeft, Search, UploadCloud, X, Check, ShieldCheck } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 
 type CaseDetail = {
@@ -19,6 +19,7 @@ type CaseDetail = {
     status: "pending" | "approved" | "rejected";
     rejected_reason?: string | null;
     created_at: string;
+    approved_at?: string | null;
     evidence_urls?: string[];
     registered_company_id?: string;
     registered_by_user_id?: string;
@@ -80,6 +81,7 @@ export default function CaseDetailPage() {
 
     // Storage files & 追完アップロード用ステート
     const [evidenceFiles, setEvidenceFiles] = useState<EvidenceFile[]>([]);
+    const [canViewRawEvidence, setCanViewRawEvidence] = useState(false);
     const [canUploadEvidence, setCanUploadEvidence] = useState(false);
     const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
     const [uploadingEvidence, setUploadingEvidence] = useState(false);
@@ -206,7 +208,7 @@ export default function CaseDetailPage() {
 
             const { data: currentUser } = await supabase
                 .from("app_users")
-                .select("company_id, role")
+                .select("company_id, role, allowed_plan")
                 .eq("id", user.id)
                 .single();
 
@@ -216,10 +218,16 @@ export default function CaseDetailPage() {
                 return;
             }
 
+            if (currentUser.allowed_plan === "credit" && currentUser.role !== "admin") {
+                setErrorMsg("現在の契約プラン（MIERIS CREDIT）では就業・採用トラブル情報（MIERIS WORK）を閲覧できません。");
+                setLoading(false);
+                return;
+            }
+
             const { data, error } = await supabase
                 .from("blacklist_cases")
                 .select(
-                    "id, full_name, full_name_kana, gender, birth_date, phone_last4, occurrence_date, reason_text, status, rejected_reason, created_at, evidence_urls, registered_company_id, registered_by_user_id, risk_score"
+                    "id, full_name, full_name_kana, gender, birth_date, phone_last4, city, occurrence_date, reason_text, status, rejected_reason, created_at, approved_at, evidence_urls, registered_company_id, registered_by_user_id, risk_score"
                 )
                 .eq("id", id)
                 .maybeSingle();
@@ -237,16 +245,18 @@ export default function CaseDetailPage() {
             }
 
             // アクセス権限チェック: 管理者(admin)であるか、自社のデータであるか、またはステータスが「承認済み(approved)」の場合のみ閲覧可能
-            const isOwnCompany = data.registered_company_id === currentUser.company_id;
+            const isOwnCompany = Boolean(data.registered_company_id && data.registered_company_id === currentUser.company_id);
             const isApproved = data.status === 'approved';
+            const isAdminOrOwner = currentUser.role === 'admin' || isOwnCompany;
             
-            if (currentUser.role !== 'admin' && !isOwnCompany && !isApproved) {
+            if (!isAdminOrOwner && !isApproved) {
                 setErrorMsg("アクセス権限がありません。他社の審査中データは閲覧できません。");
                 setLoading(false);
                 return;
             }
 
-            setCanUploadEvidence(currentUser.role === 'admin' || isOwnCompany);
+            setCanViewRawEvidence(isAdminOrOwner);
+            setCanUploadEvidence(currentUser.role === 'admin' || (isOwnCompany && data.status !== 'approved'));
             setCaseDetail(data as CaseDetail);
 
             // アクセスログの保存
@@ -281,38 +291,42 @@ export default function CaseDetailPage() {
                 }
             }
 
-            // Fetch Registrant Name if exists
-            if (data.registered_by_user_id) {
-                const { data: appUser } = await supabase
-                    .from("app_users")
-                    .select("display_name")
-                    .eq("id", data.registered_by_user_id)
-                    .single();
-                if (appUser) {
-                    setRegistrantName(appUser.display_name);
-                }
-            }
-
-            // 証拠ファイルの署名付きURLを取得
-            if (data.evidence_urls && Array.isArray(data.evidence_urls) && data.evidence_urls.length > 0) {
-                const files: EvidenceFile[] = [];
-                for (const path of data.evidence_urls) {
-                    const { data: signedData } = await supabase.storage
-                        .from('case-evidence')
-                        .createSignedUrl(path, 3600); // 1時間有効
-
-                    if (signedData) {
-                        const isImage = path.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-                        files.push({
-                            path,
-                            signedUrl: signedData.signedUrl,
-                            type: isImage ? 'image' : 'other',
-                            name: path.split('/').pop() || 'file'
-                        });
+            // 登録者個人名・証拠資料の原本は自社または運営管理者のみ取得・表示（他社には非公開）
+            if (isAdminOrOwner) {
+                if (data.registered_by_user_id) {
+                    const { data: appUser } = await supabase
+                        .from("app_users")
+                        .select("display_name")
+                        .eq("id", data.registered_by_user_id)
+                        .single();
+                    if (appUser) {
+                        setRegistrantName(appUser.display_name);
                     }
                 }
-                setEvidenceFiles(files);
+
+                if (data.evidence_urls && Array.isArray(data.evidence_urls) && data.evidence_urls.length > 0) {
+                    const files: EvidenceFile[] = [];
+                    for (const path of data.evidence_urls) {
+                        const { data: signedData } = await supabase.storage
+                            .from('case-evidence')
+                            .createSignedUrl(path, 3600); // 1時間有効
+
+                        if (signedData) {
+                            const isImage = path.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                            files.push({
+                                path,
+                                signedUrl: signedData.signedUrl,
+                                type: isImage ? 'image' : 'other',
+                                name: path.split('/').pop() || 'file'
+                            });
+                        }
+                    }
+                    setEvidenceFiles(files);
+                } else {
+                    setEvidenceFiles([]);
+                }
             } else {
+                setRegistrantName(null);
                 setEvidenceFiles([]);
             }
 
@@ -408,21 +422,31 @@ export default function CaseDetailPage() {
                                             <div className="grid grid-cols-[120px_1fr]">
                                                 <dt className="text-slate-600">登録日</dt>
                                                 <dd className="text-slate-900 font-medium">
-                                                    {caseDetail.created_at ? new Date(caseDetail.created_at).toLocaleDateString() : "-"}
+                                                    {caseDetail.created_at ? new Date(caseDetail.created_at).toLocaleDateString("ja-JP") : "-"}
                                                 </dd>
                                             </div>
+                                            {caseDetail.approved_at && (
+                                                <div className="grid grid-cols-[120px_1fr]">
+                                                    <dt className="text-slate-600">承認日</dt>
+                                                    <dd className="text-slate-900 font-medium">
+                                                        {new Date(caseDetail.approved_at).toLocaleDateString("ja-JP")}
+                                                    </dd>
+                                                </div>
+                                            )}
                                             <div className="grid grid-cols-[120px_1fr]">
                                                 <dt className="text-slate-600">登録元</dt>
                                                 <dd className="text-slate-900 font-medium">
-                                                    {companyName || "-"}
+                                                    {companyName || "加盟企業"}
                                                 </dd>
                                             </div>
-                                            <div className="grid grid-cols-[120px_1fr]">
-                                                <dt className="text-slate-600">登録者</dt>
-                                                <dd className="text-slate-900 font-medium">
-                                                    {registrantName || "-"}
-                                                </dd>
-                                            </div>
+                                            {canViewRawEvidence && (
+                                                <div className="grid grid-cols-[120px_1fr]">
+                                                    <dt className="text-slate-600">登録担当者</dt>
+                                                    <dd className="text-slate-900 font-medium">
+                                                        {registrantName || "-"}
+                                                    </dd>
+                                                </div>
+                                            )}
                                         </dl>
                                     </div>
 
@@ -438,8 +462,13 @@ export default function CaseDetailPage() {
 
                                 {/* Evidence Files */}
                                 <div className="space-y-4">
-                                    <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2">添付資料</h2>
-                                    {evidenceFiles.length === 0 ? (
+                                    <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2">添付資料・同意書確認状況</h2>
+                                    {!canViewRawEvidence ? (
+                                        <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 flex items-center gap-3 text-emerald-900 text-xs sm:text-sm font-medium">
+                                            <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                                            <span>運営事務局にて本人同意書および客観的証拠資料の確認・審査済みです（個人情報保護のため添付原本は非公開）。</span>
+                                        </div>
+                                    ) : evidenceFiles.length === 0 ? (
                                         <p className="text-sm text-slate-500">証拠ファイルはありません。</p>
                                     ) : (
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -466,7 +495,7 @@ export default function CaseDetailPage() {
                                         </div>
                                     )}
 
-                                    {/* 自社または管理者の場合：追加資料のアップロード欄 */}
+                                    {/* 自社（未承認時）または管理者の場合：追加資料のアップロード欄 */}
                                     {canUploadEvidence && (
                                         <div className="mt-6 p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                                             <div>

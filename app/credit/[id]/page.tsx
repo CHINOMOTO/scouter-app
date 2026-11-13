@@ -112,10 +112,19 @@ export default function CreditCaseDetailPage() {
                     .from("case_attachments")
                     .upload(filePath, file);
 
-                if (uploadError) {
-                    throw new Error(`ファイルのアップロードに失敗しました (${file.name}): ${uploadError.message}`);
+                if (!uploadError) {
+                    newPaths.push(filePath);
+                } else {
+                    const fallbackPath = `${session.user.id}/${fileName}`;
+                    const { error: fallbackError, data: fallbackData } = await supabase.storage
+                        .from("case-evidence")
+                        .upload(fallbackPath, file);
+
+                    if (fallbackError) {
+                        throw new Error(`ファイルのアップロードに失敗しました (${file.name}): ${fallbackError.message}`);
+                    }
+                    newPaths.push(fallbackData?.path || fallbackPath);
                 }
-                newPaths.push(filePath);
             }
 
             const updatedUrls = [...(caseData.evidence_urls || []), ...newPaths];
@@ -180,6 +189,23 @@ export default function CreditCaseDetailPage() {
             const data = await res.json();
             if (data.case) {
                 setCaseData(data.case);
+
+                // アクセス監査ログの保存
+                try {
+                    await fetch("/api/audit", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify({
+                            action_type: "VIEW_CREDIT",
+                            target_id: data.case.company_name || String(id)
+                        })
+                    });
+                } catch {
+                    // ignore audit error
+                }
             }
         } catch (e) {
             console.error("Fetch detail error:", e);
@@ -249,7 +275,7 @@ export default function CreditCaseDetailPage() {
         );
     }
 
-    const isOwner = caseData.registered_by_company_id === currentCompanyId;
+    const isOwner = Boolean(caseData.registered_by_company_id && caseData.registered_by_company_id === currentCompanyId);
     const isResolved = caseData.payment_status === "resolved";
     const sourceInfo = caseData.official_source || detectOfficialSource(caseData) || { isOfficial: false, sourceName: "加盟企業", sourceCategory: "被害申告" };
 
@@ -292,7 +318,10 @@ export default function CreditCaseDetailPage() {
                         </div>
                         {isOwner && !isResolved && (
                             <button
-                                onClick={() => setShowResolveModal(true)}
+                                onClick={() => {
+                                    setDelayDays(String(currentDelayDays > 0 ? currentDelayDays : 0));
+                                    setShowResolveModal(true);
+                                }}
                                 className="inline-flex items-center gap-1.5 px-4 h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-xs transition-all whitespace-nowrap shrink-0"
                             >
                                 <Check className="w-3.5 h-3.5 shrink-0" />
@@ -619,8 +648,8 @@ export default function CreditCaseDetailPage() {
                             )}
                         </div>
 
-                        {/* 自社登録または管理者の場合：追加資料のアップロード */}
-                        {!sourceInfo.isOfficial && (isOwner || isAdmin) && (
+                        {/* 自社登録（未承認時）または管理者の場合：追加資料のアップロード */}
+                        {!sourceInfo.isOfficial && (isAdmin || (isOwner && caseData.status !== "approved")) && (
                             <div className="mt-6 p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                                 <div className="flex items-center justify-between flex-wrap gap-2">
                                     <div>
@@ -693,13 +722,25 @@ export default function CreditCaseDetailPage() {
                             </div>
                         )}
 
-                        {/* 登録日 */}
+                        {/* 登録日 & 審査ステータス */}
                         <div className="mt-8 pt-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between items-center">
                             <span>システム登録日: {new Date(caseData.created_at).toLocaleString()}</span>
-                            <span className="flex items-center gap-1 font-semibold text-emerald-700">
-                                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                                <span>運営管理者承認済み</span>
-                            </span>
+                            {caseData.status === "approved" ? (
+                                <span className="flex items-center gap-1 font-semibold text-emerald-700">
+                                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                    <span>運営管理者承認済み</span>
+                                </span>
+                            ) : caseData.status === "pending" ? (
+                                <span className="flex items-center gap-1 font-semibold text-amber-700">
+                                    <Clock className="w-4 h-4 text-amber-600" />
+                                    <span>運営管理者審査中</span>
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-1 font-semibold text-rose-700">
+                                    <AlertTriangle className="w-4 h-4 text-rose-600" />
+                                    <span>審査却下（差し戻し）</span>
+                                </span>
+                            )}
                         </div>
                     </div>
 

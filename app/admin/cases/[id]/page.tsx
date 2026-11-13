@@ -14,6 +14,7 @@ type CaseDetail = {
   gender: "male" | "female" | "other" | "unknown";
   birth_date: string;
   phone_last4: string | null;
+  city?: string | null;
   occurrence_date: string;
   reason_text: string;
   status: "pending" | "approved" | "rejected";
@@ -85,6 +86,7 @@ export default function AdminCaseDetailPage() {
   const [editGender, setEditGender] = useState("");
   const [editBirthDate, setEditBirthDate] = useState("");
   const [editPhoneLast4, setEditPhoneLast4] = useState("");
+  const [editCity, setEditCity] = useState("");
   const [editOccurrenceDate, setEditOccurrenceDate] = useState("");
   const [editReasonText, setEditReasonText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -100,7 +102,7 @@ export default function AdminCaseDetailPage() {
       const { data, error } = await supabase
         .from("blacklist_cases")
         .select(
-          "id, full_name, full_name_kana, gender, birth_date, phone_last4, occurrence_date, reason_text, status, created_at, approved_at, rejected_reason, evidence_urls, registered_company_id"
+          "id, full_name, full_name_kana, gender, birth_date, phone_last4, city, occurrence_date, reason_text, status, created_at, approved_at, rejected_reason, evidence_urls, registered_company_id"
         )
         .eq("id", id)
         .maybeSingle();
@@ -123,6 +125,7 @@ export default function AdminCaseDetailPage() {
       setEditGender(data.gender || "male");
       setEditBirthDate(data.birth_date || "");
       setEditPhoneLast4(data.phone_last4 || "");
+      setEditCity(data.city || "");
       setEditOccurrenceDate(data.occurrence_date || "");
       setEditReasonText(data.reason_text || "");
 
@@ -195,6 +198,7 @@ export default function AdminCaseDetailPage() {
           gender: editGender,
           birth_date: editBirthDate,
           phone_last4: editPhoneLast4,
+          city: editCity,
           occurrence_date: editOccurrenceDate,
           reason_text: editReasonText,
         }),
@@ -212,6 +216,7 @@ export default function AdminCaseDetailPage() {
         gender: editGender as any,
         birth_date: editBirthDate,
         phone_last4: editPhoneLast4,
+        city: editCity,
         occurrence_date: editOccurrenceDate,
         reason_text: editReasonText,
       } : null);
@@ -340,16 +345,26 @@ export default function AdminCaseDetailPage() {
             <p className="text-sm text-slate-700">データが見つかりません。</p>
           ) : (
             <>
-              <div className="mb-4">
-                <Link
-                  href="/admin/cases"
-                  className="text-xs sm:text-sm text-slate-900 hover:text-slate-900 transition-colors inline-block mb-2 font-medium"
+              <div className="mb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                <div>
+                  <Link
+                    href="/admin/cases"
+                    className="text-xs sm:text-sm text-slate-900 hover:text-slate-900 transition-colors inline-block mb-2 font-medium"
+                  >
+                    ← 一覧へ戻る
+                  </Link>
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+                    承認・却下（詳細）
+                  </h1>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing((prev) => !prev)}
+                  className="btn-secondary text-xs px-3.5 py-2 rounded-xl font-bold inline-flex items-center gap-1.5 self-start sm:self-auto"
                 >
-                  ← 一覧へ戻る
-                </Link>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-                  承認・却下（詳細）
-                </h1>
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>{isEditing ? "編集を閉じる" : "内容を編集"}</span>
+                </button>
               </div>
 
               {/* Inline Error for Ops */}
@@ -360,7 +375,7 @@ export default function AdminCaseDetailPage() {
               )}
 
               {isEditing ? (
-                  <div className="bg-blue-50/40 p-4.5 sm:p-6 rounded-2xl border-2 border-blue-200 space-y-4">
+                  <div className="bg-blue-50/40 p-4.5 sm:p-6 rounded-2xl border-2 border-blue-200 space-y-4 mb-6">
                     <div className="flex items-center justify-between border-b border-blue-200 pb-2">
                       <h2 className="text-sm font-bold text-blue-900 flex items-center gap-1.5">
                         <Edit3 className="w-4 h-4 text-blue-600" />
@@ -418,6 +433,15 @@ export default function AdminCaseDetailPage() {
                           value={editPhoneLast4}
                           onChange={(e) => setEditPhoneLast4(e.target.value)}
                           className="input-field py-2 text-xs font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">住所（市区町村）</label>
+                        <input
+                          type="text"
+                          value={editCity}
+                          onChange={(e) => setEditCity(e.target.value)}
+                          className="input-field py-2 text-xs"
                         />
                       </div>
                       <div>
@@ -484,6 +508,10 @@ export default function AdminCaseDetailPage() {
                     <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">電話番号（下4桁）：</span>
                       <span className="text-slate-900">{caseDetail.phone_last4 || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
+                      <span className="text-slate-600">住所（市区町村）：</span>
+                      <span className="text-slate-900">{caseDetail.city || "-"}</span>
                     </div>
                     <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">発生日：</span>

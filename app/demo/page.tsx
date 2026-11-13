@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { RequireAdmin } from "@/components/RequireAdmin";
 import "./kaonavi.css";
 
 export default function DemoLandingPage() {
@@ -33,6 +34,7 @@ export default function DemoLandingPage() {
   }, []);
 
   return (
+    <RequireAdmin>
     <div className="kaonavi-lp-wrapper" style={{ overflowX: "hidden", width: "100%", maxWidth: "100vw", position: "relative" }}>
       {/* 1. カオナビ完全同期 ヘッダー */}
       <header id="header" className="header">
@@ -764,5 +766,6 @@ export default function DemoLandingPage() {
         </div>
       </footer>
     </div>
+    </RequireAdmin>
   );
 }

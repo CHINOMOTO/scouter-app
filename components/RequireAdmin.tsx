@@ -23,11 +23,23 @@ export function RequireAdmin({ children }: RequireAdminProps) {
         return;
       }
 
-      // DBを使わず、Token内のメタデータで判定
-      const role = session.user.app_metadata?.role;
+      // 1. Token内のメタデータで判定
+      let isAdmin = session.user.app_metadata?.role === "admin";
 
-      if (role !== "admin") {
-        console.warn("Access denied: User is not admin (Token check)");
+      // 2. Tokenにまだ反映されていない場合、app_usersテーブルでもフォールバック確認
+      if (!isAdmin) {
+        const { data: appUser } = await supabase
+          .from("app_users")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (appUser?.role === "admin") {
+          isAdmin = true;
+        }
+      }
+
+      if (!isAdmin) {
+        console.warn("Access denied: User is not admin");
         router.push("/dashboard");
         setAllowed(false);
       } else {

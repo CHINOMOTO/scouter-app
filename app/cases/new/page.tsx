@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { UploadCloud, X, AlertCircle, ArrowLeft, Check, ShieldAlert } from "lucide-react";
+import { UploadCloud, X, AlertCircle, ArrowLeft, Check, ShieldAlert, Lock } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 import { recognizeText } from "@/lib/ocr";
 
@@ -84,6 +84,7 @@ export default function NewCasePage() {
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [planRestricted, setPlanRestricted] = useState(false);
 
   // Form states
   const [name, setName] = useState("");
@@ -112,6 +113,25 @@ export default function NewCasePage() {
   // 遅刻を選択した時のみの追加同意チェックボックス
   const [agreedLate1, setAgreedLate1] = useState(false);
   const [agreedLate2, setAgreedLate2] = useState(false);
+
+  useEffect(() => {
+    const checkPlan = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: appUser } = await supabase
+          .from("app_users")
+          .select("allowed_plan, role")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        const isAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
+        if (!isAdmin && appUser?.allowed_plan === "credit") {
+          setPlanRestricted(true);
+        }
+      }
+    };
+    checkPlan();
+  }, []);
 
   const currentCategoryObj = TROUBLE_CATEGORIES.find((c) => c.id === selectedCategory);
   const isLateSelected = selectedCategory === "absence" && LATE_SUB_ITEMS.includes(selectedSubItem);
@@ -176,15 +196,20 @@ export default function NewCasePage() {
         throw new Error("ログインセッションが切れました。再ログインしてください。");
       }
 
-      // ユーザーの会社IDと会社名を取得
+      // ユーザーの会社IDと会社名・プランを取得
       const { data: appUser } = await supabase
         .from("app_users")
-        .select("company_id, companies(name)")
+        .select("company_id, allowed_plan, role, companies(name)")
         .eq("id", user.id)
         .single();
 
       if (!appUser?.company_id) {
         throw new Error("所属会社情報が見つかりません。");
+      }
+
+      if (appUser.allowed_plan === "credit" && appUser.role !== "admin") {
+        setPlanRestricted(true);
+        throw new Error("現在の契約プラン（MIERIS CREDIT）では就業・採用トラブル情報（MIERIS WORK）を登録できません。");
       }
 
       if (!name.trim()) {
@@ -420,472 +445,503 @@ export default function NewCasePage() {
             </div>
             <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
               <Link 
-                href="/cases" 
+                href={planRestricted ? "/dashboard" : "/cases"} 
                 className="btn-secondary text-xs h-9 px-3.5 rounded-lg flex items-center justify-center gap-1.5 font-medium transition-colors whitespace-nowrap w-full sm:w-auto"
               >
                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                <span className="whitespace-nowrap">一覧へ戻る</span>
+                <span className="whitespace-nowrap">{planRestricted ? "ダッシュボードへ戻る" : "一覧へ戻る"}</span>
               </Link>
             </div>
           </div>
 
-          {/* コンプライアンス遵守ボックス（未払い登録画面と統一した運用ルール表示） */}
-          <div className="bg-slate-900 text-slate-100 p-4 sm:p-6 rounded-xl mb-6 shadow-2xs border border-slate-800 animate-fade-in w-full max-w-full overflow-hidden">
-            <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3 border-b border-slate-800 pb-2.5 sm:pb-3">
-              <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
-              <span className="text-xs sm:text-sm font-bold tracking-wide text-white">
-                「晒す」仕組みにしないための運用ルール
-              </span>
-            </div>
-            <ul className="text-xs space-y-2 text-slate-300 list-disc list-inside leading-relaxed">
-              <li><strong className="text-white font-bold">同意書のない相手は登録できません</strong>（採用・就業開始時に本人署名を得た同意書の添付が必須です）</li>
-              <li><strong className="text-white font-bold">評価・推測・伝聞・断定的な犯罪呼称は禁止</strong>（「悪質」「詐欺師」等の主観的表現や誹謗中傷は審査で却下されます）</li>
-              <li><strong className="text-white font-bold">客観的な事実経緯を記録</strong>（本人から言い分や主張があった場合はその内容も併記してください）</li>
-              <li><strong className="text-white font-bold">返却・精算や和解等で解決した場合は速やかに更新・連絡</strong>してください</li>
-              <li><strong className="text-white font-bold">全件、運営管理者の厳格な同意書・エビデンス審査</strong>を経てから共有されます</li>
-            </ul>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4.5 sm:p-8 md:p-10 animate-fade-in delay-100">
-            <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-
-              {/* 基本情報 */}
-              <Section title="基本情報">
-                <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <Label required>氏名</Label>
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="input-field text-sm sm:text-base py-2.5 sm:py-3"
-                      placeholder="山田 太郎"
-                    />
-                  </div>
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <Label required>氏名（カナ）</Label>
-                    <input
-                      type="text"
-                      value={nameKana}
-                      onChange={(e) => setNameKana(e.target.value)}
-                      className="input-field text-sm sm:text-base py-2.5 sm:py-3"
-                      placeholder="ヤマダ タロウ"
-                      pattern="^[ァ-ヶー\s　]*$"
-                      title="全角カタカナで入力してください"
-                    />
-                  </div>
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <Label required>生年月日</Label>
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="flex-1 flex items-center gap-1">
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={4}
-                          value={birthYear}
-                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthYear(e.target.value); }}
-                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
-                          placeholder="1990"
-                        />
-                        <span className="text-slate-600 text-xs font-bold shrink-0">年</span>
-                      </div>
-                      <div className="w-20 sm:w-24 flex items-center gap-1">
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={2}
-                          value={birthMonth}
-                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthMonth(e.target.value); }}
-                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
-                          placeholder="01"
-                        />
-                        <span className="text-slate-600 text-xs font-bold shrink-0">月</span>
-                      </div>
-                      <div className="w-20 sm:w-24 flex items-center gap-1">
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={2}
-                          value={birthDay}
-                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthDay(e.target.value); }}
-                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
-                          placeholder="01"
-                        />
-                        <span className="text-slate-600 text-xs font-bold shrink-0">日</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <Label required>性別</Label>
-                    <select
-                      value={gender}
-                      onChange={(e) => setGender(e.target.value)}
-                      className="input-field appearance-none py-2.5 sm:py-3 text-sm sm:text-base"
-                    >
-                      <option value="">選択してください</option>
-                      <option value="male">男性</option>
-                      <option value="female">女性</option>
-                      <option value="other">その他</option>
-                    </select>
-                  </div>
-                </div>
-              </Section>
-
-              {/* 詳細情報 */}
-              <Section title="トラブル情報">
-                <div className="grid md:grid-cols-2 gap-6 mb-6">
-                  <div className="space-y-2">
-                    <Label required>携帯電話番号（下4桁）</Label>
-                    <input
-                      type="text"
-                      maxLength={4}
-                      value={phoneLast4}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (/^\d*$/.test(val)) {
-                          setPhoneLast4(val);
-                        }
-                      }}
-                      className="input-field"
-                      placeholder="1234"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label required>住所（市区町村）</Label>
-                    <input
-                      type="text"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className="input-field"
-                      placeholder="例: 東京都渋谷区"
-                    />
-                  </div>
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <Label required>発生日</Label>
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="flex-1 flex items-center gap-1">
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={4}
-                          value={occurrenceYear}
-                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceYear(e.target.value); }}
-                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
-                          placeholder="2024"
-                        />
-                        <span className="text-slate-600 text-xs font-bold shrink-0">年</span>
-                      </div>
-                      <div className="w-20 sm:w-24 flex items-center gap-1">
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={2}
-                          value={occurrenceMonth}
-                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceMonth(e.target.value); }}
-                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
-                          placeholder="01"
-                        />
-                        <span className="text-slate-600 text-xs font-bold shrink-0">月</span>
-                      </div>
-                      <div className="w-20 sm:w-24 flex items-center gap-1">
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={2}
-                          value={occurrenceDay}
-                          onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceDay(e.target.value); }}
-                          className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
-                          placeholder="01"
-                        />
-                        <span className="text-slate-600 text-xs font-bold shrink-0">日</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 二重選択式トラブル事象セレクター（未払い機能と同様の選択制UI） */}
-                <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 mb-6">
-                  <div>
-                    <Label required>トラブル事象の選択（2段階選択）</Label>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      ① 大まかな事象ボタンを選択し、続けて ② 詳細事象ボタンを選択してください。
-                    </p>
-                  </div>
-
-                  {/* Step 1: 大まかな事象ボタン */}
-                  <div className="space-y-2">
-                    <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-900 text-white text-[11px] font-bold">1</span>
-                      <span>大まかな事象を選択</span>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                      {TROUBLE_CATEGORIES.map((cat) => {
-                        const isSelected = selectedCategory === cat.id;
-                        return (
-                          <button
-                            key={cat.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedCategory(cat.id);
-                              setSelectedSubItem("");
-                            }}
-                            className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between ${
-                              isSelected
-                                ? "ring-2 ring-blue-600 border-blue-600 bg-blue-50/60 shadow-xs"
-                                : "border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50/80"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-1 w-full">
-                              <span className={`text-xs sm:text-sm font-bold ${isSelected ? "text-blue-900" : "text-slate-900"}`}>
-                                {cat.label}
-                              </span>
-                              <span
-                                className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                                  isSelected ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white"
-                                }`}
-                              >
-                                {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                              </span>
-                            </div>
-                            <p className="text-[10px] text-slate-500 leading-tight">{cat.desc}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Step 2: 詳細事象ボタン（その他以外のカテゴリ選択時に表示） */}
-                  {currentCategoryObj && currentCategoryObj.id !== "other" && (
-                    <div className="pt-3 border-t border-slate-200/80 space-y-2.5 animate-fade-in">
-                      <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold">2</span>
-                        <span>「{currentCategoryObj.label}」の詳細事象を選択 <span className="text-red-500">*</span></span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        {currentCategoryObj.subItems.map((sub) => {
-                          const isSubSelected = selectedSubItem === sub;
-                          return (
-                            <button
-                              key={sub}
-                              type="button"
-                              onClick={() => setSelectedSubItem(sub)}
-                              className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all flex items-center justify-between gap-2 ${
-                                isSubSelected
-                                  ? "ring-2 ring-blue-600 border-blue-600 bg-blue-50/80 shadow-xs"
-                                  : "border-slate-200 bg-white hover:border-slate-400"
-                              }`}
-                            >
-                              <span className={`text-xs sm:text-sm font-bold leading-snug ${isSubSelected ? "text-blue-950" : "text-slate-800"}`}>
-                                {sub}
-                              </span>
-                              <input
-                                type="radio"
-                                name="troubleSubItem"
-                                checked={isSubSelected}
-                                onChange={() => setSelectedSubItem(sub)}
-                                className="w-4 h-4 text-blue-600 focus:ring-blue-500 shrink-0"
-                              />
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 選択状態のプレビュー表示 */}
-                  {selectedCategory && (selectedCategory === "other" || selectedSubItem) && (
-                    <div className="pt-2">
-                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold">
-                        <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        <span>
-                          選択中の事象:{" "}
-                          {selectedCategory === "other"
-                            ? "【その他】（下の欄に詳細を記入してください）"
-                            : `【${currentCategoryObj?.label}】${selectedSubItem}`}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 補足詳細・その他理由入力欄 */}
-                <div className="space-y-1.5 sm:space-y-2">
-                  <Label required={selectedCategory === "other" || isLateSelected || isFalsificationSelected}>
-                    {selectedCategory === "other"
-                      ? "登録理由 / 具体的なトラブル詳細（「その他」選択時は必須）"
-                      : isLateSelected
-                        ? "補足詳細（遅刻選択時は「勤務◯回中、遅刻◯回」の記載が必須）"
-                        : isFalsificationSelected
-                          ? "補足詳細（「申告内容の相違」選択時は、何が相違だったのかの記載が必須）"
-                          : "補足詳細・具体的な状況（任意）"}
-                  </Label>
-                  <textarea
-                    required={selectedCategory === "other" || isLateSelected || isFalsificationSelected}
-                    rows={4}
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    className="input-field min-h-[100px] text-sm leading-relaxed"
-                    placeholder={
-                      selectedCategory === "other"
-                        ? "具体的なトラブル内容や客観的な事実経過を記載してください..."
-                        : isLateSelected
-                          ? "例: 勤務10回中、遅刻3回（その他、客観的な事実経過があれば記載してください）"
-                          : isFalsificationSelected
-                            ? "何が相違だったのか、具体的な相違内容・客観的な事実経過を記載してください..."
-                            : "選択した事象に加えて補足すべき事実経過や注意点があれば記載してください（任意）..."
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2 mt-4">
-                  <Label required>添付資料（同意書必須、あれば証拠のスクショなど）</Label>
-                  <div className="border border-dashed border-slate-300 rounded-xl p-5 sm:p-6 text-center hover:bg-slate-50 transition-colors relative">
-                    <input
-                      type="file"
-                      multiple
-                      onChange={handleFileChange}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      accept="image/*,application/pdf"
-                    />
-                    <div className="pointer-events-none">
-                      <UploadCloud className="w-7 h-7 sm:w-8 sm:h-8 text-slate-400 mx-auto mb-1.5 sm:mb-2" />
-                      <p className="text-xs sm:text-sm font-semibold text-slate-700">タップまたはドラッグ＆ドロップで追加</p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">（同意書は必須添付 / 証拠スクショ・画像・PDFなど複数ファイル添付可 / 1ファイルあたり最大50MB）</p>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    ※申請後に運営から追加資料を求められた場合も、マイページの「自社登録トラブル一覧」→該当データの詳細画面からいつでも追加アップロードが可能です。
-                  </p>
-
-                  {selectedFiles.length > 0 && (
-                    <ul className="mt-4 space-y-2">
-                      {selectedFiles.map((file, index) => (
-                        <li key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
-                          <span className="truncate max-w-[60%] text-slate-700">{file.name} ({(file.size / 1024).toFixed(0)}KB)</span>
-                          <div className="flex items-center gap-3">
-                            {file.type.startsWith('image/') && (
-                              <button
-                                type="button"
-                                onClick={() => handleOCR(file)}
-                                disabled={isAnalyzing}
-                                className="text-xs text-slate-900 hover:text-slate-900 border border-slate-200 bg-slate-50 px-2 py-1 rounded transition-colors"
-                              >
-                                {isAnalyzing ? "解析中..." : "文字認識(OCR)"}
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => removeFile(index)}
-                              className="text-rose-600 hover:text-rose-800 hover:bg-rose-50 p-1 rounded transition-colors"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                {/* 登録に関する宣誓・同意チェックボックス */}
-                <div className="space-y-3 pt-5 mt-4 border-t border-slate-200">
-                  <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <span>登録に関する宣誓・同意</span>
-                    <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">
-                      必須
-                    </span>
-                  </div>
-
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={agreedWork1}
-                      onChange={(e) => setAgreedWork1(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 shrink-0"
-                    />
-                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
-                      記載した内容は、当社が直接経験した事実です。推測・伝聞・誇張は含みません。
-                    </span>
-                  </label>
-
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={agreedWork2}
-                      onChange={(e) => setAgreedWork2(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 shrink-0"
-                    />
-                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
-                      添付した同意書は、本人が内容を確認し、署名したものです。
-                    </span>
-                  </label>
-
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={agreedWork3}
-                      onChange={(e) => setAgreedWork3(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 shrink-0"
-                    />
-                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
-                      虚偽または事実と異なる登録が判明した場合、当該登録の削除、当社の利用停止、およびそれにより生じた損害の負担の対象となることに同意します。
-                    </span>
-                  </label>
-
-                  {isLateSelected && (
-                    <div className="mt-3 p-3.5 sm:p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-2.5 animate-fade-in">
-                      <div className="text-xs font-bold text-blue-950">
-                        遅刻を選択した場合の追加確認事項
-                      </div>
-                      <label className="flex items-start gap-3 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={agreedLate1}
-                          onChange={(e) => setAgreedLate1(e.target.checked)}
-                          className="mt-0.5 w-4 h-4 rounded border-blue-300 text-blue-700 focus:ring-blue-600 shrink-0"
-                        />
-                        <span className="text-xs text-slate-800 group-hover:text-slate-950 leading-relaxed">
-                          公共交通機関の遅延など、本人の責めに帰すことができない事由による遅刻は、回数に含めていません。
-                        </span>
-                      </label>
-                      <label className="flex items-start gap-3 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={agreedLate2}
-                          onChange={(e) => setAgreedLate2(e.target.checked)}
-                          className="mt-0.5 w-4 h-4 rounded border-blue-300 text-blue-700 focus:ring-blue-600 shrink-0"
-                        />
-                        <span className="text-xs text-slate-800 group-hover:text-slate-950 leading-relaxed">
-                          補足欄に「勤務◯回中、遅刻◯回」と記載しました。
-                        </span>
-                      </label>
-                    </div>
-                  )}
-                </div>
-              </Section>
-
-              {errorMsg && (
-                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 text-sm">
-                  <span className="inline-flex items-center gap-1.5"><AlertCircle className="w-4 h-4 shrink-0" /><span>{errorMsg}</span></span>
-                </div>
-              )}
-
-              <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 pt-4 border-t border-slate-200">
-                <Link href="/dashboard" className="btn-secondary w-full sm:flex-1 text-center py-3 text-sm font-bold">
-                  キャンセル
-                </Link>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-primary w-full sm:flex-1 py-3 text-sm sm:text-base font-bold active:scale-[0.98] transition-transform"
+          {planRestricted ? (
+            <div className="bg-white p-6 sm:p-10 rounded-2xl border border-slate-200 text-center max-w-xl mx-auto my-8 sm:my-12 shadow-sm animate-fade-in">
+              <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-600 border border-amber-200/60">
+                <Lock className="w-6 h-6" />
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
+                MIERIS WORK（就業信用管理）未加入です
+              </h2>
+              <p className="text-xs text-slate-600 leading-relaxed mb-6">
+                現在のご契約プラン（MIERIS CREDIT）では、MIERIS WORK（応募者照会・就業トラブル防止機能）をご利用いただけません。<br />
+                就業トラブルデータの登録や照会を行うには、プラン追加（またはFULLプランへの変更）のお申し込みが必要です。
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Link
+                  href="/contact"
+                  className="btn-primary text-xs w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold shadow-xs hover:-translate-y-0.5 transition-all text-center"
                 >
-                  {loading ? "送信中..." : "登録を申請する"}
-                </button>
+                  プラン追加のお問い合わせ
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="btn-secondary text-xs w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold transition-all text-center"
+                >
+                  ダッシュボードへ戻る
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* コンプライアンス遵守ボックス（未払い登録画面と統一した運用ルール表示） */}
+              <div className="bg-slate-900 text-slate-100 p-4 sm:p-6 rounded-xl mb-6 shadow-2xs border border-slate-800 animate-fade-in w-full max-w-full overflow-hidden">
+                <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3 border-b border-slate-800 pb-2.5 sm:pb-3">
+                  <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+                  <span className="text-xs sm:text-sm font-bold tracking-wide text-white">
+                    「晒す」仕組みにしないための運用ルール
+                  </span>
+                </div>
+                <ul className="text-xs space-y-2 text-slate-300 list-disc list-inside leading-relaxed">
+                  <li><strong className="text-white font-bold">同意書のない相手は登録できません</strong>（採用・就業開始時に本人署名を得た同意書の添付が必須です）</li>
+                  <li><strong className="text-white font-bold">評価・推測・伝聞・断定的な犯罪呼称は禁止</strong>（「悪質」「詐欺師」等の主観的表現や誹謗中傷は審査で却下されます）</li>
+                  <li><strong className="text-white font-bold">客観的な事実経緯を記録</strong>（本人から言い分や主張があった場合はその内容も併記してください）</li>
+                  <li><strong className="text-white font-bold">返却・精算や和解等で解決した場合は速やかに更新・連絡</strong>してください</li>
+                  <li><strong className="text-white font-bold">全件、運営管理者の厳格な同意書・エビデンス審査</strong>を経てから共有されます</li>
+                </ul>
               </div>
 
-            </form>
-          </div>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4.5 sm:p-8 md:p-10 animate-fade-in delay-100">
+                <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+
+                  {/* 基本情報 */}
+                  <Section title="基本情報">
+                    <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label required>氏名</Label>
+                        <input
+                          type="text"
+                          required
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="input-field text-sm sm:text-base py-2.5 sm:py-3"
+                          placeholder="山田 太郎"
+                        />
+                      </div>
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label required>氏名（カナ）</Label>
+                        <input
+                          type="text"
+                          value={nameKana}
+                          onChange={(e) => setNameKana(e.target.value)}
+                          className="input-field text-sm sm:text-base py-2.5 sm:py-3"
+                          placeholder="ヤマダ タロウ"
+                          pattern="^[ァ-ヶー\s　]*$"
+                          title="全角カタカナで入力してください"
+                        />
+                      </div>
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label required>生年月日</Label>
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <div className="flex-1 flex items-center gap-1">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={4}
+                              value={birthYear}
+                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthYear(e.target.value); }}
+                              className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                              placeholder="1990"
+                            />
+                            <span className="text-slate-600 text-xs font-bold shrink-0">年</span>
+                          </div>
+                          <div className="w-20 sm:w-24 flex items-center gap-1">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={2}
+                              value={birthMonth}
+                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthMonth(e.target.value); }}
+                              className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                              placeholder="01"
+                            />
+                            <span className="text-slate-600 text-xs font-bold shrink-0">月</span>
+                          </div>
+                          <div className="w-20 sm:w-24 flex items-center gap-1">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={2}
+                              value={birthDay}
+                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthDay(e.target.value); }}
+                              className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                              placeholder="01"
+                            />
+                            <span className="text-slate-600 text-xs font-bold shrink-0">日</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label required>性別</Label>
+                        <select
+                          value={gender}
+                          onChange={(e) => setGender(e.target.value)}
+                          className="input-field appearance-none py-2.5 sm:py-3 text-sm sm:text-base"
+                        >
+                          <option value="">選択してください</option>
+                          <option value="male">男性</option>
+                          <option value="female">女性</option>
+                          <option value="other">その他</option>
+                        </select>
+                      </div>
+                    </div>
+                  </Section>
+
+                  {/* 詳細情報 */}
+                  <Section title="トラブル情報">
+                    <div className="grid md:grid-cols-2 gap-6 mb-6">
+                      <div className="space-y-2">
+                        <Label required>携帯電話番号（下4桁）</Label>
+                        <input
+                          type="text"
+                          maxLength={4}
+                          value={phoneLast4}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (/^\d*$/.test(val)) {
+                              setPhoneLast4(val);
+                            }
+                          }}
+                          className="input-field"
+                          placeholder="1234"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label required>住所（市区町村）</Label>
+                        <input
+                          type="text"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          className="input-field"
+                          placeholder="例: 東京都渋谷区"
+                        />
+                      </div>
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label required>発生日</Label>
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <div className="flex-1 flex items-center gap-1">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={4}
+                              value={occurrenceYear}
+                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceYear(e.target.value); }}
+                              className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                              placeholder="2024"
+                            />
+                            <span className="text-slate-600 text-xs font-bold shrink-0">年</span>
+                          </div>
+                          <div className="w-20 sm:w-24 flex items-center gap-1">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={2}
+                              value={occurrenceMonth}
+                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceMonth(e.target.value); }}
+                              className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                              placeholder="01"
+                            />
+                            <span className="text-slate-600 text-xs font-bold shrink-0">月</span>
+                          </div>
+                          <div className="w-20 sm:w-24 flex items-center gap-1">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={2}
+                              value={occurrenceDay}
+                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceDay(e.target.value); }}
+                              className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
+                              placeholder="01"
+                            />
+                            <span className="text-slate-600 text-xs font-bold shrink-0">日</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 二重選択式トラブル事象セレクター（未払い機能と同様の選択制UI） */}
+                    <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 mb-6">
+                      <div>
+                        <Label required>トラブル事象の選択（2段階選択）</Label>
+                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                          ① 大まかな事象ボタンを選択し、続けて ② 詳細事象ボタンを選択してください。
+                        </p>
+                      </div>
+
+                      {/* Step 1: 大まかな事象ボタン */}
+                      <div className="space-y-2">
+                        <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-900 text-white text-[11px] font-bold">1</span>
+                          <span>大まかな事象を選択</span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                          {TROUBLE_CATEGORIES.map((cat) => {
+                            const isSelected = selectedCategory === cat.id;
+                            return (
+                              <button
+                                key={cat.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedCategory(cat.id);
+                                  setSelectedSubItem("");
+                                }}
+                                className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between ${
+                                  isSelected
+                                    ? "ring-2 ring-blue-600 border-blue-600 bg-blue-50/60 shadow-xs"
+                                    : "border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50/80"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between mb-1 w-full">
+                                  <span className={`text-xs sm:text-sm font-bold ${isSelected ? "text-blue-900" : "text-slate-900"}`}>
+                                    {cat.label}
+                                  </span>
+                                  <span
+                                    className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                      isSelected ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white"
+                                    }`}
+                                  >
+                                    {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-slate-500 leading-tight">{cat.desc}</p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Step 2: 詳細事象ボタン（その他以外のカテゴリ選択時に表示） */}
+                      {currentCategoryObj && currentCategoryObj.id !== "other" && (
+                        <div className="pt-3 border-t border-slate-200/80 space-y-2.5 animate-fade-in">
+                          <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold">2</span>
+                            <span>「{currentCategoryObj.label}」の詳細事象を選択 <span className="text-red-500">*</span></span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            {currentCategoryObj.subItems.map((sub) => {
+                              const isSubSelected = selectedSubItem === sub;
+                              return (
+                                <button
+                                  key={sub}
+                                  type="button"
+                                  onClick={() => setSelectedSubItem(sub)}
+                                  className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all flex items-center justify-between gap-2 ${
+                                    isSubSelected
+                                      ? "ring-2 ring-blue-600 border-blue-600 bg-blue-50/80 shadow-xs"
+                                      : "border-slate-200 bg-white hover:border-slate-400"
+                                  }`}
+                                >
+                                  <span className={`text-xs sm:text-sm font-bold leading-snug ${isSubSelected ? "text-blue-950" : "text-slate-800"}`}>
+                                    {sub}
+                                  </span>
+                                  <input
+                                    type="radio"
+                                    name="troubleSubItem"
+                                    checked={isSubSelected}
+                                    onChange={() => setSelectedSubItem(sub)}
+                                    className="w-4 h-4 text-blue-600 focus:ring-blue-500 shrink-0"
+                                  />
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 選択状態のプレビュー表示 */}
+                      {selectedCategory && (selectedCategory === "other" || selectedSubItem) && (
+                        <div className="pt-2">
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold">
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>
+                              選択中の事象:{" "}
+                              {selectedCategory === "other"
+                                ? "【その他】（下の欄に詳細を記入してください）"
+                                : `【${currentCategoryObj?.label}】${selectedSubItem}`}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 補足詳細・その他理由入力欄 */}
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label required={selectedCategory === "other" || isLateSelected || isFalsificationSelected}>
+                        {selectedCategory === "other"
+                          ? "登録理由 / 具体的なトラブル詳細（「その他」選択時は必須）"
+                          : isLateSelected
+                            ? "補足詳細（遅刻選択時は「勤務◯回中、遅刻◯回」の記載が必須）"
+                            : isFalsificationSelected
+                              ? "補足詳細（「申告内容の相違」選択時は、何が相違だったのかの記載が必須）"
+                              : "補足詳細・具体的な状況（任意）"}
+                      </Label>
+                      <textarea
+                        required={selectedCategory === "other" || isLateSelected || isFalsificationSelected}
+                        rows={4}
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        className="input-field min-h-[100px] text-sm leading-relaxed"
+                        placeholder={
+                          selectedCategory === "other"
+                            ? "具体的なトラブル内容や客観的な事実経過を記載してください..."
+                            : isLateSelected
+                              ? "例: 勤務10回中、遅刻3回（その他、客観的な事実経過があれば記載してください）"
+                              : isFalsificationSelected
+                                ? "何が相違だったのか、具体的な相違内容・客観的な事実経過を記載してください..."
+                                : "選択した事象に加えて補足すべき事実経過や注意点があれば記載してください（任意）..."
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-2 mt-4">
+                      <Label required>添付資料（同意書必須、あれば証拠のスクショなど）</Label>
+                      <div className="border border-dashed border-slate-300 rounded-xl p-5 sm:p-6 text-center hover:bg-slate-50 transition-colors relative">
+                        <input
+                          type="file"
+                          multiple
+                          onChange={handleFileChange}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          accept="image/*,application/pdf"
+                        />
+                        <div className="pointer-events-none">
+                          <UploadCloud className="w-7 h-7 sm:w-8 sm:h-8 text-slate-400 mx-auto mb-1.5 sm:mb-2" />
+                          <p className="text-xs sm:text-sm font-semibold text-slate-700">タップまたはドラッグ＆ドロップで追加</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">（同意書は必須添付 / 証拠スクショ・画像・PDFなど複数ファイル添付可 / 1ファイルあたり最大50MB）</p>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        ※申請後に運営から追加資料を求められた場合も、マイページの「自社登録トラブル一覧」→該当データの詳細画面からいつでも追加アップロードが可能です。
+                      </p>
+
+                      {selectedFiles.length > 0 && (
+                        <ul className="mt-4 space-y-2">
+                          {selectedFiles.map((file, index) => (
+                            <li key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
+                              <span className="truncate max-w-[60%] text-slate-700">{file.name} ({(file.size / 1024).toFixed(0)}KB)</span>
+                              <div className="flex items-center gap-3">
+                                {file.type.startsWith('image/') && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOCR(file)}
+                                    disabled={isAnalyzing}
+                                    className="text-xs text-slate-900 hover:text-slate-900 border border-slate-200 bg-slate-50 px-2 py-1 rounded transition-colors"
+                                  >
+                                    {isAnalyzing ? "解析中..." : "文字認識(OCR)"}
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => removeFile(index)}
+                                  className="text-rose-600 hover:text-rose-800 hover:bg-rose-50 p-1 rounded transition-colors"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* 登録に関する宣誓・同意チェックボックス */}
+                    <div className="space-y-3 pt-5 mt-4 border-t border-slate-200">
+                      <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <span>登録に関する宣誓・同意</span>
+                        <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">
+                          必須
+                        </span>
+                      </div>
+
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={agreedWork1}
+                          onChange={(e) => setAgreedWork1(e.target.checked)}
+                          className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 shrink-0"
+                        />
+                        <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
+                          記載した内容は、当社が直接経験した事実です。推測・伝聞・誇張は含みません。
+                        </span>
+                      </label>
+
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={agreedWork2}
+                          onChange={(e) => setAgreedWork2(e.target.checked)}
+                          className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 shrink-0"
+                        />
+                        <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
+                          添付した同意書は、本人が内容を確認し、署名したものです。
+                        </span>
+                      </label>
+
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={agreedWork3}
+                          onChange={(e) => setAgreedWork3(e.target.checked)}
+                          className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 shrink-0"
+                        />
+                        <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
+                          虚偽または事実と異なる登録が判明した場合、当該登録の削除、当社の利用停止、およびそれにより生じた損害の負担の対象となることに同意します。
+                        </span>
+                      </label>
+
+                      {isLateSelected && (
+                        <div className="mt-3 p-3.5 sm:p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-2.5 animate-fade-in">
+                          <div className="text-xs font-bold text-blue-950">
+                            遅刻を選択した場合の追加確認事項
+                          </div>
+                          <label className="flex items-start gap-3 cursor-pointer group">
+                            <input
+                              type="checkbox"
+                              checked={agreedLate1}
+                              onChange={(e) => setAgreedLate1(e.target.checked)}
+                              className="mt-0.5 w-4 h-4 rounded border-blue-300 text-blue-700 focus:ring-blue-600 shrink-0"
+                            />
+                            <span className="text-xs text-slate-800 group-hover:text-slate-950 leading-relaxed">
+                              公共交通機関の遅延など、本人の責めに帰すことができない事由による遅刻は、回数に含めていません。
+                            </span>
+                          </label>
+                          <label className="flex items-start gap-3 cursor-pointer group">
+                            <input
+                              type="checkbox"
+                              checked={agreedLate2}
+                              onChange={(e) => setAgreedLate2(e.target.checked)}
+                              className="mt-0.5 w-4 h-4 rounded border-blue-300 text-blue-700 focus:ring-blue-600 shrink-0"
+                            />
+                            <span className="text-xs text-slate-800 group-hover:text-slate-950 leading-relaxed">
+                              補足欄に「勤務◯回中、遅刻◯回」と記載しました。
+                            </span>
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </Section>
+
+                  {errorMsg && (
+                    <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-700 text-sm">
+                      <span className="inline-flex items-center gap-1.5"><AlertCircle className="w-4 h-4 shrink-0" /><span>{errorMsg}</span></span>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 pt-4 border-t border-slate-200">
+                    <Link href="/dashboard" className="btn-secondary w-full sm:flex-1 text-center py-3 text-sm font-bold">
+                      キャンセル
+                    </Link>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="btn-primary w-full sm:flex-1 py-3 text-sm sm:text-base font-bold active:scale-[0.98] transition-transform"
+                    >
+                      {loading ? "送信中..." : "登録を申請する"}
+                    </button>
+                  </div>
+
+                </form>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </RequireAuth>

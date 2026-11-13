@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { usePlan } from "@/contexts/PlanContext";
 import { 
     LayoutDashboard, 
     Users, 
@@ -34,6 +35,7 @@ import {
 export default function Navigation() {
     const pathname = usePathname() || "";
     const router = useRouter();
+    const { allowedPlan: contextPlan, isAdmin: contextAdmin, companyName: contextCompanyName, displayName: contextDisplayName } = usePlan();
     const [session, setSession] = useState<any>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
@@ -219,16 +221,21 @@ export default function Navigation() {
 
     if (isPublicPage || !session) return null;
 
-    // プラン別の権限判定
-    const canViewPerson = isAdmin || allowedPlan === "full" || allowedPlan === "employment";
-    const canViewCredit = isAdmin || allowedPlan === "full" || allowedPlan === "credit";
+    // プラン別の権限判定（リアルタイムContextの値を優先反映）
+    const effectivePlan = contextPlan || allowedPlan;
+    const effectiveIsAdmin = contextAdmin || isAdmin;
+    const effectiveCompanyName = contextCompanyName || companyName;
+    const effectiveUserName = contextDisplayName || userName;
+
+    const canViewPerson = effectiveIsAdmin || effectivePlan === "full" || effectivePlan === "employment";
+    const canViewCredit = effectiveIsAdmin || effectivePlan === "full" || effectivePlan === "credit";
 
     // プラン名表示
     const getPlanLabel = () => {
-        if (isAdmin) return "管理者";
-        if (allowedPlan === "full") return "両方セット";
-        if (allowedPlan === "employment") return "応募者照会";
-        if (allowedPlan === "credit") return "企業信用";
+        if (effectiveIsAdmin) return "管理者";
+        if (effectivePlan === "full") return "両方セット";
+        if (effectivePlan === "employment") return "応募者照会";
+        if (effectivePlan === "credit") return "企業信用";
         return "スタンダード";
     };
 
@@ -293,8 +300,8 @@ export default function Navigation() {
 
                 {/* 2. 会社・プラン情報バッジ */}
                 <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/60 shrink-0">
-                    <div className="text-[11px] font-bold text-slate-800 truncate" title={companyName || "所属企業"}>
-                        {companyName || "所属企業"}
+                    <div className="text-[11px] font-bold text-slate-800 truncate" title={effectiveCompanyName || "所属企業"}>
+                        {effectiveCompanyName || "所属企業"}
                     </div>
                     <div className="flex items-center gap-1.5 mt-1">
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
@@ -498,7 +505,7 @@ export default function Navigation() {
                         </div>
                         <div className="flex flex-col min-w-0 flex-1">
                             <span className="text-xs font-bold text-slate-900 truncate">
-                                {userName || "ユーザー"}
+                                {effectiveUserName || "ユーザー"}
                             </span>
                             <span className="text-[10px] text-slate-500 truncate">
                                 設定・登録情報

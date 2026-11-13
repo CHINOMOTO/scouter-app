@@ -51,7 +51,7 @@ export async function GET(request: Request) {
                 }
             }
 
-            // フォールバック: 内部DBから社名あいまい検索
+            // フォールバック: 内部DBから承認済み案件のみ社名あいまい検索
             const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
             const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
             const supabase = createClient(supabaseUrl, supabaseKey);
@@ -60,6 +60,7 @@ export async function GET(request: Request) {
             const { data: dbCases } = await supabase
                 .from('credit_cases')
                 .select('corporate_number, company_name, location')
+                .eq('status', 'approved')
                 .or(qVariants.map(v => `company_name.ilike.%${v}%`).join(','))
                 .limit(5);
 
@@ -116,7 +117,9 @@ export async function GET(request: Request) {
                             business_summary: info.business_summary,
                             registry_status: isClosed ? 'closed' : 'active',
                             registry_close_date: isClosed ? info.update_date : null,
-                            registry_close_cause: isClosed ? info.status : null
+                            registry_close_cause: isClosed ? info.status : null,
+                            close_date: isClosed ? info.update_date : null,
+                            close_cause: isClosed ? info.status : null
                         });
                     }
                 }
@@ -125,44 +128,31 @@ export async function GET(request: Request) {
             }
         }
 
-        // 2. 内部DB（credit_cases / companies）に該当の法人番号が存在するか確認
+        // 2. 内部DB（承認済み credit_cases）に該当の法人番号が存在するか確認
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         const { data: creditCase } = await supabase
             .from('credit_cases')
-            .select('company_name, location')
+            .select('company_name, location, registry_status, registry_close_date, registry_close_cause')
             .eq('corporate_number', number)
+            .eq('status', 'approved')
             .limit(1)
             .maybeSingle();
 
         if (creditCase?.company_name) {
-            const isClosed = creditCase.company_name.includes('大同アーバン建装') || creditCase.company_name.includes('大和建装') || number === '5011101998002';
+            const isClosed = creditCase.registry_status === 'closed';
             return NextResponse.json({
                 found: true,
                 name: creditCase.company_name,
                 location: creditCase.location,
                 source: 'internal_db',
                 registry_status: isClosed ? 'closed' : 'active',
-                registry_close_date: isClosed ? '2025-12-20' : null,
-                registry_close_cause: isClosed ? '清算結了' : null
-            });
-        }
-
-        const { data: company } = await supabase
-            .from('companies')
-            .select('name, corporate_number')
-            .eq('corporate_number', number)
-            .limit(1)
-            .maybeSingle();
-
-        if (company?.name) {
-            return NextResponse.json({
-                found: true,
-                name: company.name,
-                source: 'internal_db',
-                registry_status: 'active'
+                registry_close_date: creditCase.registry_close_date || null,
+                registry_close_cause: creditCase.registry_close_cause || null,
+                close_date: creditCase.registry_close_date || null,
+                close_cause: creditCase.registry_close_cause || null
             });
         }
 
@@ -194,7 +184,9 @@ export async function GET(request: Request) {
                             source: 'nta_api',
                             registry_status: isClosed ? 'closed' : 'active',
                             registry_close_date: matchCloseDate ? matchCloseDate[1] : null,
-                            registry_close_cause: closeCauseText
+                            registry_close_cause: closeCauseText,
+                            close_date: matchCloseDate ? matchCloseDate[1] : null,
+                            close_cause: closeCauseText
                         });
                     }
                 }

@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Search, AlertCircle, UserPlus, ClipboardList, ArrowLeft, Lock } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Toast, ToastMessage } from "@/components/Toast";
+import { usePlan } from "@/contexts/PlanContext";
 
 type BlacklistCase = {
   id: string;
@@ -17,6 +18,8 @@ type BlacklistCase = {
   occurrence_date: string | null;
   reason_text: string;
   status: string;
+  approved_at?: string | null;
+  companies?: { id: string; name: string } | null;
 };
 
 export default function SearchPage() {
@@ -32,6 +35,20 @@ export default function SearchPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [planRestricted, setPlanRestricted] = useState(false);
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
+  const { allowedPlan, isAdmin: isContextAdmin, companyId: contextCompanyId } = usePlan();
+
+  // リアルタイムプラン情報の同期（管理者がプラン変更した際に即時反映）
+  useEffect(() => {
+    if (isContextAdmin) {
+      setPlanRestricted(false);
+      setIsAdmin(true);
+    } else {
+      setPlanRestricted(allowedPlan === "credit");
+    }
+    if (contextCompanyId) {
+      setUserCompanyId(contextCompanyId);
+    }
+  }, [allowedPlan, isContextAdmin, contextCompanyId]);
 
   // Check admin role and get company_id on mount
   useEffect(() => {
@@ -201,7 +218,7 @@ export default function SearchPage() {
                 採用や契約前に過去のトラブルや問題行動の記録を照会し、トラブルを未然に防ぎます。
               </p>
             </div>
-            <div className="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto">
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 w-full md:w-auto">
               <Link 
                 href="/dashboard" 
                 className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
@@ -209,20 +226,24 @@ export default function SearchPage() {
                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                 <span>戻る</span>
               </Link>
-              <Link
-                href="/cases"
-                className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
-              >
-                <ClipboardList className="w-3.5 h-3.5 shrink-0" />
-                <span>{isAdmin ? "登録一覧" : "自社登録一覧"}</span>
-              </Link>
-              <Link
-                href="/cases/new"
-                className="btn-primary flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
-              >
-                <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span>新規登録</span>
-              </Link>
+              {!planRestricted && (
+                <>
+                  <Link
+                    href="/cases"
+                    className="btn-secondary text-xs h-9 px-2 sm:px-3.5 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 font-medium transition-colors whitespace-nowrap"
+                  >
+                    <ClipboardList className="w-3.5 h-3.5 shrink-0" />
+                    <span>{isAdmin ? "登録一覧" : "自社登録一覧"}</span>
+                  </Link>
+                  <Link
+                    href="/cases/new"
+                    className="btn-primary flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
+                  >
+                    <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span>新規登録</span>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -385,6 +406,9 @@ export default function SearchPage() {
                 <div className="grid gap-5">
                   {results.map((item) => {
                     const badge = getStatusBadge(item.status);
+                    const regCompanyName = Array.isArray(item.companies)
+                      ? item.companies[0]?.name
+                      : item.companies?.name;
                     return (
                       <div
                         key={item.id}
@@ -408,7 +432,15 @@ export default function SearchPage() {
                           </div>
 
                           <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200">
-                            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 sm:mb-2">登録理由</h4>
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">登録理由・事実経過</h4>
+                              <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                                <span>登録元: <strong className="text-slate-700">{regCompanyName || "加盟企業"}</strong></span>
+                                {item.approved_at && (
+                                  <span>承認日: <strong className="text-slate-700 font-mono">{new Date(item.approved_at).toLocaleDateString("ja-JP")}</strong></span>
+                                )}
+                              </div>
+                            </div>
                             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium line-clamp-3">
                               {item.reason_text}
                             </p>

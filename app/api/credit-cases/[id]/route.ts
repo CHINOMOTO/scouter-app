@@ -33,6 +33,24 @@ export async function GET(
             ? createClient(supabaseUrl, supabaseServiceRoleKey)
             : supabaseUser;
 
+        // ユーザーの承認状態・プラン・所属企業を確認
+        const { data: appUser } = await supabaseAdmin
+            .from('app_users')
+            .select('role, company_id, allowed_plan, is_approved')
+            .eq('id', user.id)
+            .single();
+
+        if (!appUser || appUser.is_approved === false) {
+            return NextResponse.json({ error: '承認されたアカウントが必要です' }, { status: 403 });
+        }
+
+        const isAdmin = appUser.role === 'admin';
+        const userPlan = appUser.allowed_plan || 'full';
+
+        if (!isAdmin && userPlan === 'employment') {
+            return NextResponse.json({ error: 'この機能は「ミエリスクレジット」または「両方セット」プランのご契約が必要です', planRestricted: true }, { status: 403 });
+        }
+
         const { data: creditCase, error } = await supabaseAdmin
             .from('credit_cases')
             .select(`
@@ -44,6 +62,14 @@ export async function GET(
 
         if (error || !creditCase) {
             return NextResponse.json({ error: '対象データが見つかりません' }, { status: 404 });
+        }
+
+        const isOwnCompany = appUser.company_id && creditCase.registered_by_company_id === appUser.company_id;
+        const isApproved = creditCase.status === 'approved';
+
+        // 権限チェック: 管理者か、自社登録案件か、承認済み案件のみ閲覧可能
+        if (!isAdmin && !isOwnCompany && !isApproved) {
+            return NextResponse.json({ error: 'アクセス権限がありません。他社の審査中・却下データは閲覧できません。' }, { status: 403 });
         }
 
         // 公的機関（省庁・裁判所・官報）データかどうかの判定および公表元特定の取得
@@ -58,7 +84,6 @@ export async function GET(
         const isCorporate = isCorporateEntityName(creditCase.company_name);
 
         if (isOfficialData) {
-            // 公的機関データの場合、民間の「音信不通（LINEブロック）」のような被害報告ステータスは付与しない
             businessStatus = null;
             if (claim.includes('破産') || claim.includes('清算')) {
                 registryStatus = 'closed';
@@ -68,7 +93,6 @@ export async function GET(
                 registryStatus = 'active';
             }
         } else {
-            // 加盟企業からの民間未払い被害登録の場合のみ判定
             if (!businessStatus) {
                 if (claim.includes('夜逃げ') || claim.includes('引き払い') || claim.includes('所在不明')) {
                     businessStatus = 'relocated';
@@ -94,8 +118,13 @@ export async function GET(
             }
         }
 
+        // 他社が閲覧する場合は evidence_urls と admin_notes（却下理由等）をマスクする
+        const sanitizedCase = (!isAdmin && !isOwnCompany)
+            ? { ...creditCase, evidence_urls: [], admin_notes: null }
+            : creditCase;
+
         const enrichedCase = {
-            ...creditCase,
+            ...sanitizedCase,
             is_official_record: isOfficialData,
             official_source: officialSource,
             business_status: businessStatus,
@@ -110,7 +139,7 @@ export async function GET(
     }
 }
 
-// PATCH: ステータス更新（解決報告など）
+// PATCH: ステータス更新（解決報告・追加資料の再審査申請など）
 export async function PATCH(
     request: Request,
     context: { params: Promise<{ id: string }> }
@@ -142,14 +171,32 @@ export async function PATCH(
             ? createClient(supabaseUrl, supabaseServiceRoleKey)
             : supabaseUser;
 
+        // ユーザーの権限・所属会社チェック
+        const { data: appUser } = await supabaseAdmin
+            .from('app_users')
+            .select('role, company_id, is_approved')
+            .eq('id', user.id)
+            .single();
+
+        if (!appUser || appUser.is_approved === false) {
+            return NextResponse.json({ error: '承認されたアカウントが必要です' }, { status: 403 });
+        }
+
         const { data: creditCase, error: fetchErr } = await supabaseAdmin
             .from('credit_cases')
-            .select('registered_by_company_id, companies:registered_by_company_id ( id, name )')
+            .select('company_name, registered_by_company_id, companies:registered_by_company_id ( id, name )')
             .eq('id', id)
             .single();
 
         if (fetchErr || !creditCase) {
             return NextResponse.json({ error: '対象データが見つかりません' }, { status: 404 });
+        }
+
+        // 所有者または管理者のみ更新可能
+        const isAdmin = appUser.role === 'admin';
+        const isOwner = appUser.company_id && creditCase.registered_by_company_id === appUser.company_id;
+        if (!isAdmin && !isOwner) {
+            return NextResponse.json({ error: '自社が登録した案件のみ更新できます' }, { status: 403 });
         }
 
         const updateData: any = {};

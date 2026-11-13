@@ -64,7 +64,7 @@ export async function PATCH(
             }
         }
 
-        // 5. 権限の更新
+        // 5. 権限の更新 (app_users)
         const { error: updateError } = await supabaseAdmin
             .from("app_users")
             .update({ role })
@@ -72,6 +72,19 @@ export async function PATCH(
 
         if (updateError) {
             return NextResponse.json({ error: updateError.message }, { status: 500 });
+        }
+
+        // 6. Auth(Supabase認証)の app_metadata.role も同期
+        const { data: existingUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+        const currentAppMetadata = existingUser?.user?.app_metadata || {};
+        const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+            app_metadata: {
+                ...currentAppMetadata,
+                role,
+            },
+        });
+        if (authUpdateError) {
+            console.warn("auth app_metadata.role sync warning:", authUpdateError.message);
         }
 
         return NextResponse.json({ success: true });

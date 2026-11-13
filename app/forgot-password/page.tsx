@@ -44,9 +44,7 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-between p-3.5 sm:p-6 bg-[#f8fafc]">
-            <div className="h-2 sm:h-6"></div>
-
+        <div className="min-h-screen flex flex-col items-center justify-center p-3.5 sm:p-6 bg-[#f8fafc]">
             <main className="w-full max-w-[460px] flex flex-col items-center justify-center py-4 sm:py-8 my-auto">
                 <div className="mb-6 sm:mb-8 text-center flex flex-col items-center">
                     <Link href="/" className="inline-block mb-3">
@@ -117,10 +115,6 @@ export default function ForgotPasswordPage() {
                     </div>
                 </div>
             </main>
-
-            <footer className="text-center py-3 text-[11px] text-slate-400 font-medium">
-                © 2026 MIERIS. All rights reserved.
-            </footer>
         </div>
     );
 }

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Toast, ToastMessage } from "@/components/Toast";
+import { usePlan } from "@/contexts/PlanContext";
 import { detectOfficialSource, getCleanOfficialSourceName, getSourceDisplayName, isCorporateEntityName } from "@/lib/officialSources";
 import { OfficialDataNotice } from "@/components/OfficialDataNotice";
 import { 
@@ -163,6 +164,16 @@ export default function CreditSearchPage() {
 
     // プラン制限チェック用
     const [planRestricted, setPlanRestricted] = useState(false);
+    const { allowedPlan, isAdmin: isContextAdmin } = usePlan();
+
+    // リアルタイムプラン情報の同期（管理者がプラン変更した際に即時反映）
+    useEffect(() => {
+        if (isContextAdmin) {
+            setPlanRestricted(false);
+        } else {
+            setPlanRestricted(allowedPlan === "employment");
+        }
+    }, [allowedPlan, isContextAdmin]);
 
     // 期日超過日数の計算
     const calculateOverdueDays = (dueDateStr?: string | null) => {
@@ -284,15 +295,14 @@ export default function CreditSearchPage() {
 
         const normalizedQuery = searchQuery.trim();
 
-        // 弁護士法務要件：同名企業の誤認混同・名誉毀損防止のため、照会には法人番号（13桁）が必須
-        if (!normalizedCorp) {
-            const msg = "同名企業との誤認を防ぐため、法人番号（13桁）またはインボイス番号を入力してください（社名から自動セットも可能です）。";
+        if (!normalizedCorp && normalizedQuery.length < 2) {
+            const msg = "法人番号（13桁）・インボイス番号、または照会する企業名・屋号（2文字以上）を入力してください。";
             setErrorMsg(msg);
             setToast({ type: "error", text: msg });
             return;
         }
 
-        if (normalizedCorp.length !== 13) {
+        if (normalizedCorp && normalizedCorp.length !== 13) {
             const msg = "法人番号・インボイス登録番号は13桁の半角数字で入力してください。";
             setErrorMsg(msg);
             setToast({ type: "error", text: msg });
@@ -413,10 +423,12 @@ export default function CreditSearchPage() {
                         if (lookupData.registry_status) {
                             setLookupRegistryStatus(lookupData.registry_status);
                         }
-                        if (lookupData.close_date || lookupData.close_cause) {
+                        const closeDate = lookupData.registry_close_date || lookupData.close_date;
+                        const closeCause = lookupData.registry_close_cause || lookupData.close_cause;
+                        if (closeDate || closeCause) {
                             setLookupCloseDetails({
-                                date: lookupData.close_date,
-                                cause: lookupData.close_cause
+                                date: closeDate,
+                                cause: closeCause
                             });
                         }
                         // gBizINFO公的プロファイルの保持
@@ -481,20 +493,24 @@ export default function CreditSearchPage() {
                                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                                 <span>戻る</span>
                             </Link>
-                            <Link
-                                href="/credit/cases"
-                                className="btn-secondary flex items-center justify-center gap-1.5 px-3 sm:px-3.5 h-9 rounded-lg font-bold text-xs border border-slate-300 hover:border-slate-400 bg-white text-slate-800 transition-all whitespace-nowrap shadow-2xs hover:shadow-xs"
-                            >
-                                <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                <span>公的処分・信用情報一覧</span>
-                            </Link>
-                            <Link
-                                href="/credit/new"
-                                className="btn-primary flex items-center justify-center gap-1.5 px-3 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
-                            >
-                                <Plus className="w-4 h-4 shrink-0" />
-                                <span>遅延・未払いを新規登録</span>
-                            </Link>
+                            {!planRestricted && (
+                                <>
+                                    <Link
+                                        href="/credit/cases"
+                                        className="btn-secondary flex items-center justify-center gap-1.5 px-3 sm:px-3.5 h-9 rounded-lg font-bold text-xs border border-slate-300 hover:border-slate-400 bg-white text-slate-800 transition-all whitespace-nowrap shadow-2xs hover:shadow-xs"
+                                    >
+                                        <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                        <span>公的処分・信用情報一覧</span>
+                                    </Link>
+                                    <Link
+                                        href="/credit/new"
+                                        className="btn-primary flex items-center justify-center gap-1.5 px-3 sm:px-4 h-9 rounded-lg font-bold text-xs shadow-xs hover:-translate-y-0.5 transition-all whitespace-nowrap"
+                                    >
+                                        <Plus className="w-4 h-4 shrink-0" />
+                                        <span>遅延・未払いを新規登録</span>
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -513,8 +529,8 @@ export default function CreditSearchPage() {
                             </p>
                             <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs text-slate-700 max-w-md mx-auto mb-6 text-left space-y-1.5">
                                 <div className="font-bold text-slate-900 mb-1">【プラン変更のご案内】</div>
-                                <div>・MIERIS CREDIT: 月額 15,000円</div>
-                                <div>・FULLプラン（MIERIS WORK ＋ MIERIS CREDIT）: 月額 30,000円（おすすめ）</div>
+                                <div>・MIERIS CREDIT: 月額 18,000円（税別）</div>
+                                <div>・FULLプラン（MIERIS WORK ＋ MIERIS CREDIT）: 月額 30,000円（税別・おすすめ）</div>
                             </div>
                             <Link href="/contact" className="btn-primary px-6 py-2.5 rounded-lg font-bold text-xs inline-block">
                                 プラン変更をお問い合わせ
@@ -573,10 +589,10 @@ export default function CreditSearchPage() {
                                 </div>
                             </div>
 
-                            {/* 照会条件カード（法人番号必須） */}
+                            {/* 照会条件カード */}
                             <div className="bg-white p-4.5 sm:p-7 rounded-xl border border-slate-200 shadow-2xs mb-6">
                                 <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 leading-relaxed mb-5">
-                                    ※同名企業との誤認を防ぐため、照会には<strong>法人番号（13桁）</strong>または<strong>インボイス番号</strong>が必要です（社名から候補を選んで自動セットできます）。
+                                    ※同名企業との誤認を防ぐため、法人の照会には<strong>法人番号（13桁）</strong>または<strong>インボイス番号</strong>を推奨します（社名から候補を選んで自動セットも可能／法人番号を持たない個人事業主は屋号・商号でも照会できます）。
                                 </div>
 
                                 {errorMsg && (
@@ -590,19 +606,18 @@ export default function CreditSearchPage() {
 
                                 <form onSubmit={handleSearch} className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* 法人番号 または インボイス番号（必須） */}
+                                        {/* 法人番号 または インボイス番号 */}
                                         <div>
                                             <div className="flex justify-between items-center mb-1.5">
                                                 <label className="text-xs font-bold text-slate-700">
                                                     法人番号 または インボイス番号（13桁）
                                                 </label>
-                                                <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">
-                                                    必須
+                                                <span className="text-[10px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 font-bold">
+                                                    法人推奨
                                                 </span>
                                             </div>
                                             <input
                                                 type="text"
-                                                required
                                                 maxLength={14}
                                                 value={corpFilter}
                                                 onChange={(e) => {
@@ -621,7 +636,7 @@ export default function CreditSearchPage() {
                                         <div className="relative">
                                             <div className="flex justify-between items-center mb-1.5">
                                                 <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                                                    <span>企業名・商号（法人番号の検索補助）</span>
+                                                    <span>企業名・商号・屋号（法人番号の検索補助）</span>
                                                     <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200 font-semibold">
                                                         経産省サジェスト
                                                     </span>
@@ -639,7 +654,7 @@ export default function CreditSearchPage() {
                                                 value={searchQuery}
                                                 onChange={(e) => handleSearchQueryChange(e.target.value)}
                                                 onFocus={() => { if (searchCandidates.length > 0) setShowSearchCandidates(true); }}
-                                                placeholder="例: トヨタ、メルカリ..."
+                                                placeholder="例: 株式会社〇〇、〇〇工務店..."
                                                 className="input-field py-2.5 text-sm"
                                             />
                                             <p className="text-[11px] text-slate-500 mt-1">
@@ -717,10 +732,10 @@ export default function CreditSearchPage() {
                                             <Building2 className="w-6 h-6" />
                                         </div>
                                         <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1 leading-snug">
-                                            照会対象企業の「法人番号」を入力して照会してください
+                                            照会対象企業の「法人番号」または「商号」を入力して照会してください
                                         </h3>
                                         <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed mt-1">
-                                            同名企業との誤認混同防止および厳格な信用情報管理のため、13桁の法人番号による特定照会を採用しています。右側の企業名欄から候補を選択するか、法人番号を直接入力してください。
+                                            同名企業との誤認混同防止および厳格な信用情報管理のため、法人は13桁の法人番号による特定照会を推奨しています。右側の企業名欄から候補を選択するか、法人番号を直接入力してください。
                                         </p>
                                     </div>
 
@@ -781,9 +796,11 @@ export default function CreditSearchPage() {
                                                             {discoveredCompanyName}
                                                         </span>
                                                     )}
-                                                    <span className="text-xs text-slate-500 font-mono">
-                                                        (法人番号: {searchedCorp})
-                                                    </span>
+                                                    {searchedCorp && (
+                                                        <span className="text-xs text-slate-500 font-mono">
+                                                            (法人番号: {searchedCorp})
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 mb-3">
                                                     国税庁登記情報: 閉鎖（{lookupCloseDetails?.cause || "清算結了等"}）{lookupCloseDetails?.date ? ` / 閉鎖日: ${lookupCloseDetails.date}` : ""}
@@ -806,13 +823,17 @@ export default function CreditSearchPage() {
                                                             {discoveredCompanyName}
                                                         </span>
                                                     )}
-                                                    <span className="text-xs text-slate-500 font-mono">
-                                                        (法人番号: {searchedCorp})
-                                                    </span>
+                                                    {searchedCorp && (
+                                                        <span className="text-xs text-slate-500 font-mono">
+                                                            (法人番号: {searchedCorp})
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <div className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 mb-3">
-                                                    公的登記ステータス: 登記中（存続企業）
-                                                </div>
+                                                {searchedCorp && (
+                                                    <div className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 mb-3">
+                                                        公的登記ステータス: 登記中（存続企業）
+                                                    </div>
+                                                )}
                                                 <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed mb-4">
                                                     データベース上に該当する未払い・支払遅延の記録は存在しません。安心してお取引をご検討いただけます。
                                                 </p>
@@ -1005,6 +1026,12 @@ export default function CreditSearchPage() {
                                                                     {sourceInfo.isOfficial && c.amount === 0 ? "行政処分・公認記録" : `¥${(c.amount ?? 0).toLocaleString()}`}
                                                                 </span>
                                                             </div>
+                                                            {!sourceInfo.isOfficial && c.invoice_date && (
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="text-slate-500 font-medium">請求日</span>
+                                                                    <span className="font-mono text-slate-800">{c.invoice_date}</span>
+                                                                </div>
+                                                            )}
                                                             <div className="flex justify-between items-center">
                                                                 <span className="text-slate-500 font-medium">{sourceInfo.isOfficial ? "公表日" : "当初支払期日"}</span>
                                                                 <span className="font-mono text-slate-800">{c.due_date}</span>

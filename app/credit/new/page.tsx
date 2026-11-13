@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
@@ -15,13 +15,16 @@ import {
     Calendar,
     Coins,
     Clock,
-    X
+    X,
+    Lock
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
 
 export default function NewCreditCasePage() {
     const router = useRouter();
+
+    const [planRestricted, setPlanRestricted] = useState(false);
 
     const [companyName, setCompanyName] = useState("");
     const [corporateNumber, setCorporateNumber] = useState("");
@@ -56,12 +59,33 @@ export default function NewCreditCasePage() {
     const [files, setFiles] = useState<File[]>([]);
     const [uploading, setUploading] = useState(false);
 
-    // 6つのルールの同意チェック
+    // 登録ルールの同意チェック
     const [agreedRule1, setAgreedRule1] = useState(false); // 同意書の取得
     const [agreedRule2, setAgreedRule2] = useState(false); // 評価・伝聞ではなく客観的事実のみ
     const [agreedRule3, setAgreedRule3] = useState(false); // 入金時は5日以内に解決報告する
 
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 1ファイルあたり最大50MB
+
+    useEffect(() => {
+        const checkPlan = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const { data: appUser } = await supabase
+                    .from("app_users")
+                    .select("allowed_plan, role")
+                    .eq("id", session.user.id)
+                    .maybeSingle();
+
+                const isAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
+                if (!isAdmin && appUser?.allowed_plan === "employment") {
+                    setPlanRestricted(true);
+                }
+            }
+        };
+        checkPlan();
+    }, []);
 
     // 支払期日からの遅延日数・状況の動的計算
     const delayInfo = useMemo(() => {
@@ -104,13 +128,59 @@ export default function NewCreditCasePage() {
     }, [dueDate]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
+        if (e.target.files && e.target.files.length > 0) {
             const newFiles = Array.from(e.target.files);
-            setFiles(prev => [...prev, ...newFiles]);
+            const validFiles: File[] = [];
+            newFiles.forEach((file) => {
+                if (file.size > MAX_FILE_SIZE) {
+                    alert(`ファイル「${file.name}」はサイズが大きすぎます (1ファイルあたり最大50MB)`);
+                } else {
+                    validFiles.push(file);
+                }
+            });
+            if (validFiles.length > 0) {
+                setFiles(prev => [...prev, ...validFiles]);
+            }
         }
     };
 
-        // インボイス登録番号（T+13桁）のリアルタイム公的検証
+    // 社名入力時のgBizINFOサジェスト検索
+    const handleCompanyNameChange = async (val: string) => {
+        setCompanyName(val);
+        if (val.trim().length >= 2 && !isSoleProprietor) {
+            setIsSearchingGbiz(true);
+            try {
+                const res = await fetch(`/api/credit/corporate-lookup?q=${encodeURIComponent(val.trim())}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.candidates && data.candidates.length > 0) {
+                        setCompanyCandidates(data.candidates);
+                        setShowCandidates(true);
+                    } else {
+                        setCompanyCandidates([]);
+                        setShowCandidates(false);
+                    }
+                }
+            } catch {
+                // ignore
+            } finally {
+                setIsSearchingGbiz(false);
+            }
+        } else {
+            setCompanyCandidates([]);
+            setShowCandidates(false);
+        }
+    };
+
+    const selectCompanyCandidate = (c: { corporate_number: string; name: string; location: string }) => {
+        setCompanyName(c.name);
+        setCorporateNumber(c.corporate_number);
+        if (c.location) setLocation(c.location);
+        setShowCandidates(false);
+        handleCorporateNumberChange(c.corporate_number);
+    };
+
+    // インボイス登録番号（T+13桁）のリアルタイム公的検証
     const handleInvoiceNumberChange = async (val: string) => {
         setInvoiceNumber(val);
         const cleaned = val.replace(/[^0-9]/g, '');
@@ -201,7 +271,7 @@ export default function NewCreditCasePage() {
             const session = (await supabase.auth.getSession()).data.session;
             if (!session) throw new Error("認証セッションがありません");
 
-            // 1. エビデンスファイルのアップロード
+            // 1. エビデンスファイルのアップロード（case_attachments または case-evidence バケットへ確実に保存）
             const uploadedUrls: string[] = [];
             for (const file of files) {
                 const ext = file.name.split('.').pop();
@@ -215,7 +285,15 @@ export default function NewCreditCasePage() {
                 if (!uploadError) {
                     uploadedUrls.push(filePath);
                 } else {
-                    console.warn("Storage upload warning:", uploadError.message);
+                    const fallbackPath = `${session.user.id}/${fileName}`;
+                    const { error: fallbackError, data: fallbackData } = await supabase.storage
+                        .from("case-evidence")
+                        .upload(fallbackPath, file);
+
+                    if (fallbackError) {
+                        throw new Error(`裏付け資料のアップロードに失敗しました (${file.name}): ${fallbackError.message}`);
+                    }
+                    uploadedUrls.push(fallbackData?.path || fallbackPath);
                 }
             }
 
@@ -257,7 +335,7 @@ export default function NewCreditCasePage() {
         }
     };
 
-    // 法人番号入力時の自動照会（公的ステータスチェック）
+    // 法人番号入力時の自動照会（公的ステータス・商号・所在地チェック）
     const handleCorporateNumberChange = async (num: string) => {
         const clean = num.replace(/[^0-9]/g, "");
         setCorporateNumber(clean);
@@ -266,12 +344,13 @@ export default function NewCreditCasePage() {
                 const res = await fetch(`/api/credit/corporate-lookup?number=${clean}`);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.found && data.name) {
-                        if (!companyName) setCompanyName(data.name);
+                    if (data.found) {
+                        if (data.name && !companyName) setCompanyName(data.name);
+                        if (data.location && !location) setLocation(data.location);
                         if (data.registry_status) {
                             setRegistryStatus(data.registry_status);
-                            setRegistryCloseDate(data.registry_close_date || "");
-                            setRegistryCloseCause(data.registry_close_cause || "");
+                            setRegistryCloseDate(data.registry_close_date || data.close_date || "");
+                            setRegistryCloseCause(data.registry_close_cause || data.close_cause || "");
                         }
                     }
                 }
@@ -290,19 +369,21 @@ export default function NewCreditCasePage() {
                     <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-in flex-wrap gap-2.5">
                         <div className="flex items-center gap-2 flex-wrap">
                             <Link 
-                                href="/credit" 
+                                href={planRestricted ? "/dashboard" : "/credit"} 
                                 className="btn-secondary text-xs h-9 px-3 sm:px-3.5 rounded-lg flex items-center gap-1.5 font-medium transition-colors whitespace-nowrap shrink-0"
                             >
                                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                                <span className="whitespace-nowrap">企業信用照会へ戻る</span>
+                                <span className="whitespace-nowrap">{planRestricted ? "ダッシュボードへ戻る" : "企業信用照会へ戻る"}</span>
                             </Link>
-                            <Link 
-                                href="/credit/cases" 
-                                className="btn-secondary text-xs h-9 px-3 sm:px-3.5 rounded-lg flex items-center gap-1.5 font-medium border border-slate-300 hover:border-slate-400 bg-white text-slate-700 transition-colors whitespace-nowrap shrink-0 shadow-2xs hover:shadow-xs"
-                            >
-                                <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                <span className="whitespace-nowrap">公的処分・登録データ一覧</span>
-                            </Link>
+                            {!planRestricted && (
+                                <Link 
+                                    href="/credit/cases" 
+                                    className="btn-secondary text-xs h-9 px-3 sm:px-3.5 rounded-lg flex items-center gap-1.5 font-medium border border-slate-300 hover:border-slate-400 bg-white text-slate-700 transition-colors whitespace-nowrap shrink-0 shadow-2xs hover:shadow-xs"
+                                >
+                                    <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                    <span className="whitespace-nowrap">公的処分・登録データ一覧</span>
+                                </Link>
+                            )}
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="text-[11px] font-extrabold text-blue-600 uppercase tracking-widest font-mono">
@@ -325,412 +406,479 @@ export default function NewCreditCasePage() {
                         </p>
                     </div>
 
-                    {/* コンプライアンス遵守ボックス（確実に視認可能なコントラスト設計） */}
-                    <div className="bg-slate-900 text-slate-100 p-4 sm:p-6 rounded-xl mb-6 shadow-2xs border border-slate-800 animate-fade-in w-full max-w-full overflow-hidden">
-                        <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3 border-b border-slate-800 pb-2.5 sm:pb-3">
-                            <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
-                            <span className="text-xs sm:text-sm font-bold tracking-wide text-white">
-                                「晒す」仕組みにしないための運用ルール
-                            </span>
+                    {planRestricted ? (
+                        <div className="bg-white p-6 sm:p-10 rounded-xl border border-slate-200 text-center max-w-xl mx-auto my-8 sm:my-12 shadow-sm animate-fade-in">
+                            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-600 border border-amber-200/60">
+                                <Lock className="w-6 h-6" />
+                            </div>
+                            <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
+                                MIERIS CREDIT 未加入プランです
+                            </h2>
+                            <p className="text-xs text-slate-600 leading-relaxed mb-6">
+                                現在のアカウントは「MIERIS WORK」のため、企業信用情報の照会・登録をご利用いただけません。<br />
+                                「MIERIS CREDIT」または「FULLプラン」への変更で、全機能をご利用いただけます。
+                            </p>
+                            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs text-slate-700 max-w-md mx-auto mb-6 text-left space-y-1.5">
+                                <div className="font-bold text-slate-900 mb-1">【プラン変更のご案内】</div>
+                                <div>・MIERIS CREDIT: 月額 18,000円（税別）</div>
+                                <div>・FULLプラン（MIERIS WORK ＋ MIERIS CREDIT）: 月額 30,000円（税別・おすすめ）</div>
+                            </div>
+                            <Link href="/contact" className="btn-primary px-6 py-2.5 rounded-lg font-bold text-xs inline-block">
+                                プラン変更をお問い合わせ
+                            </Link>
                         </div>
-                        <ul className="text-xs space-y-2 text-slate-300 list-disc list-inside leading-relaxed">
-                            <li><strong className="text-white font-bold">同意書のない相手は登録できません</strong>（取引開始時に署名を得た同意書が必要です）</li>
-                            <li><strong className="text-white font-bold">評価・推測・伝聞は禁止</strong>（「悪質」「危ない」といった主観的表現は審査で却下されます）</li>
-                            <li><strong className="text-white font-bold">客観的な未払い経緯を記録</strong>（相手側から言い分や主張があった場合はその内容も併記してください）</li>
-                            <li><strong className="text-white font-bold">入金されたら5営業日以内に更新</strong>（「解決済み（遅延○日）」と表示更新されます）</li>
-                            <li><strong className="text-white font-bold">全件、運営管理者の厳格なエビデンス審査</strong>を経てから共有されます</li>
-                        </ul>
-                    </div>
-
-                    {/* 申請フォーム */}
-                    <div className="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs animate-fade-in w-full min-w-0">
-                        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6 w-full min-w-0">
-
-                            {/* 対象企業名 */}
-                            <div className="space-y-1.5 sm:space-y-2">
-                                <label className="text-xs sm:text-sm font-bold text-slate-800 flex items-center justify-between">
-                                    <span>対象企業名（商号） <span className="text-red-500">*</span></span>
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={companyName}
-                                    onChange={(e) => setCompanyName(e.target.value)}
-                                    className="input-field py-2.5 sm:py-3 text-sm sm:text-base"
-                                    placeholder="例: 株式会社〇〇工務店"
-                                />
+                    ) : (
+                        <>
+                            {/* コンプライアンス遵守ボックス（6つのルール明記） */}
+                            <div className="bg-slate-900 text-slate-100 p-4 sm:p-6 rounded-xl mb-6 shadow-2xs border border-slate-800 animate-fade-in w-full max-w-full overflow-hidden">
+                                <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3 border-b border-slate-800 pb-2.5 sm:pb-3">
+                                    <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+                                    <span className="text-xs sm:text-sm font-bold tracking-wide text-white">
+                                        「晒す」仕組みにしないための6つの運用ルール
+                                    </span>
+                                </div>
+                                <ul className="text-xs space-y-2 text-slate-300 list-disc list-inside leading-relaxed">
+                                    <li><strong className="text-white font-bold">同意書のない相手は登録できません</strong>（取引開始時に署名を得た同意書が必要です）</li>
+                                    <li><strong className="text-white font-bold">評価・推測・伝聞は禁止</strong>（「悪質」「危ない」といった主観的表現は審査で却下されます）</li>
+                                    <li><strong className="text-white font-bold">客観的な未払い経緯を記録</strong>（相手側から言い分や主張があった場合はその内容も併記してください）</li>
+                                    <li><strong className="text-white font-bold">入金されたら5営業日以内に更新</strong>（「解決済み（遅延○日）」と表示更新されます）</li>
+                                    <li><strong className="text-white font-bold">全件、運営管理者の厳格なエビデンス審査</strong>を経てから共有されます</li>
+                                    <li><strong className="text-white font-bold">第三者（元請・発注者など当事者以外）の情報は記載できません</strong>（直接の契約当事者間の事実のみ登録可能です）</li>
+                                </ul>
                             </div>
 
-                            {/* 法人番号 & 所在地 */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-1.5 sm:space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-xs sm:text-sm font-bold text-slate-800">
-                                            法人番号（13桁） {!isSoleProprietor && <span className="text-red-500">*</span>}
+                            {/* 申請フォーム */}
+                            <div className="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs animate-fade-in w-full min-w-0">
+                                <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6 w-full min-w-0">
+
+                                    {/* 対象企業名 */}
+                                    <div className="space-y-1.5 sm:space-y-2 relative">
+                                        <label className="text-xs sm:text-sm font-bold text-slate-800 flex items-center justify-between">
+                                            <span>対象企業名（商号・屋号） <span className="text-red-500">*</span></span>
+                                            {isSearchingGbiz && (
+                                                <span className="text-[10px] text-blue-600 animate-pulse font-medium">公的候補検索中...</span>
+                                            )}
                                         </label>
-                                        <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer select-none">
-                                            <input
-                                                type="checkbox"
-                                                checked={isSoleProprietor}
-                                                onChange={(e) => {
-                                                    setIsSoleProprietor(e.target.checked);
-                                                    if (e.target.checked) {
-                                                        setRegistryStatus("sole_proprietor");
-                                                    } else {
-                                                        setRegistryStatus("active");
-                                                    }
-                                                }}
-                                                className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
-                                            />
-                                             <span className="font-semibold text-slate-700">個人事業主</span>
-                                        </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={companyName}
+                                            onChange={(e) => handleCompanyNameChange(e.target.value)}
+                                            onFocus={() => { if (companyCandidates.length > 0) setShowCandidates(true); }}
+                                            className="input-field py-2.5 sm:py-3 text-sm sm:text-base"
+                                            placeholder="例: 株式会社〇〇工務店"
+                                        />
+                                        {showCandidates && companyCandidates.length > 0 && (
+                                            <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-fade-in text-left">
+                                                <div className="p-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-bold px-3">
+                                                    <span>公的法人候補（クリックで法人番号・所在地を自動入力）</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowCandidates(false)}
+                                                        className="text-slate-400 hover:text-slate-600 text-xs"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                                <div className="max-h-56 overflow-y-auto divide-y divide-slate-100">
+                                                    {companyCandidates.map((c) => (
+                                                        <div
+                                                            key={c.corporate_number}
+                                                            onClick={() => selectCompanyCandidate(c)}
+                                                            className="p-2.5 hover:bg-blue-50/70 cursor-pointer transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-1"
+                                                        >
+                                                            <div>
+                                                                <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                                                    <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                                                    <span>{c.name}</span>
+                                                                </div>
+                                                                <div className="text-[11px] text-slate-500">
+                                                                    {c.location || "所在地未設定"}
+                                                                </div>
+                                                            </div>
+                                                            <span className="font-mono text-[10px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded shrink-0 self-start sm:self-center font-bold">
+                                                                {c.corporate_number}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <input
-                                        type="text"
-                                        disabled={isSoleProprietor}
-                                        required={!isSoleProprietor}
-                                        maxLength={13}
-                                        value={isSoleProprietor ? "" : corporateNumber}
-                                        onChange={(e) => handleCorporateNumberChange(e.target.value)}
-                                        className={`input-field font-mono py-2.5 sm:py-3 text-sm sm:text-base ${
-                                            isSoleProprietor ? "bg-slate-100 text-slate-400 cursor-not-allowed" : ""
-                                        }`}
-                                        placeholder={isSoleProprietor ? "（法人番号なし・個人事業主）" : "例: 1234567890123"}
-                                    />
-                                    {/* 登記閉鎖検知バナー */}
-                                    {registryStatus === "closed" && (
-                                        <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2">
-                                            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
-                                            <span>
-                                                <strong>公的データ検知:</strong> この法人はすでに登記閉鎖（{registryCloseCause || "清算結了等"}）されています
-                                            </span>
-                                        </div>
-                                    )}
-                                    {isSoleProprietor && (
-                                        <div className="space-y-2 mt-2 pt-2 border-t border-slate-100">
-                                            <p className="text-[10px] sm:text-[11px] text-blue-600 font-medium">
-                                                ※個人事業主（屋号等）として登録されます
-                                            </p>
-                                            <div className="flex items-center justify-between mt-2">
-                                                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                                                    <span>インボイス登録番号（T番号）</span>
-                                                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 font-bold">
-                                                        任意・公的確認
-                                                    </span>
+
+                                    {/* 法人番号 & 所在地 */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5 sm:space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-xs sm:text-sm font-bold text-slate-800">
+                                                    法人番号（13桁） {!isSoleProprietor && <span className="text-red-500">*</span>}
+                                                </label>
+                                                <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer select-none">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSoleProprietor}
+                                                        onChange={(e) => {
+                                                            setIsSoleProprietor(e.target.checked);
+                                                            if (e.target.checked) {
+                                                                setRegistryStatus("sole_proprietor");
+                                                            } else {
+                                                                setRegistryStatus("active");
+                                                            }
+                                                        }}
+                                                        className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
+                                                    />
+                                                    <span className="font-semibold text-slate-700">個人事業主</span>
                                                 </label>
                                             </div>
                                             <input
                                                 type="text"
-                                                maxLength={14}
-                                                value={invoiceNumber}
-                                                onChange={(e) => handleInvoiceNumberChange(e.target.value)}
-                                                className="input-field font-mono py-2 text-xs sm:text-sm"
-                                                placeholder="例: T1234567890123"
+                                                disabled={isSoleProprietor}
+                                                required={!isSoleProprietor}
+                                                maxLength={13}
+                                                value={isSoleProprietor ? "" : corporateNumber}
+                                                onChange={(e) => handleCorporateNumberChange(e.target.value)}
+                                                className={`input-field font-mono py-2.5 sm:py-3 text-sm sm:text-base ${
+                                                    isSoleProprietor ? "bg-slate-100 text-slate-400 cursor-not-allowed" : ""
+                                                }`}
+                                                placeholder={isSoleProprietor ? "（法人番号なし・個人事業主）" : "例: 1234567890123"}
                                             />
-                                            {invoiceVerification && (
-                                                <div className={`p-2.5 rounded-lg text-xs flex items-start gap-2 border ${
-                                                    invoiceVerification.checking 
-                                                        ? 'bg-slate-50 text-slate-600 border-slate-200'
-                                                        : invoiceVerification.valid 
-                                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                                                            : 'bg-amber-50 text-amber-800 border-amber-200'
-                                                }`}>
-                                                    {invoiceVerification.checking ? (
-                                                        <span>国税庁アルゴリズム照合中...</span>
-                                                    ) : (
-                                                        <div>
-                                                            <div className="font-bold flex items-center gap-1">
-                                                                {invoiceVerification.valid ? '✅ ' : '⚠️ '}
-                                                                {invoiceVerification.label || 'インボイス照合結果'}
-                                                            </div>
-                                                            <div className="text-[11px] mt-0.5">{invoiceVerification.note}</div>
+                                            {/* 登記閉鎖検知バナー */}
+                                            {registryStatus === "closed" && (
+                                                <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2">
+                                                    <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                                                    <span>
+                                                        <strong>公的データ検知:</strong> この法人はすでに登記閉鎖（{registryCloseCause || "清算結了等"}）されています
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {isSoleProprietor && (
+                                                <div className="space-y-2 mt-2 pt-2 border-t border-slate-100">
+                                                    <p className="text-[10px] sm:text-[11px] text-blue-600 font-medium">
+                                                        ※個人事業主（屋号等）として登録されます
+                                                    </p>
+                                                    <div className="flex items-center justify-between mt-2">
+                                                        <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                                            <span>インボイス登録番号（T番号）</span>
+                                                            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 font-bold">
+                                                                任意・公的確認
+                                                            </span>
+                                                        </label>
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        maxLength={14}
+                                                        value={invoiceNumber}
+                                                        onChange={(e) => handleInvoiceNumberChange(e.target.value)}
+                                                        className="input-field font-mono py-2 text-xs sm:text-sm"
+                                                        placeholder="例: T1234567890123"
+                                                    />
+                                                    {invoiceVerification && (
+                                                        <div className={`p-2.5 rounded-lg text-xs flex items-start gap-2 border ${
+                                                            invoiceVerification.checking 
+                                                                ? 'bg-slate-50 text-slate-600 border-slate-200'
+                                                                : invoiceVerification.valid 
+                                                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                                                                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                                                        }`}>
+                                                            {invoiceVerification.checking ? (
+                                                                <span>国税庁アルゴリズム照合中...</span>
+                                                            ) : (
+                                                                <div>
+                                                                    <div className="font-bold flex items-center gap-1">
+                                                                        {invoiceVerification.valid ? '✅ ' : '⚠️ '}
+                                                                        {invoiceVerification.label || 'インボイス照合結果'}
+                                                                    </div>
+                                                                    <div className="text-[11px] mt-0.5">{invoiceVerification.note}</div>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
                                             )}
                                         </div>
-                                    )}
-                                </div>
-                                <div className="space-y-1.5 sm:space-y-2">
-                                    <label className="text-xs sm:text-sm font-bold text-slate-800">
-                                        本社所在地 / 現場拠点 <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={location}
-                                        onChange={(e) => setLocation(e.target.value)}
-                                        className="input-field py-2.5 sm:py-3 text-sm sm:text-base"
-                                        placeholder="例: 東京都千代田区〇〇1-2-3"
-                                    />
-                                </div>
-                            </div>
+                                        <div className="space-y-1.5 sm:space-y-2">
+                                            <label className="text-xs sm:text-sm font-bold text-slate-800">
+                                                本社所在地 / 現場拠点 <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={location}
+                                                onChange={(e) => setLocation(e.target.value)}
+                                                className="input-field py-2.5 sm:py-3 text-sm sm:text-base"
+                                                placeholder="例: 東京都千代田区〇〇1-2-3"
+                                            />
+                                        </div>
+                                    </div>
 
-                            {/* 相手先の現在の営業実態ステータス */}
-                            <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                                <div>
-                                    <label className="text-xs sm:text-sm font-bold text-slate-800 block">
-                                        相手先の現在の営業状況・連絡状況 <span className="text-red-500">*</span>
-                                    </label>
-                                </div>
-                                <p className="text-xs text-slate-500 leading-relaxed">
-                                    未払い発生後の相手方の現状を選択してください。
-                                </p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
-                                    {[
-                                        { id: "unreachable", label: "音信不通", desc: "電話不通・LINE等ブロック", color: "border-slate-200 bg-white hover:border-slate-400" },
-                                        { id: "relocated", label: "事務所引き払い・所在不明", desc: "拠点退去・連絡不能", color: "border-slate-200 bg-white hover:border-slate-400" },
-                                        { id: "bankrupt", label: "破産・倒産手続き中", desc: "弁護士等からの通知受領", color: "border-slate-200 bg-white hover:border-slate-400" },
-                                        { id: "active", label: "連絡可能（督促中）", desc: "連絡はつくが支払拒絶・延期", color: "border-slate-200 bg-white hover:border-slate-400" },
-                                        { id: "unknown", label: "現状不明", desc: "最新状況は未確認", color: "border-slate-200 bg-white hover:border-slate-400" },
-                                    ].map((opt) => (
-                                        <label
-                                            key={opt.id}
-                                            onClick={() => setBusinessStatus(opt.id)}
-                                            className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between ${opt.color} ${
-                                                businessStatus === opt.id
-                                                    ? "ring-2 ring-blue-600 border-blue-600 bg-blue-50/50 shadow-xs"
-                                                    : "hover:bg-slate-50/80"
-                                            }`}
-                                        >
-                                            <div className="flex items-center justify-between mb-1">
-                                                <span className="text-xs font-bold text-slate-900">{opt.label}</span>
+                                    {/* 相手先の現在の営業実態ステータス */}
+                                    <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                                        <div>
+                                            <label className="text-xs sm:text-sm font-bold text-slate-800 block">
+                                                相手先の現在の営業状況・連絡状況 <span className="text-red-500">*</span>
+                                            </label>
+                                        </div>
+                                        <p className="text-xs text-slate-500 leading-relaxed">
+                                            未払い発生後の相手方の現状を選択してください。
+                                        </p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+                                            {[
+                                                { id: "unreachable", label: "音信不通", desc: "電話不通・LINE等ブロック", color: "border-slate-200 bg-white hover:border-slate-400" },
+                                                { id: "relocated", label: "事務所引き払い・所在不明", desc: "拠点退去・連絡不能", color: "border-slate-200 bg-white hover:border-slate-400" },
+                                                { id: "bankrupt", label: "破産・倒産手続き中", desc: "弁護士等からの通知受領", color: "border-slate-200 bg-white hover:border-slate-400" },
+                                                { id: "active", label: "連絡可能（督促中）", desc: "連絡はつくが支払拒絶・延期", color: "border-slate-200 bg-white hover:border-slate-400" },
+                                                { id: "unknown", label: "現状不明", desc: "最新状況は未確認", color: "border-slate-200 bg-white hover:border-slate-400" },
+                                            ].map((opt) => (
+                                                <label
+                                                    key={opt.id}
+                                                    onClick={() => setBusinessStatus(opt.id)}
+                                                    className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between ${opt.color} ${
+                                                        businessStatus === opt.id
+                                                            ? "ring-2 ring-blue-600 border-blue-600 bg-blue-50/50 shadow-xs"
+                                                            : "hover:bg-slate-50/80"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-xs font-bold text-slate-900">{opt.label}</span>
+                                                        <input
+                                                            type="radio"
+                                                            name="businessStatus"
+                                                            value={opt.id}
+                                                            checked={businessStatus === opt.id}
+                                                            onChange={() => setBusinessStatus(opt.id)}
+                                                            className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500"
+                                                        />
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-500 leading-tight">{opt.desc}</p>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* 未払い金額 & 支払期日 */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 w-full min-w-0">
+                                        <div className="space-y-1.5 sm:space-y-2 w-full min-w-0">
+                                            <label className="text-xs sm:text-sm font-bold text-slate-800">
+                                                未払い・遅延金額（税込） <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="relative flex items-center w-full min-w-0">
+                                                <span className="absolute left-3.5 text-slate-400 font-bold text-base pointer-events-none select-none">¥</span>
                                                 <input
-                                                    type="radio"
-                                                    name="businessStatus"
-                                                    value={opt.id}
-                                                    checked={businessStatus === opt.id}
-                                                    onChange={() => setBusinessStatus(opt.id)}
-                                                    className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500"
+                                                    type="text"
+                                                    required
+                                                    value={amount}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/[^0-9]/g, "");
+                                                        setAmount(val ? Number(val).toLocaleString() : "");
+                                                    }}
+                                                    style={{ paddingLeft: "2.25rem" }}
+                                                    className="input-field font-extrabold text-base sm:text-lg font-mono w-full min-w-0"
+                                                    placeholder="500,000"
                                                 />
                                             </div>
-                                            <p className="text-[10px] text-slate-500 leading-tight">{opt.desc}</p>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* 未払い金額 & 支払期日 */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 w-full min-w-0">
-                                <div className="space-y-1.5 sm:space-y-2 w-full min-w-0">
-                                    <label className="text-xs sm:text-sm font-bold text-slate-800">
-                                        未払い・遅延金額（税込） <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="relative flex items-center w-full min-w-0">
-                                        <span className="absolute left-3.5 text-slate-400 font-bold text-base pointer-events-none select-none">¥</span>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={amount}
-                                            onChange={(e) => {
-                                                const val = e.target.value.replace(/[^0-9]/g, "");
-                                                setAmount(val ? Number(val).toLocaleString() : "");
-                                            }}
-                                            style={{ paddingLeft: "2.25rem" }}
-                                            className="input-field font-extrabold text-base sm:text-lg font-mono w-full min-w-0"
-                                            placeholder="500,000"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-1.5 sm:space-y-2 w-full min-w-0">
-                                    <div className="flex flex-wrap items-center justify-between gap-1.5">
-                                        <label className="text-xs sm:text-sm font-bold text-slate-800">
-                                            当初の支払期日 <span className="text-red-500">*</span>
-                                        </label>
-                                        {delayInfo && (
-                                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 shrink-0 ${delayInfo.badgeClass}`}>
-                                                {delayInfo.type === "delayed" && (
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                                                )}
-                                                {delayInfo.text}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="relative flex items-center w-full min-w-0">
-                                        <input
-                                            type="date"
-                                            required
-                                            value={dueDate}
-                                            onChange={(e) => setDueDate(e.target.value)}
-                                            className={`w-full min-w-0 bg-white border rounded-xl pl-3.5 pr-10 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors ${
-                                                delayInfo?.type === "delayed"
-                                                    ? "border-rose-300 focus:border-rose-500 bg-rose-50/20"
-                                                    : "border-slate-300"
-                                            }`}
-                                        />
-                                        <Calendar className="w-4 h-4 text-slate-400 absolute right-3.5 pointer-events-none" />
-                                    </div>
-                                    {delayInfo && delayInfo.type === "delayed" && (
-                                        <p className="text-[11px] font-bold text-rose-600 flex items-center gap-1.5 pt-0.5">
-                                            <Clock className="w-3.5 h-3.5 shrink-0 text-rose-500" />
-                                            <span>期日から {delayInfo.days}日 経過（支払遅延中）</span>
-                                        </p>
-                                    )}
-                                    {delayInfo && delayInfo.type === "today" && (
-                                        <p className="text-[11px] font-bold text-amber-600 flex items-center gap-1.5 pt-0.5">
-                                            <Clock className="w-3.5 h-3.5 shrink-0 text-amber-500" />
-                                            <span>本日が支払期日です</span>
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="col-span-1 sm:col-span-2 space-y-2 w-full min-w-0">
-                                    <div className="flex flex-wrap items-center justify-between gap-1.5">
-                                        <label className="text-xs font-bold text-slate-700">
-                                            請求日（請求書の発行日） <span className="text-red-500">*</span>
-                                        </label>
-                                        {invoiceDate && dueDate && invoiceDate > dueDate && (
-                                            <span className="text-[10px] text-amber-600 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded shrink-0">
-                                                ※支払期日が請求書発行日より前です
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="relative flex items-center w-full min-w-0">
-                                        <input
-                                            type="date"
-                                            required
-                                            value={invoiceDate}
-                                            onChange={(e) => setInvoiceDate(e.target.value)}
-                                            className="w-full min-w-0 bg-white border border-slate-300 rounded-xl pl-3.5 pr-10 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors"
-                                        />
-                                        <Calendar className="w-4 h-4 text-slate-400 absolute right-3.5 pointer-events-none" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* 登録理由 */}
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-bold text-slate-800">
-                                        登録理由（未払い・遅延の経緯・相手側の主張）
-                                    </label>
-                                    <span className="text-xs text-slate-600 font-semibold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                                        ※相手側の言い分がある場合は併記してください
-                                    </span>
-                                </div>
-                                <textarea
-                                    rows={4}
-                                    value={counterpartyClaim}
-                                    onChange={(e) => setCounterpartyClaim(e.target.value)}
-                                    className="input-field py-2.5 resize-none text-sm"
-                                    placeholder="例: 「支払期日を過ぎても入金がなく、複数回の督促に対して『社内精査中』『資金調達中』と回答されている」「納品完了後に相手側より『検収内容に疑義がある』と主張され残金の支払いを拒絶されている」「連絡を試みているが担当者不在を理由に折り返しがない」など、未払い・遅延に至った客観的な経緯および相手側からの主張・言い分をご記入ください。"
-                                />
-                                <p className="text-[11px] text-slate-500">
-                                    ※一方的な申立てを防ぎ審査の客観性を保つため、未払い・遅延に至った経緯に加え、相手企業から提示された理由・言い分・反論（または連絡不通などの実態）についても併せてご記載ください。
-                                </p>
-                            </div>
-
-                            {/* エビデンス添付 */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-800 flex items-center justify-between">
-                                    <div className="flex items-center gap-1.5">
-                                        <FileText className="w-4 h-4 text-slate-600" />
-                                        <span>裏付け資料の添付（請求書、督促状、同意書等）</span>
-                                    </div>
-                                    <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">必須</span>
-                                </label>
-                                <div className="border-2 border-dashed border-slate-200 rounded-2xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                                    <input
-                                        type="file"
-                                        multiple
-                                        required={files.length === 0}
-                                        onChange={handleFileChange}
-                                        className="block w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 cursor-pointer"
-                                    />
-                                    <p className="text-[11px] text-slate-500 mt-2">
-                                        ※PDFまたは画像ファイルを添付してください（1ファイルあたり最大50MB / 複数ファイル添付可）。管理者の審査時にエビデンスとして確認されます。<br />
-                                        ※申請後に運営から追加資料を求められた場合も、該当データの詳細画面からいつでも追加アップロードが可能です。
-                                    </p>
-
-                                    {files.length > 0 && (
-                                        <ul className="mt-3 space-y-1.5 pt-3 border-t border-slate-200">
-                                            {files.map((file, index) => (
-                                                <li key={index} className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 text-xs">
-                                                    <span className="truncate max-w-[70%] text-slate-700 font-medium">
-                                                        {file.name} ({(file.size / 1024).toFixed(0)}KB)
+                                        </div>
+                                        <div className="space-y-1.5 sm:space-y-2 w-full min-w-0">
+                                            <div className="flex flex-wrap items-center justify-between gap-1.5">
+                                                <label className="text-xs sm:text-sm font-bold text-slate-800">
+                                                    当初の支払期日 <span className="text-red-500">*</span>
+                                                </label>
+                                                {delayInfo && (
+                                                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 shrink-0 ${delayInfo.badgeClass}`}>
+                                                        {delayInfo.type === "delayed" && (
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                                        )}
+                                                        {delayInfo.text}
                                                     </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeFile(index)}
-                                                        className="text-rose-600 hover:text-rose-800 hover:bg-rose-50 p-1 rounded-lg transition-colors flex items-center gap-1 text-[11px] font-bold"
-                                                    >
-                                                        <X className="w-3.5 h-3.5" />
-                                                        <span>削除</span>
-                                                    </button>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                                )}
+                                            </div>
+                                            <div className="relative flex items-center w-full min-w-0">
+                                                <input
+                                                    type="date"
+                                                    required
+                                                    value={dueDate}
+                                                    onChange={(e) => setDueDate(e.target.value)}
+                                                    className={`w-full min-w-0 bg-white border rounded-xl pl-3.5 pr-10 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors ${
+                                                        delayInfo?.type === "delayed"
+                                                            ? "border-rose-300 focus:border-rose-500 bg-rose-50/20"
+                                                            : "border-slate-300"
+                                                    }`}
+                                                />
+                                                <Calendar className="w-4 h-4 text-slate-400 absolute right-3.5 pointer-events-none" />
+                                            </div>
+                                            {delayInfo && delayInfo.type === "delayed" && (
+                                                <p className="text-[11px] font-bold text-rose-600 flex items-center gap-1.5 pt-0.5">
+                                                    <Clock className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                                                    <span>期日から {delayInfo.days}日 経過（支払遅延中）</span>
+                                                </p>
+                                            )}
+                                            {delayInfo && delayInfo.type === "today" && (
+                                                <p className="text-[11px] font-bold text-amber-600 flex items-center gap-1.5 pt-0.5">
+                                                    <Clock className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+                                                    <span>本日が支払期日です</span>
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="col-span-1 sm:col-span-2 space-y-2 w-full min-w-0">
+                                            <div className="flex flex-wrap items-center justify-between gap-1.5">
+                                                <label className="text-xs font-bold text-slate-700">
+                                                    請求日（請求書の発行日） <span className="text-red-500">*</span>
+                                                </label>
+                                                {invoiceDate && dueDate && invoiceDate > dueDate && (
+                                                    <span className="text-[10px] text-amber-600 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded shrink-0">
+                                                        ※支払期日が請求書発行日より前です
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="relative flex items-center w-full min-w-0">
+                                                <input
+                                                    type="date"
+                                                    required
+                                                    value={invoiceDate}
+                                                    onChange={(e) => setInvoiceDate(e.target.value)}
+                                                    className="w-full min-w-0 bg-white border border-slate-300 rounded-xl pl-3.5 pr-10 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors"
+                                                />
+                                                <Calendar className="w-4 h-4 text-slate-400 absolute right-3.5 pointer-events-none" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 登録理由 */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-bold text-slate-800">
+                                                登録理由（未払い・遅延の経緯・相手側の主張）
+                                            </label>
+                                            <span className="text-xs text-slate-600 font-semibold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                                                ※相手側の言い分がある場合は併記してください
+                                            </span>
+                                        </div>
+                                        <textarea
+                                            rows={4}
+                                            value={counterpartyClaim}
+                                            onChange={(e) => setCounterpartyClaim(e.target.value)}
+                                            className="input-field py-2.5 resize-none text-sm"
+                                            placeholder="例: 「支払期日を過ぎても入金がなく、複数回の督促に対して『社内精査中』『資金調達中』と回答されている」「納品完了後に相手側より『検収内容に疑義がある』と主張され残金の支払いを拒絶されている」「連絡を試みているが担当者不在を理由に折り返しがない」など、未払い・遅延に至った客観的な経緯および相手側からの主張・言い分をご記入ください。"
+                                        />
+                                        <p className="text-[11px] text-slate-500">
+                                            ※一方的な申立てを防ぎ審査の客観性を保つため、未払い・遅延に至った経緯に加え、相手企業から提示された理由・言い分・反論（または連絡不通などの実態）についても併せてご記載ください。
+                                        </p>
+                                    </div>
+
+                                    {/* エビデンス添付 */}
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-800 flex items-center justify-between">
+                                            <div className="flex items-center gap-1.5">
+                                                <FileText className="w-4 h-4 text-slate-600" />
+                                                <span>裏付け資料の添付（請求書、督促状、同意書等）</span>
+                                            </div>
+                                            <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 font-bold">必須</span>
+                                        </label>
+                                        <div className="border-2 border-dashed border-slate-200 rounded-2xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                                            <input
+                                                type="file"
+                                                multiple
+                                                accept="image/*,application/pdf"
+                                                required={files.length === 0}
+                                                onChange={handleFileChange}
+                                                className="block w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 cursor-pointer"
+                                            />
+                                            <p className="text-[11px] text-slate-500 mt-2">
+                                                ※PDFまたは画像ファイルを添付してください（1ファイルあたり最大50MB / 複数ファイル添付可）。管理者の審査時にエビデンスとして確認されます。<br />
+                                                ※申請後に運営から追加資料を求められた場合も、該当データの詳細画面からいつでも追加アップロードが可能です。
+                                            </p>
+
+                                            {files.length > 0 && (
+                                                <ul className="mt-3 space-y-1.5 pt-3 border-t border-slate-200">
+                                                    {files.map((file, index) => (
+                                                        <li key={index} className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 text-xs">
+                                                            <span className="truncate max-w-[70%] text-slate-700 font-medium">
+                                                                {file.name} ({(file.size / 1024).toFixed(0)}KB)
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeFile(index)}
+                                                                className="text-rose-600 hover:text-rose-800 hover:bg-rose-50 p-1 rounded-lg transition-colors flex items-center gap-1 text-[11px] font-bold"
+                                                            >
+                                                                <X className="w-3.5 h-3.5" />
+                                                                <span>削除</span>
+                                                            </button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 同意チェックボックス */}
+                                    <div className="space-y-3 pt-4 border-t border-slate-100">
+                                        <div className="text-xs font-bold text-slate-900">
+                                            登録に関する宣誓・同意
+                                        </div>
+                                        
+                                        <label className="flex items-start gap-3 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                checked={agreedRule1}
+                                                onChange={(e) => setAgreedRule1(e.target.checked)}
+                                                className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                            />
+                                            <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
+                                                取引開始時に所定の同意書を取得済みであり、エビデンス資料を添付しています。
+                                            </span>
+                                        </label>
+
+                                        <label className="flex items-start gap-3 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                checked={agreedRule2}
+                                                onChange={(e) => setAgreedRule2(e.target.checked)}
+                                                className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                            />
+                                            <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
+                                                主観的な評価や誹謗中傷は含まず、客観的な請求・支払遅延の事実のみを記録しています。
+                                            </span>
+                                        </label>
+
+                                        <label className="flex items-start gap-3 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                checked={agreedRule3}
+                                                onChange={(e) => setAgreedRule3(e.target.checked)}
+                                                className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                            />
+                                            <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
+                                                相手方から代金の支払いがあった場合は、5営業日以内に「解決済み（入金完了）」へ更新します。
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    {errorMsg && (
+                                        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-start gap-2.5">
+                                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                            <span>{errorMsg}</span>
+                                        </div>
                                     )}
-                                </div>
+
+                                    <div className="pt-4">
+                                        <button
+                                            type="submit"
+                                            disabled={uploading}
+                                            className="btn-primary w-full py-3.5 sm:py-4 text-sm sm:text-base font-bold shadow-md hover:shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                        >
+                                            {uploading ? (
+                                                <>
+                                                    <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div>
+                                                    <span>エビデンス送信中...</span>
+                                                </>
+                                            ) : (
+                                                <span>信用情報を審査申請する</span>
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-
-                            {/* 同意チェックボックス */}
-                            <div className="space-y-3 pt-4 border-t border-slate-100">
-                                <div className="text-xs font-bold text-slate-900">
-                                    登録に関する宣誓・同意
-                                </div>
-                                
-                                <label className="flex items-start gap-3 cursor-pointer group">
-                                    <input
-                                        type="checkbox"
-                                        checked={agreedRule1}
-                                        onChange={(e) => setAgreedRule1(e.target.checked)}
-                                        className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                                    />
-                                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
-                                        取引開始時に所定の同意書を取得済みであり、エビデンス資料を添付しています。
-                                    </span>
-                                </label>
-
-                                <label className="flex items-start gap-3 cursor-pointer group">
-                                    <input
-                                        type="checkbox"
-                                        checked={agreedRule2}
-                                        onChange={(e) => setAgreedRule2(e.target.checked)}
-                                        className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                                    />
-                                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
-                                        主観的な評価や誹謗中傷は含まず、客観的な請求・支払遅延の事実のみを記録しています。
-                                    </span>
-                                </label>
-
-                                <label className="flex items-start gap-3 cursor-pointer group">
-                                    <input
-                                        type="checkbox"
-                                        checked={agreedRule3}
-                                        onChange={(e) => setAgreedRule3(e.target.checked)}
-                                        className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                                    />
-                                    <span className="text-xs text-slate-700 group-hover:text-slate-900 leading-relaxed">
-                                        相手方から代金の支払いがあった場合は、5営業日以内に「解決済み（入金完了）」へ更新します。
-                                    </span>
-                                </label>
-                            </div>
-
-                            {errorMsg && (
-                                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-start gap-2.5">
-                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                                    <span>{errorMsg}</span>
-                                </div>
-                            )}
-
-                            <div className="pt-4">
-                                <button
-                                    type="submit"
-                                    disabled={uploading}
-                                    className="btn-primary w-full py-3.5 sm:py-4 text-sm sm:text-base font-bold shadow-md hover:shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                                >
-                                    {uploading ? (
-                                        <>
-                                            <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div>
-                                            <span>エビデンス送信中...</span>
-                                        </>
-                                    ) : (
-                                        <span>信用情報を審査申請する</span>
-                                    )}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        </>
+                    )}
                 </div>
             </div>
         </RequireAuth>

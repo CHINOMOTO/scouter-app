@@ -47,8 +47,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "メールアドレス、パスワード、担当者名、所属会社は必須です" }, { status: 400 });
         }
 
-        if (password.length < 6) {
-            return NextResponse.json({ error: "パスワードは6文字以上で設定してください" }, { status: 400 });
+        if (password.length < 8) {
+            return NextResponse.json({ error: "パスワードは8文字以上で設定してください" }, { status: 400 });
         }
 
         // DB enum (user_role) に準拠: 'admin' または 'viewer'
@@ -82,8 +82,7 @@ export async function POST(request: Request) {
             company_id: companyId,
             display_name: displayName.trim(),
             role: targetRole,
-            is_approved: true, // 管理者発行なので即時承認
-            is_active: true
+            is_approved: true // 管理者発行なので即時承認
         };
 
         if (allowedPlan) {

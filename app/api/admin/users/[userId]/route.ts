@@ -45,12 +45,18 @@ export async function DELETE(
             return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
         }
 
-        // 3. 関連データの外部キー制約を安全に解決（投稿データや問い合わせデータは保持）
-        // 3-1. 監査ログ（ユーザー自身のログを削除）
-        await supabaseAdmin
+        // 3. 関連データの外部キー制約を安全に解決（投稿データや問い合わせデータ・監査証跡は保持）
+        // 3-1. 監査ログ（可能な限り user_id を null にして履歴を保持、NOT NULL制約がある場合のみフォールバック）
+        const { error: auditUpdateError } = await supabaseAdmin
             .from('audit_logs')
-            .delete()
+            .update({ user_id: null })
             .eq('user_id', userId);
+        if (auditUpdateError) {
+            await supabaseAdmin
+                .from('audit_logs')
+                .delete()
+                .eq('user_id', userId);
+        }
 
         // 3-2. お問い合わせ（ユーザーID紐付けを解除して問い合わせ本文は保持）
         await supabaseAdmin

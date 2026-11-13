@@ -168,7 +168,7 @@ export default function NewCompanyPage() {
                                             className="sr-only"
                                         />
                                         <div className="font-bold text-slate-900 text-sm mb-1">MIERIS CREDIT</div>
-                                        <div className="text-xs font-bold text-slate-700 mb-2">月額 15,000円</div>
+                                        <div className="text-xs font-bold text-slate-700 mb-2">月額 18,000円</div>
                                         <div className="text-[11px] text-slate-600 leading-tight">企業信用・未払い企業情報共有のみ</div>
                                     </label>
                                 </div>

@@ -179,6 +179,46 @@ export default function AdminCreditCaseDetailPage() {
         fetchDetail();
     }, [id]);
 
+    const handleSaveEdit = async () => {
+        if (!caseDetail) return;
+        setIsSaving(true);
+        try {
+            const session = (await supabase.auth.getSession()).data.session;
+            if (!session) throw new Error("認証セッションがありません");
+
+            const res = await fetch(`/api/admin/credit-cases/${id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    company_name: editCompanyName,
+                    corporate_number: editCorporateNumber,
+                    location: editLocation,
+                    invoice_date: editInvoiceDate,
+                    amount: Number(String(editAmount).replace(/[^0-9]/g, "")) || 0,
+                    due_date: editDueDate,
+                    business_status: editBusinessStatus,
+                    counterparty_claim: editCounterpartyClaim
+                })
+            });
+
+            const result = await res.json();
+            if (!res.ok) {
+                throw new Error(result.error || "更新に失敗しました");
+            }
+
+            setIsEditing(false);
+            setToast({ type: "success", text: "登録内容を更新・保存しました。" });
+            await fetchDetail();
+        } catch (err: any) {
+            setToast({ type: "error", text: err.message || "更新エラーが発生しました" });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     // 審査ステータス更新 (承認 / 却下)
     const handleUpdateStatus = async (status: "approved" | "rejected") => {
         if (!caseDetail) return;
@@ -273,15 +313,136 @@ export default function AdminCreditCaseDetailPage() {
                             <ArrowLeft className="w-3.5 h-3.5" />
                             <span>← 企業信用審査一覧へ戻る</span>
                         </Link>
-                        <div className="flex items-center gap-2 self-start sm:self-auto">
+                        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                            <button
+                                type="button"
+                                onClick={() => setIsEditing((prev) => !prev)}
+                                className="btn-secondary text-xs px-3.5 py-2 rounded-xl font-bold inline-flex items-center gap-1.5"
+                            >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>{isEditing ? "編集を閉じる" : "内容を編集"}</span>
+                            </button>
                             <span className="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white tracking-wider">
                                 ADMIN CONSOLE
                             </span>
-                            <span className="text-xs text-slate-500 font-mono truncate max-w-[200px]">
-                                ID: {caseDetail.id}
+                            <span className="text-xs text-slate-500 font-mono truncate max-w-[160px]">
+                                ID: {caseDetail.id.slice(0, 8)}
                             </span>
                         </div>
                     </div>
+
+                    {isEditing && (
+                        <div className="bg-blue-50/40 p-4.5 sm:p-6 rounded-2xl border-2 border-blue-200 space-y-4 mb-6">
+                            <div className="flex items-center justify-between border-b border-blue-200 pb-2">
+                                <h2 className="text-sm font-bold text-blue-900 flex items-center gap-1.5">
+                                    <Edit3 className="w-4 h-4 text-blue-600" />
+                                    <span>投稿内容の直接編集（管理者モード）</span>
+                                </h2>
+                                <span className="text-[11px] text-blue-700 font-medium">誤字脱字・不適切表現の修正を行えます</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                                <div>
+                                    <label className="block font-bold text-slate-700 mb-1">対象企業名（商号）</label>
+                                    <input
+                                        type="text"
+                                        value={editCompanyName}
+                                        onChange={(e) => setEditCompanyName(e.target.value)}
+                                        className="input-field py-2 text-xs"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-700 mb-1">法人番号（13桁）</label>
+                                    <input
+                                        type="text"
+                                        maxLength={13}
+                                        value={editCorporateNumber}
+                                        onChange={(e) => setEditCorporateNumber(e.target.value)}
+                                        className="input-field py-2 text-xs font-mono"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-700 mb-1">本社所在地</label>
+                                    <input
+                                        type="text"
+                                        value={editLocation}
+                                        onChange={(e) => setEditLocation(e.target.value)}
+                                        className="input-field py-2 text-xs"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-700 mb-1">未払い金額（税込）</label>
+                                    <input
+                                        type="number"
+                                        value={editAmount}
+                                        onChange={(e) => setEditAmount(e.target.value)}
+                                        className="input-field py-2 text-xs font-mono"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-700 mb-1">請求日</label>
+                                    <input
+                                        type="date"
+                                        value={editInvoiceDate}
+                                        onChange={(e) => setEditInvoiceDate(e.target.value)}
+                                        className="input-field py-2 text-xs"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-700 mb-1">当初支払期日</label>
+                                    <input
+                                        type="date"
+                                        value={editDueDate}
+                                        onChange={(e) => setEditDueDate(e.target.value)}
+                                        className="input-field py-2 text-xs"
+                                    />
+                                </div>
+                                <div className="sm:col-span-2">
+                                    <label className="block font-bold text-slate-700 mb-1">相手先の営業状況</label>
+                                    <select
+                                        value={editBusinessStatus}
+                                        onChange={(e) => setEditBusinessStatus(e.target.value)}
+                                        className="input-field py-2 text-xs"
+                                    >
+                                        <option value="unreachable">音信不通（電話不通・LINE等ブロック）</option>
+                                        <option value="relocated">事務所引き払い・所在不明</option>
+                                        <option value="bankrupt">破産・倒産手続き中</option>
+                                        <option value="active">連絡可能（督促中）</option>
+                                        <option value="unknown">現状不明</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="pt-2">
+                                <label className="block font-bold text-slate-700 text-xs mb-1">登録理由（未払い・遅延の経緯・相手側の主張）</label>
+                                <textarea
+                                    rows={5}
+                                    value={editCounterpartyClaim}
+                                    onChange={(e) => setEditCounterpartyClaim(e.target.value)}
+                                    className="input-field py-2.5 text-xs leading-relaxed resize-y w-full"
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-2.5 pt-2 border-t border-blue-200">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(false)}
+                                    className="btn-secondary py-2 px-4 text-xs"
+                                >
+                                    キャンセル
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSaveEdit}
+                                    disabled={isSaving}
+                                    className="btn-primary py-2 px-5 text-xs flex items-center gap-1.5"
+                                >
+                                    <Save className="w-3.5 h-3.5" />
+                                    <span>{isSaving ? "保存中..." : "編集内容を保存する"}</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* メインカード */}
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden mb-6">

@@ -80,6 +80,15 @@ export default function EditCompanyPage() {
                 throw updateError;
             }
 
+            // 所属ユーザーの契約プラン（allowed_plan）も同時に同期
+            const { error: syncUsersError } = await supabase
+                .from("app_users")
+                .update({ allowed_plan: planType })
+                .eq("company_id", id);
+            if (syncUsersError) {
+                console.warn("Could not sync app_users allowed_plan:", syncUsersError.message);
+            }
+
             router.push("/admin/companies");
             router.refresh();
         } catch (err: any) {
@@ -199,7 +208,7 @@ export default function EditCompanyPage() {
                                             className="sr-only"
                                         />
                                         <div className="font-bold text-slate-900 text-sm mb-1">MIERIS CREDIT</div>
-                                        <div className="text-xs font-bold text-slate-700 mb-2">月額 15,000円</div>
+                                        <div className="text-xs font-bold text-slate-700 mb-2">月額 18,000円</div>
                                         <div className="text-[11px] text-slate-600 leading-tight">企業信用・未払い企業共有のみ</div>
                                     </label>
                                 </div>

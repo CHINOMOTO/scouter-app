@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, RotateCcw, ShieldCheck, Sparkles, Box } from "lucide-react";
+import { ArrowLeft, CheckCircle2, RotateCcw, ShieldCheck, Box } from "lucide-react";
 import * as THREE from "three";
+import { RequireAdmin } from "@/components/RequireAdmin";
 
 export default function LoadingCubeDemoPage() {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -401,116 +402,118 @@ export default function LoadingCubeDemoPage() {
     }, []);
 
     return (
-        <div className="h-screen w-screen bg-[#050508] text-white flex flex-col items-center justify-between selection:bg-indigo-500 selection:text-white relative overflow-hidden font-sans p-6 sm:p-10">
-            
-            {/* 1. 背景グリッドとアンビエントライティング */}
-            <div 
-                className="absolute inset-0 pointer-events-none opacity-20"
-                style={{
-                    backgroundImage: `
-                        linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px)
-                    `,
-                    backgroundSize: '40px 40px'
-                }}
-            />
-            {/* 中央のグラデーショングロー (完了時はグリーン、ローディング中はブルー紫) */}
-            <div 
-                className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[500px] blur-[140px] pointer-events-none transition-all duration-1000 ${
-                    isComplete 
-                        ? "bg-gradient-to-b from-emerald-500/20 via-teal-500/10 to-transparent" 
-                        : "bg-gradient-to-b from-cyan-500/20 via-indigo-500/15 to-transparent"
-                }`} 
-            />
-
-            {/* 2. ヘッダーナビゲーション (戻る / testへのリンク) */}
-            <header className="w-full max-w-4xl flex items-center justify-between z-30 relative">
-                <Link
-                    href="/admin"
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs text-white/60 hover:text-white transition-all backdrop-blur-md"
-                >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>管理トップへ</span>
-                </Link>
-
-                <div className="flex items-center gap-3">
-                    <Link
-                        href="/admin/test"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs text-white/60 hover:text-white transition-all backdrop-blur-md"
-                    >
-                        <Box className="w-3.5 h-3.5 text-indigo-400" />
-                        <span>test (自由操作版) へ</span>
-                    </Link>
-                </div>
-            </header>
-
-            {/* 3. 中央: 3D ルービックキューブ (ローディング演出) */}
-            <main className="flex-1 w-full flex flex-col items-center justify-center relative z-20">
+        <RequireAdmin>
+            <div className="h-screen w-screen bg-[#050508] text-white flex flex-col items-center justify-between selection:bg-indigo-500 selection:text-white relative overflow-hidden font-sans p-6 sm:p-10">
                 
-                {/* 3D キャンバス */}
+                {/* 1. 背景グリッドとアンビエントライティング */}
                 <div 
-                    ref={containerRef}
-                    className="w-full max-w-md h-[300px] sm:h-[360px] relative pointer-events-none"
+                    className="absolute inset-0 pointer-events-none opacity-20"
+                    style={{
+                        backgroundImage: `
+                            linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+                            linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px)
+                        `,
+                        backgroundSize: '40px 40px'
+                    }}
+                />
+                {/* 中央のグラデーショングロー (完了時はグリーン、ローディング中はブルー紫) */}
+                <div 
+                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[500px] blur-[140px] pointer-events-none transition-all duration-1000 ${
+                        isComplete 
+                            ? "bg-gradient-to-b from-emerald-500/20 via-teal-500/10 to-transparent" 
+                            : "bg-gradient-to-b from-cyan-500/20 via-indigo-500/15 to-transparent"
+                    }`} 
                 />
 
-                {/* ローディングステータス & プログレスバー UI */}
-                <div className="w-full max-w-md px-4 mt-2 flex flex-col items-center text-center">
-                    
-                    {/* ステータステキスト */}
-                    <div className="flex items-center gap-2 mb-3">
-                        {isComplete ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400 animate-bounce" />
-                        ) : (
-                            <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
-                        )}
-                        <span className={`text-xs sm:text-sm font-mono tracking-wider font-semibold transition-colors duration-300 ${
-                            isComplete ? "text-emerald-400" : "text-white/80"
-                        }`}>
-                            {statusSteps[statusIndex]}
-                        </span>
-                    </div>
+                {/* 2. ヘッダーナビゲーション (戻る / testへのリンク) */}
+                <header className="w-full max-w-4xl flex items-center justify-between z-30 relative">
+                    <Link
+                        href="/admin"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs text-white/60 hover:text-white transition-all backdrop-blur-md"
+                    >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>管理トップへ</span>
+                    </Link>
 
-                    {/* プログレスバー */}
-                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden relative mb-2">
-                        <div 
-                            className={`h-full transition-all duration-150 ease-out rounded-full ${
-                                isComplete 
-                                    ? "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]" 
-                                    : "bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 shadow-[0_0_12px_rgba(6,182,212,0.8)]"
-                            }`}
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-
-                    {/* パーセンテージ表示 */}
-                    <div className="w-full flex items-center justify-between text-[11px] font-mono text-white/40">
-                        <span>DATA PIPELINE</span>
-                        <span className="font-bold text-white/70">{progress}%</span>
-                    </div>
-
-                    {/* 完了時のリトライボタン */}
-                    {isComplete && (
-                        <button
-                            onClick={resetSimulation}
-                            className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-white/20 text-xs font-bold text-white transition-all shadow-lg animate-fade-in"
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href="/admin/test"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs text-white/60 hover:text-white transition-all backdrop-blur-md"
                         >
-                            <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
-                            <span>ローディングを再実行する</span>
-                        </button>
-                    )}
-                </div>
+                            <Box className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>test (自由操作版) へ</span>
+                        </Link>
+                    </div>
+                </header>
 
-            </main>
+                {/* 3. 中央: 3D ルービックキューブ (ローディング演出) */}
+                <main className="flex-1 w-full flex flex-col items-center justify-center relative z-20">
+                    
+                    {/* 3D キャンバス */}
+                    <div 
+                        ref={containerRef}
+                        className="w-full max-w-md h-[300px] sm:h-[360px] relative pointer-events-none"
+                    />
 
-            {/* 4. フッター */}
-            <footer className="w-full max-w-4xl flex items-center justify-between text-[11px] text-white/40 z-30 relative">
-                <div className="flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>MIERIS 3D Data Pipeline Engine</span>
-                </div>
-                <span>Inspired by Resend 3D Experience</span>
-            </footer>
+                    {/* ローディングステータス & プログレスバー UI */}
+                    <div className="w-full max-w-md px-4 mt-2 flex flex-col items-center text-center">
+                        
+                        {/* ステータステキスト */}
+                        <div className="flex items-center gap-2 mb-3">
+                            {isComplete ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400 animate-bounce" />
+                            ) : (
+                                <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+                            )}
+                            <span className={`text-xs sm:text-sm font-mono tracking-wider font-semibold transition-colors duration-300 ${
+                                isComplete ? "text-emerald-400" : "text-white/80"
+                            }`}>
+                                {statusSteps[statusIndex]}
+                            </span>
+                        </div>
 
-        </div>
+                        {/* プログレスバー */}
+                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden relative mb-2">
+                            <div 
+                                className={`h-full transition-all duration-150 ease-out rounded-full ${
+                                    isComplete 
+                                        ? "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]" 
+                                        : "bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 shadow-[0_0_12px_rgba(6,182,212,0.8)]"
+                                }`}
+                                style={{ width: `${progress}%` }}
+                            />
+                        </div>
+
+                        {/* パーセンテージ表示 */}
+                        <div className="w-full flex items-center justify-between text-[11px] font-mono text-white/40">
+                            <span>DATA PIPELINE</span>
+                            <span className="font-bold text-white/70">{progress}%</span>
+                        </div>
+
+                        {/* 完了時のリトライボタン */}
+                        {isComplete && (
+                            <button
+                                onClick={resetSimulation}
+                                className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-white/20 text-xs font-bold text-white transition-all shadow-lg animate-fade-in"
+                            >
+                                <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
+                                <span>ローディングを再実行する</span>
+                            </button>
+                        )}
+                    </div>
+
+                </main>
+
+                {/* 4. フッター */}
+                <footer className="w-full max-w-4xl flex items-center justify-between text-[11px] text-white/40 z-30 relative">
+                    <div className="flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>MIERIS 3D Data Pipeline Engine</span>
+                    </div>
+                    <span>Inspired by Resend 3D Experience</span>
+                </footer>
+
+            </div>
+        </RequireAdmin>
     );
 }

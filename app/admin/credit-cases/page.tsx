@@ -66,8 +66,8 @@ export default function AdminCreditCasesPage() {
         setSortConfig({ key, direction });
     };
 
-        const handleSyncPublicData = async () => {
-        if (!confirm("各省庁（厚労省・公取委・国交省・消費者庁・官報）の公的公表データを最新状態に同期しますか？")) return;
+    const handleSyncPublicData = async () => {
+        if (!confirm("各省庁（国土交通省・厚生労働省・経済産業省・国税庁・官報）の公的公表データを最新状態に同期しますか？")) return;
         setSyncLoading(true);
         try {
             const session = (await supabase.auth.getSession()).data.session;
@@ -128,7 +128,15 @@ export default function AdminCreditCasesPage() {
 
     const handleUpdateStatus = async (id: string, newStatus: "approved" | "rejected") => {
         const actionLabel = newStatus === "approved" ? "承認" : "却下";
-        if (!confirm(`この未払い企業情報を「${actionLabel}」しますか？`)) return;
+        let adminNotes: string | undefined = undefined;
+
+        if (newStatus === "rejected") {
+            const reason = prompt("却下理由を入力してください（登録申請企業へ通知されます・空欄の場合は『要件不備』）:");
+            if (reason === null) return; // キャンセル
+            adminNotes = reason.trim() || "要件不備";
+        } else {
+            if (!confirm(`この未払い企業情報を「${actionLabel}」しますか？`)) return;
+        }
 
         setActionLoading(id);
 
@@ -143,7 +151,8 @@ export default function AdminCreditCasesPage() {
                     "Authorization": `Bearer ${session.access_token}`
                 },
                 body: JSON.stringify({
-                    status: newStatus
+                    status: newStatus,
+                    adminNotes
                 })
             });
 
@@ -378,6 +387,12 @@ export default function AdminCreditCasesPage() {
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">
                                                     <XCircle className="w-3 h-3 shrink-0" />
                                                     <span>却下</span>
+                                                </span>
+                                            )}
+                                            {c.payment_status === "resolved" && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+                                                    <Check className="w-3 h-3 shrink-0" />
+                                                    <span>解決済み（入金完了）</span>
                                                 </span>
                                             )}
                                         </div>
