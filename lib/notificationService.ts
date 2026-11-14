@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import nodemailer from "nodemailer";
+import { createMailTransporter, DEFAULT_FROM_ADDRESS } from "@/lib/mailTransporter";
 
 export type ReviewNotificationParams = {
   type: "work" | "credit"; // 就業トラブル(work) または 企業信用(credit)
@@ -123,9 +124,24 @@ MIERIS 運営事務局
 ──────────────────────────────`;
     }
 
-    // A. Gmail / SMTP 設定がある場合（Gmail から直接送信）
-    const gmailUser = process.env.GMAIL_USER || process.env.SMTP_USER;
-    const gmailPass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASSWORD;
+    // A. SMTP（さくらインターネット/独自メール等）設定がある場合
+    const mailTransporter = createMailTransporter();
+    if (mailTransporter) {
+      const fromAddress = DEFAULT_FROM_ADDRESS;
+      const info = await mailTransporter.sendMail({
+        from: fromAddress,
+        to: recipientEmails,
+        subject: subject,
+        text: textContent,
+      });
+
+      console.log(`[SMTP SENT] Review notification sent to: ${recipientEmails.join(", ")} messageId: ${info.messageId}`);
+      return { sent: true, provider: "smtp", messageId: info.messageId, recipients: recipientEmails };
+    }
+
+    // A-2. Gmail 互換フォールバック
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD;
 
     if (gmailUser && gmailPass) {
       const transporter = nodemailer.createTransport({

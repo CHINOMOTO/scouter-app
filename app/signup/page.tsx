@@ -93,6 +93,22 @@ ${notes.trim() || "なし"}`;
                 console.warn("LINE notify skipped or failed:", notifyErr);
             }
 
+            // 申込者への自動返信メール送信（盲点①対応）
+            try {
+                await fetch("/api/notify/signup-reply", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email: email.trim(),
+                        displayName: displayName.trim(),
+                        companyName: companyName.trim(),
+                        planType,
+                    })
+                });
+            } catch (replyErr) {
+                console.warn("Signup auto-reply email failed or skipped:", replyErr);
+            }
+
             if (insertError && !notifyOk) {
                 throw new Error("お申し込みデータの保存に失敗しました。お手数ですが時間をおいて再度お試しください。");
             }
