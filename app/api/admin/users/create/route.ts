@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { translateErrorMessage } from "@/lib/errorMessage";
 
 export async function POST(request: Request) {
     try {
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
 
         if (createAuthError || !authResult.user) {
             console.error("Auth create error:", createAuthError);
-            return NextResponse.json({ error: createAuthError?.message || "アカウントの作成に失敗しました" }, { status: 400 });
+            return NextResponse.json({ error: translateErrorMessage(createAuthError) || "アカウントの作成に失敗しました" }, { status: 400 });
         }
 
         const newUserId = authResult.user.id;

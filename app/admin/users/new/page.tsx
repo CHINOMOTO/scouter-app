@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
+import { translateErrorMessage } from "@/lib/errorMessage";
 import { 
     ArrowLeft, 
     RefreshCw, 
@@ -210,7 +211,7 @@ ${name} 様
             });
 
         } catch (err: any) {
-            setError(err.message || "アカウント作成エラー");
+            setError(translateErrorMessage(err) || "アカウント作成エラー");
             setShowConfirmModal(false);
         } finally {
             setSubmitting(false);
