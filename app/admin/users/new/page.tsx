@@ -17,7 +17,9 @@ import {
     Mail,
     Eye,
     EyeOff,
-    ExternalLink
+    ExternalLink,
+    Send,
+    Loader2
 } from "lucide-react";
 
 type Company = {
@@ -64,6 +66,9 @@ export default function NewUserPage() {
         plan: string;
     } | null>(null);
     const [copied, setCopied] = useState(false);
+    const [sendingInvite, setSendingInvite] = useState(false);
+    const [inviteSent, setInviteSent] = useState(false);
+    const [inviteError, setInviteError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
@@ -202,6 +207,8 @@ ${name} 様
             }
 
             setShowConfirmModal(false);
+            setInviteSent(false);
+            setInviteError(null);
             setCreatedUser({
                 email: email.trim(),
                 pass: password,
@@ -230,6 +237,50 @@ ${name} 様
         navigator.clipboard.writeText(text);
         setCopied(true);
         setTimeout(() => setCopied(false), 3000);
+    };
+
+    const handleSendInviteEmail = async () => {
+        if (!createdUser || sendingInvite) return;
+        setSendingInvite(true);
+        setInviteError(null);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                throw new Error("ログインセッションが見つかりません。再ログインをお試しください。");
+            }
+
+            const text = emailBody || buildEmailBody(
+                createdUser.email, 
+                createdUser.pass, 
+                createdUser.name, 
+                createdUser.companyName, 
+                createdUser.plan
+            );
+
+            const res = await fetch("/api/admin/users/send-invite", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    email: createdUser.email,
+                    subject: emailSubject,
+                    text: text
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "メール送信に失敗しました");
+            }
+
+            setInviteSent(true);
+        } catch (err: any) {
+            setInviteError(translateErrorMessage(err) || "メール送信に失敗しました");
+        } finally {
+            setSendingInvite(false);
+        }
     };
 
     // Gmail作成画面を開くURL（Web Gmail Compose）
@@ -567,93 +618,82 @@ ${name} 様
                                 <div><span className="text-slate-400">プラン:</span> <span className="font-sans text-slate-800">{planLabels[createdUser.plan]}</span></div>
                             </div>
 
-                            <div className="space-y-2">
-                                {isMobile ? (
-                                    /* スマホ表示: メールアプリ（Gmail/標準メール）が直接起動する mailto をメインに */
-                                    <>
-                                        <a
-                                            href={getMailtoUrl()}
-                                            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                                        >
-                                            <Mail className="w-4 h-4" />
-                                            <span>メールアプリで案内を送信</span>
-                                            <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-                                        </a>
-
-                                        {/* 案内文コピー */}
-                                        <button
-                                            onClick={copyCredentials}
-                                            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
-                                        >
-                                            {copied ? (
-                                                <>
-                                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                                    <span>案内文をコピーしました</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Copy className="w-3.5 h-3.5" />
-                                                    <span>案内文をコピー</span>
-                                                </>
-                                            )}
-                                        </button>
-
-                                        {/* サブ: ブラウザ版Gmailリンク */}
-                                        <div className="pt-1">
-                                            <a
-                                                href={getGmailComposeUrl()}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-[11px] text-slate-500 hover:text-slate-800 hover:underline inline-flex items-center justify-center gap-1"
-                                            >
-                                                <span>ブラウザ版 Gmail で開く</span>
-                                                <ExternalLink className="w-3 h-3 opacity-60" />
-                                            </a>
-                                        </div>
-                                    </>
+                            <div className="space-y-3">
+                                {/* メイン: システムからの直接メール送信ボタン */}
+                                {inviteSent ? (
+                                    <div className="w-full py-3 px-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2">
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                        <span>案内メールを送信しました</span>
+                                    </div>
                                 ) : (
-                                    /* PC表示: ブラウザ版 Gmail Compose をメインに */
-                                    <>
-                                        <a
-                                            href={getGmailComposeUrl()}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                                        >
-                                            <Mail className="w-4 h-4" />
-                                            <span>Gmail で案内メールを送信</span>
-                                            <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-                                        </a>
-
-                                        {/* 案内文コピー */}
+                                    <div className="space-y-1.5">
                                         <button
-                                            onClick={copyCredentials}
-                                            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                                            onClick={handleSendInviteEmail}
+                                            disabled={sendingInvite}
+                                            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:cursor-not-allowed"
                                         >
-                                            {copied ? (
+                                            {sendingInvite ? (
                                                 <>
-                                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                                    <span>案内文をコピーしました</span>
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    <span>案内メールを送信中...</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Copy className="w-3.5 h-3.5" />
-                                                    <span>案内文をコピー</span>
+                                                    <Send className="w-4 h-4" />
+                                                    <span>案内メールを送信する</span>
                                                 </>
                                             )}
                                         </button>
-
-                                        {/* サブ: その他のメールソフトリンク */}
-                                        <div className="pt-1">
-                                            <a
-                                                href={getMailtoUrl()}
-                                                className="text-[11px] text-slate-500 hover:text-slate-800 hover:underline inline-flex items-center justify-center gap-1"
-                                            >
-                                                <span>その他のメールソフト（Outlook等）で開く</span>
-                                            </a>
-                                        </div>
-                                    </>
+                                        <p className="text-[11px] text-slate-400">
+                                            mieris0610@uiken.jp よりログイン情報を直接送信します
+                                        </p>
+                                    </div>
                                 )}
+
+                                {inviteError && (
+                                    <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs flex items-center gap-2 text-left">
+                                        <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                                        <span>{inviteError}</span>
+                                    </div>
+                                )}
+
+                                {/* サブ: 案内文コピー */}
+                                <button
+                                    onClick={copyCredentials}
+                                    className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                                >
+                                    {copied ? (
+                                        <>
+                                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                            <span>案内文をコピーしました</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="w-3.5 h-3.5" />
+                                            <span>案内文をコピー</span>
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* サブ手動フォールバック: メーラー / Gmail */}
+                                <div className="pt-1 flex items-center justify-center gap-3 text-[11px] text-slate-500">
+                                    <a
+                                        href={getGmailComposeUrl()}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:text-slate-800 hover:underline inline-flex items-center gap-1"
+                                    >
+                                        <span>Gmailで開く</span>
+                                        <ExternalLink className="w-3 h-3 opacity-60" />
+                                    </a>
+                                    <span className="text-slate-300">|</span>
+                                    <a
+                                        href={getMailtoUrl()}
+                                        className="hover:text-slate-800 hover:underline inline-flex items-center gap-1"
+                                    >
+                                        <span>メールソフトで開く</span>
+                                    </a>
+                                </div>
 
                                 <div className="pt-2 border-t border-slate-100">
                                     <button

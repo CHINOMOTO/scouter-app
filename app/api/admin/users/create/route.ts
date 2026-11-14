@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { translateErrorMessage } from "@/lib/errorMessage";
+import { createMailTransporter, DEFAULT_FROM_ADDRESS } from "@/lib/mailTransporter";
 
 export async function POST(request: Request) {
     try {
@@ -120,50 +121,76 @@ export async function POST(request: Request) {
         };
 
         if (sendEmail) {
-            const resendApiKey = process.env.RESEND_API_KEY;
-            if (resendApiKey) {
-                try {
-                    const { Resend } = await import("resend");
-                    const resend = new Resend(resendApiKey);
-                    const fromEmail = process.env.RESEND_FROM_EMAIL || "MIERIS 運営事務局 <onboarding@resend.dev>";
-                    const subject = emailSubject || "【MIERIS】アカウント発行およびログイン情報のご案内";
-                    const content = emailBody || `アカウントが発行されました。\nログインURL: https://www.m-m-m-mieris0610.com/\nメールアドレス: ${email.trim()}`;
+            const subject = emailSubject || "【MIERIS】アカウント発行およびログイン情報のご案内";
+            const content = emailBody || `アカウントが発行されました。\nログインURL: https://www.m-m-m-mieris0610.com/\nメールアドレス: ${email.trim()}`;
 
-                    const emailResult = await resend.emails.send({
-                        from: fromEmail,
+            const mailTransporter = createMailTransporter();
+            if (mailTransporter) {
+                try {
+                    const info = await mailTransporter.sendMail({
+                        from: DEFAULT_FROM_ADDRESS,
                         to: [email.trim()],
                         subject: subject,
                         text: content,
                     });
-
-                    if (emailResult.error) {
-                        console.error("Resend delivery error:", emailResult.error);
-                        emailDelivery = {
-                            attempted: true,
-                            sent: false,
-                            message: `送信エラー: ${emailResult.error.message}`
-                        };
-                    } else {
-                        emailDelivery = {
-                            attempted: true,
-                            sent: true,
-                            message: "メールを正常に送信しました"
-                        };
-                    }
-                } catch (err: any) {
-                    console.error("Email send exception:", err);
+                    emailDelivery = {
+                        attempted: true,
+                        sent: true,
+                        message: "メールを正常に送信しました"
+                    };
+                    console.log(`[SMTP CREATE SENT] Sent invitation to ${email.trim()} messageId: ${info.messageId}`);
+                } catch (smtpErr: any) {
+                    console.error("SMTP delivery error:", smtpErr);
                     emailDelivery = {
                         attempted: true,
                         sent: false,
-                        message: `送信処理中にエラーが発生しました: ${err.message}`
+                        message: `送信処理中にエラーが発生しました: ${smtpErr.message}`
                     };
                 }
             } else {
-                emailDelivery = {
-                    attempted: true,
-                    sent: false,
-                    message: "RESEND_API_KEY が未設定のため自動送信は保留されました（案内テキストをコピーまたはメーラーから送信可能です）"
-                };
+                const resendApiKey = process.env.RESEND_API_KEY;
+                if (resendApiKey) {
+                    try {
+                        const { Resend } = await import("resend");
+                        const resend = new Resend(resendApiKey);
+                        const fromEmail = process.env.RESEND_FROM_EMAIL || "MIERIS 運営事務局 <onboarding@resend.dev>";
+
+                        const emailResult = await resend.emails.send({
+                            from: fromEmail,
+                            to: [email.trim()],
+                            subject: subject,
+                            text: content,
+                        });
+
+                        if (emailResult.error) {
+                            console.error("Resend delivery error:", emailResult.error);
+                            emailDelivery = {
+                                attempted: true,
+                                sent: false,
+                                message: `送信エラー: ${emailResult.error.message}`
+                            };
+                        } else {
+                            emailDelivery = {
+                                attempted: true,
+                                sent: true,
+                                message: "メールを正常に送信しました"
+                            };
+                        }
+                    } catch (err: any) {
+                        console.error("Email send exception:", err);
+                        emailDelivery = {
+                            attempted: true,
+                            sent: false,
+                            message: `送信処理中にエラーが発生しました: ${err.message}`
+                        };
+                    }
+                } else {
+                    emailDelivery = {
+                        attempted: true,
+                        sent: false,
+                        message: "SMTPおよびメール設定が未完了のため自動送信は保留されました（案内テキストをコピーまたはメーラーから送信可能です）"
+                    };
+                }
             }
         }
 
