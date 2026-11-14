@@ -53,6 +53,12 @@ export function translateErrorMessage(error: any): string {
   }
 
   // メールサーバー・SMTP関連
+  if (lower.includes("command rejected") || lower.includes("550 5.7.1") || lower.includes("relaying denied")) {
+    return "メールサーバー（さくらインターネット）のセキュリティ設定（国外IPアドレスフィルタ等）により送信が拒否されました。さくらのコントロールパネルで「国外IPアドレスフィルタ」を無効化するか、案内文をコピーして送信してください。";
+  }
+  if (lower.includes("authentication failed") || lower.includes("535 5.7.0") || lower.includes("invalid login")) {
+    return "メール送信サーバー（SMTP）のユーザー名またはパスワードが正しくありません。";
+  }
   if (lower.includes("getaddrinfo") || lower.includes("ebusy") || lower.includes("enotfound") || lower.includes("smtp") || lower.includes("etimedout") || lower.includes("econnrefused")) {
     return "メールサーバーとの接続が混雑しているか一時的に失敗しました。もう一度「案内メールを送信する」を押してお試しください。";
   }
@@ -62,6 +68,12 @@ export function translateErrorMessage(error: any): string {
     return "既に同じ情報が登録されているため、重複して登録することはできません。";
   }
 
-  // その他の英文エラーの場合はデフォルト日本語メッセージまたはそのまま返す
-  return msg || "エラーが発生しました。入力内容をご確認の上、再度お試しください。";
+  // 日本語（ひらがな・カタカナ・漢字）が含まれている場合はそのまま表示
+  const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(msg);
+  if (hasJapanese) {
+    return msg;
+  }
+
+  // 英文・システムエラーの場合は未翻訳のまま出さず親切な日本語を返す
+  return "処理中にエラーが発生しました。時間をおいて再度お試しいただくか、運営事務局へお問い合わせください。";
 }
