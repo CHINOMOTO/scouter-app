@@ -52,6 +52,11 @@ export function translateErrorMessage(error: any): string {
     return "サーバーで問題が発生しました。時間をおいて再度お試しいただくか、運営事務局へお問い合わせください。";
   }
 
+  // メールサーバー・SMTP関連
+  if (lower.includes("getaddrinfo") || lower.includes("ebusy") || lower.includes("enotfound") || lower.includes("smtp") || lower.includes("etimedout") || lower.includes("econnrefused")) {
+    return "メールサーバーとの接続が混雑しているか一時的に失敗しました。もう一度「案内メールを送信する」を押してお試しください。";
+  }
+
   // データベース制約
   if (lower.includes("duplicate key") || lower.includes("unique constraint")) {
     return "既に同じ情報が登録されているため、重複して登録することはできません。";

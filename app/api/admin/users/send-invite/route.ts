@@ -58,12 +58,25 @@ export async function POST(request: Request) {
         const mailSubject = subject || "【MIERIS】アカウント発行およびログイン情報のご案内";
         const fromAddress = DEFAULT_FROM_ADDRESS;
 
-        const info = await mailTransporter.sendMail({
-            from: fromAddress,
-            to: email.trim(),
-            subject: mailSubject,
-            text: text,
-        });
+        let info;
+        try {
+            info = await mailTransporter.sendMail({
+                from: fromAddress,
+                to: email.trim(),
+                subject: mailSubject,
+                text: text,
+            });
+        } catch (firstErr: any) {
+            console.warn("[SMTP INVITE] First attempt failed, retrying in 1s...", firstErr.message);
+            // 1秒待ってリトライ
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            info = await mailTransporter.sendMail({
+                from: fromAddress,
+                to: email.trim(),
+                subject: mailSubject,
+                text: text,
+            });
+        }
 
         console.log(`[SMTP INVITE SENT] Sent invitation to ${email.trim()} messageId: ${info.messageId}`);
 
