@@ -113,6 +113,12 @@ export async function POST(request: Request) {
             throw insertError;
         }
 
+        // 所属会社（companies.plan_type）および同社の他ユーザーのプランも同期して不整合を防止
+        if (allowedPlan && companyId) {
+            await supabaseAdmin.from("companies").update({ plan_type: allowedPlan }).eq("id", companyId);
+            await supabaseAdmin.from("app_users").update({ allowed_plan: allowedPlan }).eq("company_id", companyId);
+        }
+
         // メール送信の実行（指定されている場合）
         let emailDelivery = {
             attempted: Boolean(sendEmail),

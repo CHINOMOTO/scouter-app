@@ -31,7 +31,9 @@ import {
     PREFECTURE_OPTIONS,
     extractPrefectureFromLocation,
     getLocationPriorityRank,
-    normalizeCompanySearchText
+    normalizeCompanySearchText,
+    classifyCompanyIndustry,
+    isTargetCreditIndustry
 } from "@/lib/officialSources";
 import { OfficialDataNotice } from "@/components/OfficialDataNotice";
 
@@ -129,6 +131,7 @@ export default function CreditCasesListPage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [prefectureFilter, setPrefectureFilter] = useState<string>("all");
+    const [industryFilter, setIndustryFilter] = useState<string>("all");
     const [statusFilter, setStatusFilter] = useState<"all" | "official" | "unpaid" | "resolved">("all");
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" }>({
         key: "priority",
@@ -202,7 +205,12 @@ export default function CreditCasesListPage() {
 
     // 検索・フィルタリング・ソート
     const filteredCases = useMemo(() => {
-        let result = [...cases];
+        let result = cases.filter((c) => isTargetCreditIndustry(c));
+
+        // 業種フィルター（建設・施工・不動産 / 運送・物流・倉庫 / 警備・人材・ビル管理）
+        if (industryFilter !== "all") {
+            result = result.filter((c) => classifyCompanyIndustry(c) === industryFilter);
+        }
 
         // ステータスフィルター（公的処分 / 民間未払い中 / 民間解決済み）
         if (statusFilter === "official") {
@@ -273,7 +281,7 @@ export default function CreditCasesListPage() {
         });
 
         return result;
-    }, [cases, searchTerm, prefectureFilter, statusFilter, sortConfig]);
+    }, [cases, searchTerm, prefectureFilter, industryFilter, statusFilter, sortConfig]);
 
     const totalPages = Math.ceil(filteredCases.length / PAGE_SIZE) || 1;
 
@@ -374,7 +382,7 @@ export default function CreditCasesListPage() {
                                 </div>
 
                                 {/* 都道府県プルダウン */}
-                                <div className="relative w-full sm:w-44 shrink-0">
+                                <div className="relative w-full sm:w-40 shrink-0">
                                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                                     <select
                                         value={prefectureFilter}
@@ -391,6 +399,25 @@ export default function CreditCasesListPage() {
                                                 {pref}
                                             </option>
                                         ))}
+                                    </select>
+                                </div>
+
+                                {/* 業種プルダウン */}
+                                <div className="relative w-full sm:w-48 shrink-0">
+                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                    <select
+                                        value={industryFilter}
+                                        onChange={(e) => {
+                                            setIndustryFilter(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        style={{ paddingLeft: '2.1rem' }}
+                                        className="w-full bg-white border border-slate-200 rounded-xl pr-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
+                                    >
+                                        <option value="all">すべての対象業種</option>
+                                        <option value="construction_realestate">建設・施工・不動産</option>
+                                        <option value="transport_logistics">運送・物流・倉庫</option>
+                                        <option value="security_staffing">警備・人材・ビル管理</option>
                                     </select>
                                 </div>
                             </div>

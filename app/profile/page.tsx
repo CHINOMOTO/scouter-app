@@ -148,7 +148,16 @@ export default function ProfileAndSettingsPage() {
             setNewPassword("");
             setConfirmPassword("");
         } catch (err: any) {
-            setToast({ type: "error", text: "パスワード更新に失敗しました: " + (err.message || "") });
+            const msg = (err?.message || "").toLowerCase();
+            let friendlyMsg = "パスワードの更新に失敗しました。時間をおいて再度お試しください。";
+            if (msg.includes("different from the old password") || msg.includes("same_password")) {
+                friendlyMsg = "現在と同じパスワードは設定できません。異なる新しいパスワードを入力してください。";
+            } else if (msg.includes("at least 8 characters") || msg.includes("should be at least")) {
+                friendlyMsg = "パスワードは8文字以上で入力してください。";
+            } else if (msg.includes("pwned") || msg.includes("weak_password") || msg.includes("too weak")) {
+                friendlyMsg = "セキュリティ強度が不足しています。英数字や記号を組み合わせたパスワードを設定してください。";
+            }
+            setToast({ type: "error", text: friendlyMsg });
         } finally {
             setIsSavingPassword(false);
         }

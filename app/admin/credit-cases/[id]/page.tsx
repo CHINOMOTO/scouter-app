@@ -296,6 +296,8 @@ export default function AdminCreditCaseDetailPage() {
     }
 
     const isResolved = caseDetail.payment_status === "resolved";
+    const officialSource = detectOfficialSource(caseDetail);
+    const isOfficial = officialSource.isOfficial;
 
     return (
         <RequireAdmin>
@@ -485,9 +487,19 @@ export default function AdminCreditCaseDetailPage() {
                                     )}
                                 </div>
 
-                                {/* 入金ステータス */}
+                                {/* 入金ステータス / 公的処分バッジ */}
                                 <div>
-                                    {isResolved ? (
+                                    {isOfficial ? (
+                                        <div className="px-4 py-2 rounded-xl bg-blue-50 text-blue-900 border border-blue-200 text-center">
+                                            <div className="flex items-center justify-center gap-1.5 text-xs font-extrabold">
+                                                <ShieldCheck className="w-4 h-4 text-blue-700 shrink-0" />
+                                                <span>公的機関 公認処分・確定記録</span>
+                                            </div>
+                                            <div className="text-[11px] text-blue-700 mt-0.5 font-bold">
+                                                公表日: {caseDetail.due_date?.replace(/-/g, "/") || "-"}
+                                            </div>
+                                        </div>
+                                    ) : isResolved ? (
                                         <div className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-center">
                                             <div className="flex items-center justify-center gap-1.5 text-xs font-bold">
                                                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -511,23 +523,42 @@ export default function AdminCreditCaseDetailPage() {
                                 </div>
                             </div>
 
-                            {/* 未払い金額ハイライト */}
-                            <div className="p-4 sm:p-6 bg-slate-50 rounded-xl border border-slate-200 mt-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-                                <div>
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                                        未払い金額（税込）
-                                    </span>
-                                    <span className="text-2xl sm:text-4xl font-extrabold text-slate-900">
-                                        ¥{caseDetail.amount.toLocaleString()}
-                                    </span>
+                            {/* 未払い金額 / 公的処分ハイライト */}
+                            {isOfficial ? (
+                                <div className="p-4 sm:p-6 bg-blue-50/50 rounded-xl border border-blue-200 mt-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                                    <div>
+                                        <span className="text-xs font-bold text-blue-700 uppercase tracking-wider block mb-1">
+                                            {caseDetail.amount > 0 ? "公表不払認定額（概算）" : "処分区分・措置概要"}
+                                        </span>
+                                        <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                                            {caseDetail.amount > 0 ? `¥${caseDetail.amount.toLocaleString()}` : "行政処分・公認記録"}
+                                        </span>
+                                    </div>
+                                    <div className="text-left sm:text-right">
+                                        <span className="text-xs font-bold text-slate-500 block mb-0.5 sm:mb-1">公表日 / 処分発令日</span>
+                                        <span className="text-base sm:text-lg font-bold text-slate-900 font-mono">
+                                            {caseDetail.due_date?.replace(/-/g, "/") || "-"}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="text-left sm:text-right">
-                                    <span className="text-xs font-bold text-slate-500 block mb-0.5 sm:mb-1">当初支払期日</span>
-                                    <span className="text-base sm:text-lg font-bold text-slate-900 font-mono">
-                                        {caseDetail.due_date.replace(/-/g, "/")}
-                                    </span>
+                            ) : (
+                                <div className="p-4 sm:p-6 bg-slate-50 rounded-xl border border-slate-200 mt-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                                    <div>
+                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                                            未払い金額（税込）
+                                        </span>
+                                        <span className="text-2xl sm:text-4xl font-extrabold text-slate-900">
+                                            ¥{caseDetail.amount.toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div className="text-left sm:text-right">
+                                        <span className="text-xs font-bold text-slate-500 block mb-0.5 sm:mb-1">当初支払期日</span>
+                                        <span className="text-base sm:text-lg font-bold text-slate-900 font-mono">
+                                            {caseDetail.due_date.replace(/-/g, "/")}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* 申請詳細リスト */}

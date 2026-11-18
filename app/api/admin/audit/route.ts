@@ -70,10 +70,14 @@ export async function GET(request: Request) {
             const companyName = compMap.get(log.company_id) || "所属なし";
 
             let targetDetail = log.target_id || "-";
-            if (log.action_type === "VIEW_CASE" && caseMap.has(log.target_id)) {
-                targetDetail = `対象者: ${caseMap.get(log.target_id)} (ID: ${log.target_id.slice(0, 8)}...)`;
-            } else if (log.action_type === "VIEW_CREDIT" && creditMap.has(log.target_id)) {
-                targetDetail = `対象企業: ${creditMap.get(log.target_id)} (ID: ${log.target_id.slice(0, 8)}...)`;
+            if (log.action_type === "VIEW_CASE") {
+                targetDetail = caseMap.has(log.target_id)
+                    ? `対象者: ${caseMap.get(log.target_id)} (ID: ${log.target_id.slice(0, 8)}...)`
+                    : `対象者: ${log.target_id}`;
+            } else if (log.action_type === "VIEW_CREDIT") {
+                targetDetail = creditMap.has(log.target_id)
+                    ? `対象企業: ${creditMap.get(log.target_id)} (ID: ${log.target_id.slice(0, 8)}...)`
+                    : `対象企業: ${log.target_id}`;
             }
 
             return {

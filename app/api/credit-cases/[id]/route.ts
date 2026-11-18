@@ -118,8 +118,9 @@ export async function GET(
             }
         }
 
-        // 他社が閲覧する場合は evidence_urls と admin_notes（却下理由等）をマスクする
-        const sanitizedCase = (!isAdmin && !isOwnCompany)
+        // 民間登録案件を他社が閲覧する場合のみ evidence_urls と admin_notes（却下理由等）をマスクする
+        // ※公的処分データ（isOfficialData）は違反法条・事案概要・公表元URLを全加盟企業に公開する
+        const sanitizedCase = (!isAdmin && !isOwnCompany && !isOfficialData)
             ? { ...creditCase, evidence_urls: [], admin_notes: null }
             : creditCase;
 

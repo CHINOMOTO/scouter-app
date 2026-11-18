@@ -69,8 +69,8 @@ export async function sendCaseReviewNotification(params: ReviewNotificationParam
     const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.m-m-m-mieris0610.com";
 
     const subject = status === "approved"
-      ? `【MIERIS】ご登録申請が承認されました（${targetName} 様 / 社）`
-      : `【MIERIS】ご登録申請の審査結果について（${targetName} 様 / 社）`;
+      ? `【MIERIS】ご登録申請が承認されました（対象：${targetName}）`
+      : `【MIERIS】ご登録申請の審査結果について（対象：${targetName}）`;
 
     let textContent = "";
     if (status === "approved") {

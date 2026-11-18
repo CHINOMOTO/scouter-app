@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { detectOfficialSource, isCorporateEntityName, getLocationPriorityRank, buildCompanyQueryVariants } from '@/lib/officialSources';
+import { detectOfficialSource, isCorporateEntityName, getLocationPriorityRank, buildCompanyQueryVariants, isTargetCreditIndustry } from '@/lib/officialSources';
 
 // GET: 未払い企業情報の検索・一覧取得
 export async function GET(request: Request) {
@@ -166,18 +166,20 @@ export async function GET(request: Request) {
             return NextResponse.json({ cases: [] });
         }
 
-        // 営業実態・公的登記ステータスの補完（未設定レコードの場合）
-        const enrichedCases = (data || []).map((item: any) => {
+        // 対象外業種（旅行・製薬・飲食・医療等の公的データ）を除外し、営業実態・公的登記ステータスを補完
+        const targetFiltered = (data || []).filter((item: any) => isTargetCreditIndustry(item));
+        const enrichedCases = targetFiltered.map((item: any) => {
             let businessStatus = item.business_status;
             let registryStatus = item.registry_status;
 
+            const fullText = `${item.counterparty_claim || ''} ${item.admin_notes || ''}`;
+
             if (!businessStatus) {
-                const claim = item.counterparty_claim || '';
-                if (claim.includes('夜逃げ') || claim.includes('引き払い') || claim.includes('所在不明')) {
+                if (fullText.includes('夜逃げ') || fullText.includes('引き払い') || fullText.includes('所在不明')) {
                     businessStatus = 'relocated';
-                } else if (claim.includes('倒産') || claim.includes('破産')) {
+                } else if (fullText.includes('倒産') || fullText.includes('破産') || fullText.includes('民事再生')) {
                     businessStatus = 'bankrupt';
-                } else if (claim.includes('不通') || claim.includes('連絡が取れ') || claim.includes('ブロック')) {
+                } else if (fullText.includes('不通') || fullText.includes('連絡が取れ') || fullText.includes('ブロック')) {
                     businessStatus = 'unreachable';
                 } else {
                     businessStatus = 'unreachable';
@@ -185,7 +187,9 @@ export async function GET(request: Request) {
             }
 
             if (!registryStatus) {
-                if (item.company_name?.includes('個人事業主') || (!item.corporate_number && !isCorporateEntityName(item.company_name)) || item.corporate_number?.startsWith('999')) {
+                if (fullText.includes('閉鎖登記') || fullText.includes('清算結了') || fullText.includes('破産手続開始') || fullText.includes('破産管財')) {
+                    registryStatus = 'closed';
+                } else if (item.company_name?.includes('個人事業主') || (!item.corporate_number && !isCorporateEntityName(item.company_name)) || item.corporate_number?.startsWith('999')) {
                     registryStatus = 'sole_proprietor';
                 } else {
                     registryStatus = 'active';

@@ -92,11 +92,14 @@ export default function DashboardPage() {
 
         const { data: appUser } = await supabase
           .from("app_users")
-          .select("display_name, allowed_plan, company_id, companies ( name )")
+          .select("display_name, allowed_plan, role, company_id, companies ( name )")
           .eq("id", user.id)
           .maybeSingle();
 
         if (appUser) {
+          if (appUser.role === "admin") {
+            setIsAdmin(true);
+          }
           if (appUser.allowed_plan) {
             setAllowedPlan(appUser.allowed_plan);
           }
@@ -256,16 +259,10 @@ export default function DashboardPage() {
               <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
               <div className="animate-marquee flex items-center gap-3 sm:gap-4 pl-4">
-                {[...partnerCompanies, ...partnerCompanies].map((comp, idx) => (
-                  <a
-                    key={`${comp.id}-${idx}`}
-                    href={comp.websiteUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="h-12 sm:h-14 px-4 sm:px-6 rounded-lg bg-white border border-slate-200/90 hover:border-slate-400 hover:shadow-xs transition-all shrink-0 flex items-center justify-center group/item cursor-pointer"
-                    title={`${comp.name} (${comp.category})`}
-                  >
-                    {comp.logoSvg === "uiken" ? (
+                {[...partnerCompanies, ...partnerCompanies].map((comp, idx) => {
+                  const hasExternalUrl = Boolean(comp.websiteUrl && comp.websiteUrl !== "#");
+                  const cardClass = `h-12 sm:h-14 px-4 sm:px-6 rounded-lg bg-white border border-slate-200/90 hover:border-slate-400 hover:shadow-xs transition-all shrink-0 flex items-center justify-center group/item ${hasExternalUrl ? "cursor-pointer" : "cursor-default"}`;
+                  const innerContent = comp.logoSvg === "uiken" ? (
                       <div className="flex items-center gap-2 select-none">
                         <div className="w-5 h-5 rounded bg-slate-900 flex items-center justify-center font-black text-white text-[10px] shrink-0 shadow-2xs">
                           UI
@@ -350,9 +347,29 @@ export default function DashboardPage() {
                           <span className="text-[7px] text-teal-700 font-bold tracking-widest mt-0.5">フロンティア都市開発</span>
                         </div>
                       </div>
-                    )}
-                  </a>
-                ))}
+                    );
+
+                  return hasExternalUrl ? (
+                    <a
+                      key={`${comp.id}-${idx}`}
+                      href={comp.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cardClass}
+                      title={`${comp.name} (${comp.category})`}
+                    >
+                      {innerContent}
+                    </a>
+                  ) : (
+                    <div
+                      key={`${comp.id}-${idx}`}
+                      className={cardClass}
+                      title={`${comp.name} (${comp.category})`}
+                    >
+                      {innerContent}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

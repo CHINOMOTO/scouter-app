@@ -125,9 +125,13 @@ export default function AdminAuditPage() {
         const searches = logs.filter(l => l.action_type === "SEARCH" || l.action_type === "SEARCH_CREDIT").length;
         const views = logs.filter(l => l.action_type === "VIEW_CASE" || l.action_type === "VIEW_CREDIT").length;
         
-        // 本日（UTC換算）
-        const todayStr = new Date().toISOString().split("T")[0];
-        const todayCount = logs.filter(l => (l.created_at || "").startsWith(todayStr)).length;
+        // 本日（日本時間・ローカル日付換算）
+        const todayLocalStr = new Date().toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
+        const todayCount = logs.filter(l => {
+            if (!l.created_at) return false;
+            const logLocalStr = new Date(l.created_at).toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
+            return logLocalStr === todayLocalStr;
+        }).length;
 
         return { total, searches, views, todayCount };
     }, [logs]);

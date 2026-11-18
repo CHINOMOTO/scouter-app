@@ -80,7 +80,7 @@ export default function AdminCompaniesPage() {
             case "credit":
                 return (
                     <span className="text-[11px] bg-amber-50 text-amber-800 px-2.5 py-0.5 rounded-full border border-amber-200 font-bold">
-                        MIERIS CREDIT (1.5万/月)
+                        MIERIS CREDIT (1.8万/月)
                     </span>
                 );
             case "full":

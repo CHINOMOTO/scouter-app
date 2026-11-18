@@ -32,13 +32,20 @@ export default function Home() {
       const { data, error } = await Promise.race([loginPromise, timeoutPromise]) as any;
 
       if (error) {
-        if (error.message.includes("Invalid login credentials")) {
+        const lower = (error.message || "").toLowerCase();
+        if (lower.includes("invalid login credentials")) {
           throw new Error("メールアドレスまたはパスワードが間違っています。");
         }
-        if (error.message.includes("Email not confirmed")) {
+        if (lower.includes("email not confirmed")) {
           throw new Error("メールアドレスの確認が完了していません。受信トレイを確認してください。");
         }
-        throw error;
+        if (lower.includes("rate limit") || lower.includes("too many requests")) {
+          throw new Error("短期間にログイン試行が集中しました。1分ほど時間をおいてから再度お試しください。");
+        }
+        if (lower.includes("network") || lower.includes("fetch")) {
+          throw new Error("通信エラーが発生しました。ネットワーク接続をご確認の上、再度お試しください。");
+        }
+        throw new Error("ログインに失敗しました。入力内容をご確認の上、再度お試しください。");
       }
 
       if (data?.session) {

@@ -6,7 +6,6 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { UploadCloud, X, AlertCircle, ArrowLeft, Check, ShieldAlert, Lock } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
-import { recognizeText } from "@/lib/ocr";
 
 type TroubleCategory = {
   id: string;
@@ -104,7 +103,6 @@ export default function NewCasePage() {
 
   // File upload state
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // 登録に関する宣誓・同意チェックボックス
   const [agreedWork1, setAgreedWork1] = useState(false);
@@ -161,28 +159,6 @@ export default function NewCasePage() {
 
   const removeFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleOCR = async (file: File) => {
-    if (!confirm("画像を解析してテキストを抽出しますか？\n抽出されたテキストは「補足詳細 / 登録理由」欄に追記されます。")) return;
-
-    setIsAnalyzing(true);
-    try {
-      const text = await recognizeText(file);
-      if (text) {
-        // 余分な空白を除去して追記
-        const cleanedText = text.replace(/\s+/g, ' ').trim();
-        setReason((prev) => prev + (prev ? "\n\n" : "") + "[画像解析結果]\n" + cleanedText);
-        alert("テキストを抽出しました！");
-      } else {
-        alert("テキストが見つかりませんでした。");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("解析に失敗しました。");
-    } finally {
-      setIsAnalyzing(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -818,16 +794,6 @@ export default function NewCasePage() {
                             <li key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
                               <span className="truncate max-w-[60%] text-slate-700">{file.name} ({(file.size / 1024).toFixed(0)}KB)</span>
                               <div className="flex items-center gap-3">
-                                {file.type.startsWith('image/') && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOCR(file)}
-                                    disabled={isAnalyzing}
-                                    className="text-xs text-slate-900 hover:text-slate-900 border border-slate-200 bg-slate-50 px-2 py-1 rounded transition-colors"
-                                  >
-                                    {isAnalyzing ? "解析中..." : "文字認識(OCR)"}
-                                  </button>
-                                )}
                                 <button
                                   type="button"
                                   onClick={() => removeFile(index)}

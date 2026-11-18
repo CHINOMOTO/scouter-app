@@ -41,20 +41,53 @@ export function detectOfficialSource(item?: {
         };
     }
 
-    // 2. 国土交通省・自治体（ネガティブ情報検索システム・宅建/建築監督処分）
+    // 2. 国土交通省・自治体（ネガティブ情報検索システム・建設業/運送業/宅建業/測量/指名停止等）
     if (
         claim.includes('【国土交通省') ||
         claim.includes('【東京都知事') ||
         notes.includes('国土交通省') ||
         urls.some(u => typeof u === 'string' && (u.includes('mlit.go.jp') || u.includes('nega-inf')))
     ) {
-        const agencyName = claim.includes('東京都知事') 
-            ? '東京都（都市整備局） / 国土交通省' 
-            : '国土交通省（各地方整備局）';
+        const isTokyo = claim.includes('東京都知事');
+        const isTransport = /自動車運送|貨物|車両使用停止|運輸局/.test(claim) && !/自動車整備|道路運送車両法/.test(claim);
+        const isMaintenance = /自動車整備|道路運送車両法/.test(claim);
+
+        let agencyName = '国土交通省（各地方整備局・都道府県）';
+        if (isTokyo) {
+            agencyName = '東京都（都市整備局） / 国土交通省';
+        } else if (isTransport || isMaintenance) {
+            agencyName = '国土交通省（各地方運輸局）';
+        }
+
+        let sourceCategory = '宅地建物取引業法に基づく監督処分';
+        if (isTransport) {
+            sourceCategory = '貨物自動車運送事業法に基づく行政処分';
+        } else if (isMaintenance) {
+            sourceCategory = '道路運送車両法（自動車整備事業）に基づく監督処分';
+        } else if (/指名停止/.test(claim)) {
+            sourceCategory = '公共工事・発注業務における指名停止措置';
+        } else if (/建設業法|無許可業者|一括下請負|施工不良|施工管理/.test(claim)) {
+            sourceCategory = '建設業法に基づく監督処分';
+        } else if (/測量法/.test(claim)) {
+            sourceCategory = '測量法に基づく監督処分';
+        } else if (/建設コンサルタント/.test(claim)) {
+            sourceCategory = '建設コンサルタント登録規程に基づく監督処分';
+        } else if (/地質調査/.test(claim)) {
+            sourceCategory = '地質調査業者登録規程に基づく監督処分';
+        } else if (/マンション管理/.test(claim)) {
+            sourceCategory = 'マンション管理適正化法に基づく監督処分';
+        } else if (/賃貸住宅管理/.test(claim)) {
+            sourceCategory = '賃貸住宅管理業法に基づく監督処分';
+        } else if (/建築基準法|建築士/.test(claim)) {
+            sourceCategory = '建築基準法・建築士法に基づく監督処分';
+        }
+
         return {
             isOfficial: true,
-            sourceName: `${agencyName} ネガティブ情報検索システム`,
-            sourceCategory: '宅地建物取引業法・建築基準法に基づく監督処分',
+            sourceName: isTransport
+                ? `${agencyName} 自動車運送事業行政処分公表`
+                : `${agencyName} ネガティブ情報検索システム`,
+            sourceCategory,
             sourceUrl: urls.find(u => typeof u === 'string' && (u.includes('mlit.go.jp') || u.includes('nega-inf'))) || 'https://www.mlit.go.jp/nega-inf/'
         };
     }
@@ -336,6 +369,106 @@ export function getLocationPriorityRank(location?: string | null): number {
     if (pref === '茨城県' || pref === '栃木県' || pref === '群馬県') return 4;
     return 5;
 }
+
+/**
+ * MIERIS CREDIT 対象業種カテゴリ
+ * - construction_realestate: 建設・施工・設備・不動産
+ * - transport_logistics: 運送・物流・倉庫・車両
+ * - security_staffing: 警備・人材派遣・ビル管理・環境整備
+ * - excluded: 旅行・製薬・医療福祉・飲食・小売・美容・アパレル等の対象外業種
+ */
+export type IndustryCategory =
+    | 'construction_realestate'
+    | 'transport_logistics'
+    | 'security_staffing'
+    | 'excluded';
+
+const EXCLUDED_INDUSTRY_REGEX =
+    /製薬|薬品|医薬|クリニック|病院|医療法人|歯科|薬局|整骨|接骨|鍼灸|福祉|介護|デイサービス|訪問介護|老人ホーム|保育園|幼稚園|学園|学校法人|大学|学習塾|進学塾|英会話|留学|美容|サロン|エステ|化粧品|コスメ|薬用|健康食品|サプリ|機能性表示食品|旅行|トラベル|観光|ツアー|しろくまツアー|てるみくらぶ|ホテル|旅館|アパレル|ファッション|呉服|繊維|レナウン|製菓|洋菓子|シベール|菓子|食品|フーズ|飲食|レストラン|カフェ|喫茶|居酒屋|焼肉|寿司|ラーメン|うどん|そば|弁当|給食|青果|水産|畜産|牧場|農業|農園|ケフィア|漁業|パチンコ|ガイア|アミューズメント|フィットネス|ジム|chocoZAP|RIZAP|船井電機|夢グループ|イモトのWiFi|エクスコム|磁気治療器|ジャパンライフ|出版|印刷|新聞|書店|スーパー|百貨店|ドラッグストア|ゴルフ|冠婚葬祭|葬儀|ブライダル/;
+
+const TRANSPORT_LOGISTICS_REGEX =
+    /運輸|運送|物流|ロジスティクス|ロジ|通運|急便|陸運|海運|倉庫|配送|引越|交通|貨物|自動車運送|レッカー|ダンプ|トラック|ドライバー|運転手|運転者|荷役|港湾|乗務員/;
+
+const SECURITY_STAFFING_REGEX =
+    /警備|セキュリティ|ガード|メンテナンス|ビル管理|清掃|美装|環境|廃棄物|産廃|不用品|害虫駆除|派遣|スタッフ|ワーク|キャリア|ヒューマン|サポート|アウトソーシング|請負|技能実習/;
+
+const CONSTRUCTION_REALESTATE_REGEX =
+    /建設|建工|工務|工業|建材|土木|建築|塗装|防水|設備|電設|電気|電工|配管|管工|給排水|給湯|水道|ガス|空調|ダクト|解体|足場|鳶|鉄筋|鉄骨|溶接|左官|板金|建具|サッシ|ガラス|タイル|石材|内装|外装|屋根|外壁|造園|舗装|基礎|仮設|杭|重機|クレーン|生コン|コンクリート|ハウス|ホーム|不動産|宅建|宅地建物|地所|興業|組|技建|住建|建装|資材|開発|設計|測量|リフォーム|リノベ|エンジニアリング|工事|現場|施工/;
+
+/**
+ * 社名・処分内容・備考テキストから業種カテゴリを自動判定する
+ */
+export function classifyCompanyIndustry(item?: {
+    company_name?: string | null;
+    counterparty_claim?: string | null;
+    admin_notes?: string | null;
+} | null): IndustryCategory {
+    if (!item) return 'excluded';
+    const name = item.company_name || '';
+    const claim = item.counterparty_claim || '';
+    const notes = item.admin_notes || '';
+    const fullText = `${name} ${claim} ${notes}`;
+
+    // 1. 明確な対象外業種（製薬・旅行・医療・飲食・アパレル等）は最優先で除外
+    if (EXCLUDED_INDUSTRY_REGEX.test(fullText)) {
+        return 'excluded';
+    }
+
+    // 2. 国交省の建設・土木・測量・不動産・マンション管理処分は「建設・施工・不動産」
+    if (/宅建|宅地建物|建設業|建築基準|指名停止|測量|建設コンサル|地質調査|マンション管理|賃貸住宅管理/.test(claim)) {
+        return 'construction_realestate';
+    }
+
+    // 3. 国交省の自動車運送・トラック・軽貨物・自動車整備処分または運送・物流キーワード
+    if (/自動車運送|貨物自動車|自動車整備/.test(claim) || TRANSPORT_LOGISTICS_REGEX.test(name) || TRANSPORT_LOGISTICS_REGEX.test(fullText)) {
+        return 'transport_logistics';
+    }
+
+    // 4. 建設・施工・設備・不動産キーワード
+    if (CONSTRUCTION_REALESTATE_REGEX.test(name) || CONSTRUCTION_REALESTATE_REGEX.test(fullText)) {
+        return 'construction_realestate';
+    }
+
+    // 5. 警備・人材・ビルメンテキーワード
+    if (SECURITY_STAFFING_REGEX.test(name) || SECURITY_STAFFING_REGEX.test(fullText)) {
+        return 'security_staffing';
+    }
+
+    return 'excluded';
+}
+
+/**
+ * 公的データ・登録データが MIERIS CREDIT の表示対象業種かどうかを判定する
+ * （民間加盟企業による直接登録データは常に表示対象とし、公的データは対象3業種のみ表示）
+ */
+export function isTargetCreditIndustry(item?: {
+    company_name?: string | null;
+    counterparty_claim?: string | null;
+    admin_notes?: string | null;
+    evidence_urls?: string[] | null;
+    companies?: { name?: string } | null;
+} | null): boolean {
+    if (!item) return false;
+    const official = detectOfficialSource(item);
+    if (!official.isOfficial) {
+        return true; // 民間加盟企業の登録案件は常に対象
+    }
+    return classifyCompanyIndustry(item) !== 'excluded';
+}
+
+export function getIndustryCategoryLabel(cat: IndustryCategory): string {
+    switch (cat) {
+        case 'construction_realestate':
+            return '建設・施工・不動産';
+        case 'transport_logistics':
+            return '運送・物流・倉庫';
+        case 'security_staffing':
+            return '警備・人材・ビル管理';
+        default:
+            return 'その他';
+    }
+}
+
 
 
 

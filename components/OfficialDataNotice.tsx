@@ -59,8 +59,8 @@ export function OfficialDataNotice({ className = "", compact = false }: Official
                     className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-100/80 transition-colors flex items-center justify-between group"
                 >
                     <div className="truncate pr-2">
-                        <span className="font-bold text-slate-800 block truncate">国土交通省 ネガティブ情報等検索システム</span>
-                        <span className="text-[10px] text-slate-500 block truncate">宅地建物取引業法・建設業法等に基づく監督処分情報</span>
+                        <span className="font-bold text-slate-800 block truncate">国土交通省 ネガティブ情報等検索システム・自動車運送処分</span>
+                        <span className="text-[10px] text-slate-500 block truncate">建設業法・貨物自動車運送事業法・宅建業法等に基づく監督処分・指名停止</span>
                     </div>
                     <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
                 </a>
@@ -79,14 +79,40 @@ export function OfficialDataNotice({ className = "", compact = false }: Official
                 </a>
 
                 <a
+                    href="https://www.no-trouble.caa.go.jp/action/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-100/80 transition-colors flex items-center justify-between group"
+                >
+                    <div className="truncate pr-2">
+                        <span className="font-bold text-slate-800 block truncate">消費者庁 特定商取引法ガイド（執行状況公表）</span>
+                        <span className="text-[10px] text-slate-500 block truncate">住宅リフォーム・屋根外壁工事・設備修繕等における業務停止命令・指示</span>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
+                </a>
+
+                <a
+                    href="https://kanpou.npb.go.jp/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-100/80 transition-colors flex items-center justify-between group"
+                >
+                    <div className="truncate pr-2">
+                        <span className="font-bold text-slate-800 block truncate">国立印刷局「官報」公告 / 管轄地方裁判所・公正取引委員会</span>
+                        <span className="text-[10px] text-slate-500 block truncate">裁判所公認の破産・民事再生手続開始決定および下請法勧告事案</span>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
+                </a>
+
+                <a
                     href="https://info.gbiz.go.jp/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-100/80 transition-colors flex items-center justify-between group"
                 >
                     <div className="truncate pr-2">
-                        <span className="font-bold text-slate-800 block truncate">経済産業省 gBizINFO（Web-API）</span>
-                        <span className="text-[10px] text-slate-500 block truncate">法人公的プロフィール・行政処分・届出公表データベース</span>
+                        <span className="font-bold text-slate-800 block truncate">経済産業省 gBizINFO（Web-API 法人プロファイル照会）</span>
+                        <span className="text-[10px] text-slate-500 block truncate">企業検索時の公的法人プロフィール（代表者・資本金・従業員数）自動補完</span>
                     </div>
                     <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
                 </a>
@@ -99,7 +125,7 @@ export function OfficialDataNotice({ className = "", compact = false }: Official
                 >
                     <div className="truncate pr-2">
                         <span className="font-bold text-slate-800 block truncate">国税庁 法人番号公表サイト / インボイス公表システム</span>
-                        <span className="text-[10px] text-slate-500 block truncate">登記法人基本3情報（商号・所在地・法人番号）・適格請求書登録</span>
+                        <span className="text-[10px] text-slate-500 block truncate">登記法人基本3情報・登記閉鎖（清算結了）確認・適格請求書登録検証</span>
                     </div>
                     <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
                 </a>

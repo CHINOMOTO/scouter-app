@@ -316,7 +316,7 @@ export default function CreditCaseDetailPage() {
                                 <span className="whitespace-nowrap">公的処分・信用情報一覧</span>
                             </Link>
                         </div>
-                        {isOwner && !isResolved && (
+                        {!sourceInfo.isOfficial && isOwner && !isResolved && (
                             <button
                                 onClick={() => {
                                     setDelayDays(String(currentDelayDays > 0 ? currentDelayDays : 0));
@@ -599,11 +599,19 @@ export default function CreditCaseDetailPage() {
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">
-                                    {sourceInfo.isOfficial ? "法令違反・処分状況" : "入金の有無"}
+                                    {sourceInfo.isOfficial ? "記録の種別・区分" : "入金の有無"}
                                 </span>
-                                <span className={`font-bold ${isResolved ? "text-emerald-700" : "text-rose-700"}`}>
-                                    {sourceInfo.isOfficial ? (isResolved ? "是正・履行済" : "処分対象・未是正") : (isResolved ? "解決済み" : "未払い")}
-                                </span>
+                                {sourceInfo.isOfficial ? (
+                                    <span className="font-bold text-blue-900">
+                                        {/破産|民事再生/.test(caseData.counterparty_claim || "")
+                                            ? "裁判所公告・法的整理手続記録"
+                                            : "行政処分・法令違反公表記録（公表日時点の確定事実）"}
+                                    </span>
+                                ) : (
+                                    <span className={`font-bold ${isResolved ? "text-emerald-700" : "text-rose-700"}`}>
+                                        {isResolved ? "解決済み" : "未払い"}
+                                    </span>
+                                )}
                             </div>
                             {sourceInfo.isOfficial ? (
                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2.5 border-b border-slate-100 gap-1 sm:gap-4">

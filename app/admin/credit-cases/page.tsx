@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { Pagination } from "@/components/Pagination";
+import { detectOfficialSource, getCleanOfficialSourceName } from "@/lib/officialSources";
 
 type CreditCaseAdmin = {
     id: string;
@@ -67,7 +68,7 @@ export default function AdminCreditCasesPage() {
     };
 
     const handleSyncPublicData = async () => {
-        if (!confirm("各省庁（国土交通省・厚生労働省・経済産業省・国税庁・官報）の公的公表データを最新状態に同期しますか？")) return;
+        if (!confirm("各省庁（国土交通省・厚生労働省・消費者庁・官報）の対象業種公表データを最新状態に同期しますか？")) return;
         setSyncLoading(true);
         try {
             const session = (await supabase.auth.getSession()).data.session;
@@ -360,7 +361,10 @@ export default function AdminCreditCasesPage() {
                         </div>
                     ) : (
                         <div className="space-y-4 animate-fade-in">
-                            {paginatedCases.map((c) => (
+                            {paginatedCases.map((c) => {
+                                const sourceInfo = detectOfficialSource(c);
+                                const isOfficial = sourceInfo.isOfficial;
+                                return (
                                 <div
                                     key={c.id}
                                     className="bg-white p-4.5 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6"
@@ -371,6 +375,12 @@ export default function AdminCreditCasesPage() {
                                                 <Building2 className="w-5 h-5 text-slate-600 shrink-0" />
                                                 <span>{c.company_name}</span>
                                             </h3>
+                                            {isOfficial && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200 whitespace-nowrap">
+                                                    <ShieldCheck className="w-3 h-3 text-blue-700 shrink-0" />
+                                                    <span>🏛️ 公的確定処分</span>
+                                                </span>
+                                            )}
                                             {c.status === "pending" && (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
                                                     <Clock className="w-3 h-3 shrink-0" />
@@ -389,7 +399,7 @@ export default function AdminCreditCasesPage() {
                                                     <span>却下</span>
                                                 </span>
                                             )}
-                                            {c.payment_status === "resolved" && (
+                                            {!isOfficial && c.payment_status === "resolved" && (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
                                                     <Check className="w-3 h-3 shrink-0" />
                                                     <span>解決済み（入金完了）</span>
@@ -398,16 +408,27 @@ export default function AdminCreditCasesPage() {
                                         </div>
 
                                         <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-slate-600 my-3">
-                                            <div>未払い額: <strong className="text-slate-900 font-extrabold text-sm">¥{c.amount.toLocaleString()}</strong></div>
-                                            <div>支払期日: <span className="font-mono text-slate-800">{c.due_date}</span></div>
-                                            {c.corporate_number && <div>法人番号: <span className="font-mono text-slate-800">{c.corporate_number}</span></div>}
-                                            <div>申請企業: <strong className="text-slate-800">{c.companies?.name || "加盟企業"}</strong></div>
-                                            <div>申請日: <span className="text-slate-700">{new Date(c.created_at).toLocaleDateString()}</span></div>
+                                            {isOfficial ? (
+                                                <>
+                                                    <div>処分区分: <strong className="text-slate-900 font-extrabold text-sm">{c.amount > 0 ? `公表不払額 ¥${c.amount.toLocaleString()}` : "行政処分・公認記録"}</strong></div>
+                                                    <div>公表日: <span className="font-mono text-slate-800">{c.due_date || "-"}</span></div>
+                                                    {c.corporate_number && <div>法人番号: <span className="font-mono text-slate-800">{c.corporate_number}</span></div>}
+                                                    <div>公表機関: <strong className="text-blue-800">{getCleanOfficialSourceName(sourceInfo)}</strong></div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div>未払い額: <strong className="text-slate-900 font-extrabold text-sm">¥{c.amount.toLocaleString()}</strong></div>
+                                                    <div>支払期日: <span className="font-mono text-slate-800">{c.due_date}</span></div>
+                                                    {c.corporate_number && <div>法人番号: <span className="font-mono text-slate-800">{c.corporate_number}</span></div>}
+                                                    <div>申請企業: <strong className="text-slate-800">{c.companies?.name || "加盟企業"}</strong></div>
+                                                    <div>申請日: <span className="text-slate-700">{new Date(c.created_at).toLocaleDateString()}</span></div>
+                                                </>
+                                            )}
                                         </div>
 
                                         {c.counterparty_claim && (
                                             <div className="text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 mb-2">
-                                                <span className="font-bold text-slate-900 block mb-0.5">登録理由・相手側の主張:</span>
+                                                <span className="font-bold text-slate-900 block mb-0.5">{isOfficial ? "公的処分・公表内容:" : "登録理由・相手側の主張:"}</span>
                                                 {c.counterparty_claim}
                                             </div>
                                         )}
@@ -444,7 +465,8 @@ export default function AdminCreditCasesPage() {
                                         )}
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
 
                             <Pagination
                                 currentPage={currentPage}
