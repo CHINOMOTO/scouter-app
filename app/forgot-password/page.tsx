@@ -18,25 +18,27 @@ export default function ForgotPasswordPage() {
         setSuccessMsg(null);
 
         try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/update-password`,
+            const res = await fetch("/api/auth/reset-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: email.trim(),
+                    redirectTo: `${window.location.origin}/update-password`,
+                }),
             });
 
-            if (error) {
-                throw error;
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || "パスワード再設定メールの送信に失敗しました。");
             }
 
             setSuccessMsg("パスワード再設定用のメールを送信しました。メール内のリンクをクリックして新しいパスワードを設定してください。");
         } catch (err: any) {
-            const msg = (err?.message || "").toLowerCase();
-            if (msg.includes("rate limit") || msg.includes("security") || msg.includes("60 seconds")) {
-                setErrorMsg("短期間にメールが送信されすぎました。セキュリティのため、1分ほど時間をおいてから再度お試しください。");
-            } else if (msg.includes("invalid email") || msg.includes("unable to validate email")) {
-                setErrorMsg("正しいメールアドレス形式を入力してください。");
-            } else if (msg.includes("network") || msg.includes("fetch failed")) {
-                setErrorMsg("通信に失敗しました。ネットワーク接続をご確認の上、再度お試しください。");
+            const msg = err?.message || "";
+            if (msg.includes("メールアドレス") || msg.includes("送信に失敗")) {
+                setErrorMsg(msg);
             } else {
-                setErrorMsg("パスワード再設定メールの送信に失敗しました。時間をおいて再度お試しください。");
+                setErrorMsg("通信に失敗しました。ネットワーク接続をご確認の上、再度お試しください。");
             }
         } finally {
             setIsLoading(false);
