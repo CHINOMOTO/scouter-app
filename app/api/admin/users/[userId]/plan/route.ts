@@ -46,17 +46,52 @@ export async function PATCH(
             return NextResponse.json({ error: "管理者権限が必要です" }, { status: 403 });
         }
 
-        // 対象ユーザー個人の利用可能プラン（allowed_plan）のみを更新
-        const { error: updateError } = await supabaseAdmin
+        // 対象ユーザーの所属会社IDを取得
+        const { data: targetUser, error: targetErr } = await supabaseAdmin
             .from("app_users")
-            .update({ allowed_plan: allowedPlan })
-            .eq("id", userId);
+            .select("id, company_id")
+            .eq("id", userId)
+            .single();
 
-        if (updateError) {
-            return NextResponse.json({ error: updateError.message }, { status: 500 });
+        if (targetErr || !targetUser) {
+            return NextResponse.json({ error: "対象ユーザーが見つかりません" }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, allowedPlan });
+        if (targetUser.company_id) {
+            // 会社管理（companies.plan_type）と同社に所属する全ユーザー（app_users.allowed_plan）を連動更新
+            const { error: compErr } = await supabaseAdmin
+                .from("companies")
+                .update({ plan_type: allowedPlan })
+                .eq("id", targetUser.company_id);
+
+            if (compErr) {
+                return NextResponse.json({ error: compErr.message }, { status: 500 });
+            }
+
+            const { error: usersErr } = await supabaseAdmin
+                .from("app_users")
+                .update({ allowed_plan: allowedPlan })
+                .eq("company_id", targetUser.company_id);
+
+            if (usersErr) {
+                return NextResponse.json({ error: usersErr.message }, { status: 500 });
+            }
+        } else {
+            const { error: updateError } = await supabaseAdmin
+                .from("app_users")
+                .update({ allowed_plan: allowedPlan })
+                .eq("id", userId);
+
+            if (updateError) {
+                return NextResponse.json({ error: updateError.message }, { status: 500 });
+            }
+        }
+
+        return NextResponse.json({
+            success: true,
+            allowedPlan,
+            companyId: targetUser.company_id || null
+        });
     } catch (error: any) {
         console.error("Plan update error:", error);
         return NextResponse.json({ error: "サーバーエラーが発生しました" }, { status: 500 });

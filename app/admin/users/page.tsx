@@ -189,14 +189,18 @@ export default function AdminUsersManagementPage() {
         }
     };
 
-    // 個別プラン変更（そのユーザー1人の利用可能プランのみ変更）
+    // プラン変更（所属会社と同社の全所属ユーザーを連動更新）
     const handleChangePlan = async (user: AppUser, newPlan: "full" | "employment" | "credit") => {
         if (updatingPlanUserId) return;
         const currentPlan = user.allowed_plan || user.companies?.plan_type || "full";
         if (currentPlan === newPlan) return;
 
         const planLabel = getPlanName(newPlan);
-        if (!confirm(`「${user.display_name || "このユーザー"}」の利用プランを【${planLabel}】に変更しますか？\n※このユーザー個人の閲覧・利用権限のみ変更されます（会社管理側の契約プランは変更されません）。`)) {
+        const targetLabel = user.companies?.name
+            ? `「${user.companies.name}」の契約プランを【${planLabel}】に変更しますか？\n※会社管理側の契約プランおよび同社に所属する全ユーザーへ即時反映されます。`
+            : `「${user.display_name || "このユーザー"}」の利用プランを【${planLabel}】に変更しますか？`;
+
+        if (!confirm(targetLabel)) {
             return;
         }
 
@@ -216,8 +220,26 @@ export default function AdminUsersManagementPage() {
             const data = await res.json();
             if (!res.ok || data.error) throw new Error(data.error || "プラン変更に失敗しました");
 
-            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, allowed_plan: newPlan } : u));
-            setToast({ type: "success", text: `「${user.display_name || "ユーザー"}」の利用プランを【${planLabel}】に更新しました。` });
+            // 同一会社に所属する画面上の全ユーザーカードのプラン表記も即時連動更新
+            setUsers(prev => prev.map(u => {
+                if (user.companies?.id && u.companies?.id === user.companies.id) {
+                    return {
+                        ...u,
+                        allowed_plan: newPlan,
+                        companies: u.companies ? { ...u.companies, plan_type: newPlan } : u.companies
+                    };
+                }
+                if (u.id === user.id) {
+                    return { ...u, allowed_plan: newPlan };
+                }
+                return u;
+            }));
+            setToast({
+                type: "success",
+                text: user.companies?.name
+                    ? `「${user.companies.name}」の契約プランを【${planLabel}】に更新しました（全所属ユーザーに反映済み）。`
+                    : `利用プランを【${planLabel}】に更新しました。`
+            });
         } catch (err: any) {
             setToast({ type: "error", text: "プラン変更に失敗しました: " + err.message });
         } finally {
@@ -463,7 +485,7 @@ export default function AdminUsersManagementPage() {
                                                     onChange={(e) => handleChangePlan(user, e.target.value as "full" | "employment" | "credit")}
                                                     disabled={updatingPlanUserId === user.id || deletingUserId === user.id}
                                                     aria-label="利用プランを変更"
-                                                    title="このユーザー個人の利用可能プランを変更"
+                                                    title="所属会社および全所属ユーザーの契約プランを変更"
                                                     className="text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:border-slate-400 rounded-xl sm:rounded-lg px-2.5 py-2 sm:py-1.5 cursor-pointer focus:outline-none focus:border-slate-500 disabled:opacity-60 disabled:cursor-not-allowed"
                                                 >
                                                     <option value="full">
