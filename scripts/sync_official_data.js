@@ -529,9 +529,10 @@ async function syncOfficialData() {
   let totalSkipped = 0;
   let totalCleaned = 0;
 
-  // 重複判定用インメモリセット（数百回の個別SELECTを廃止してバッチ高速化）
-  const existingDateKeySet = new Set();
+  // 重複判定・URL最新化用インメモリマップ（company_name||due_date -> DB row）
+  const existingOfficialMap = new Map();
   const existingNameSet = new Set();
+  const matchedOfficialIds = new Set();
 
   // 0. 既存DB内の公的記録クリーンアップ
   //    (a) 毎週自動取得できる公式一次ソース以外の公的記録（固定データ・旧取り込みデータ）を削除
@@ -552,10 +553,11 @@ async function syncOfficialData() {
     const fixFlagIds = [];
 
     for (const row of allCases) {
+      const dateStr = row.due_date ? String(row.due_date).slice(0, 10) : '';
+      const dateKey = `${row.company_name || ''}||${dateStr}`;
       if (!isOfficialRecord(row)) {
         if (row.company_name) {
           existingNameSet.add(row.company_name);
-          existingDateKeySet.add(`${row.company_name}||${row.due_date ? String(row.due_date).slice(0, 10) : ''}`);
         }
         continue;
       }
@@ -563,15 +565,20 @@ async function syncOfficialData() {
         nonAutoIds.push(row.id);
       } else if (classifyCompanyIndustry(row) === 'excluded') {
         excludedIds.push(row.id);
-      } else if (row.due_date && String(row.due_date).slice(0, 10) < retentionCutoff) {
+      } else if (dateStr && dateStr < retentionCutoff) {
         expiredIds.push(row.id);
       } else {
         if (row.is_official === false) {
           fixFlagIds.push(row.id);
         }
         if (row.company_name) {
-          existingNameSet.add(row.company_name);
-          existingDateKeySet.add(`${row.company_name}||${row.due_date ? String(row.due_date).slice(0, 10) : ''}`);
+          // 同一キーが既に存在する場合は古い重複行として削除対象に入れる
+          if (existingOfficialMap.has(dateKey)) {
+            nonAutoIds.push(row.id);
+          } else {
+            existingOfficialMap.set(dateKey, row);
+            existingNameSet.add(row.company_name);
+          }
         }
       }
     }
@@ -610,6 +617,9 @@ async function syncOfficialData() {
     return inserted;
   };
 
+  let totalUpdatedUrl = 0;
+  const urlUpdates = [];
+
   // 1A. 国土交通省 ネガティブ情報（建設・指名停止・測量・建設コンサル・地質・宅建・マンション管理・賃貸管理・自動車整備）
   console.log('\n[1/3] 国土交通省 ネガティブ情報（建設・土木・測量・不動産・自動車整備 全9分野）の同期確認中...');
   const mlitCategories = [
@@ -632,12 +642,11 @@ async function syncOfficialData() {
     for (const item of cases) {
       if (!item.company_name) continue;
       const dateKey = `${item.company_name}||${item.pub_date || ''}`;
-      const isDuplicate = item.pub_date ? existingDateKeySet.has(dateKey) : existingNameSet.has(item.company_name);
+      const existingRow = existingOfficialMap.get(dateKey);
+      const newNotes = `[公表日: ${item.pub_date || ''}] 処分機関: ${item.authority}\n処分種別: ${item.punish_type}\n公表ソース: ${item.overview_url}`;
 
-      if (!isDuplicate) {
-        existingDateKeySet.add(dateKey);
-        existingNameSet.add(item.company_name);
-        mlitToInsert.push({
+      if (!existingRow) {
+        const createdObj = {
           company_name: item.company_name,
           corporate_number: item.corporate_number,
           location: item.address || null,
@@ -646,12 +655,24 @@ async function syncOfficialData() {
           amount: 0,
           payment_status: 'unpaid',
           counterparty_claim: `【国土交通省 ${item.category_label}監督処分】${item.authority}公表による${item.punish_type}処分`,
-          admin_notes: `[公表日: ${item.pub_date || ''}] 処分機関: ${item.authority}\n処分種別: ${item.punish_type}\n公表ソース: ${item.overview_url}`,
+          admin_notes: newNotes,
           status: 'approved',
           registered_by_company_id: regCompanyId,
           evidence_urls: [item.overview_url]
-        });
+        };
+        existingOfficialMap.set(dateKey, createdObj);
+        existingNameSet.add(item.company_name);
+        mlitToInsert.push(createdObj);
       } else {
+        if (existingRow.id) matchedOfficialIds.add(existingRow.id);
+        const oldUrl = Array.isArray(existingRow.evidence_urls) ? existingRow.evidence_urls[0] : '';
+        if (existingRow.id && (oldUrl !== item.overview_url || existingRow.admin_notes !== newNotes)) {
+          urlUpdates.push({
+            id: existingRow.id,
+            evidence_urls: [item.overview_url],
+            admin_notes: newNotes
+          });
+        }
         totalSkipped++;
       }
     }
@@ -667,12 +688,10 @@ async function syncOfficialData() {
   const truckToInsert = [];
   for (const item of truckCases) {
     const dateKey = `${item.company_name}||${item.pub_date || ''}`;
-    const isDuplicate = item.pub_date ? existingDateKeySet.has(dateKey) : existingNameSet.has(item.company_name);
+    const existingRow = existingOfficialMap.get(dateKey);
 
-    if (!isDuplicate) {
-      existingDateKeySet.add(dateKey);
-      existingNameSet.add(item.company_name);
-      truckToInsert.push({
+    if (!existingRow) {
+      const createdObj = {
         company_name: item.company_name,
         corporate_number: item.corporate_number,
         location: item.location,
@@ -685,8 +704,21 @@ async function syncOfficialData() {
         status: 'approved',
         registered_by_company_id: regCompanyId,
         evidence_urls: item.evidence_urls
-      });
+      };
+      existingOfficialMap.set(dateKey, createdObj);
+      existingNameSet.add(item.company_name);
+      truckToInsert.push(createdObj);
     } else {
+      if (existingRow.id) matchedOfficialIds.add(existingRow.id);
+      const oldUrl = Array.isArray(existingRow.evidence_urls) ? existingRow.evidence_urls[0] : '';
+      const newUrl = Array.isArray(item.evidence_urls) ? item.evidence_urls[0] : '';
+      if (existingRow.id && newUrl && oldUrl !== newUrl) {
+        urlUpdates.push({
+          id: existingRow.id,
+          evidence_urls: item.evidence_urls,
+          admin_notes: item.admin_notes
+        });
+      }
       totalSkipped++;
     }
   }
@@ -694,19 +726,17 @@ async function syncOfficialData() {
     totalNew += await batchInsertOfficialRecords(truckToInsert);
   }
 
-  // 2. 消費者庁「特定商取引法ガイド 執行状況一覧」（工事・リフォーム・設備・運送系のみ自動抽出）
+  // 2. 消費者庁「特定商取引法ガイド 執行状況一覧」（工事・リフォーム・設備・運送・駆除・清掃系のみ自動抽出）
   console.log('\n[3/3] 消費者庁 特定商取引法行政処分（建設・リフォーム・住宅設備・運送系）の同期確認中...');
   const caaCases = await fetchCaaTargetIndustryCases();
   console.log(`- 消費者庁 対象業種抽出レコード: ${caaCases.length} 件`);
   const caaToInsert = [];
   for (const item of caaCases) {
     const dateKey = `${item.company_name}||${item.pub_date || ''}`;
-    const isDuplicate = existingNameSet.has(item.company_name) || existingDateKeySet.has(dateKey);
+    const existingRow = existingOfficialMap.get(dateKey);
 
-    if (!isDuplicate) {
-      existingDateKeySet.add(dateKey);
-      existingNameSet.add(item.company_name);
-      caaToInsert.push({
+    if (!existingRow && !existingNameSet.has(item.company_name)) {
+      const createdObj = {
         company_name: item.company_name,
         corporate_number: item.corporate_number,
         location: item.location,
@@ -719,13 +749,35 @@ async function syncOfficialData() {
         status: 'approved',
         registered_by_company_id: regCompanyId,
         evidence_urls: item.evidence_urls
-      });
+      };
+      existingOfficialMap.set(dateKey, createdObj);
+      existingNameSet.add(item.company_name);
+      caaToInsert.push(createdObj);
     } else {
+      if (existingRow && existingRow.id) matchedOfficialIds.add(existingRow.id);
       totalSkipped++;
     }
   }
   if (caaToInsert.length > 0) {
     totalNew += await batchInsertOfficialRecords(caaToInsert);
+  }
+
+  // 国交省サイト側で行番号（no=xxx）が移動した既存レコードの公表ソースURLを最新値に一括更新
+  if (urlUpdates.length > 0) {
+    const UPDATE_BATCH = 25;
+    for (let i = 0; i < urlUpdates.length; i += UPDATE_BATCH) {
+      const batch = urlUpdates.slice(i, i + UPDATE_BATCH);
+      await Promise.all(
+        batch.map(u =>
+          supabase
+            .from('credit_cases')
+            .update({ evidence_urls: u.evidence_urls, admin_notes: u.admin_notes })
+            .eq('id', u.id)
+        )
+      );
+    }
+    totalUpdatedUrl = urlUpdates.length;
+    console.log(`- 公表ソースURL（行番号 no=xxx）の最新化更新: ${totalUpdatedUrl} 件`);
   }
 
   // ※以下の旧ソースは、毎週自動取得できる公式一次ソースではないため廃止済み
