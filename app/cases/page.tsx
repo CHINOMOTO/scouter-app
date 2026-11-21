@@ -24,6 +24,8 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { Pagination } from "@/components/Pagination";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { usePlan } from "@/contexts/PlanContext";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { formatDateJST } from "@/lib/dateFormat";
 
 type BlacklistCase = {
   id: string;
@@ -47,18 +49,63 @@ export default function CasesPage() {
   const [errorMSG, setErrorMSG] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [planRestricted, setPlanRestricted] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const { allowedPlan, isAdmin: isContextAdmin } = usePlan();
+  const { allowedPlan, isAdmin: isContextAdmin, loading: planLoading } = usePlan();
 
-  // リアルタイムプラン情報の同期（管理者がプラン変更した際に即時反映）
+  // リアルタイムプラン情報の同期（管理者がプラン変更した際に即時反映・自動再取得）
   useEffect(() => {
-    if (isContextAdmin) {
-      setPlanRestricted(false);
-      setIsAdmin(true);
-    } else {
-      setPlanRestricted(allowedPlan === "credit");
+    if (planLoading) return;
+    const hasWorkAccess = isContextAdmin || allowedPlan === "full" || allowedPlan === "employment";
+    setIsAdmin(isContextAdmin);
+    setPlanRestricted(!hasWorkAccess);
+
+    if (!hasWorkAccess) {
+      setIsLoading(false);
+      return;
     }
-  }, [allowedPlan, isContextAdmin]);
+
+    let active = true;
+    const loadCases = async () => {
+      setIsLoading(true);
+      setErrorMSG(null);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          if (active) setIsLoading(false);
+          return;
+        }
+
+        const res = await fetch("/api/cases", {
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`
+          }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!active) return;
+
+        if (res.status === 403 && data.planRestricted) {
+          setPlanRestricted(true);
+          return;
+        }
+        if (!res.ok) {
+          throw new Error(data.error || "データの取得に失敗しました。");
+        }
+
+        setIsAdmin(Boolean(data.isAdmin));
+        setCases(data.cases || []);
+      } catch (err: unknown) {
+        if (active) setErrorMSG(translateErrorMessage(err, "データ取得に失敗しました。"));
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+
+    loadCases();
+    return () => {
+      active = false;
+    };
+  }, [allowedPlan, isContextAdmin, planLoading]);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "pending" | "rejected">("all");
@@ -113,72 +160,24 @@ export default function CasesPage() {
 
   const totalPages = Math.ceil(filteredAndSortedCases.length / PAGE_SIZE);
 
-  const paginatedCases = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredAndSortedCases.slice(start, start + PAGE_SIZE);
-  }, [filteredAndSortedCases, currentPage]);
-
   useEffect(() => {
-    const init = async () => {
-      // 1. Check Admin Role via DB app_users
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
+    const maxPage = Math.max(1, totalPages);
+    if (currentPage > maxPage) {
+      setCurrentPage(maxPage);
+    }
+  }, [currentPage, totalPages]);
 
-      const { data: appUser } = await supabase
-        .from("app_users")
-        .select("company_id, allowed_plan, role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const isUserAdmin = appUser?.role === 'admin' || user?.app_metadata?.role === 'admin';
-      setIsAdmin(isUserAdmin);
-
-      // 2. Fetch Cases
-      try {
-        // クレジット専用プランの場合はアクセス制限（管理者を除く）
-        if (!isUserAdmin && appUser && appUser.allowed_plan === "credit") {
-          setPlanRestricted(true);
-          setIsLoading(false);
-          return;
-        }
-
-        let query = supabase
-          .from("blacklist_cases")
-          .select("id, full_name, full_name_kana, birth_date, occurrence_date, phone_last4, reason_text, status, rejected_reason, created_at, registered_company_id")
-          .order("created_at", { ascending: false });
-
-        // 管理者以外は一覧の垂れ流しを防止（自社登録データのみに厳格制限）
-        if (!isUserAdmin) {
-          if (appUser?.company_id) {
-            query = query.eq("registered_company_id", appUser.company_id);
-          } else {
-            // 所属企業がない一般ユーザーには他社データを絶対に垂れ流さない
-            setCases([]);
-            setIsLoading(false);
-            return;
-          }
-        }
-
-        const { data, error } = await query;
-
-        if (error) throw error;
-        setCases(data || []);
-      } catch (err: any) {
-        setErrorMSG("データ取得に失敗しました: " + err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    init();
-  }, []);
+  const paginatedCases = useMemo(() => {
+    const safePage = Math.min(currentPage, Math.max(1, totalPages));
+    const start = (safePage - 1) * PAGE_SIZE;
+    return filteredAndSortedCases.slice(start, start + PAGE_SIZE);
+  }, [filteredAndSortedCases, currentPage, totalPages]);
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
     if (!confirm("本当にこのデータを削除しますか？この操作は取り消せません。")) return;
 
+    setDeletingId(id);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -189,14 +188,16 @@ export default function CasesPage() {
           "Authorization": `Bearer ${token}`
         }
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       
-      if (data.error) throw new Error(data.error);
+      if (!res.ok || data.error) throw new Error(data.error || "削除に失敗しました。");
 
       setCases(prev => prev.filter(c => c.id !== id));
       setToast({ type: "success", text: "データを削除しました。" });
-    } catch (err: any) {
-      setToast({ type: "error", text: "削除に失敗しました: " + err.message });
+    } catch (err: unknown) {
+      setToast({ type: "error", text: translateErrorMessage(err, "削除に失敗しました。") });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -242,7 +243,7 @@ export default function CasesPage() {
                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                 <span>戻る</span>
               </Link>
-              {!planRestricted && (
+              {!planLoading && !planRestricted && (
                 <>
                   <Link
                     href="/search"
@@ -476,7 +477,7 @@ export default function CasesPage() {
 
                     {/* フッター */}
                     <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-                      <span>登録日: {new Date(c.created_at).toLocaleDateString()}</span>
+                      <span>登録日: {formatDateJST(c.created_at)}</span>
                       <div className="flex items-center gap-3">
                         {(isAdmin || c.status === "pending" || c.status === "rejected") && (
                           <div className="flex items-center gap-1 mr-1">
@@ -491,7 +492,8 @@ export default function CasesPage() {
                             )}
                             <button
                               onClick={() => handleDelete(c.id)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                              disabled={deletingId === c.id}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                               title={isAdmin ? "削除" : "申請を取り下げる（削除）"}
                             >
                               <Trash2 className="w-3.5 h-3.5" />

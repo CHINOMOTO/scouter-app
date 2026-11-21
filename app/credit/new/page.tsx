@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
@@ -20,6 +20,10 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
+import { usePlan } from "@/contexts/PlanContext";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { getDiffDaysFromDueDateJST, isValidCalendarDate } from "@/lib/dateFormat";
+import { validateEvidenceFiles, extractSafeFileExtension } from "@/lib/fileValidation";
 
 export default function NewCreditCasePage() {
     const router = useRouter();
@@ -38,10 +42,19 @@ export default function NewCreditCasePage() {
     const [companyCandidates, setCompanyCandidates] = useState<Array<{ corporate_number: string; name: string; location: string }>>([]);
     const [isSearchingGbiz, setIsSearchingGbiz] = useState(false);
     const [showCandidates, setShowCandidates] = useState(false);
+    const gbizDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const gbizAbortRef = useRef<AbortController | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (gbizDebounceRef.current) clearTimeout(gbizDebounceRef.current);
+            gbizAbortRef.current?.abort();
+        };
+    }, []);
     
     // 営業実態ステータス & 公的登記ステータス
     const [businessStatus, setBusinessStatus] = useState<string>("unreachable");
-    const [registryStatus, setRegistryStatus] = useState<string>("active");
+    const [registryStatus, setRegistryStatus] = useState<string>("unknown");
     const [registryCloseDate, setRegistryCloseDate] = useState<string>("");
     const [registryCloseCause, setRegistryCloseCause] = useState<string>("");
     const [isSoleProprietor, setIsSoleProprietor] = useState(false);
@@ -66,45 +79,20 @@ export default function NewCreditCasePage() {
 
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 1ファイルあたり最大50MB
-
     const [planChecked, setPlanChecked] = useState(false);
+    const { allowedPlan, isAdmin: isContextAdmin, loading: planLoading } = usePlan();
 
     useEffect(() => {
-        const checkPlan = async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user) {
-                    const { data: appUser } = await supabase
-                        .from("app_users")
-                        .select("allowed_plan, role")
-                        .eq("id", session.user.id)
-                        .maybeSingle();
+        if (planLoading) return;
+        setPlanRestricted(!isContextAdmin && allowedPlan !== "full" && allowedPlan !== "credit");
+        setPlanChecked(true);
+    }, [allowedPlan, isContextAdmin, planLoading]);
 
-                    const isAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
-                    if (!isAdmin && appUser?.allowed_plan === "employment") {
-                        setPlanRestricted(true);
-                    }
-                }
-            } finally {
-                setPlanChecked(true);
-            }
-        };
-        checkPlan();
-    }, []);
-
-    // 支払期日からの遅延日数・状況の動的計算
+    // 支払期日からの遅延日数・状況の動的計算（JSTカレンダー日付基準）
     const delayInfo = useMemo(() => {
         if (!dueDate) return null;
-        const target = new Date(dueDate);
-        if (isNaN(target.getTime())) return null;
-
-        const today = new Date();
-        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const targetDate = new Date(target.getFullYear(), target.getMonth(), target.getDate());
-
-        const diffTime = todayDate.getTime() - targetDate.getTime();
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = getDiffDaysFromDueDateJST(dueDate);
+        if (diffDays === null) return null;
 
         if (diffDays > 0) {
             return {
@@ -135,33 +123,50 @@ export default function NewCreditCasePage() {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
-            const newFiles = Array.from(e.target.files);
-            const validFiles: File[] = [];
-            newFiles.forEach((file) => {
-                if (file.size > MAX_FILE_SIZE) {
-                    alert(`ファイル「${file.name}」はサイズが大きすぎます (1ファイルあたり最大50MB)`);
-                } else {
-                    validFiles.push(file);
-                }
-            });
+            const { validFiles, errors } = validateEvidenceFiles(Array.from(e.target.files), files.length);
+            if (errors.length > 0) {
+                setErrorMsg(errors.join("\n"));
+            } else {
+                setErrorMsg(null);
+            }
             if (validFiles.length > 0) {
                 setFiles(prev => [...prev, ...validFiles]);
             }
+            e.target.value = "";
         }
     };
 
-    // 社名入力時のgBizINFOサジェスト検索
-    const handleCompanyNameChange = async (val: string) => {
+    // 社名入力時のgBizINFOサジェスト検索（300msデバウンス＋AbortController）
+    const handleCompanyNameChange = (val: string) => {
         setCompanyName(val);
-        if (val.trim().length >= 2 && !isSoleProprietor) {
-            setIsSearchingGbiz(true);
+        if (gbizDebounceRef.current) clearTimeout(gbizDebounceRef.current);
+        gbizAbortRef.current?.abort();
+
+        const trimmed = val.trim();
+        if (trimmed.length < 2 || isSoleProprietor) {
+            setIsSearchingGbiz(false);
+            setCompanyCandidates([]);
+            setShowCandidates(false);
+            return;
+        }
+
+        setIsSearchingGbiz(true);
+        gbizDebounceRef.current = setTimeout(async () => {
+            const controller = new AbortController();
+            gbizAbortRef.current = controller;
             try {
                 const { data: { session } } = await supabase.auth.getSession();
-                const res = await fetch(`/api/credit/corporate-lookup?q=${encodeURIComponent(val.trim())}`, {
-                    headers: session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : undefined
+                if (controller.signal.aborted) return;
+
+                const res = await fetch(`/api/credit/corporate-lookup?q=${encodeURIComponent(trimmed)}`, {
+                    headers: session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : undefined,
+                    signal: controller.signal
                 });
+                if (controller.signal.aborted) return;
+
                 if (res.ok) {
                     const data = await res.json();
+                    if (controller.signal.aborted) return;
                     if (data.candidates && data.candidates.length > 0) {
                         setCompanyCandidates(data.candidates);
                         setShowCandidates(true);
@@ -170,18 +175,20 @@ export default function NewCreditCasePage() {
                         setShowCandidates(false);
                     }
                 }
-            } catch {
-                // ignore
+            } catch (e: unknown) {
+                if (e instanceof Error && e.name === "AbortError") return;
             } finally {
-                setIsSearchingGbiz(false);
+                if (!controller.signal.aborted) {
+                    setIsSearchingGbiz(false);
+                }
             }
-        } else {
-            setCompanyCandidates([]);
-            setShowCandidates(false);
-        }
+        }, 300);
     };
 
     const selectCompanyCandidate = (c: { corporate_number: string; name: string; location: string }) => {
+        if (gbizDebounceRef.current) clearTimeout(gbizDebounceRef.current);
+        gbizAbortRef.current?.abort();
+        setIsSearchingGbiz(false);
         setCompanyName(c.name);
         setCorporateNumber(c.corporate_number);
         if (c.location) setLocation(c.location);
@@ -191,8 +198,11 @@ export default function NewCreditCasePage() {
 
     // インボイス登録番号（T+13桁）のリアルタイム公的検証
     const handleInvoiceNumberChange = async (val: string) => {
-        setInvoiceNumber(val);
-        const cleaned = val.replace(/[^0-9]/g, '');
+        const normalized = val
+            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+            .replace(/Ｔ|ｔ/g, "T");
+        setInvoiceNumber(normalized);
+        const cleaned = normalized.replace(/[^0-9]/g, '');
         if (cleaned.length === 13) {
             setInvoiceVerification({ checking: true });
             try {
@@ -250,15 +260,25 @@ export default function NewCreditCasePage() {
             return;
         }
 
-        const numAmount = Number(amount.replace(/[^0-9]/g, ""));
-        if (!numAmount || numAmount <= 0) {
-            setErrorMsg("有効な未払い金額を入力してください。");
+        const rawAmountDigits = amount.replace(/[^0-9]/g, "");
+        const numAmount = Number(rawAmountDigits);
+        if (!rawAmountDigits || !Number.isFinite(numAmount) || numAmount < 1 || numAmount > 999999999999) {
+            setErrorMsg("未払い金額は1円〜9,999億円の範囲で正しく入力してください。");
             return;
         }
 
-        const cleanCorpNum = corporateNumber.trim().replace(/[^0-9]/g, "");
+        const cleanCorpNum = corporateNumber.trim()
+            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+            .replace(/[^0-9]/g, "");
         if (!isSoleProprietor && (!cleanCorpNum || cleanCorpNum.length !== 13)) {
             setErrorMsg("法人の場合は法人番号（13桁の半角数字）を入力してください。個人事業主の場合は「個人事業主」にチェックを入れてください。");
+            return;
+        }
+        const cleanSoleInvoice = invoiceNumber.trim()
+            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+            .replace(/[^0-9]/g, "");
+        if (isSoleProprietor && invoiceNumber.trim() && cleanSoleInvoice.length !== 13) {
+            setErrorMsg("インボイス登録番号を入力する場合は、T＋13桁（または13桁の数字）で正しく入力してください。");
             return;
         }
 
@@ -267,8 +287,13 @@ export default function NewCreditCasePage() {
             return;
         }
 
-        if (!invoiceDate) {
-            setErrorMsg("請求日（または契約・発注日）を入力してください。");
+        if (!invoiceDate || !isValidCalendarDate(invoiceDate)) {
+            setErrorMsg("請求日（または契約・発注日）を正しい日付で入力してください。");
+            return;
+        }
+
+        if (!dueDate || !isValidCalendarDate(dueDate)) {
+            setErrorMsg("支払期日を正しい日付で入力してください。");
             return;
         }
 
@@ -281,32 +306,26 @@ export default function NewCreditCasePage() {
 
         try {
             const session = (await supabase.auth.getSession()).data.session;
-            if (!session) throw new Error("認証セッションがありません");
+            if (!session) throw new Error("認証セッションがありません。再度ログインしてください。");
 
-            // 1. エビデンスファイルのアップロード（case_attachments または case-evidence バケットへ確実に保存）
+            // 1. エビデンスファイルのアップロード（厳格化Storage RLS・所有者パス検証に統一: case-evidence/<userId>/...）
             const uploadedUrls: string[] = [];
             for (const file of files) {
-                const ext = file.name.split('.').pop();
-                const fileName = `credit-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-                const filePath = `credit_evidence/${fileName}`;
+                const safeExt = extractSafeFileExtension(file.name);
+                if (!safeExt) {
+                    throw new Error(`ファイル「${file.name}」は対応していない形式です。画像（JPG/PNG/GIF/WebP）またはPDFを選択してください。`);
+                }
+                const fileName = `credit-${Date.now()}-${Math.random().toString(36).substring(7)}.${safeExt}`;
+                const filePath = `${session.user.id}/${fileName}`;
 
-                const { error: uploadError } = await supabase.storage
-                    .from("case_attachments")
+                const { error: uploadError, data: uploadData } = await supabase.storage
+                    .from("case-evidence")
                     .upload(filePath, file);
 
-                if (!uploadError) {
-                    uploadedUrls.push(filePath);
-                } else {
-                    const fallbackPath = `${session.user.id}/${fileName}`;
-                    const { error: fallbackError, data: fallbackData } = await supabase.storage
-                        .from("case-evidence")
-                        .upload(fallbackPath, file);
-
-                    if (fallbackError) {
-                        throw new Error(`裏付け資料のアップロードに失敗しました (${file.name}): ${fallbackError.message}`);
-                    }
-                    uploadedUrls.push(fallbackData?.path || fallbackPath);
+                if (uploadError) {
+                    throw new Error(`裏付け資料「${file.name}」のアップロードに失敗しました。${translateErrorMessage(uploadError, "時間をおいて再度お試しください。")}`);
                 }
+                uploadedUrls.push(uploadData?.path || filePath);
             }
 
             // 2. 登録申請 API の呼び出し
@@ -318,10 +337,10 @@ export default function NewCreditCasePage() {
                 },
                 body: JSON.stringify({
                     companyName: companyName.trim(),
-                    corporateNumber: isSoleProprietor ? (invoiceNumber ? invoiceNumber.replace(/[^0-9]/g, "") : null) : (cleanCorpNum || null),
+                    corporateNumber: isSoleProprietor ? (cleanSoleInvoice || null) : (cleanCorpNum || null),
                     location: location.trim() || null,
                     invoiceDate: invoiceDate || null,
-                    amount: numAmount,
+                    amount: Math.floor(numAmount),
                     dueDate: dueDate,
                     counterpartyClaim: counterpartyClaim.trim() || null,
                     evidenceUrls: uploadedUrls,
@@ -332,16 +351,19 @@ export default function NewCreditCasePage() {
                 })
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) {
-                throw new Error(data.error || "登録申請に失敗しました");
+                if (res.status === 403 && data.planRestricted) {
+                    setPlanRestricted(true);
+                }
+                throw new Error(data.error || "登録申請に失敗しました。");
             }
 
             alert("企業信用（遅延・未払い）情報の登録申請を受け付けました。\n運営管理者による事実確認・審査を経てシステム全体に共有されます。");
             router.push("/credit");
 
-        } catch (err: any) {
-            setErrorMsg(err.message || "予期せぬエラーが発生しました");
+        } catch (err: unknown) {
+            setErrorMsg(translateErrorMessage(err, "登録申請の処理中にエラーが発生しました。"));
         } finally {
             setUploading(false);
         }
@@ -349,8 +371,13 @@ export default function NewCreditCasePage() {
 
     // 法人番号入力時の自動照会（公的ステータス・商号・所在地チェック）
     const handleCorporateNumberChange = async (num: string) => {
-        const clean = num.replace(/[^0-9]/g, "");
+        const clean = num
+            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+            .replace(/[^0-9]/g, "");
         setCorporateNumber(clean);
+        setRegistryStatus("unknown");
+        setRegistryCloseDate("");
+        setRegistryCloseCause("");
         if (clean.length === 13) {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
@@ -541,7 +568,7 @@ export default function NewCreditCasePage() {
                                                             if (e.target.checked) {
                                                                 setRegistryStatus("sole_proprietor");
                                                             } else {
-                                                                setRegistryStatus("active");
+                                                                setRegistryStatus("unknown");
                                                             }
                                                         }}
                                                         className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
@@ -579,7 +606,7 @@ export default function NewCreditCasePage() {
                                                         <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                                                             <span>インボイス登録番号（T番号）</span>
                                                             <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 font-bold">
-                                                                任意・公的確認
+                                                                任意・形式チェック
                                                             </span>
                                                         </label>
                                                     </div>
@@ -687,7 +714,9 @@ export default function NewCreditCasePage() {
                                                     required
                                                     value={amount}
                                                     onChange={(e) => {
-                                                        const val = e.target.value.replace(/[^0-9]/g, "");
+                                                        const val = e.target.value
+                                                            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+                                                            .replace(/[^0-9]/g, "");
                                                         setAmount(val ? Number(val).toLocaleString() : "");
                                                     }}
                                                     style={{ paddingLeft: "2.25rem" }}

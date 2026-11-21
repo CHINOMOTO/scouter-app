@@ -6,6 +6,9 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { UploadCloud, X, FileText, AlertCircle, ArrowLeft } from "lucide-react";
 import { RequireAdmin } from "@/components/RequireAdmin";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { isValidCalendarDate } from "@/lib/dateFormat";
+import { validateEvidenceFiles, extractSafeFileExtension } from "@/lib/fileValidation";
 
 export default function EditCasePage() {
     const router = useRouter();
@@ -13,6 +16,7 @@ export default function EditCasePage() {
     const id = params?.id as string;
 
     const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
     const [saving, setSaving] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -41,25 +45,31 @@ export default function EditCasePage() {
 
         const fetchCase = async () => {
             setLoading(true);
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.user) { setLoading(false); return; }
-            const { data: appUser } = await supabase.from("app_users").select("role").eq("id", session.user.id).maybeSingle();
-            const isUserAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
-            if (!isUserAdmin) { setLoading(false); return; }
-            const { data, error } = await supabase
-                .from("blacklist_cases")
-                .select("*")
-                .eq("id", id)
-                .single();
+            setErrorMsg(null);
+            setLoadFailed(false);
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) {
+                    setErrorMsg("認証セッションが見つかりません。再ログインしてください。");
+                    setLoadFailed(true);
+                    return;
+                }
 
-            if (error) {
-                setErrorMsg("データの取得に失敗しました: " + error.message);
-                setLoading(false);
-                return;
-            }
+                const res = await fetch(`/api/cases/${id}`, {
+                    headers: {
+                        "Authorization": `Bearer ${session.access_token}`
+                    }
+                });
+                const resData = await res.json().catch(() => ({}));
 
-            if (data) {
-                setName(data.full_name);
+                if (!res.ok || !resData.case) {
+                    setErrorMsg(translateErrorMessage(resData.error, "該当するデータが見つかりません。"));
+                    setLoadFailed(true);
+                    return;
+                }
+
+                const data = resData.case;
+                setName(data.full_name || "");
                 setNameKana(data.full_name_kana || "");
                 setGender(data.gender || "");
                 const [by, bm, bd] = (data.birth_date || "").split("-");
@@ -68,29 +78,24 @@ export default function EditCasePage() {
                 setCity(data.city || "");
                 const [oy, om, od] = (data.occurrence_date || "").split("-");
                 setOccurrenceYear(oy || ""); setOccurrenceMonth(om || ""); setOccurrenceDay(od || "");
-                setReason(data.reason_text);
-                setStatus(data.status);
+                setReason(data.reason_text || "");
+                setStatus(data.status || "pending");
 
-                // Existing files
-                if (data.evidence_urls && Array.isArray(data.evidence_urls)) {
-                    const loadedFiles: ExistingFile[] = [];
-                    for (const path of data.evidence_urls) {
-                        const { data: signedData } = await supabase.storage
-                            .from('case-evidence')
-                            .createSignedUrl(path, 3600);
-
-                        if (signedData) {
-                            loadedFiles.push({
-                                path,
-                                signedUrl: signedData.signedUrl,
-                                name: path.split('/').pop() || 'unknown file'
-                            });
-                        }
-                    }
-                    setExistingFiles(loadedFiles);
+                if (Array.isArray(resData.evidenceFiles)) {
+                    setExistingFiles(
+                        resData.evidenceFiles.map((f: any) => ({
+                            path: f.path,
+                            signedUrl: f.signedUrl,
+                            name: f.name || "file",
+                        }))
+                    );
                 }
+            } catch (err: unknown) {
+                setErrorMsg(translateErrorMessage(err, "データの取得に失敗しました。"));
+                setLoadFailed(true);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
 
         fetchCase();
@@ -99,8 +104,19 @@ export default function EditCasePage() {
     // File handlers
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
-            const newFiles = Array.from(e.target.files);
-            setSelectedFiles((prev) => [...prev, ...newFiles]);
+            const { validFiles, errors } = validateEvidenceFiles(
+                Array.from(e.target.files),
+                existingFiles.length + selectedFiles.length
+            );
+            if (errors.length > 0) {
+                setErrorMsg(errors.join("\n"));
+            } else {
+                setErrorMsg(null);
+            }
+            if (validFiles.length > 0) {
+                setSelectedFiles((prev) => [...prev, ...validFiles]);
+            }
+            e.target.value = "";
         }
     };
 
@@ -119,25 +135,45 @@ export default function EditCasePage() {
         setErrorMsg(null);
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("セッションが切れました。再ログインしてください。");
+            const { data: { session } } = await supabase.auth.getSession();
+            const user = session?.user;
+            if (!session?.access_token || !user) {
+                throw new Error("セッションが切れました。再ログインしてください。");
+            }
 
             if (nameKana && !/^[ァ-ヶー\s　]*$/.test(nameKana)) {
                 throw new Error("氏名（カナ）は全角カタカナで入力してください。");
+            }
+
+            const birthDateVal = (birthYear || birthMonth || birthDay)
+                ? `${birthYear.padStart(4, '0')}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`
+                : null;
+            if (birthDateVal && !isValidCalendarDate(birthDateVal, { allowFuture: false })) {
+                throw new Error("生年月日を実在する正しい日付（本日以前）で入力してください。");
+            }
+
+            const occurrenceDateVal = (occurrenceYear || occurrenceMonth || occurrenceDay)
+                ? `${occurrenceYear.padStart(4, '0')}-${occurrenceMonth.padStart(2, '0')}-${occurrenceDay.padStart(2, '0')}`
+                : null;
+            if (occurrenceDateVal && !isValidCalendarDate(occurrenceDateVal, { allowFuture: false })) {
+                throw new Error("発生日を実在する正しい日付（本日以前）で入力してください。");
             }
 
             // 1. Upload new files
             const newUploadedPaths: string[] = [];
             if (selectedFiles.length > 0) {
                 for (const file of selectedFiles) {
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                    const safeExt = extractSafeFileExtension(file.name);
+                    if (!safeExt) {
+                        throw new Error(`ファイル「${file.name}」は対応していない形式です。画像またはPDFを選択してください。`);
+                    }
+                    const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${safeExt}`;
 
                     const { error: uploadError, data: uploadData } = await supabase.storage
                         .from('case-evidence')
                         .upload(fileName, file);
 
-                    if (uploadError) throw new Error(`ファイルアップロード失敗: ${file.name}`);
+                    if (uploadError) throw new Error(`ファイル「${file.name}」のアップロードに失敗しました。`);
                     if (uploadData?.path) newUploadedPaths.push(uploadData.path);
                 }
             }
@@ -148,33 +184,36 @@ export default function EditCasePage() {
                 ...newUploadedPaths
             ];
 
-            // 3. Update DB
-            const { error } = await supabase
-                .from("blacklist_cases")
-                .update({
+            // 3. Update via Admin API (RLS厳格化対応)
+            const res = await fetch(`/api/admin/cases/${id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
                     full_name: name,
                     full_name_kana: nameKana,
                     gender,
-                    birth_date: (birthYear && birthMonth && birthDay)
-                        ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`
-                        : null,
+                    birth_date: birthDateVal,
                     phone_last4: phoneLast4 || null,
                     city: city || null,
-                    occurrence_date: (occurrenceYear && occurrenceMonth && occurrenceDay)
-                        ? `${occurrenceYear}-${occurrenceMonth.padStart(2, '0')}-${occurrenceDay.padStart(2, '0')}`
-                        : null,
+                    occurrence_date: occurrenceDateVal,
                     reason_text: reason,
-                    status: status,
+                    status,
                     evidence_urls: finalEvidenceUrls
                 })
-                .eq("id", id);
+            });
 
-            if (error) throw error;
+            const resData = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(resData.error || "更新に失敗しました。");
+            }
 
             router.push("/cases");
             router.refresh();
-        } catch (err: any) {
-            setErrorMsg("更新に失敗しました: " + err.message);
+        } catch (err: unknown) {
+            setErrorMsg(translateErrorMessage(err, "更新に失敗しました。"));
             setSaving(false);
         }
     };
@@ -184,6 +223,28 @@ export default function EditCasePage() {
             <RequireAdmin>
                 <div className="min-h-screen flex items-center justify-center">
                     <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
+                </div>
+            </RequireAdmin>
+        );
+    }
+
+    if (loadFailed) {
+        return (
+            <RequireAdmin>
+                <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
+                    <div className="max-w-lg w-full bg-white p-8 rounded-2xl border border-slate-200 shadow-2xs text-center space-y-4">
+                        <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+                            <AlertCircle className="w-6 h-6" />
+                        </div>
+                        <h1 className="text-lg font-bold text-slate-900">データを取得できませんでした</h1>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            {errorMsg || "指定されたデータが見つからないか、削除されている可能性があります。"}
+                        </p>
+                        <Link href="/cases" className="btn-secondary inline-flex items-center gap-1.5 text-xs px-5 py-2.5 rounded-xl font-bold">
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                            <span>登録一覧へ戻る</span>
+                        </Link>
+                    </div>
                 </div>
             </RequireAdmin>
         );
@@ -381,9 +442,9 @@ export default function EditCasePage() {
                                         onChange={(e) => setStatus(e.target.value)}
                                         className="input-field appearance-none bg-slate-100"
                                     >
-                                        <option value="pending">審査中 (Pending)</option>
-                                        <option value="approved">承認済み (Approved)</option>
-                                        <option value="rejected">却下 (Rejected)</option>
+                                        <option value="pending">審査中</option>
+                                        <option value="approved">承認済み</option>
+                                        <option value="rejected">却下</option>
                                     </select>
                                 </div>
                             </Section>

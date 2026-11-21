@@ -1,62 +1,54 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { authenticateApiRequest } from "@/lib/apiAuth";
 import { translateErrorMessage } from "@/lib/errorMessage";
 import { createMailTransporter, DEFAULT_FROM_ADDRESS } from "@/lib/mailTransporter";
 
+const VALID_PLANS = ["full", "employment", "credit"] as const;
+
 export async function POST(request: Request) {
     try {
-        const authHeader = request.headers.get("Authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ error: "認証トークンが不足しています" }, { status: 401 });
-        }
-        const token = authHeader.replace("Bearer ", "");
-
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-        if (!supabaseServiceRoleKey) {
-            return NextResponse.json({ error: "サーバー設定エラー: Service Role Key が未設定です" }, { status: 500 });
+        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            return NextResponse.json({ error: "サーバー設定エラーのためアカウントを作成できません。" }, { status: 500 });
         }
 
-        // 呼び出し元のユーザー認証 & 管理者チェック
-        const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
-        });
+        const auth = await authenticateApiRequest(request, { requireAdmin: true });
+        if (!auth.ok) return auth.response;
 
-        const { data: { user: caller }, error: callerError } = await supabaseUser.auth.getUser();
-        if (callerError || !caller) {
-            return NextResponse.json({ error: "認証に失敗しました" }, { status: 401 });
-        }
+        const { supabaseAdmin } = auth;
 
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
-
-        const { data: callerProfile } = await supabaseAdmin
-            .from("app_users")
-            .select("role")
-            .eq("id", caller.id)
-            .single();
-
-        if (!callerProfile || callerProfile.role !== "admin") {
-            return NextResponse.json({ error: "管理者権限が必要です" }, { status: 403 });
-        }
-
-        // リクエストボディの取得
         const body = await request.json();
         const { email, password, displayName, companyId, allowedPlan, role, sendEmail, emailSubject, emailBody } = body;
 
-        if (!email || !password || !displayName || !companyId) {
-            return NextResponse.json({ error: "メールアドレス、パスワード、担当者名、所属会社は必須です" }, { status: 400 });
+        if (
+            typeof email !== "string" || !email.trim() ||
+            typeof password !== "string" || !password ||
+            typeof displayName !== "string" || !displayName.trim() ||
+            typeof companyId !== "string" || !companyId.trim()
+        ) {
+            return NextResponse.json({ error: "メールアドレス、パスワード、担当者名、所属会社は必須です。" }, { status: 400 });
         }
 
         if (password.length < 8) {
-            return NextResponse.json({ error: "パスワードは8文字以上で設定してください" }, { status: 400 });
+            return NextResponse.json({ error: "パスワードは8文字以上で設定してください。" }, { status: 400 });
         }
 
-        // DB enum (user_role) に準拠: 'admin' または 'viewer'
+        // 所属会社の存在確認および契約プランの取得（会社プランを継承し、他ユーザーのプランを意図せず上書きしない）
+        const { data: targetCompany, error: companyError } = await supabaseAdmin
+            .from("companies")
+            .select("id, plan_type")
+            .eq("id", companyId)
+            .maybeSingle();
+
+        if (companyError || !targetCompany) {
+            return NextResponse.json({ error: "指定された所属会社が見つかりません。" }, { status: 404 });
+        }
+
+        const companyPlan = VALID_PLANS.includes(targetCompany.plan_type) ? targetCompany.plan_type : null;
+        const requestedPlan = VALID_PLANS.includes(allowedPlan) ? allowedPlan : "full";
+        const validatedPlan = companyPlan || requestedPlan;
         const targetRole = role === "admin" ? "admin" : "viewer";
 
-        // 1. Supabase Auth でユーザーを直接作成 (メール確認済み & 即時承認)
+        // 1. Supabase Auth でユーザーを作成 (メール確認済み & 即時承認)
         const { data: authResult, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
             email: email.trim(),
             password: password,
@@ -73,29 +65,28 @@ export async function POST(request: Request) {
 
         if (createAuthError || !authResult.user) {
             console.error("Auth create error:", createAuthError);
-            return NextResponse.json({ error: translateErrorMessage(createAuthError) || "アカウントの作成に失敗しました" }, { status: 400 });
+            return NextResponse.json(
+                { error: translateErrorMessage(createAuthError) || "アカウントの作成に失敗しました。" },
+                { status: 400 }
+            );
         }
 
         const newUserId = authResult.user.id;
 
         // 2. app_users にプロフィールと企業紐付けを登録
-        const userPayload: any = {
+        const userPayload: Record<string, any> = {
             id: newUserId,
             company_id: companyId,
             display_name: displayName.trim(),
             role: targetRole,
-            is_approved: true // 管理者発行なので即時承認
+            is_approved: true,
+            allowed_plan: validatedPlan,
         };
 
-        if (allowedPlan) {
-            userPayload.allowed_plan = allowedPlan;
-        }
-
-        let { error: insertError } = await supabaseAdmin
+        const { error: insertError } = await supabaseAdmin
             .from("app_users")
             .insert([userPayload]);
 
-        // もし allowed_plan カラムがまだ未マイグレーションの場合のフォールバック
         if (insertError && insertError.message.includes("allowed_plan")) {
             console.warn("Falling back without allowed_plan:", insertError.message);
             delete userPayload.allowed_plan;
@@ -103,20 +94,17 @@ export async function POST(request: Request) {
                 .from("app_users")
                 .insert([userPayload]);
             if (retryError) {
-                // auth ユーザーをロールバック削除
                 await supabaseAdmin.auth.admin.deleteUser(newUserId);
                 throw retryError;
             }
         } else if (insertError) {
-            // auth ユーザーをロールバック削除
             await supabaseAdmin.auth.admin.deleteUser(newUserId);
             throw insertError;
         }
 
-        // 所属会社（companies.plan_type）および同社の他ユーザーのプランも同期して不整合を防止
-        if (allowedPlan && companyId) {
-            await supabaseAdmin.from("companies").update({ plan_type: allowedPlan }).eq("id", companyId);
-            await supabaseAdmin.from("app_users").update({ allowed_plan: allowedPlan }).eq("company_id", companyId);
+        // 所属会社に plan_type が未設定の場合のみ初期設定する（設定済みの他社ユーザー一括上書きは行わない）
+        if (!companyPlan && validatedPlan && companyId) {
+            await supabaseAdmin.from("companies").update({ plan_type: validatedPlan }).eq("id", companyId);
         }
 
         // メール送信の実行（指定されている場合）
@@ -127,8 +115,9 @@ export async function POST(request: Request) {
         };
 
         if (sendEmail) {
+            const appBaseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.m-m-m-mieris0610.com").replace(/\/+$/, "");
             const subject = emailSubject || "【MIERIS】アカウント発行およびログイン情報のご案内";
-            const content = emailBody || `アカウントが発行されました。\nログインURL: https://www.m-m-m-mieris0610.com/\nメールアドレス: ${email.trim()}`;
+            const content = emailBody || `アカウントが発行されました。\nログインURL: ${appBaseUrl}/\nメールアドレス: ${email.trim()}`;
 
             const mailTransporter = createMailTransporter();
             if (mailTransporter) {
@@ -150,7 +139,7 @@ export async function POST(request: Request) {
                     emailDelivery = {
                         attempted: true,
                         sent: false,
-                        message: `送信処理中にエラーが発生しました: ${smtpErr.message}`
+                        message: translateErrorMessage(smtpErr, { includeAdminSmtpHint: true })
                     };
                 }
             } else {
@@ -173,7 +162,7 @@ export async function POST(request: Request) {
                             emailDelivery = {
                                 attempted: true,
                                 sent: false,
-                                message: `送信エラー: ${emailResult.error.message}`
+                                message: translateErrorMessage(emailResult.error)
                             };
                         } else {
                             emailDelivery = {
@@ -187,7 +176,7 @@ export async function POST(request: Request) {
                         emailDelivery = {
                             attempted: true,
                             sent: false,
-                            message: `送信処理中にエラーが発生しました: ${err.message}`
+                            message: translateErrorMessage(err)
                         };
                     }
                 } else {
@@ -207,13 +196,12 @@ export async function POST(request: Request) {
                 email: email.trim(),
                 displayName: displayName.trim(),
                 companyId: companyId,
-                allowedPlan: allowedPlan || "full"
+                allowedPlan: validatedPlan
             },
             emailDelivery
         });
-
-    } catch (error: any) {
+    } catch (error) {
         console.error("Admin user create API error:", error);
-        return NextResponse.json({ error: error.message || "予期せぬエラーが発生しました" }, { status: 500 });
+        return NextResponse.json({ error: "アカウント作成中にエラーが発生しました。" }, { status: 500 });
     }
 }

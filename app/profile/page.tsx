@@ -5,6 +5,9 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Toast, ToastMessage } from "@/components/Toast";
+import { usePlan } from "@/contexts/PlanContext";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { formatDateJST } from "@/lib/dateFormat";
 import { 
     User, 
     ArrowLeft, 
@@ -34,6 +37,7 @@ export default function ProfileAndSettingsPage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState<ToastMessage | null>(null);
+    const { refreshPlan } = usePlan();
 
     // プロフィール編集用 state
     const [editDisplayName, setEditDisplayName] = useState("");
@@ -47,34 +51,26 @@ export default function ProfileAndSettingsPage() {
 
     const fetchProfile = async () => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) return;
 
-            const { data: appUser } = await supabase
-                .from("app_users")
-                .select("id, display_name, phone_number, company_id, role, is_approved, created_at, companies ( name )")
-                .eq("id", user.id)
-                .maybeSingle();
-
-            const dName = appUser?.display_name || user.user_metadata?.display_name || "未設定";
-            const pNum = appUser?.phone_number || "";
-            const compName = (appUser?.companies as any)?.name || null;
-
-            setProfile({
-                id: user.id,
-                email: user.email || "",
-                displayName: dName,
-                phoneNumber: pNum,
-                companyName: compName,
-                role: appUser?.role || "viewer",
-                isApproved: appUser?.is_approved ?? false,
-                createdAt: appUser?.created_at || user.created_at || "",
+            const res = await fetch("/api/profile", {
+                headers: {
+                    "Authorization": `Bearer ${session.access_token}`
+                }
             });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.profile) {
+                throw new Error(data.error || "プロフィール情報の取得に失敗しました。");
+            }
 
-            setEditDisplayName(dName === "未設定" ? "" : dName);
-            setEditPhoneNumber(pNum);
+            const p = data.profile as UserProfile;
+            setProfile(p);
+            setEditDisplayName(p.displayName === "未設定" ? "" : p.displayName);
+            setEditPhoneNumber(p.phoneNumber || "");
         } catch (err) {
             console.error("Profile fetch error:", err);
+            setToast({ type: "error", text: translateErrorMessage(err, "プロフィール情報の取得に失敗しました。") });
         } finally {
             setLoading(false);
         }
@@ -91,30 +87,37 @@ export default function ProfileAndSettingsPage() {
         setIsSavingProfile(true);
 
         try {
-            const { error } = await supabase
-                .from("app_users")
-                .update({ 
-                    display_name: editDisplayName, 
-                    phone_number: editPhoneNumber 
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error("認証セッションが切れました。再度ログインしてください。");
+            }
+
+            const res = await fetch("/api/profile", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    displayName: editDisplayName.trim(),
+                    phoneNumber: editPhoneNumber.trim(),
                 })
-                .eq("id", profile.id);
-
-            if (error) throw error;
-
-            // auth側メタデータも更新
-            await supabase.auth.updateUser({
-                data: { display_name: editDisplayName }
             });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || "基本情報の更新に失敗しました。");
+            }
 
             setProfile(prev => prev ? {
                 ...prev,
-                displayName: editDisplayName || "未設定",
-                phoneNumber: editPhoneNumber
+                displayName: data.profile?.displayName || editDisplayName.trim() || "未設定",
+                phoneNumber: data.profile?.phoneNumber ?? editPhoneNumber.trim()
             } : null);
 
+            await refreshPlan();
             setToast({ type: "success", text: "基本情報を更新しました。" });
-        } catch (err: any) {
-            setToast({ type: "error", text: "更新に失敗しました: " + (err.message || "") });
+        } catch (err: unknown) {
+            setToast({ type: "error", text: translateErrorMessage(err, "基本情報の更新に失敗しました。") });
         } finally {
             setIsSavingProfile(false);
         }
@@ -167,7 +170,7 @@ export default function ProfileAndSettingsPage() {
         switch (role) {
             case "admin": return "管理者";
             case "viewer": return "一般ユーザー";
-            default: return role;
+            default: return "一般ユーザー";
         }
     };
 
@@ -241,7 +244,7 @@ export default function ProfileAndSettingsPage() {
                                             </span>
                                         </div>
                                         <p className="text-[11px] text-slate-400">
-                                            登録日: {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" }) : "-"}
+                                            登録日: {formatDateJST(profile.createdAt, { long: true })}
                                         </p>
                                     </div>
                                 </div>

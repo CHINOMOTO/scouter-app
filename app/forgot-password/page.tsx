@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
 import { Mail, AlertCircle } from "lucide-react";
+import { translateErrorMessage } from "@/lib/errorMessage";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -33,13 +33,13 @@ export default function ForgotPasswordPage() {
             }
 
             setSuccessMsg("パスワード再設定用のメールを送信しました。メール内のリンクをクリックして新しいパスワードを設定してください。");
-        } catch (err: any) {
-            const msg = err?.message || "";
-            if (msg.includes("メールアドレス") || msg.includes("送信に失敗")) {
-                setErrorMsg(msg);
-            } else {
-                setErrorMsg("通信に失敗しました。ネットワーク接続をご確認の上、再度お試しください。");
-            }
+        } catch (err: unknown) {
+            setErrorMsg(
+                translateErrorMessage(
+                    err,
+                    "通信に失敗しました。ネットワーク接続をご確認の上、再度お試しください。"
+                )
+            );
         } finally {
             setIsLoading(false);
         }

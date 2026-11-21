@@ -7,6 +7,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { detectOfficialSource } from "@/lib/officialSources";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { formatDateTimeJST } from "@/lib/dateFormat";
 import {
     ArrowLeft,
     Building2,
@@ -33,8 +35,8 @@ type CreditCaseDetail = {
     corporate_number?: string | null;
     location?: string | null;
     invoice_date?: string | null;
-    amount: number;
-    due_date: string;
+    amount: number | null;
+    due_date: string | null;
     payment_status: "unpaid" | "resolved";
     resolved_delay_days?: number | null;
     counterparty_claim?: string | null;
@@ -135,41 +137,15 @@ export default function AdminCreditCaseDetailPage() {
             setEditBusinessStatus(c.business_status || "unreachable");
             setEditCounterpartyClaim(c.counterparty_claim || "");
 
-            // 証拠ファイルの署名付きURLを取得
-            if (c.evidence_urls && Array.isArray(c.evidence_urls) && c.evidence_urls.length > 0) {
-                const files: EvidenceFile[] = [];
-                for (const path of c.evidence_urls) {
-                    // まず case_attachments から取得を試みる
-                    let { data: signedData } = await supabase.storage
-                        .from("case_attachments")
-                        .createSignedUrl(path, 3600);
-
-                    // なければ case-evidence を試行
-                    if (!signedData) {
-                        const fallback = await supabase.storage
-                            .from("case-evidence")
-                            .createSignedUrl(path, 3600);
-                        signedData = fallback.data;
-                    }
-
-                    if (signedData?.signedUrl) {
-                        const isImage = path.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-                        const isPdf = path.match(/\.pdf$/i);
-                        files.push({
-                            path,
-                            signedUrl: signedData.signedUrl,
-                            type: isImage ? "image" : isPdf ? "pdf" : "other",
-                            name: path.split("/").pop() || "evidence_file"
-                        });
-                    }
-                }
-                setEvidenceFiles(files);
+            // 証拠ファイルの署名付きURLはサーバーAPI側（Service Role）で生成済みの配列を利用（厳格化Storage RLS対応）
+            if (Array.isArray(data.evidenceFiles)) {
+                setEvidenceFiles(data.evidenceFiles);
             } else {
                 setEvidenceFiles([]);
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error("Fetch detail error:", e);
-            setFetchError(e.message || "予期せぬエラーが発生しました。");
+            setFetchError(translateErrorMessage(e, "予期せぬエラーが発生しました。"));
         } finally {
             setLoading(false);
         }
@@ -181,10 +157,38 @@ export default function AdminCreditCaseDetailPage() {
 
     const handleSaveEdit = async () => {
         if (!caseDetail) return;
+        const isCurrentOfficial = detectOfficialSource(caseDetail).isOfficial;
+
+        let parsedAmount: number | undefined = undefined;
+        if (!isCurrentOfficial) {
+            const trimmedAmount = String(editAmount).trim();
+            if (!/^\d+$/.test(trimmedAmount)) {
+                setToast({ type: "error", text: "金額は0以上の半角整数で入力してください。" });
+                return;
+            }
+            parsedAmount = Number(trimmedAmount);
+            if (!Number.isFinite(parsedAmount) || parsedAmount < 0 || parsedAmount > 999999999999) {
+                setToast({ type: "error", text: "金額は0円〜9,999億円の範囲で入力してください。" });
+                return;
+            }
+        }
         setIsSaving(true);
         try {
             const session = (await supabase.auth.getSession()).data.session;
-            if (!session) throw new Error("認証セッションがありません");
+            if (!session) throw new Error("認証セッションがありません。再度ログインしてください。");
+
+            const payload: Record<string, unknown> = {
+                company_name: editCompanyName,
+                corporate_number: editCorporateNumber,
+                location: editLocation,
+                counterparty_claim: editCounterpartyClaim,
+            };
+            if (!isCurrentOfficial) {
+                payload.invoice_date = editInvoiceDate;
+                payload.amount = Math.floor(parsedAmount ?? 0);
+                payload.due_date = editDueDate;
+                payload.business_status = editBusinessStatus;
+            }
 
             const res = await fetch(`/api/admin/credit-cases/${id}`, {
                 method: "PATCH",
@@ -192,28 +196,19 @@ export default function AdminCreditCaseDetailPage() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${session.access_token}`
                 },
-                body: JSON.stringify({
-                    company_name: editCompanyName,
-                    corporate_number: editCorporateNumber,
-                    location: editLocation,
-                    invoice_date: editInvoiceDate,
-                    amount: Number(String(editAmount).replace(/[^0-9]/g, "")) || 0,
-                    due_date: editDueDate,
-                    business_status: editBusinessStatus,
-                    counterparty_claim: editCounterpartyClaim
-                })
+                body: JSON.stringify(payload)
             });
 
-            const result = await res.json();
+            const result = await res.json().catch(() => ({}));
             if (!res.ok) {
-                throw new Error(result.error || "更新に失敗しました");
+                throw new Error(result.error || "更新に失敗しました。");
             }
 
             setIsEditing(false);
             setToast({ type: "success", text: "登録内容を更新・保存しました。" });
             await fetchDetail();
-        } catch (err: any) {
-            setToast({ type: "error", text: err.message || "更新エラーが発生しました" });
+        } catch (err: unknown) {
+            setToast({ type: "error", text: translateErrorMessage(err, "更新処理中にエラーが発生しました。") });
         } finally {
             setIsSaving(false);
         }
@@ -244,7 +239,7 @@ export default function AdminCreditCaseDetailPage() {
                 })
             });
 
-            const result = await res.json();
+            const result = await res.json().catch(() => ({}));
 
             if (!res.ok) {
                 throw new Error(result.error || "審査ステータスの更新に失敗しました。");
@@ -258,8 +253,8 @@ export default function AdminCreditCaseDetailPage() {
             setShowApproveModal(false);
             setShowRejectModal(false);
             await fetchDetail();
-        } catch (err: any) {
-            setToast({ type: "error", text: err.message || "エラーが発生しました。" });
+        } catch (err: unknown) {
+            setToast({ type: "error", text: translateErrorMessage(err, "審査ステータスの更新中にエラーが発生しました。") });
         } finally {
             setIsProcessing(false);
         }
@@ -313,7 +308,7 @@ export default function AdminCreditCaseDetailPage() {
                             className="btn-secondary text-xs h-10 px-4 rounded-xl flex items-center justify-center gap-1.5 font-medium transition-colors whitespace-nowrap active:scale-[0.98] w-full sm:w-auto"
                         >
                             <ArrowLeft className="w-3.5 h-3.5" />
-                            <span>← 企業信用審査一覧へ戻る</span>
+                            <span>企業信用審査一覧へ戻る</span>
                         </Link>
                         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
                             <button
@@ -372,47 +367,52 @@ export default function AdminCreditCaseDetailPage() {
                                         className="input-field py-2 text-xs"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block font-bold text-slate-700 mb-1">未払い金額（税込）</label>
-                                    <input
-                                        type="number"
-                                        value={editAmount}
-                                        onChange={(e) => setEditAmount(e.target.value)}
-                                        className="input-field py-2 text-xs font-mono"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block font-bold text-slate-700 mb-1">請求日</label>
-                                    <input
-                                        type="date"
-                                        value={editInvoiceDate}
-                                        onChange={(e) => setEditInvoiceDate(e.target.value)}
-                                        className="input-field py-2 text-xs"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block font-bold text-slate-700 mb-1">当初支払期日</label>
-                                    <input
-                                        type="date"
-                                        value={editDueDate}
-                                        onChange={(e) => setEditDueDate(e.target.value)}
-                                        className="input-field py-2 text-xs"
-                                    />
-                                </div>
-                                <div className="sm:col-span-2">
-                                    <label className="block font-bold text-slate-700 mb-1">相手先の営業状況</label>
-                                    <select
-                                        value={editBusinessStatus}
-                                        onChange={(e) => setEditBusinessStatus(e.target.value)}
-                                        className="input-field py-2 text-xs"
-                                    >
-                                        <option value="unreachable">音信不通（電話不通・LINE等ブロック）</option>
-                                        <option value="relocated">事務所引き払い・所在不明</option>
-                                        <option value="bankrupt">破産・倒産手続き中</option>
-                                        <option value="active">連絡可能（督促中）</option>
-                                        <option value="unknown">現状不明</option>
-                                    </select>
-                                </div>
+                                {!isOfficial && (
+                                    <>
+                                        <div>
+                                            <label className="block font-bold text-slate-700 mb-1">未払い金額（税込）</label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                value={editAmount}
+                                                onChange={(e) => setEditAmount(e.target.value)}
+                                                className="input-field py-2 text-xs font-mono"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block font-bold text-slate-700 mb-1">請求日</label>
+                                            <input
+                                                type="date"
+                                                value={editInvoiceDate}
+                                                onChange={(e) => setEditInvoiceDate(e.target.value)}
+                                                className="input-field py-2 text-xs"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block font-bold text-slate-700 mb-1">当初支払期日</label>
+                                            <input
+                                                type="date"
+                                                value={editDueDate}
+                                                onChange={(e) => setEditDueDate(e.target.value)}
+                                                className="input-field py-2 text-xs"
+                                            />
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                            <label className="block font-bold text-slate-700 mb-1">相手先の営業状況</label>
+                                            <select
+                                                value={editBusinessStatus}
+                                                onChange={(e) => setEditBusinessStatus(e.target.value)}
+                                                className="input-field py-2 text-xs"
+                                            >
+                                                <option value="unreachable">音信不通（電話不通・LINE等ブロック）</option>
+                                                <option value="relocated">事務所引き払い・所在不明</option>
+                                                <option value="bankrupt">破産・倒産手続き中</option>
+                                                <option value="active">連絡可能（督促中）</option>
+                                                <option value="unknown">現状不明</option>
+                                            </select>
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
                             <div className="pt-2">
@@ -457,23 +457,32 @@ export default function AdminCreditCaseDetailPage() {
                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 uppercase tracking-widest font-mono">
                                             CREDIT CASE
                                         </span>
-                                        {caseDetail.status === "pending" && (
-                                            <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                                                <Clock className="w-3 h-3" />
-                                                <span>審査待ち</span>
+                                        {isOfficial ? (
+                                            <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
+                                                <ShieldCheck className="w-3 h-3 text-blue-700" />
+                                                <span>🏛️ 公的確定処分</span>
                                             </span>
-                                        )}
-                                        {caseDetail.status === "approved" && (
-                                            <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                <CheckCircle2 className="w-3 h-3" />
-                                                <span>承認済み</span>
-                                            </span>
-                                        )}
-                                        {caseDetail.status === "rejected" && (
-                                            <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                                                <XCircle className="w-3 h-3" />
-                                                <span>却下</span>
-                                            </span>
+                                        ) : (
+                                            <>
+                                                {caseDetail.status === "pending" && (
+                                                    <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                                        <Clock className="w-3 h-3" />
+                                                        <span>審査待ち</span>
+                                                    </span>
+                                                )}
+                                                {caseDetail.status === "approved" && (
+                                                    <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                        <CheckCircle2 className="w-3 h-3" />
+                                                        <span>承認済み</span>
+                                                    </span>
+                                                )}
+                                                {caseDetail.status === "rejected" && (
+                                                    <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                                        <XCircle className="w-3 h-3" />
+                                                        <span>却下</span>
+                                                    </span>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                     <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
@@ -528,10 +537,10 @@ export default function AdminCreditCaseDetailPage() {
                                 <div className="p-4 sm:p-6 bg-blue-50/50 rounded-xl border border-blue-200 mt-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
                                     <div>
                                         <span className="text-xs font-bold text-blue-700 uppercase tracking-wider block mb-1">
-                                            {caseDetail.amount > 0 ? "公表不払認定額（概算）" : "処分区分・措置概要"}
+                                            {(caseDetail.amount ?? 0) > 0 ? "公表不払認定額（概算）" : "処分区分・措置概要"}
                                         </span>
                                         <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                                            {caseDetail.amount > 0 ? `¥${caseDetail.amount.toLocaleString()}` : "行政処分・公認記録"}
+                                            {(caseDetail.amount ?? 0) > 0 ? `¥${(caseDetail.amount ?? 0).toLocaleString()}` : "行政処分・公認記録"}
                                         </span>
                                     </div>
                                     <div className="text-left sm:text-right">
@@ -548,13 +557,13 @@ export default function AdminCreditCaseDetailPage() {
                                             未払い金額（税込）
                                         </span>
                                         <span className="text-2xl sm:text-4xl font-extrabold text-slate-900">
-                                            ¥{caseDetail.amount.toLocaleString()}
+                                            ¥{(caseDetail.amount ?? 0).toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="text-left sm:text-right">
                                         <span className="text-xs font-bold text-slate-500 block mb-0.5 sm:mb-1">当初支払期日</span>
                                         <span className="text-base sm:text-lg font-bold text-slate-900 font-mono">
-                                            {caseDetail.due_date.replace(/-/g, "/")}
+                                            {caseDetail.due_date?.replace(/-/g, "/") || "-"}
                                         </span>
                                     </div>
                                 </div>
@@ -580,8 +589,12 @@ export default function AdminCreditCaseDetailPage() {
                                     <span className="font-medium text-slate-900">{caseDetail.location || "未登録"}</span>
                                 </div>
                                 <div className="bg-slate-50/60 p-3.5 rounded-lg border border-slate-100">
-                                    <span className="text-xs text-slate-500 block mb-0.5">請求日</span>
-                                    <span className="font-mono font-medium text-slate-900">{caseDetail.invoice_date?.replace(/-/g, "/") || "-"}</span>
+                                    <span className="text-xs text-slate-500 block mb-0.5">{isOfficial ? "公表日 / 処分日" : "請求日"}</span>
+                                    <span className="font-mono font-medium text-slate-900">
+                                        {isOfficial
+                                            ? (caseDetail.due_date || caseDetail.invoice_date)?.replace(/-/g, "/") || "-"
+                                            : caseDetail.invoice_date?.replace(/-/g, "/") || "-"}
+                                    </span>
                                 </div>
                                 <div className="bg-slate-50/60 p-3.5 rounded-lg border border-slate-100">
                                     {(() => {
@@ -592,22 +605,22 @@ export default function AdminCreditCaseDetailPage() {
                                                     {src.isOfficial ? "公表機関・情報元" : "登録申請元企業"}
                                                 </span>
                                                 <span className="font-bold text-slate-900">
-                                                    {src.isOfficial ? "🏛️ " + src?.sourceName || '' : (caseDetail.companies?.name || "加盟企業")}
+                                                    {src.isOfficial ? `🏛️ ${src?.sourceName || "公的機関"}` : (caseDetail.companies?.name || "加盟企業")}
                                                 </span>
                                             </>
                                         );
                                     })()}
                                 </div>
                                 <div className="bg-slate-50/60 p-3.5 rounded-lg border border-slate-100">
-                                    <span className="text-xs text-slate-500 block mb-0.5">申請日時</span>
-                                    <span className="font-mono text-slate-700">{new Date(caseDetail.created_at).toLocaleString()}</span>
+                                    <span className="text-xs text-slate-500 block mb-0.5">{isOfficial ? "データ取込日時" : "申請日時"}</span>
+                                    <span className="font-mono text-slate-700">{formatDateTimeJST(caseDetail.created_at)}</span>
                                 </div>
                             </div>
 
-                            {/* 登録理由 */}
+                            {/* 登録理由 / 公的公表概要 */}
                             <div className="mt-4 pt-4 border-t border-slate-100">
                                 <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-2">
-                                    登録理由（未払い・遅延の経緯・相手側の主張）
+                                    {isOfficial ? "公的公表概要・処分内容" : "登録理由（未払い・遅延の経緯・相手側の主張）"}
                                 </span>
                                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
                                     {caseDetail.counterparty_claim || "特段の登録理由・相手側の主張は記載されていません。"}
@@ -717,7 +730,7 @@ export default function AdminCreditCaseDetailPage() {
                                     </button>
                                 )}
 
-                                {caseDetail.status !== "rejected" && (
+                                {!isOfficial && caseDetail.status !== "rejected" && (
                                     <button
                                         type="button"
                                         onClick={() => setShowRejectModal(true)}

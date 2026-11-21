@@ -29,6 +29,8 @@ export default function UpdatePasswordPage() {
         }
 
         let isMounted = true;
+        let authSubscription: { unsubscribe: () => void } | null = null;
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
         // セッションが確立されたか確認する
         const checkSession = async () => {
@@ -45,9 +47,14 @@ export default function UpdatePasswordPage() {
                         setIsSessionReady(true);
                     }
                 });
+                if (!isMounted) {
+                    subscription.unsubscribe();
+                    return;
+                }
+                authSubscription = subscription;
 
                 // 4秒待ってもセッションが確立されない場合は期限切れ・無効と判断
-                const timeoutId = setTimeout(() => {
+                timeoutId = setTimeout(() => {
                     if (isMounted) {
                         supabase.auth.getSession().then(({ data: { session } }) => {
                             if (!session && isMounted) {
@@ -56,11 +63,6 @@ export default function UpdatePasswordPage() {
                         });
                     }
                 }, 4000);
-
-                return () => {
-                    subscription.unsubscribe();
-                    clearTimeout(timeoutId);
-                };
             } catch (err) {
                 console.error("Session check error:", err);
                 if (isMounted) setIsExpired(true);
@@ -71,6 +73,8 @@ export default function UpdatePasswordPage() {
 
         return () => {
             isMounted = false;
+            authSubscription?.unsubscribe();
+            if (timeoutId) clearTimeout(timeoutId);
         };
     }, []);
 

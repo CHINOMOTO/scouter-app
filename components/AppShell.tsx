@@ -5,18 +5,55 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { PlanProvider } from "@/contexts/PlanContext";
+import { PlanProvider, usePlan } from "@/contexts/PlanContext";
+
+function AppShellInner({
+    children,
+    isPublicPage,
+    hasSession,
+}: {
+    children: React.ReactNode;
+    isPublicPage: boolean;
+    hasSession: boolean;
+}) {
+    const { isApproved, loading: planLoading } = usePlan();
+
+    // 承認済みかつ非公開ページのみサイドバーを表示（未承認・停止中ユーザーのサイドバー露出を防止）
+    const showSidebar = !isPublicPage && hasSession && !planLoading && isApproved;
+
+    if (!showSidebar) {
+        return (
+            <div className="min-h-screen flex flex-col">
+                <main className="relative z-10 flex-grow">{children}</main>
+                <Footer />
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen flex">
+            {/* 左サイドバー ＆ モバイルヘッダー */}
+            <Navigation />
+
+            {/* 右メインコンテンツエリア（サイドバー分インデント） */}
+            <div className="flex-1 flex flex-col min-w-0 md:pl-64">
+                <main className="relative z-10 flex-grow">
+                    {children}
+                </main>
+                <Footer />
+            </div>
+        </div>
+    );
+}
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname() || "";
     const [session, setSession] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const checkAuth = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             setSession(session);
-            setLoading(false);
         };
 
         checkAuth();
@@ -29,19 +66,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }, []);
 
     // サイドバーを表示しない公開ページ判定
-    const isPublicPage = 
-        pathname === "/" || 
-        pathname === "/signup" || 
-        pathname === "/login" || 
-        pathname === "/demo" || 
-        pathname === "/forgot-password" || 
-        pathname === "/update-password" || 
+    const isPublicPage =
+        pathname === "/" ||
+        pathname === "/signup" ||
+        pathname === "/login" ||
+        pathname === "/forgot-password" ||
+        pathname === "/update-password" ||
         pathname === "/pending-approval";
 
-    const showSidebar = !isPublicPage && !!session;
-
-    if (!showSidebar) {
-        // 通常の全幅表示（ログイン画面、デモページ等）
+    if (isPublicPage) {
         return (
             <div className="min-h-screen flex flex-col">
                 <main className="relative z-10 flex-grow">{children}</main>
@@ -52,18 +85,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
     return (
         <PlanProvider>
-            <div className="min-h-screen flex">
-                {/* 左サイドバー ＆ モバイルヘッダー */}
-                <Navigation />
-
-                {/* 右メインコンテンツエリア（サイドバー分インデント） */}
-                <div className="flex-1 flex flex-col min-w-0 md:pl-64">
-                    <main className="relative z-10 flex-grow">
-                        {children}
-                    </main>
-                    <Footer />
-                </div>
-            </div>
+            <AppShellInner isPublicPage={isPublicPage} hasSession={!!session}>
+                {children}
+            </AppShellInner>
         </PlanProvider>
     );
 }

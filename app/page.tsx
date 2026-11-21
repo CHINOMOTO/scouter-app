@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { translateErrorMessage } from "@/lib/errorMessage";
 
 export default function Home() {
   const router = useRouter();
@@ -13,6 +14,19 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // ログイン済みユーザーがトップ（/）を開いた場合はダッシュボードへ自動遷移
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (active && session) {
+        router.replace("/dashboard");
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,9 +64,12 @@ export default function Home() {
 
       if (data?.session) {
         router.push("/dashboard");
+      } else {
+        setErrorMsg("ログインセッションを確立できませんでした。再度お試しください。");
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      setErrorMsg(err.message || "ログイン中に問題が発生しました。");
+    } catch (err: unknown) {
+      setErrorMsg(translateErrorMessage(err, "ログイン中に問題が発生しました。時間をおいて再度お試しください。"));
       setIsLoading(false);
     }
   };

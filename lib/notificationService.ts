@@ -35,20 +35,30 @@ export async function sendCaseReviewNotification(params: ReviewNotificationParam
     // 宛先メールアドレスのリスト
     const recipientEmails: string[] = [];
 
-    // 1. 申請者ユーザーのメールアドレス取得
+    // 1. 申請者ユーザーのメールアドレス取得（有効・承認済みかつ申請元企業と一致するユーザーのみ）
     if (registeredByUserId) {
-      const { data: userData } = await supabaseAdmin.auth.admin.getUserById(registeredByUserId);
-      if (userData?.user?.email) {
-        recipientEmails.push(userData.user.email);
+      const { data: appRegistrant } = await supabaseAdmin
+        .from("app_users")
+        .select("id, is_approved, company_id")
+        .eq("id", registeredByUserId)
+        .maybeSingle();
+
+      const matchesCompany = !registeredCompanyId || appRegistrant?.company_id === registeredCompanyId;
+      if (appRegistrant?.is_approved === true && matchesCompany) {
+        const { data: userData } = await supabaseAdmin.auth.admin.getUserById(registeredByUserId);
+        if (userData?.user?.email) {
+          recipientEmails.push(userData.user.email);
+        }
       }
     }
 
-    // 2. ユーザーが見つからない、または会社単位での登録の場合、その会社のアカウントユーザー全員を宛先に追加
+    // 2. ユーザーが見つからない、または会社単位での登録の場合、その会社の有効（is_approved = true）なユーザー全員を宛先に追加
     if (recipientEmails.length === 0 && registeredCompanyId) {
       const { data: usersInCompany } = await supabaseAdmin
         .from("app_users")
         .select("id")
-        .eq("company_id", registeredCompanyId);
+        .eq("company_id", registeredCompanyId)
+        .eq("is_approved", true);
 
       if (usersInCompany && usersInCompany.length > 0) {
         for (const u of usersInCompany) {
@@ -66,7 +76,7 @@ export async function sendCaseReviewNotification(params: ReviewNotificationParam
     }
 
     const typeLabel = type === "work" ? "就業トラブル情報" : "企業信用（未払い）情報";
-    const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.m-m-m-mieris0610.com";
+    const appBaseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.m-m-m-mieris0610.com").replace(/\/+$/, "");
 
     const subject = status === "approved"
       ? `【MIERIS】ご登録申請が承認されました（対象：${targetName}）`

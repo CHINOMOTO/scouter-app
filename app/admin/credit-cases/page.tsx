@@ -23,14 +23,16 @@ import {
 import { Toast, ToastMessage } from "@/components/Toast";
 import { Pagination } from "@/components/Pagination";
 import { detectOfficialSource, getCleanOfficialSourceName } from "@/lib/officialSources";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { formatDateJST } from "@/lib/dateFormat";
 
 type CreditCaseAdmin = {
     id: string;
     company_name: string;
     corporate_number?: string | null;
     location?: string | null;
-    amount: number;
-    due_date: string;
+    amount: number | null;
+    due_date: string | null;
     payment_status: "unpaid" | "resolved";
     counterparty_claim?: string | null;
     evidence_urls?: string[];
@@ -48,7 +50,7 @@ const PAGE_SIZE = 10;
 export default function AdminCreditCasesPage() {
     const [cases, setCases] = useState<CreditCaseAdmin[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filterStatus, setFilterStatus] = useState<"pending" | "approved" | "rejected" | "all">("pending");
+    const [filterStatus, setFilterStatus] = useState<"pending" | "approved" | "rejected" | "official" | "all">("pending");
     const [searchTerm, setSearchTerm] = useState("");
     const [sortConfig, setSortConfig] = useState<{ key: "created_at" | "company_name" | "amount" | "due_date"; direction: "asc" | "desc" }>({
         key: "created_at",
@@ -68,7 +70,7 @@ export default function AdminCreditCasesPage() {
     };
 
     const handleSyncPublicData = async () => {
-        if (!confirm("各省庁（国土交通省・厚生労働省・消費者庁・官報）の対象業種公表データを最新状態に同期しますか？")) return;
+        if (!confirm("国土交通省・消費者庁等の公的公表データおよび登録済み公的記録の対象業種同期を実行しますか？")) return;
         setSyncLoading(true);
         try {
             const session = (await supabase.auth.getSession()).data.session;
@@ -81,7 +83,7 @@ export default function AdminCreditCasesPage() {
                 }
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (res.ok && data.success) {
                 setToast({
                     type: "success",
@@ -91,11 +93,11 @@ export default function AdminCreditCasesPage() {
             } else {
                 setToast({
                     type: "error",
-                    text: data.error || "同期に失敗しました"
+                    text: translateErrorMessage(data.error, "同期に失敗しました。")
                 });
             }
-        } catch (err: any) {
-            setToast({ type: "error", text: "同期エラー: " + err.message });
+        } catch (err: unknown) {
+            setToast({ type: "error", text: translateErrorMessage(err, "公的データの同期中にエラーが発生しました。") });
         } finally {
             setSyncLoading(false);
         }
@@ -105,7 +107,10 @@ export default function AdminCreditCasesPage() {
         setLoading(true);
         try {
             const session = (await supabase.auth.getSession()).data.session;
-            if (!session) return;
+            if (!session) {
+                setToast({ type: "error", text: "認証セッションが見つかりません。再度ログインしてください。" });
+                return;
+            }
 
             const res = await fetch("/api/admin/credit-cases", {
                 headers: {
@@ -113,11 +118,15 @@ export default function AdminCreditCasesPage() {
                 }
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || "企業信用データの取得に失敗しました。");
+            }
             setCases(data.cases || []);
 
-        } catch (e) {
+        } catch (e: unknown) {
             console.error("Fetch admin credit cases error:", e);
+            setToast({ type: "error", text: translateErrorMessage(e, "企業信用データの取得に失敗しました。") });
         } finally {
             setLoading(false);
         }
@@ -128,6 +137,7 @@ export default function AdminCreditCasesPage() {
     }, []);
 
     const handleUpdateStatus = async (id: string, newStatus: "approved" | "rejected") => {
+        if (actionLoading) return;
         const actionLabel = newStatus === "approved" ? "承認" : "却下";
         let adminNotes: string | undefined = undefined;
 
@@ -161,19 +171,24 @@ export default function AdminCreditCasesPage() {
                 setToast({ type: "success", text: `ステータスを「${actionLabel}」に更新しました。` });
                 fetchCases();
             } else {
-                const err = await res.json();
-                setToast({ type: "error", text: "更新失敗: " + (err.error || "予期せぬエラー") });
+                const err = await res.json().catch(() => ({}));
+                setToast({ type: "error", text: translateErrorMessage(err.error, "ステータスの更新に失敗しました。") });
             }
 
-        } catch (err: any) {
-            setToast({ type: "error", text: "エラー: " + err.message });
+        } catch (err: unknown) {
+            setToast({ type: "error", text: translateErrorMessage(err, "更新処理中にエラーが発生しました。") });
         } finally {
             setActionLoading(null);
         }
     };
 
     const filteredAndSortedCases = useMemo(() => {
-        let result = cases.filter(c => filterStatus === "all" ? true : c.status === filterStatus);
+        let result = cases.filter(c => {
+            if (filterStatus === "all") return true;
+            const isOfficial = detectOfficialSource(c).isOfficial;
+            if (filterStatus === "official") return isOfficial;
+            return !isOfficial && c.status === filterStatus;
+        });
 
         if (searchTerm.trim()) {
             const q = searchTerm.trim().toLowerCase();
@@ -195,7 +210,7 @@ export default function AdminCreditCasesPage() {
                 case "company_name":
                     return (a.company_name || "").localeCompare(b.company_name || "") * dir;
                 case "amount":
-                    return (a.amount - b.amount) * dir;
+                    return ((a.amount ?? 0) - (b.amount ?? 0)) * dir;
                 case "due_date":
                     return (a.due_date || "").localeCompare(b.due_date || "") * dir;
                 default:
@@ -207,10 +222,18 @@ export default function AdminCreditCasesPage() {
     }, [cases, filterStatus, searchTerm, sortConfig]);
 
     const totalPages = Math.ceil(filteredAndSortedCases.length / PAGE_SIZE) || 1;
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
     const paginatedCases = useMemo(() => {
-        const start = (currentPage - 1) * PAGE_SIZE;
+        const safePage = Math.min(currentPage, totalPages);
+        const start = (safePage - 1) * PAGE_SIZE;
         return filteredAndSortedCases.slice(start, start + PAGE_SIZE);
-    }, [filteredAndSortedCases, currentPage]);
+    }, [filteredAndSortedCases, currentPage, totalPages]);
 
     return (
         <RequireAdmin>
@@ -312,7 +335,7 @@ export default function AdminCreditCasesPage() {
                                 className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] ${filterStatus === "pending" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
                             >
                                 <Clock className="w-3.5 h-3.5" />
-                                <span>審査待ち ({cases.filter(c => c.status === "pending").length})</span>
+                                <span>審査待ち ({cases.filter(c => !detectOfficialSource(c).isOfficial && c.status === "pending").length})</span>
                             </button>
                             <button
                                 onClick={() => {
@@ -322,7 +345,7 @@ export default function AdminCreditCasesPage() {
                                 className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] ${filterStatus === "approved" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
                             >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                <span>承認済み ({cases.filter(c => c.status === "approved").length})</span>
+                                <span>承認済み ({cases.filter(c => !detectOfficialSource(c).isOfficial && c.status === "approved").length})</span>
                             </button>
                             <button
                                 onClick={() => {
@@ -332,7 +355,17 @@ export default function AdminCreditCasesPage() {
                                 className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] ${filterStatus === "rejected" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"}`}
                             >
                                 <XCircle className="w-3.5 h-3.5" />
-                                <span>却下 ({cases.filter(c => c.status === "rejected").length})</span>
+                                <span>却下 ({cases.filter(c => !detectOfficialSource(c).isOfficial && c.status === "rejected").length})</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setFilterStatus("official");
+                                    setCurrentPage(1);
+                                }}
+                                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-[0.98] ${filterStatus === "official" ? "bg-blue-700 text-white shadow-sm" : "bg-blue-50/70 text-blue-800 hover:bg-blue-100/80 border border-blue-200"}`}
+                            >
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                <span>公的データ ({cases.filter(c => detectOfficialSource(c).isOfficial).length})</span>
                             </button>
                             <button
                                 onClick={() => {
@@ -375,29 +408,32 @@ export default function AdminCreditCasesPage() {
                                                 <Building2 className="w-5 h-5 text-slate-600 shrink-0" />
                                                 <span>{c.company_name}</span>
                                             </h3>
-                                            {isOfficial && (
+                                            {isOfficial ? (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200 whitespace-nowrap">
                                                     <ShieldCheck className="w-3 h-3 text-blue-700 shrink-0" />
                                                     <span>🏛️ 公的確定処分</span>
                                                 </span>
-                                            )}
-                                            {c.status === "pending" && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
-                                                    <Clock className="w-3 h-3 shrink-0" />
-                                                    <span>審査待ち</span>
-                                                </span>
-                                            )}
-                                            {c.status === "approved" && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
-                                                    <CheckCircle2 className="w-3 h-3 shrink-0" />
-                                                    <span>承認済み</span>
-                                                </span>
-                                            )}
-                                            {c.status === "rejected" && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">
-                                                    <XCircle className="w-3 h-3 shrink-0" />
-                                                    <span>却下</span>
-                                                </span>
+                                            ) : (
+                                                <>
+                                                    {c.status === "pending" && (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
+                                                            <Clock className="w-3 h-3 shrink-0" />
+                                                            <span>審査待ち</span>
+                                                        </span>
+                                                    )}
+                                                    {c.status === "approved" && (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                                                            <CheckCircle2 className="w-3 h-3 shrink-0" />
+                                                            <span>承認済み</span>
+                                                        </span>
+                                                    )}
+                                                    {c.status === "rejected" && (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">
+                                                            <XCircle className="w-3 h-3 shrink-0" />
+                                                            <span>却下</span>
+                                                        </span>
+                                                    )}
+                                                </>
                                             )}
                                             {!isOfficial && c.payment_status === "resolved" && (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
@@ -410,18 +446,18 @@ export default function AdminCreditCasesPage() {
                                         <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-slate-600 my-3">
                                             {isOfficial ? (
                                                 <>
-                                                    <div>処分区分: <strong className="text-slate-900 font-extrabold text-sm">{c.amount > 0 ? `公表不払額 ¥${c.amount.toLocaleString()}` : "行政処分・公認記録"}</strong></div>
+                                                    <div>処分区分: <strong className="text-slate-900 font-extrabold text-sm">{(c.amount ?? 0) > 0 ? `公表不払額 ¥${(c.amount ?? 0).toLocaleString()}` : "行政処分・公認記録"}</strong></div>
                                                     <div>公表日: <span className="font-mono text-slate-800">{c.due_date || "-"}</span></div>
                                                     {c.corporate_number && <div>法人番号: <span className="font-mono text-slate-800">{c.corporate_number}</span></div>}
                                                     <div>公表機関: <strong className="text-blue-800">{getCleanOfficialSourceName(sourceInfo)}</strong></div>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div>未払い額: <strong className="text-slate-900 font-extrabold text-sm">¥{c.amount.toLocaleString()}</strong></div>
-                                                    <div>支払期日: <span className="font-mono text-slate-800">{c.due_date}</span></div>
+                                                    <div>未払い額: <strong className="text-slate-900 font-extrabold text-sm">¥{(c.amount ?? 0).toLocaleString()}</strong></div>
+                                                    <div>支払期日: <span className="font-mono text-slate-800">{c.due_date || "-"}</span></div>
                                                     {c.corporate_number && <div>法人番号: <span className="font-mono text-slate-800">{c.corporate_number}</span></div>}
                                                     <div>申請企業: <strong className="text-slate-800">{c.companies?.name || "加盟企業"}</strong></div>
-                                                    <div>申請日: <span className="text-slate-700">{new Date(c.created_at).toLocaleDateString()}</span></div>
+                                                    <div>申請日: <span className="text-slate-700">{formatDateJST(c.created_at)}</span></div>
                                                 </>
                                             )}
                                         </div>
@@ -447,16 +483,16 @@ export default function AdminCreditCasesPage() {
                                             <>
                                                 <button
                                                     onClick={() => handleUpdateStatus(c.id, "approved")}
-                                                    disabled={actionLoading === c.id}
-                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition-all w-full active:scale-[0.98]"
+                                                    disabled={actionLoading !== null}
+                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs shadow-sm transition-all w-full active:scale-[0.98]"
                                                 >
                                                     <Check className="w-3.5 h-3.5" />
                                                     <span>{actionLoading === c.id ? "更新中..." : "承認する"}</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleUpdateStatus(c.id, "rejected")}
-                                                    disabled={actionLoading === c.id}
-                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition-all w-full active:scale-[0.98]"
+                                                    disabled={actionLoading !== null}
+                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 disabled:opacity-50 text-rose-700 font-bold text-xs border border-rose-200 transition-all w-full active:scale-[0.98]"
                                                 >
                                                     <X className="w-3.5 h-3.5" />
                                                     <span>却下する</span>

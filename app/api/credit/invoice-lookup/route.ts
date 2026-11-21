@@ -23,7 +23,7 @@ function verifyCorporateChecksum(num13: string): boolean {
     return checkDigit === expectedCheck;
 }
 
-// GET: インボイス登録番号（T+13桁 または 13桁数字）の有効性検証・公的照会API
+// GET: インボイス登録番号（T+13桁 または 13桁数字）の形式検証・法人実在照会API
 export async function GET(request: Request) {
     try {
         // 認証・承認・CREDITプランチェック
@@ -42,12 +42,24 @@ export async function GET(request: Request) {
         if (number.length !== 13) {
             return NextResponse.json({
                 valid: false,
+                checksum_verified: false,
                 error: 'インボイス登録番号は「T」＋13桁の半角数字で入力してください。'
             }, { status: 400 });
         }
 
         // 1. 国税庁アルゴリズムによるチェックディジット検査
         const isChecksumValid = verifyCorporateChecksum(number);
+
+        // チェックディジット不一致の場合は有効（valid: true）とせずエラーを返す
+        if (!isChecksumValid) {
+            return NextResponse.json({
+                valid: false,
+                invoice_number: `T${number}`,
+                number,
+                checksum_verified: false,
+                error: '検査数字（チェックディジット）が国税庁アルゴリズムと一致しません。入力内容をご確認ください。'
+            });
+        }
 
         // 2. gBizINFO APIで法人としての実在・企業情報を自動照会
         const gbizToken = process.env.GBIZINFO_API_TOKEN;
@@ -61,7 +73,8 @@ export async function GET(request: Request) {
                         'Accept': 'application/json',
                         'X-hojinInfo-api-token': gbizToken,
                         'User-Agent': 'MIERIS-Invoice-Checker/1.0'
-                    }
+                    },
+                    signal: AbortSignal.timeout(4500)
                 });
 
                 if (gbizRes.ok) {
@@ -80,20 +93,20 @@ export async function GET(request: Request) {
             invoice_number: `T${number}`,
             number: number,
             business_type: isCorporate ? 'corporate' : 'sole_proprietor_or_other',
-            business_type_label: isCorporate ? '適格請求書発行法人' : '適格請求書発行事業者（個人事業主等）',
-            checksum_verified: isChecksumValid,
+            business_type_label: isCorporate ? '法人番号確認済み（形式適合）' : '個人事業主・その他（形式適合）',
+            checksum_verified: true,
             corporate_profile: isCorporate ? {
                 name: corporateData.name,
                 location: corporateData.location,
                 representative_name: corporateData.representative_name,
-                status: corporateData.status || '登記中'
+                status: corporateData.status || '確認済み'
             } : null,
-            verification_note: isCorporate 
-                ? '国税庁・経済産業省データベース上で適格事業者としての実在が公認されています。'
-                : 'チェックディジット照合完了。適格請求書発行事業者番号の形式要件を満たしています。'
+            verification_note: isCorporate
+                ? 'チェックディジット照合および経済産業省gBizINFOでの法人実在を確認しました。※適格請求書発行事業者（インボイス）の登録有無・有効性は国税庁公表サイトにてご確認ください。'
+                : 'チェックディジット（モジュラス9/11）の形式要件を満たしています。※適格請求書発行事業者の登録有無・有効性は国税庁公表サイトにてご確認ください。'
         });
 
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Invoice verification error:', e);
         return NextResponse.json({
             valid: false,

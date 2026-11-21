@@ -1,41 +1,18 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { authenticateApiRequest } from "@/lib/apiAuth";
 
-export async function PATCH(request: Request, context: any) {
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
     try {
-        const params = await context.params;
-        const { id } = params;
+        const auth = await authenticateApiRequest(request, { requireAdmin: true });
+        if (!auth.ok) return auth.response;
+
+        const { supabaseAdmin } = auth;
+        const { id } = await context.params;
         const body = await request.json();
         const { is_active } = body;
 
-        const authHeader = request.headers.get("Authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-        const token = authHeader.replace("Bearer ", "");
-
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-        const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
-        });
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
-
-        const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-        if (userError || !user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const { data: appUser } = await supabaseAdmin
-            .from("app_users")
-            .select("role")
-            .eq("id", user.id)
-            .single();
-
-        if (!appUser || appUser.role !== 'admin') {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        if (typeof is_active !== "boolean") {
+            return NextResponse.json({ error: "公開状態の指定が不正です。" }, { status: 400 });
         }
 
         const { error: updateError } = await supabaseAdmin
@@ -44,49 +21,24 @@ export async function PATCH(request: Request, context: any) {
             .eq("id", id);
 
         if (updateError) {
-            return NextResponse.json({ error: updateError.message }, { status: 500 });
+            console.error("Announcement PATCH error:", updateError);
+            return NextResponse.json({ error: "公開状態の更新に失敗しました。" }, { status: 500 });
         }
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    } catch (error) {
+        console.error("Announcement PATCH unexpected error:", error);
+        return NextResponse.json({ error: "サーバーエラーが発生しました。" }, { status: 500 });
     }
 }
 
-export async function DELETE(request: Request, context: any) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
     try {
-        const params = await context.params;
-        const { id } = params;
+        const auth = await authenticateApiRequest(request, { requireAdmin: true });
+        if (!auth.ok) return auth.response;
 
-        const authHeader = request.headers.get("Authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-        const token = authHeader.replace("Bearer ", "");
-
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-        const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
-        });
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
-
-        const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-        if (userError || !user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const { data: appUser } = await supabaseAdmin
-            .from("app_users")
-            .select("role")
-            .eq("id", user.id)
-            .single();
-
-        if (!appUser || appUser.role !== 'admin') {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
+        const { supabaseAdmin } = auth;
+        const { id } = await context.params;
 
         const { error: deleteError } = await supabaseAdmin
             .from("announcements")
@@ -94,11 +46,13 @@ export async function DELETE(request: Request, context: any) {
             .eq("id", id);
 
         if (deleteError) {
-            return NextResponse.json({ error: deleteError.message }, { status: 500 });
+            console.error("Announcement DELETE error:", deleteError);
+            return NextResponse.json({ error: "お知らせの削除に失敗しました。" }, { status: 500 });
         }
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    } catch (error) {
+        console.error("Announcement DELETE unexpected error:", error);
+        return NextResponse.json({ error: "サーバーエラーが発生しました。" }, { status: 500 });
     }
 }

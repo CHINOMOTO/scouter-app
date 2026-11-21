@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
 import { ArrowLeft, AlertCircle } from "lucide-react";
+import { translateErrorMessage } from "@/lib/errorMessage";
 
 export default function EditCompanyPage() {
     const router = useRouter();
@@ -17,28 +18,43 @@ export default function EditCompanyPage() {
     const [planType, setPlanType] = useState<"employment" | "credit" | "full">("full");
     const [isMain, setIsMain] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchCompany = async () => {
             if (!id) return;
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) {
+                    setError("認証セッションが見つかりません。再度ログインしてください。");
+                    setLoadFailed(true);
+                    return;
+                }
 
-            const { data, error } = await supabase
-                .from("companies")
-                .select("*")
-                .eq("id", id)
-                .single();
-
-            if (error) {
-                setError("会社情報の取得に失敗しました");
-            } else if (data) {
-                setName(data.name || "");
-                setCorporateNumber(data.corporate_number || "");
-                setPlanType(data.plan_type || "full");
-                setIsMain(data.is_main || false);
+                const res = await fetch(`/api/admin/companies/${id}`, {
+                    headers: {
+                        "Authorization": `Bearer ${session.access_token}`
+                    }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.company) {
+                    setError(translateErrorMessage(data.error, "該当する会社情報が見つかりません。"));
+                    setLoadFailed(true);
+                } else {
+                    setName(data.company.name || "");
+                    setCorporateNumber(data.company.corporate_number || "");
+                    setPlanType(data.company.plan_type || "full");
+                    setIsMain(Boolean(data.company.is_main));
+                }
+            } catch (err) {
+                console.error("fetchCompany error:", err);
+                setError(translateErrorMessage(err, "会社情報の取得中にエラーが発生しました。"));
+                setLoadFailed(true);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
 
         fetchCompany();
@@ -57,42 +73,34 @@ export default function EditCompanyPage() {
         }
 
         try {
-            const payload: any = {
-                name: name.trim(),
-                corporate_number: cleanCorpNum || null,
-                plan_type: planType,
-                is_main: isMain
-            };
-
-            let { error: updateError } = await supabase
-                .from("companies")
-                .update(payload)
-                .eq("id", id);
-
-            if (updateError && (updateError.message.includes("corporate_number") || updateError.message.includes("plan_type"))) {
-                console.warn("Falling back to basic company schema:", updateError.message);
-                const { error: fallbackError } = await supabase
-                    .from("companies")
-                    .update({ name: name.trim(), is_main: isMain })
-                    .eq("id", id);
-                if (fallbackError) throw fallbackError;
-            } else if (updateError) {
-                throw updateError;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error("認証セッションが見つかりません。再度ログインしてください。");
             }
 
-            // 所属ユーザーの契約プラン（allowed_plan）も同時に同期
-            const { error: syncUsersError } = await supabase
-                .from("app_users")
-                .update({ allowed_plan: planType })
-                .eq("company_id", id);
-            if (syncUsersError) {
-                console.warn("Could not sync app_users allowed_plan:", syncUsersError.message);
+            const res = await fetch(`/api/admin/companies/${id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    name: name.trim(),
+                    corporateNumber: cleanCorpNum,
+                    planType,
+                    isMain
+                })
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || "更新に失敗しました。");
             }
 
             router.push("/admin/companies");
             router.refresh();
-        } catch (err: any) {
-            setError(err.message || "更新に失敗しました");
+        } catch (err: unknown) {
+            setError(translateErrorMessage(err, "更新に失敗しました。"));
         } finally {
             setSaving(false);
         }
@@ -103,6 +111,28 @@ export default function EditCompanyPage() {
             <RequireAdmin>
                 <div className="min-h-screen flex items-center justify-center">
                     <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
+                </div>
+            </RequireAdmin>
+        );
+    }
+
+    if (loadFailed) {
+        return (
+            <RequireAdmin>
+                <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
+                    <div className="max-w-lg w-full bg-white p-8 rounded-2xl border border-slate-200 shadow-2xs text-center space-y-4">
+                        <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+                            <AlertCircle className="w-6 h-6" />
+                        </div>
+                        <h1 className="text-lg font-bold text-slate-900">会社情報を取得できませんでした</h1>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            {error || "指定された会社が見つからないか、削除されている可能性があります。"}
+                        </p>
+                        <Link href="/admin/companies" className="btn-secondary inline-flex items-center gap-1.5 text-xs px-5 py-2.5 rounded-xl font-bold">
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                            <span>会社一覧へ戻る</span>
+                        </Link>
+                    </div>
                 </div>
             </RequireAdmin>
         );
@@ -158,7 +188,11 @@ export default function EditCompanyPage() {
                                     required
                                     maxLength={13}
                                     value={corporateNumber}
-                                    onChange={(e) => setCorporateNumber(e.target.value.replace(/[^0-9]/g, ""))}
+                                    onChange={(e) => setCorporateNumber(
+                                        e.target.value
+                                            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+                                            .replace(/[^0-9]/g, "")
+                                    )}
                                     className="input-field font-mono"
                                     placeholder="例: 1234567890123"
                                 />

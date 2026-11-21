@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { buildCompanyQueryVariants } from '@/lib/officialSources';
 import { authenticateApiRequest, sanitizePostgrestFilterValue } from '@/lib/apiAuth';
 
+const EXTERNAL_API_TIMEOUT_MS = 4500;
+
 // GET: 法人番号または社名から企業情報を検索・取得するAPI（gBizINFO公的オープンデータ連携）
 export async function GET(request: Request) {
     try {
@@ -36,7 +38,8 @@ export async function GET(request: Request) {
                             'Accept': 'application/json',
                             'X-hojinInfo-api-token': gbizToken,
                             'User-Agent': 'MIERIS-Credit-System/1.0'
-                        }
+                        },
+                        signal: AbortSignal.timeout(EXTERNAL_API_TIMEOUT_MS)
                     });
 
                     if (gbizRes.ok) {
@@ -100,7 +103,8 @@ export async function GET(request: Request) {
                         'Accept': 'application/json',
                         'X-hojinInfo-api-token': gbizToken,
                         'User-Agent': 'MIERIS-Credit-System/1.0'
-                    }
+                    },
+                    signal: AbortSignal.timeout(EXTERNAL_API_TIMEOUT_MS)
                 });
 
                 if (gbizRes.ok) {
@@ -156,7 +160,7 @@ export async function GET(request: Request) {
                 name: creditCase.company_name,
                 location: creditCase.location,
                 source: 'internal_db',
-                registry_status: isClosed ? 'closed' : 'active',
+                registry_status: isClosed ? 'closed' : (creditCase.registry_status || 'unknown'),
                 registry_close_date: creditCase.registry_close_date || null,
                 registry_close_cause: creditCase.registry_close_cause || null,
                 close_date: creditCase.registry_close_date || null,
@@ -169,7 +173,8 @@ export async function GET(request: Request) {
         if (ntaAppId) {
             try {
                 const ntaRes = await fetch(`https://api.houjin-bangou.nta.go.jp/4/num?id=${ntaAppId}&number=${number}&type=12&history=0`, {
-                    headers: { 'User-Agent': 'MIERIS-System/1.0' }
+                    headers: { 'User-Agent': 'MIERIS-System/1.0' },
+                    signal: AbortSignal.timeout(EXTERNAL_API_TIMEOUT_MS)
                 });
                 if (ntaRes.ok) {
                     const xml = await ntaRes.text();

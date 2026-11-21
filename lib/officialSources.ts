@@ -10,6 +10,7 @@ export interface OfficialSourceInfo {
 }
 
 export function detectOfficialSource(item?: {
+    is_official?: boolean | null;
     counterparty_claim?: string | null;
     evidence_urls?: string[] | null;
     admin_notes?: string | null;
@@ -20,6 +21,16 @@ export function detectOfficialSource(item?: {
             isOfficial: false,
             sourceName: '加盟企業',
             sourceCategory: '民間取引先 被害申告'
+        };
+    }
+
+    // DB上で明示的に民間案件 (is_official === false) と記録されている場合は、
+    // テキストに「【」等が含まれていても絶対に公的処分として誤分類しない
+    if (item.is_official === false) {
+        return {
+            isOfficial: false,
+            sourceName: item?.companies?.name || '加盟企業（信用共有ネットワーク参加企業）',
+            sourceCategory: '民間取引先 債権未払い被害申告'
         };
     }
 
@@ -149,22 +160,22 @@ export function detectOfficialSource(item?: {
         };
     }
 
-    // 7. その他の行政・公的機関
-    if (claim.startsWith('【') && claim.includes('】')) {
-        const match = claim.match(/【(.*?)】/);
-        const tag = match ? match[1] : '公的機関';
-        return {
-            isOfficial: true,
-            sourceName: `${tag}（公的公表データベース）`,
-            sourceCategory: '行政処分・確定公表記録'
-        };
-    }
-
+    // 7. その他の行政・公的機関（DBフラグまたは .go.jp URL で確定判定）
     if (urls.some(u => typeof u === 'string' && u.includes('.go.jp'))) {
         return {
             isOfficial: true,
             sourceName: '政府・関係省庁公的データ',
             sourceCategory: '公的行政処分公表'
+        };
+    }
+
+    if (item.is_official === true) {
+        const match = claim.match(/^【(.*?)】/);
+        const tag = match ? match[1] : '公的機関';
+        return {
+            isOfficial: true,
+            sourceName: `${tag}（公的公表データベース）`,
+            sourceCategory: '行政処分・確定公表記録'
         };
     }
 
@@ -273,6 +284,30 @@ export function normalizeCompanySearchText(text?: string | null): string {
         .replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
         .replace(/[\s　・･]/g, '')
         .replace(/[-－ー―−]/g, '-')
+        .toLowerCase();
+}
+
+/**
+ * 企業名・検索クエリから法人格（株式会社・有限会社・（株）等）と空白・記号を除いたコア名称を抽出する
+ */
+export function extractCompanyCoreName(rawQuery?: string | null): string {
+    if (!rawQuery || typeof rawQuery !== 'string') return '';
+    return rawQuery
+        .trim()
+        .replace(/株式会社|[（\(]株[）\)]|㈱|株式/g, '')
+        .replace(/有限会社|[（\(]有[）\)]|㈲|有限/g, '')
+        .replace(/合同会社|[（\(]同[）\)]|合同/g, '')
+        .replace(/合資会社|[（\(]資[）\)]|合資/g, '')
+        .replace(/合名会社|[（\(]名[）\)]|合名/g, '')
+        .replace(/医療法人(?:社団|財団)?|[（\(]医[）\)]/g, '')
+        .replace(/一般社団法人|公益社団法人|[（\(]一社[）\)]|[（\(]公社[）\)]/g, '')
+        .replace(/一般財団法人|公益財団法人|[（\(]一財[）\)]|[（\(]公財[）\)]/g, '')
+        .replace(/社会福祉法人|[（\(]福[）\)]/g, '')
+        .replace(/特定非営利活動法人|NPO法人|ＮＰＯ法人/g, '')
+        .replace(/協同組合|協業組合|企業組合/g, '')
+        .replace(/会社/g, '')
+        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+        .replace(/[\s　・･.,()（）\-－ー―−_%'"\\]/g, '')
         .toLowerCase();
 }
 
@@ -442,6 +477,7 @@ export function classifyCompanyIndustry(item?: {
  * （民間加盟企業による直接登録データは常に表示対象とし、公的データは対象3業種のみ表示）
  */
 export function isTargetCreditIndustry(item?: {
+    is_official?: boolean | null;
     company_name?: string | null;
     counterparty_claim?: string | null;
     admin_notes?: string | null;

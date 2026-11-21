@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAdmin } from "@/components/RequireAdmin";
 import { ArrowLeft, AlertCircle } from "lucide-react";
+import { translateErrorMessage } from "@/lib/errorMessage";
 
 export default function NewCompanyPage() {
     const router = useRouter();
@@ -30,33 +31,34 @@ export default function NewCompanyPage() {
         }
 
         try {
-            // まず新カラム (corporate_number, plan_type) を含めて保存を試みる
-            const payload: any = {
-                name: name.trim(),
-                corporate_number: cleanCorpNum || null,
-                plan_type: planType,
-                is_main: isMain
-            };
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error("認証セッションが見つかりません。再度ログインしてください。");
+            }
 
-            let { error: insertError } = await supabase
-                .from("companies")
-                .insert([payload]);
+            const res = await fetch("/api/admin/companies", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    name: name.trim(),
+                    corporateNumber: cleanCorpNum,
+                    planType,
+                    isMain
+                })
+            });
 
-            // もしカラムがまだマイグレーションされていない場合のフォールバック
-            if (insertError && (insertError.message.includes("corporate_number") || insertError.message.includes("plan_type"))) {
-                console.warn("Falling back to basic company schema:", insertError.message);
-                const { error: fallbackError } = await supabase
-                    .from("companies")
-                    .insert([{ name: name.trim(), is_main: isMain }]);
-                if (fallbackError) throw fallbackError;
-            } else if (insertError) {
-                throw insertError;
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || "会社の登録に失敗しました。");
             }
 
             router.push("/admin/companies");
             router.refresh();
-        } catch (err: any) {
-            setError(err.message || "登録に失敗しました");
+        } catch (err: unknown) {
+            setError(translateErrorMessage(err, "登録に失敗しました。"));
         } finally {
             setLoading(false);
         }
@@ -112,7 +114,11 @@ export default function NewCompanyPage() {
                                     required
                                     maxLength={13}
                                     value={corporateNumber}
-                                    onChange={(e) => setCorporateNumber(e.target.value.replace(/[^0-9]/g, ""))}
+                                    onChange={(e) => setCorporateNumber(
+                                        e.target.value
+                                            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+                                            .replace(/[^0-9]/g, "")
+                                    )}
                                     className="input-field font-mono"
                                     placeholder="例: 1234567890123"
                                 />

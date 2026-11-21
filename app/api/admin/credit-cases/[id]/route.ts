@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { sendCaseReviewNotification } from '@/lib/notificationService';
+import { NextResponse } from "next/server";
+import { authenticateApiRequest } from "@/lib/apiAuth";
+import { sendCaseReviewNotification } from "@/lib/notificationService";
+import { isValidCalendarDate } from "@/lib/dateFormat";
 
 // PATCH: 管理者による審査（承認 / 却下）および登録内容の直接編集（誤字脱字修正用）
 export async function PATCH(
@@ -8,40 +9,11 @@ export async function PATCH(
     context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const auth = await authenticateApiRequest(request, { requireAdmin: true });
+        if (!auth.ok) return auth.response;
+
+        const { supabaseAdmin } = auth;
         const { id } = await context.params;
-
-        const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: '認証情報がありません' }, { status: 401 });
-        }
-        const token = authHeader.replace('Bearer ', '');
-
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-        const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
-        });
-
-        const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-        if (userError || !user) {
-            return NextResponse.json({ error: 'ユーザー情報を取得できませんでした' }, { status: 401 });
-        }
-
-        const supabaseAdmin = supabaseServiceRoleKey
-            ? createClient(supabaseUrl, supabaseServiceRoleKey)
-            : supabaseUser;
-
-        const { data: appUser } = await supabaseAdmin
-            .from('app_users')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
-        if (appUser?.role !== 'admin') {
-            return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 });
-        }
 
         const body = await request.json();
         const {
@@ -62,57 +34,110 @@ export async function PATCH(
         };
 
         if (status !== undefined) {
-            if (!['approved', 'rejected', 'pending'].includes(status)) {
-                return NextResponse.json({ error: 'ステータスが不正です' }, { status: 400 });
+            if (!["approved", "rejected", "pending"].includes(status)) {
+                return NextResponse.json({ error: "ステータスが不正です。" }, { status: 400 });
             }
-            if (status === 'rejected' && !adminNotes?.trim()) {
-                return NextResponse.json({ error: '却下理由を入力してください' }, { status: 400 });
+            if (status === "rejected" && (typeof adminNotes !== "string" || !adminNotes.trim())) {
+                return NextResponse.json({ error: "却下理由を入力してください。" }, { status: 400 });
             }
             updatePayload.status = status;
-            updatePayload.admin_notes = adminNotes || null;
-        } else if (adminNotes !== undefined) {
-            updatePayload.admin_notes = adminNotes || null;
         }
 
-        if (company_name !== undefined) updatePayload.company_name = company_name.trim();
-        if (corporate_number !== undefined) updatePayload.corporate_number = corporate_number?.trim() || null;
-        if (location !== undefined) updatePayload.location = location?.trim() || null;
-        if (invoice_date !== undefined) updatePayload.invoice_date = invoice_date || null;
-        if (amount !== undefined) updatePayload.amount = Number(amount) || 0;
-        if (due_date !== undefined) updatePayload.due_date = due_date;
+        if (adminNotes !== undefined) {
+            updatePayload.admin_notes = typeof adminNotes === "string" ? adminNotes.trim() || null : null;
+        }
+
+        if (company_name !== undefined) {
+            if (typeof company_name !== "string" || !company_name.trim()) {
+                return NextResponse.json({ error: "対象企業名は必須です。" }, { status: 400 });
+            }
+            updatePayload.company_name = company_name.trim();
+        }
+        // 既存レコードの存在・現ステータスを確認（存在しないIDの404返却＆二重通知防止）
+        const { data: existingCase, error: existingErr } = await supabaseAdmin
+            .from("credit_cases")
+            .select("id, status")
+            .eq("id", id)
+            .maybeSingle();
+
+        if (existingErr || !existingCase) {
+            return NextResponse.json({ error: "対象データが見つかりません。" }, { status: 404 });
+        }
+
+        const alreadySameStatus = status !== undefined && existingCase.status === status;
+
+        if (corporate_number !== undefined) {
+            const rawCorp = typeof corporate_number === "string"
+                ? corporate_number.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0)).trim()
+                : "";
+            const cleanCorp = rawCorp.replace(/[^0-9]/g, "");
+            if (rawCorp && cleanCorp.length !== 13) {
+                return NextResponse.json({ error: "法人番号は13桁の半角数字で入力してください。" }, { status: 400 });
+            }
+            updatePayload.corporate_number = cleanCorp || null;
+        }
+        if (location !== undefined) {
+            updatePayload.location = typeof location === "string" ? location.trim() || null : null;
+        }
+        if (invoice_date !== undefined) {
+            const trimmed = typeof invoice_date === "string" ? invoice_date.trim() : "";
+            if (trimmed && !isValidCalendarDate(trimmed)) {
+                return NextResponse.json({ error: "請求日の形式が正しくありません。" }, { status: 400 });
+            }
+            updatePayload.invoice_date = trimmed || null;
+        }
+        if (amount !== undefined) {
+            const parsedAmount = Number(amount);
+            if (!Number.isFinite(parsedAmount) || parsedAmount < 0 || parsedAmount > 999999999999) {
+                return NextResponse.json({ error: "金額は0円〜9,999億円の範囲で正しく入力してください。" }, { status: 400 });
+            }
+            updatePayload.amount = Math.floor(parsedAmount);
+        }
+        if (due_date !== undefined) {
+            const trimmed = typeof due_date === "string" ? due_date.trim() : "";
+            if (trimmed && !isValidCalendarDate(trimmed)) {
+                return NextResponse.json({ error: "支払期日の形式が正しくありません。" }, { status: 400 });
+            }
+            updatePayload.due_date = trimmed || null;
+        }
         if (business_status !== undefined) updatePayload.business_status = business_status;
-        if (counterparty_claim !== undefined) updatePayload.counterparty_claim = counterparty_claim?.trim() || null;
+        if (counterparty_claim !== undefined) {
+            updatePayload.counterparty_claim = typeof counterparty_claim === "string" ? counterparty_claim.trim() || null : null;
+        }
 
         const { data: updatedCase, error } = await supabaseAdmin
-            .from('credit_cases')
+            .from("credit_cases")
             .update(updatePayload)
-            .eq('id', id)
+            .eq("id", id)
             .select()
-            .single();
+            .maybeSingle();
 
         if (error) {
-            return NextResponse.json({ error: error.message }, { status: 500 });
+            console.error("Admin credit case PATCH DB error:", error);
+            return NextResponse.json({ error: "案件情報の更新に失敗しました。" }, { status: 500 });
+        }
+        if (!updatedCase) {
+            return NextResponse.json({ error: "対象データが見つかりません。" }, { status: 404 });
         }
 
-        // 申請者企業へ通知メールを送信 (承認または却下の場合)
-        if (status === 'approved' || status === 'rejected') {
+        // 申請者企業へ通知メールを送信 (承認または却下の場合・同一ステータス再実行時の二重送信を防止)
+        if ((status === "approved" || status === "rejected") && !alreadySameStatus) {
             try {
                 await sendCaseReviewNotification({
-                    type: 'credit',
+                    type: "credit",
                     status,
                     targetName: updatedCase.company_name,
-                    reason: adminNotes || undefined,
+                    reason: typeof adminNotes === "string" ? adminNotes.trim() || undefined : undefined,
                     registeredCompanyId: updatedCase.registered_by_company_id,
                 });
             } catch (notifErr) {
-                console.error('Failed to send credit review notification:', notifErr);
+                console.error("Failed to send credit review notification:", notifErr);
             }
         }
 
         return NextResponse.json({ success: true, case: updatedCase });
-
-    } catch (e: any) {
-        console.error('Admin credit case review error:', e);
-        return NextResponse.json({ error: e.message || 'Server error' }, { status: 500 });
+    } catch (e) {
+        console.error("Admin credit case review error:", e);
+        return NextResponse.json({ error: "サーバーエラーが発生しました。" }, { status: 500 });
     }
 }

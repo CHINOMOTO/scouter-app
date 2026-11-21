@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createMailTransporter, DEFAULT_FROM_ADDRESS } from "@/lib/mailTransporter";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 const PLAN_LABELS: Record<string, string> = {
   full: "FULLプラン（MIERIS WORK ＋ MIERIS CREDIT / 月額30,000円）",
@@ -15,14 +16,42 @@ const sanitizeSingleLine = (val: unknown, maxLen: number): string => {
 
 export async function POST(request: Request) {
   try {
+    // 公開フォームへのスパム送信・自動返信メール爆撃対策（IP単位レート制限）
+    const clientIp = getClientIp(request);
+    const rate = checkRateLimit({
+      key: `signup:${clientIp}`,
+      limit: 5,
+      windowMs: 10 * 60 * 1000, // 10分あたり5回まで
+    });
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: "短時間に送信が集中しています。しばらく時間をおいてから再度お試しください。" },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rate.retryAfterSec) },
+        }
+      );
+    }
+
     const body = await request.json();
+
+    // ボット対策ハニーポット（人間は入力できない隠しフィールドに値があれば無害に受理扱い）
+    if (typeof body?.website === "string" && body.website.trim().length > 0) {
+      return NextResponse.json({ success: true });
+    }
 
     const companyName = sanitizeSingleLine(body?.companyName, 120);
     const displayName = sanitizeSingleLine(body?.displayName, 80);
     const email = sanitizeSingleLine(body?.email, 160);
-    const phoneNumber = sanitizeSingleLine(body?.phoneNumber, 30);
+    const rawPhoneNumber = sanitizeSingleLine(body?.phoneNumber, 30);
+    const phoneNumber = rawPhoneNumber
+      .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+      .replace(/[ー－―‐]/g, "-");
+    const phoneDigits = phoneNumber.replace(/[^0-9]/g, "");
     const rawCorpNum = sanitizeSingleLine(body?.corporateNumber, 30);
-    const cleanCorpNum = rawCorpNum.replace(/[^0-9]/g, "");
+    const cleanCorpNum = rawCorpNum
+      .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+      .replace(/[^0-9]/g, "");
     const planType = ["full", "employment", "credit"].includes(body?.planType)
       ? (body.planType as "full" | "employment" | "credit")
       : "full";
@@ -34,8 +63,8 @@ export async function POST(request: Request) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "正しいメールアドレス形式で入力してください。" }, { status: 400 });
     }
-    if (!/^[0-9-]+$/.test(phoneNumber)) {
-      return NextResponse.json({ error: "電話番号は半角数字とハイフンのみで入力してください。" }, { status: 400 });
+    if (!/^[0-9-]+$/.test(phoneNumber) || phoneDigits.length < 10 || phoneDigits.length > 11) {
+      return NextResponse.json({ error: "電話番号は10〜11桁の半角数字（ハイフン可）で正しく入力してください。" }, { status: 400 });
     }
     if (cleanCorpNum.length !== 13) {
       return NextResponse.json({ error: "法人番号（13桁の半角数字）を必ず入力してください。" }, { status: 400 });
@@ -83,7 +112,7 @@ ${notes || "なし"}`;
     const adminUserId = process.env.LINE_ADMIN_USER_ID;
     if (lineToken && adminUserId) {
       const targetIds = adminUserId.split(",").map((id) => id.trim()).filter(Boolean);
-      const lineText = `【MIERIS システム通知】\n\n新規アカウントの登録申請がありました。\n\n氏名: ${displayName}（希望プラン: ${planType}）\n会社: ${companyName}\n法人番号: ${cleanCorpNum}\nEmail: ${email} / TEL: ${phoneNumber}\n\n管理画面にログインして承認・却下を行ってください。`;
+      const lineText = `【MIERIS システム通知】\n\n新規アカウントの登録申請がありました。\n\n氏名: ${displayName}\n希望プラン: ${chosenPlan}\n会社: ${companyName}\n法人番号: ${cleanCorpNum}\nEmail: ${email} / TEL: ${phoneNumber}\n\n管理画面にログインして承認・却下を行ってください。`;
       await Promise.allSettled(
         targetIds.map((targetId) =>
           fetch("https://api.line.me/v2/bot/message/push", {
@@ -103,6 +132,7 @@ ${notes || "なし"}`;
 
     // 2. 申込者へ自動返信メール送信（DB保存成功後のみ）
     try {
+      const appBaseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.m-m-m-mieris0610.com").replace(/\/+$/, "");
       const transporter = createMailTransporter();
       if (transporter) {
         const subject = "【MIERIS】利用お申し込みを受け付けました";
@@ -138,7 +168,7 @@ ${displayName} 様
 〒103-0023 東京都中央区日本橋本町4-12-17 ヨネヅビル5F
 TEL: 080-5584-6715（平日 10:00〜18:00）
 Mail: mieris0610@uiken.jp
-Web: https://mieris.jp
+Web: ${appBaseUrl}/
 ──────────────────────────────`;
 
         await transporter.sendMail({

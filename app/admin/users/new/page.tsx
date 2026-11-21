@@ -29,7 +29,7 @@ type Company = {
     plan_type?: "employment" | "credit" | "full" | null;
 };
 
-const SITE_URL = "https://www.m-m-m-mieris0610.com";
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://www.m-m-m-mieris0610.com").replace(/\/+$/, "");
 
 const planLabels: Record<string, string> = {
     full: "FULLプラン",
@@ -69,35 +69,34 @@ export default function NewUserPage() {
     const [sendingInvite, setSendingInvite] = useState(false);
     const [inviteSent, setInviteSent] = useState(false);
     const [inviteError, setInviteError] = useState<string | null>(null);
-    const [isMobile, setIsMobile] = useState(false);
-
-    useEffect(() => {
-        const checkMobile = () => {
-            const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-            const mobileUa = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-            const mobileWidth = typeof window !== "undefined" && window.innerWidth <= 768;
-            setIsMobile(mobileUa || mobileWidth);
-        };
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-        return () => window.removeEventListener("resize", checkMobile);
-    }, []);
 
     useEffect(() => {
         const fetchCompanies = async () => {
-            const { data, error } = await supabase
-                .from("companies")
-                .select("id, name, corporate_number, plan_type")
-                .order("name", { ascending: true });
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) return;
 
-            if (!error && data) {
-                setCompanies(data as any);
-                if (data.length > 0) {
-                    setSelectedCompanyId(data[0].id);
-                    setAllowedPlan((data[0] as any).plan_type || "full");
+                const res = await fetch("/api/admin/companies?sort=name", {
+                    headers: {
+                        "Authorization": `Bearer ${session.access_token}`
+                    }
+                });
+                const data = await res.json();
+                if (res.ok && Array.isArray(data.companies)) {
+                    setCompanies(data.companies);
+                    if (data.companies.length > 0) {
+                        setSelectedCompanyId(data.companies[0].id);
+                        setAllowedPlan(data.companies[0].plan_type || "full");
+                    }
+                } else {
+                    setError(data.error || "所属会社一覧の取得に失敗しました。");
                 }
+            } catch (err) {
+                console.error("fetchCompanies error:", err);
+                setError("所属会社一覧の取得中にエラーが発生しました。");
+            } finally {
+                setLoadingCompanies(false);
             }
-            setLoadingCompanies(false);
         };
         fetchCompanies();
         generateRandomPassword();
@@ -113,9 +112,18 @@ export default function NewUserPage() {
 
     const generateRandomPassword = () => {
         const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!#$@";
+        const length = 12;
+        const randomValues = new Uint32Array(length);
+        if (typeof window !== "undefined" && window.crypto?.getRandomValues) {
+            window.crypto.getRandomValues(randomValues);
+        } else {
+            for (let i = 0; i < length; i++) {
+                randomValues[i] = Math.floor(Math.random() * 0xffffffff);
+            }
+        }
         let newPass = "";
-        for (let i = 0; i < 10; i++) {
-            newPass += chars.charAt(Math.floor(Math.random() * chars.length));
+        for (let i = 0; i < length; i++) {
+            newPass += chars.charAt(randomValues[i] % chars.length);
         }
         setPassword(newPass);
     };
@@ -141,7 +149,8 @@ ${name} 様
 ※初回ログイン後、アカウント設定よりパスワードの変更をお願いいたします。
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【MIERIS 運営事務局】
-お問い合わせ: ${SITE_URL}/contact
+お問い合わせメール: mieris0610@uiken.jp
+TEL: 080-5584-6715（平日 10:00〜18:00）
 公式サイト: ${SITE_URL}/`;
     };
 
@@ -201,9 +210,9 @@ ${name} 様
                 })
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) {
-                throw new Error(data.error || "アカウント作成に失敗しました");
+                throw new Error(data.error || "アカウント作成に失敗しました。");
             }
 
             setShowConfirmModal(false);
@@ -214,18 +223,18 @@ ${name} 様
                 pass: password,
                 name: displayName.trim(),
                 companyName: comp?.name || "登録会社",
-                plan: allowedPlan
+                plan: data.user?.allowedPlan || allowedPlan
             });
 
-        } catch (err: any) {
-            setError(translateErrorMessage(err) || "アカウント作成エラー");
+        } catch (err: unknown) {
+            setError(translateErrorMessage(err, "アカウント作成中にエラーが発生しました。"));
             setShowConfirmModal(false);
         } finally {
             setSubmitting(false);
         }
     };
 
-    const copyCredentials = () => {
+    const copyCredentials = async () => {
         if (!createdUser) return;
         const text = emailBody || buildEmailBody(
             createdUser.email, 
@@ -234,9 +243,17 @@ ${name} 様
             createdUser.companyName, 
             createdUser.plan
         );
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 3000);
+        try {
+            if (!navigator.clipboard?.writeText) {
+                throw new Error("clipboard_unavailable");
+            }
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+            setInviteError(null);
+            setTimeout(() => setCopied(false), 3000);
+        } catch {
+            setInviteError("クリップボードへのコピーに失敗しました。ブラウザの権限設定をご確認いただくか、メール作成ボタンをご利用ください。");
+        }
     };
 
     const handleSendInviteEmail = async () => {
@@ -270,14 +287,14 @@ ${name} 様
                 })
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) {
-                throw new Error(data.error || "メール送信に失敗しました");
+                throw new Error(data.error || "メール送信に失敗しました。");
             }
 
             setInviteSent(true);
-        } catch (err: any) {
-            setInviteError(translateErrorMessage(err) || "メール送信に失敗しました");
+        } catch (err: unknown) {
+            setInviteError(translateErrorMessage(err, { fallback: "メール送信に失敗しました。", includeAdminSmtpHint: true }));
         } finally {
             setSendingInvite(false);
         }
@@ -309,7 +326,7 @@ ${name} 様
             createdUser.companyName, 
             createdUser.plan
         ));
-        return `mailto:${createdUser.email}?subject=${subject}&body=${body}`;
+        return `mailto:${encodeURIComponent(createdUser.email)}?subject=${subject}&body=${body}`;
     };
 
     const compSelected = companies.find(c => c.id === selectedCompanyId);
@@ -421,54 +438,78 @@ ${name} 様
                                 />
                             </div>
 
-                            {/* プラン選択 */}
+                            {/* プラン（所属会社の契約プランを自動継承） */}
                             <div className="space-y-2 pt-1">
-                                <label className="text-xs font-bold text-slate-700 block">
-                                    プラン <span className="text-red-500">*</span>
-                                </label>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                                    <label className={`p-3 rounded-xl border cursor-pointer transition-all ${allowedPlan === 'full' ? 'border-slate-900 bg-slate-50 shadow-xs' : 'border-slate-200 hover:border-slate-300'}`}>
-                                        <input
-                                            type="radio"
-                                            name="allowedPlan"
-                                            value="full"
-                                            checked={allowedPlan === 'full'}
-                                            onChange={() => setAllowedPlan('full')}
-                                            className="sr-only"
-                                        />
-                                        <div className="font-bold text-slate-900 text-xs">FULLプラン</div>
-                                        <div className="text-[11px] text-blue-600 font-semibold mt-0.5">30,000円/月</div>
-                                        <div className="text-[10px] text-slate-500 mt-1">WORK ＋ CREDIT</div>
+                                <div className="flex items-center justify-between flex-wrap gap-1">
+                                    <label className="text-xs font-bold text-slate-700 block">
+                                        適用プラン <span className="text-red-500">*</span>
                                     </label>
-
-                                    <label className={`p-3 rounded-xl border cursor-pointer transition-all ${allowedPlan === 'employment' ? 'border-slate-900 bg-slate-50 shadow-xs' : 'border-slate-200 hover:border-slate-300'}`}>
-                                        <input
-                                            type="radio"
-                                            name="allowedPlan"
-                                            value="employment"
-                                            checked={allowedPlan === 'employment'}
-                                            onChange={() => setAllowedPlan('employment')}
-                                            className="sr-only"
-                                        />
-                                        <div className="font-bold text-slate-900 text-xs">MIERIS WORK</div>
-                                        <div className="text-[11px] text-slate-700 font-semibold mt-0.5">18,000円/月</div>
-                                        <div className="text-[10px] text-slate-500 mt-1">就業トラブル対策</div>
-                                    </label>
-
-                                    <label className={`p-3 rounded-xl border cursor-pointer transition-all ${allowedPlan === 'credit' ? 'border-slate-900 bg-slate-50 shadow-xs' : 'border-slate-200 hover:border-slate-300'}`}>
-                                        <input
-                                            type="radio"
-                                            name="allowedPlan"
-                                            value="credit"
-                                            checked={allowedPlan === 'credit'}
-                                            onChange={() => setAllowedPlan('credit')}
-                                            className="sr-only"
-                                        />
-                                        <div className="font-bold text-slate-900 text-xs">MIERIS CREDIT</div>
-                                        <div className="text-[11px] text-slate-700 font-semibold mt-0.5">18,000円/月</div>
-                                        <div className="text-[10px] text-slate-500 mt-1">未払い企業情報</div>
-                                    </label>
+                                    {compSelected?.plan_type && (
+                                        <span className="text-[10px] text-slate-500 font-medium">
+                                            ※所属会社の契約プランが自動適用されます（変更は「利用会社管理」から実施）
+                                        </span>
+                                    )}
                                 </div>
+                                {compSelected?.plan_type ? (
+                                    <div className="p-3.5 rounded-xl border border-slate-300 bg-slate-50 flex items-center justify-between">
+                                        <div>
+                                            <div className="font-bold text-slate-900 text-xs">{planLabels[compSelected.plan_type] || "FULLプラン"}</div>
+                                            <div className="text-[11px] text-slate-500 mt-0.5">
+                                                所属会社「{compSelected.name}」の契約プランを自動継承します
+                                            </div>
+                                        </div>
+                                        <Link
+                                            href={`/admin/companies/${compSelected.id}`}
+                                            className="text-[11px] text-blue-600 hover:underline font-bold shrink-0"
+                                        >
+                                            会社プラン変更
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                        <label className={`p-3 rounded-xl border cursor-pointer transition-all ${allowedPlan === 'full' ? 'border-slate-900 bg-slate-50 shadow-xs' : 'border-slate-200 hover:border-slate-300'}`}>
+                                            <input
+                                                type="radio"
+                                                name="allowedPlan"
+                                                value="full"
+                                                checked={allowedPlan === 'full'}
+                                                onChange={() => setAllowedPlan('full')}
+                                                className="sr-only"
+                                            />
+                                            <div className="font-bold text-slate-900 text-xs">FULLプラン</div>
+                                            <div className="text-[11px] text-blue-600 font-semibold mt-0.5">30,000円/月</div>
+                                            <div className="text-[10px] text-slate-500 mt-1">WORK ＋ CREDIT</div>
+                                        </label>
+
+                                        <label className={`p-3 rounded-xl border cursor-pointer transition-all ${allowedPlan === 'employment' ? 'border-slate-900 bg-slate-50 shadow-xs' : 'border-slate-200 hover:border-slate-300'}`}>
+                                            <input
+                                                type="radio"
+                                                name="allowedPlan"
+                                                value="employment"
+                                                checked={allowedPlan === 'employment'}
+                                                onChange={() => setAllowedPlan('employment')}
+                                                className="sr-only"
+                                            />
+                                            <div className="font-bold text-slate-900 text-xs">MIERIS WORK</div>
+                                            <div className="text-[11px] text-slate-700 font-semibold mt-0.5">18,000円/月</div>
+                                            <div className="text-[10px] text-slate-500 mt-1">就業トラブル対策</div>
+                                        </label>
+
+                                        <label className={`p-3 rounded-xl border cursor-pointer transition-all ${allowedPlan === 'credit' ? 'border-slate-900 bg-slate-50 shadow-xs' : 'border-slate-200 hover:border-slate-300'}`}>
+                                            <input
+                                                type="radio"
+                                                name="allowedPlan"
+                                                value="credit"
+                                                checked={allowedPlan === 'credit'}
+                                                onChange={() => setAllowedPlan('credit')}
+                                                className="sr-only"
+                                            />
+                                            <div className="font-bold text-slate-900 text-xs">MIERIS CREDIT</div>
+                                            <div className="text-[11px] text-slate-700 font-semibold mt-0.5">18,000円/月</div>
+                                            <div className="text-[10px] text-slate-500 mt-1">未払い企業情報</div>
+                                        </label>
+                                    </div>
+                                )}
                             </div>
 
                             {/* 管理者権限 */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -9,6 +9,8 @@ import { Toast, ToastMessage } from "@/components/Toast";
 import { usePlan } from "@/contexts/PlanContext";
 import { detectOfficialSource, getCleanOfficialSourceName, getSourceDisplayName, isCorporateEntityName } from "@/lib/officialSources";
 import { OfficialDataNotice } from "@/components/OfficialDataNotice";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { calculateOverdueDaysJST, formatDateJST } from "@/lib/dateFormat";
 import { 
     Search, 
     Plus, 
@@ -67,10 +69,15 @@ const renderRegistryBadge = (status?: string | null, closeCause?: string | null)
                 </span>
             );
         case "active":
-        default:
             return (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     <span>公的登記: 登記中（存続）</span>
+                </span>
+            );
+        default:
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-slate-50 text-slate-500 border border-slate-200">
+                    <span>公的登記: 未確認</span>
                 </span>
             );
     }
@@ -136,13 +143,14 @@ export default function CreditSearchPage() {
     const [lookupRegistryStatus, setLookupRegistryStatus] = useState<string | null>(null);
     const [lookupCloseDetails, setLookupCloseDetails] = useState<{ date?: string; cause?: string } | null>(null);
 
-    // インボイス照会結果（T番号/適格請求書発行事業者判定）
+    // インボイス照会結果（T番号/形式・法人実在チェック）
     const [invoiceInfo, setInvoiceInfo] = useState<{
         valid: boolean;
         invoice_number?: string;
         business_type_label?: string;
         checksum_verified?: boolean;
         verification_note?: string;
+        error?: string;
     } | null>(null);
 
     // gBizINFO 公的法人詳細プロファイル
@@ -161,49 +169,37 @@ export default function CreditSearchPage() {
     const [searchCandidates, setSearchCandidates] = useState<Array<{ corporate_number: string; name: string; location: string }>>([]);
     const [isSearchingGbiz, setIsSearchingGbiz] = useState(false);
     const [showSearchCandidates, setShowSearchCandidates] = useState(false);
+    const gbizDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const gbizAbortRef = useRef<AbortController | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (gbizDebounceRef.current) clearTimeout(gbizDebounceRef.current);
+            gbizAbortRef.current?.abort();
+        };
+    }, []);
 
     // プラン制限チェック用
     const [planRestricted, setPlanRestricted] = useState(false);
-    const { allowedPlan, isAdmin: isContextAdmin } = usePlan();
+    const { allowedPlan, isAdmin: isContextAdmin, loading: planLoading } = usePlan();
 
-    // リアルタイムプラン情報の同期（管理者がプラン変更した際に即時反映）
+    // リアルタイムプラン情報の同期（管理者がプラン変更した際に即時反映・自動再取得）
     useEffect(() => {
-        if (isContextAdmin) {
-            setPlanRestricted(false);
-        } else {
-            setPlanRestricted(allowedPlan === "employment");
+        if (planLoading) return;
+        const hasCreditAccess = isContextAdmin || allowedPlan === "full" || allowedPlan === "credit";
+        setPlanRestricted(!hasCreditAccess);
+
+        if (!hasCreditAccess) {
+            setLoading(false);
+            return;
         }
-    }, [allowedPlan, isContextAdmin]);
 
-    // 期日超過日数の計算
-    const calculateOverdueDays = (dueDateStr?: string | null) => {
-        if (!dueDateStr) return 0;
-        const due = new Date(dueDateStr).getTime();
-        const now = new Date().getTime();
-        const diff = Math.floor((now - due) / (1000 * 60 * 60 * 24));
-        return diff > 0 ? diff : 0;
-    };
-
-    // 初期化: プラン確認と統計サマリーの取得
-    useEffect(() => {
-        const init = async () => {
+        let active = true;
+        const loadSummary = async () => {
             setLoading(true);
             try {
                 const session = (await supabase.auth.getSession()).data.session;
                 if (!session) return;
-
-                // ユーザーのプラン権限をチェック
-                const { data: appUser } = await supabase
-                    .from("app_users")
-                    .select("allowed_plan, role")
-                    .eq("id", session.user.id)
-                    .single();
-
-                if (appUser && appUser.allowed_plan === "employment" && appUser.role !== "admin") {
-                    setPlanRestricted(true);
-                    setLoading(false);
-                    return;
-                }
 
                 // 統計サマリーのみ取得（件数集計用）
                 const res = await fetch("/api/credit-cases", {
@@ -212,50 +208,100 @@ export default function CreditSearchPage() {
                     }
                 });
 
+                if (!active) return;
+
+                if (res.status === 403) {
+                    const errData = await res.json().catch(() => ({}));
+                    if (errData.planRestricted) {
+                        setPlanRestricted(true);
+                        return;
+                    }
+                }
+
                 if (res.ok) {
                     const data = await res.json();
                     const fetchedCases: CreditCase[] = data.cases || [];
-                    
-                    let unpaid = 0;
-                    let resolved = 0;
 
-                    fetchedCases.forEach((c) => {
-                        const isOfficial = detectOfficialSource(c).isOfficial;
-                        if (!isOfficial) {
-                            if (c.payment_status === "unpaid") {
-                                unpaid++;
-                            } else if (c.payment_status === "resolved") {
-                                resolved++;
+                    if (
+                        data.stats &&
+                        typeof data.stats.unpaidCount === "number" &&
+                        typeof data.stats.resolvedCount === "number"
+                    ) {
+                        setTotalCases(
+                            typeof data.stats.totalListCount === "number"
+                                ? data.stats.totalListCount
+                                : fetchedCases.length
+                        );
+                        setUnpaidCount(data.stats.unpaidCount);
+                        setResolvedCount(data.stats.resolvedCount);
+                    } else {
+                        let unpaid = 0;
+                        let resolved = 0;
+
+                        fetchedCases.forEach((c) => {
+                            const isOfficial = detectOfficialSource(c).isOfficial;
+                            // 承認済み（公開中）の民間案件のみを未払い／解決済みに集計（自社審査中・却下の誤混入を防止）
+                            if (!isOfficial && c.status === "approved") {
+                                if (c.payment_status === "unpaid") {
+                                    unpaid++;
+                                } else if (c.payment_status === "resolved") {
+                                    resolved++;
+                                }
                             }
-                        }
-                    });
+                        });
 
-                    setTotalCases(fetchedCases.length);
-                    setUnpaidCount(unpaid);
-                    setResolvedCount(resolved);
+                        setTotalCases(fetchedCases.length);
+                        setUnpaidCount(unpaid);
+                        setResolvedCount(resolved);
+                    }
                 }
             } catch (e) {
                 console.error("Credit cases init error:", e);
             } finally {
-                setLoading(false);
+                if (active) setLoading(false);
             }
         };
 
-        init();
-    }, []);
+        loadSummary();
+        return () => {
+            active = false;
+        };
+    }, [allowedPlan, isContextAdmin, planLoading]);
 
-    // 社名入力時のサジェスト検索
-    const handleSearchQueryChange = async (val: string) => {
+    // 期日超過日数の計算（JSTカレンダー日付基準）
+    const calculateOverdueDays = (dueDateStr?: string | null) => calculateOverdueDaysJST(dueDateStr);
+
+    // 社名入力時のサジェスト検索（300msデバウンス＋AbortController）
+    const handleSearchQueryChange = (val: string) => {
         setSearchQuery(val);
-        if (val.trim().length >= 2) {
-            setIsSearchingGbiz(true);
+        if (gbizDebounceRef.current) clearTimeout(gbizDebounceRef.current);
+        gbizAbortRef.current?.abort();
+
+        const trimmed = val.trim();
+        if (trimmed.length < 2) {
+            setIsSearchingGbiz(false);
+            setSearchCandidates([]);
+            setShowSearchCandidates(false);
+            return;
+        }
+
+        setIsSearchingGbiz(true);
+        gbizDebounceRef.current = setTimeout(async () => {
+            const controller = new AbortController();
+            gbizAbortRef.current = controller;
             try {
                 const { data: { session } } = await supabase.auth.getSession();
-                const res = await fetch(`/api/credit/corporate-lookup?q=${encodeURIComponent(val.trim())}`, {
-                    headers: session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : undefined
+                if (controller.signal.aborted) return;
+
+                const res = await fetch(`/api/credit/corporate-lookup?q=${encodeURIComponent(trimmed)}`, {
+                    headers: session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : undefined,
+                    signal: controller.signal
                 });
+                if (controller.signal.aborted) return;
+
                 if (res.ok) {
                     const data = await res.json();
+                    if (controller.signal.aborted) return;
                     if (data.candidates && data.candidates.length > 0) {
                         setSearchCandidates(data.candidates);
                         setShowSearchCandidates(true);
@@ -264,18 +310,21 @@ export default function CreditSearchPage() {
                         setShowSearchCandidates(false);
                     }
                 }
-            } catch (e) {
+            } catch (e: unknown) {
+                if (e instanceof Error && e.name === "AbortError") return;
                 console.warn("gBizINFO search error:", e);
             } finally {
-                setIsSearchingGbiz(false);
+                if (!controller.signal.aborted) {
+                    setIsSearchingGbiz(false);
+                }
             }
-        } else {
-            setSearchCandidates([]);
-            setShowSearchCandidates(false);
-        }
+        }, 300);
     };
 
     const selectSearchCandidate = (c: { corporate_number: string; name: string; location: string }) => {
+        if (gbizDebounceRef.current) clearTimeout(gbizDebounceRef.current);
+        gbizAbortRef.current?.abort();
+        setIsSearchingGbiz(false);
         setCorpFilter(c.corporate_number);
         setSearchQuery(c.name);
         setDiscoveredCompanyName(c.name);
@@ -315,6 +364,7 @@ export default function CreditSearchPage() {
         setSearching(true);
         setHasSearched(false);
         setCases([]);
+        setDiscoveredCompanyName("");
         setLookupRegistryStatus(null);
         setLookupCloseDetails(null);
         setGbizProfile(null);
@@ -351,19 +401,23 @@ export default function CreditSearchPage() {
             const fetchedCases: CreditCase[] = data.cases || [];
 
             setCases(fetchedCases);
-            setHasSearched(true);
             setSearchedCorp(normalizedCorp || "");
 
-            // 法人番号・インボイス番号がある場合は公的プロファイル・インボイス照会
+            // 法人番号・インボイス番号がある場合は公的プロファイル・インボイス照会の完了を待ってから結果を表示する
+            // （非同期レースにより閉鎖企業が一瞬「登記中」と誤表示されるのを防止）
             if (normalizedCorp) {
-                checkCorporateRegistry(normalizedCorp, fetchedCases);
-                checkInvoiceRegistry(normalizedCorp);
+                await Promise.all([
+                    checkCorporateRegistry(normalizedCorp, fetchedCases),
+                    checkInvoiceRegistry(normalizedCorp),
+                ]);
             } else if (fetchedCases.length > 0) {
                 // 社名検索で見つかった場合は先頭の社名をセット
                 setDiscoveredCompanyName(fetchedCases[0].company_name);
             } else {
                 setDiscoveredCompanyName(normalizedQuery);
             }
+
+            setHasSearched(true);
 
             // 照会監査ログの保存 (POST /api/audit)
             try {
@@ -382,15 +436,16 @@ export default function CreditSearchPage() {
                 console.error("Audit log error:", auditErr);
             }
 
-        } catch (err: any) {
-            setErrorMsg(err.message || "照会中にエラーが発生しました。");
-            setToast({ type: "error", text: err.message || "照会中にエラーが発生しました。" });
+        } catch (err: unknown) {
+            const msg = translateErrorMessage(err, "照会処理中にエラーが発生しました。時間をおいて再度お試しください。");
+            setErrorMsg(msg);
+            setToast({ type: "error", text: msg });
         } finally {
             setSearching(false);
         }
     };
 
-    // 国税庁インボイス登録番号の検証
+    // インボイス番号の形式・法人実在検証
     const checkInvoiceRegistry = async (corpNum: string) => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
@@ -407,6 +462,13 @@ export default function CreditSearchPage() {
                         checksum_verified: invData.checksum_verified,
                         verification_note: invData.verification_note
                     });
+                } else {
+                    setInvoiceInfo({
+                        valid: false,
+                        invoice_number: invData.invoice_number || `T${corpNum}`,
+                        checksum_verified: false,
+                        error: invData.error || "検査数字（チェックディジット）が国税庁アルゴリズムと一致しません。"
+                    });
                 }
             }
         } catch (e) {
@@ -417,6 +479,7 @@ export default function CreditSearchPage() {
     // 照会対象の国税庁登記ステータス確認
     const checkCorporateRegistry = async (corpNum: string, currentCases: CreditCase[]) => {
         try {
+            let resolvedName = "";
             // gBizINFO・公的登記lookupを呼び出して、企業プロファイルと登記ステータスを取得
             try {
                 const { data: { session } } = await supabase.auth.getSession();
@@ -427,6 +490,7 @@ export default function CreditSearchPage() {
                     const lookupData = await lookupRes.json();
                     if (lookupData.found) {
                         if (lookupData.name) {
+                            resolvedName = lookupData.name;
                             setDiscoveredCompanyName(lookupData.name);
                         }
                         if (lookupData.registry_status) {
@@ -457,11 +521,13 @@ export default function CreditSearchPage() {
                 console.error("Corporate lookup error:", lookupErr);
             }
 
-            // currentCasesから社名補完
+            // currentCasesから社名補完（前回検索の社名残留を防止）
             if (currentCases.length > 0 && currentCases[0].company_name) {
                 setDiscoveredCompanyName(currentCases[0].company_name);
-            } else if (searchQuery.trim() && !discoveredCompanyName) {
+            } else if (!resolvedName && searchQuery.trim()) {
                 setDiscoveredCompanyName(searchQuery.trim());
+            } else if (!resolvedName) {
+                setDiscoveredCompanyName("");
             }
         } catch (e) {
             console.error("Registry check error:", e);
@@ -502,7 +568,7 @@ export default function CreditSearchPage() {
                                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                                 <span>戻る</span>
                             </Link>
-                            {!planRestricted && (
+                            {!planLoading && !planRestricted && (
                                 <>
                                     <Link
                                         href="/credit/cases"
@@ -582,7 +648,7 @@ export default function CreditSearchPage() {
                                         <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-rose-600 font-mono tabular-nums">
                                             {unpaidCount}
                                         </span>
-                                        <span className="text-xs font-bold text-slate-500 ml-1">社</span>
+                                        <span className="text-xs font-bold text-slate-500 ml-1">件</span>
                                     </div>
                                     <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1">現在も代金未回収・支払拒絶が継続中</p>
                                 </div>
@@ -843,21 +909,29 @@ export default function CreditSearchPage() {
                                                     )}
                                                 </div>
                                                 {searchedCorp && (
-                                                    <div className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 mb-3">
-                                                        公的登記ステータス: 登記中（存続企業）
-                                                    </div>
+                                                    lookupRegistryStatus === "active" ? (
+                                                        <div className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 mb-3">
+                                                            公的登記ステータス: 登記中（存続企業）
+                                                        </div>
+                                                    ) : (
+                                                        <div className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 mb-3">
+                                                            公的登記ステータス: 未確認（国税庁・gBizINFOで該当法人未確認）
+                                                        </div>
+                                                    )
                                                 )}
                                                 <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed mb-4">
-                                                    データベース上に該当する未払い・支払遅延の記録は存在しません。安心してお取引をご検討いただけます。
+                                                    {searchedCorp && lookupRegistryStatus !== "active"
+                                                        ? "データベース上に未払い・支払遅延の記録はありませんが、入力された番号での法人登記情報が自動照合できませんでした。番号の誤りがないか国税庁公表サイトでもご確認ください。"
+                                                        : "データベース上に該当する未払い・支払遅延の記録は存在しません。安心してお取引をご検討いただけます。"}
                                                 </p>
 
-                                                {/* インボイス公的判定カード（国税庁 適格請求書発行事業者） */}
+                                                {/* インボイス形式・法人実在チェックカード */}
                                                 {invoiceInfo && invoiceInfo.valid && (
                                                     <div className="max-w-xl mx-auto my-3 p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-left">
                                                         <div className="flex items-center justify-between mb-1.5 pb-1.5 border-b border-emerald-200/60">
                                                             <div className="text-[11px] font-bold text-emerald-800 flex items-center gap-1.5">
                                                                 <BookmarkCheck className="w-4 h-4 text-emerald-600" />
-                                                                <span>国税庁 インボイス登録公表検証</span>
+                                                                <span>インボイス番号 形式・法人実在チェック</span>
                                                             </div>
                                                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
                                                                 {invoiceInfo.business_type_label}
@@ -865,7 +939,7 @@ export default function CreditSearchPage() {
                                                         </div>
                                                         <div className="flex flex-wrap items-center gap-3 text-xs">
                                                             <div>
-                                                                <span className="text-slate-500 text-[10px] block">登録番号</span>
+                                                                <span className="text-slate-500 text-[10px] block">照会番号</span>
                                                                 <span className="font-mono font-bold text-slate-900">{invoiceInfo.invoice_number}</span>
                                                             </div>
                                                             <div>
@@ -877,6 +951,17 @@ export default function CreditSearchPage() {
                                                         </div>
                                                         <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
                                                             {invoiceInfo.verification_note}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                                {invoiceInfo && !invoiceInfo.valid && (
+                                                    <div className="max-w-xl mx-auto my-3 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-left">
+                                                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-800 mb-1">
+                                                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                                                            <span>インボイス番号・法人番号チェック警告（{invoiceInfo.invoice_number}）</span>
+                                                        </div>
+                                                        <p className="text-[11px] text-amber-900 leading-relaxed">
+                                                            {invoiceInfo.error}
                                                         </p>
                                                     </div>
                                                 )}
@@ -1033,10 +1118,10 @@ export default function CreditSearchPage() {
                                                         <div className="bg-slate-50 p-3 sm:p-3.5 rounded-lg border border-slate-200/80 mb-3 space-y-1.5 text-xs">
                                                             <div className="flex justify-between items-center">
                                                                 <span className="text-slate-500 font-medium">
-                                                                    {sourceInfo.isOfficial ? (c.amount > 0 ? "公表不払額" : "処分区分") : "請求金額"}
+                                                                    {sourceInfo.isOfficial ? ((c.amount ?? 0) > 0 ? "公表不払額" : "処分区分") : "請求金額"}
                                                                 </span>
                                                                 <span className="text-slate-900 font-extrabold text-sm font-mono">
-                                                                    {sourceInfo.isOfficial && c.amount === 0 ? "行政処分・公認記録" : `¥${(c.amount ?? 0).toLocaleString()}`}
+                                                                    {sourceInfo.isOfficial && (!c.amount || c.amount <= 0) ? "行政処分・公認記録" : `¥${(c.amount ?? 0).toLocaleString()}`}
                                                                 </span>
                                                             </div>
                                                             {!sourceInfo.isOfficial && c.invoice_date && (
@@ -1047,7 +1132,7 @@ export default function CreditSearchPage() {
                                                             )}
                                                             <div className="flex justify-between items-center">
                                                                 <span className="text-slate-500 font-medium">{sourceInfo.isOfficial ? "公表日" : "当初支払期日"}</span>
-                                                                <span className="font-mono text-slate-800">{c.due_date}</span>
+                                                                <span className="font-mono text-slate-800">{c.due_date || "-"}</span>
                                                             </div>
                                                             <div className="flex justify-between items-center">
                                                                 <span className="text-slate-500 font-medium">{sourceInfo.isOfficial ? "公表機関" : "登録元"}</span>
@@ -1070,7 +1155,7 @@ export default function CreditSearchPage() {
                                                     </div>
 
                                                     <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-                                                        <span className="text-[11px] sm:text-xs">登録日: {new Date(c.created_at).toLocaleDateString()}</span>
+                                                        <span className="text-[11px] sm:text-xs">登録日: {formatDateJST(c.created_at)}</span>
                                                         <span className="text-blue-600 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
                                                             <span>事実詳細を確認</span>
                                                             <ArrowRight className="w-3.5 h-3.5" />

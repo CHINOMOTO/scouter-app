@@ -82,11 +82,11 @@ export async function authenticateApiRequest(
 
   const { data: appUser } = await supabaseAdmin
     .from("app_users")
-    .select("id, role, company_id, allowed_plan, is_approved")
+    .select("id, role, company_id, allowed_plan, is_approved, companies ( plan_type )")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (!appUser || appUser.is_approved === false) {
+  if (!appUser || appUser.is_approved !== true) {
     return {
       ok: false,
       response: NextResponse.json({ error: "承認されたアカウントが必要です" }, { status: 403 }),
@@ -94,7 +94,11 @@ export async function authenticateApiRequest(
   }
 
   const isAdmin = appUser.role === "admin";
-  const userPlan = appUser.allowed_plan || "full";
+  const companyPlan = (appUser.companies as any)?.plan_type || null;
+  const rawPlan = appUser.allowed_plan || companyPlan;
+  const userPlan = isAdmin
+    ? (rawPlan || "full")
+    : (rawPlan === "full" || rawPlan === "employment" || rawPlan === "credit" ? rawPlan : "none");
 
   if (options?.requireAdmin && !isAdmin) {
     return {
@@ -103,7 +107,7 @@ export async function authenticateApiRequest(
     };
   }
 
-  if (options?.requirePlan === "credit" && !isAdmin && userPlan === "employment") {
+  if (options?.requirePlan === "credit" && !isAdmin && !["full", "credit"].includes(userPlan)) {
     return {
       ok: false,
       response: NextResponse.json(
@@ -116,7 +120,7 @@ export async function authenticateApiRequest(
     };
   }
 
-  if (options?.requirePlan === "employment" && !isAdmin && userPlan === "credit") {
+  if (options?.requirePlan === "employment" && !isAdmin && !["full", "employment"].includes(userPlan)) {
     return {
       ok: false,
       response: NextResponse.json(
@@ -141,8 +145,33 @@ export async function authenticateApiRequest(
 }
 
 /**
- * PostgREST の .or() フィルタ構文を破壊する記号を除去するサニタイザー
+ * PostgREST の .or() フィルタ構文および SQL ILIKE ワイルドカード（%, _）を除去するサニタイザー
  */
 export function sanitizePostgrestFilterValue(value: string): string {
-  return value.replace(/[,()*%\\'"]/g, "").trim();
+  return value.replace(/[,()*%_\\'"]/g, "").trim();
+}
+
+/**
+ * 一般ユーザーが登録・添付できる自身の Storage エビデンスパスかを厳格検証する（IDOR・パストラバーサル・外部URL注入防止）
+ * 許可形式: "<userId>/<安全ファイル名>.<許可拡張子>"
+ */
+export function isValidUserEvidencePath(rawPath: string, userId: string): boolean {
+  if (typeof rawPath !== "string" || typeof userId !== "string" || !userId) return false;
+  const trimmed = rawPath.trim();
+  if (!trimmed || trimmed.length > 500) return false;
+  if (trimmed.includes("..") || trimmed.includes("\\") || /^https?:\/\//i.test(trimmed)) return false;
+  const escapedUid = userId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`^${escapedUid}/[A-Za-z0-9._-]+\\.(jpg|jpeg|png|gif|webp|pdf)$`, "i");
+  return pattern.test(trimmed);
+}
+
+/**
+ * 管理者による Storage パス検証（パストラバーサル・外部URL注入防止）
+ */
+export function isSafeStorageEvidencePath(rawPath: string): boolean {
+  if (typeof rawPath !== "string") return false;
+  const trimmed = rawPath.trim();
+  if (!trimmed || trimmed.length > 500) return false;
+  if (trimmed.includes("..") || trimmed.includes("\\") || /^https?:\/\//i.test(trimmed)) return false;
+  return /^[A-Za-z0-9_-]+\/[A-Za-z0-9._-]+\.(jpg|jpeg|png|gif|webp|pdf)$/i.test(trimmed);
 }

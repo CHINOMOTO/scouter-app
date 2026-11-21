@@ -18,56 +18,30 @@ export default function AdminDashboardPage() {
     useEffect(() => {
         const fetchCounts = async () => {
             setLoading(true);
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) return;
 
-            // 企業信用審査待ち件数
-            const creditQuery = supabase
-                .from("credit_cases")
-                .select("*", { count: "exact", head: true })
-                .eq("status", "pending");
+                const res = await fetch("/api/admin/stats", {
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
+                });
+                if (!res.ok) return;
+                const data = await res.json().catch(() => null);
+                if (!data) return;
 
-            // ケースの承認待ち件数
-            const casesQuery = supabase
-                .from("blacklist_cases")
-                .select("*", { count: "exact", head: true })
-                .eq("status", "pending");
-
-            // 登録ユーザー件数
-            const approvedUsersQuery = supabase
-                .from("app_users")
-                .select("*", { count: "exact", head: true });
-
-            // 会社の総数
-            const companiesQuery = supabase
-                .from("companies")
-                .select("*", { count: "exact", head: true });
-
-            // お問い合わせ未読件数
-            const inquiriesQuery = supabase
-                .from("contact_inquiries")
-                .select("*", { count: "exact", head: true })
-                .eq("status", "unread");
-
-            // 監査ログ件数
-            const auditQuery = supabase
-                .from("audit_logs")
-                .select("*", { count: "exact", head: true });
-
-            const [creditResult, casesResult, approvedUsersResult, companiesResult, inquiriesResult, auditResult] = await Promise.all([
-                creditQuery,
-                casesQuery,
-                approvedUsersQuery,
-                companiesQuery,
-                inquiriesQuery,
-                auditQuery
-            ]);
-
-            if (!creditResult.error) setPendingCreditCount(creditResult.count);
-            if (!casesResult.error) setPendingCount(casesResult.count);
-            if (!approvedUsersResult.error) setApprovedUserCount(approvedUsersResult.count);
-            if (!companiesResult.error) setCompanyCount(companiesResult.count);
-            if (!inquiriesResult.error) setInquiryCount(inquiriesResult.count);
-            if (!auditResult.error) setAuditCount(auditResult.count);
-            setLoading(false);
+                setPendingCreditCount(data.pendingCreditCount ?? 0);
+                setPendingCount(data.pendingCaseCount ?? 0);
+                setApprovedUserCount(data.userCount ?? 0);
+                setCompanyCount(data.companyCount ?? 0);
+                setInquiryCount(data.unreadInquiryCount ?? 0);
+                setAuditCount(data.auditCount ?? 0);
+            } catch (err) {
+                console.error("Admin stats fetch error:", err);
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchCounts();
@@ -158,7 +132,7 @@ export default function AdminDashboardPage() {
                                             <span className="text-xl sm:text-2xl text-slate-600 animate-pulse">...</span>
                                         ) : (
                                             <>
-                                                {pendingCount}
+                                                {pendingCount ?? 0}
                                                 <span className="text-sm sm:text-lg text-slate-500 font-normal ml-2 tracking-widest">
                                                     CASE
                                                 </span>

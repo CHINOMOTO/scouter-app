@@ -7,8 +7,8 @@ import { AlertTriangle } from "lucide-react";
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || "G-WLCD7WVF7C";
 
 export const metadata: Metadata = {
-  title: "MIERIS（ミエリス）- 採る前に、事実を知る 就業情報共有システム",
-  description: "雑工・荷揚げ・警備・運送 就業情報共有システム。就業実績を本人同意のもとで利用企業間に共有する仕組みです。",
+  title: "MIERIS（ミエリス）- 採る前・取引前に、事実を知る 就業・企業信用情報共有システム",
+  description: "就業トラブル防止（MIERIS WORK）および取引先信用・未払いリスク管理（MIERIS CREDIT）の情報共有システム。客観的事実を同意のもとで利用企業間に共有する仕組みです。",
   verification: {
     google: "kJHq52sj4BbDXhSpRrXqBMBoD_W1Cj23FoTxWXqwqyU",
   },

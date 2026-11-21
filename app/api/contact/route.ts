@@ -1,64 +1,68 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { authenticateApiRequest } from '@/lib/apiAuth';
+
+const ALLOWED_CATEGORIES = ['bug', 'feature', 'account', 'other'] as const;
+
+const CATEGORY_LABELS: Record<string, string> = {
+    bug: 'システム不具合の報告',
+    feature: '機能の追加・改善要望',
+    account: 'アカウントに関する相談',
+    other: 'その他',
+};
 
 export async function POST(request: Request) {
     try {
-        const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: '認証情報がありません' }, { status: 401 });
-        }
+        // 認証・承認チェック（未承認・利用停止ユーザーや未認証アクセスを遮断）
+        const auth = await authenticateApiRequest(request);
+        if (!auth.ok) return auth.response;
 
-        const token = authHeader.replace('Bearer ', '');
-
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-        const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
-        });
-
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError || !user) {
-            return NextResponse.json({ error: 'ユーザー情報を取得できませんでした' }, { status: 401 });
-        }
+        const { user, supabaseAdmin } = auth;
 
         const body = await request.json();
-        const { category, message, companyName, userName, phoneNumber } = body;
+        const category = typeof body?.category === 'string' ? body.category.trim() : '';
+        const message = typeof body?.message === 'string' ? body.message.trim() : '';
 
-        if (!category || !message) {
-            return NextResponse.json({ error: 'お問い合わせ種類と内容は必須です' }, { status: 400 });
+        if (!ALLOWED_CATEGORIES.includes(category as any)) {
+            return NextResponse.json({ error: 'お問い合わせ種類を正しく選択してください。' }, { status: 400 });
+        }
+
+        if (!message) {
+            return NextResponse.json({ error: 'お問い合わせ内容を入力してください。' }, { status: 400 });
         }
 
         if (message.length > 2000) {
-            return NextResponse.json({ error: 'お問い合わせ内容は2000文字以内で入力してください' }, { status: 400 });
+            return NextResponse.json({ error: 'お問い合わせ内容は2000文字以内で入力してください。' }, { status: 400 });
         }
 
-        // Supabaseに保存
-        const { error: insertError } = await supabase
+        // クライアントからの偽装を防ぐため、会社名・氏名・電話番号はサーバー側DBから取得
+        const { data: profile } = await supabaseAdmin
+            .from('app_users')
+            .select('display_name, phone_number, companies(name)')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        const companyName = (profile?.companies as any)?.name || '未所属';
+        const userName = profile?.display_name || '不明';
+        const phoneNumber = profile?.phone_number || null;
+
+        // Service Role 経由で保存（RLS厳格化後も確実に保存）
+        const { error: insertError } = await supabaseAdmin
             .from('contact_inquiries')
             .insert({
                 user_id: user.id,
-                company_name: companyName || '未所属',
-                user_name: userName || '不明',
+                company_name: companyName,
+                user_name: userName,
                 email: user.email || '',
-                phone_number: phoneNumber || null,
+                phone_number: phoneNumber,
                 category,
-                message: message.trim(),
+                message,
                 status: 'unread',
             });
 
         if (insertError) {
             console.error('Contact insert error:', insertError);
-            return NextResponse.json({ error: 'お問い合わせの保存に失敗しました' }, { status: 500 });
+            return NextResponse.json({ error: 'お問い合わせの保存に失敗しました。時間をおいて再度お試しください。' }, { status: 500 });
         }
-
-        // カテゴリの日本語ラベル
-        const categoryLabels: Record<string, string> = {
-            'bug': 'システム不具合の報告',
-            'feature': '機能の追加・改善要望',
-            'account': 'アカウントに関する相談',
-            'other': 'その他',
-        };
 
         // LINE通知を送信
         try {
@@ -66,11 +70,11 @@ export async function POST(request: Request) {
             const adminUserId = process.env.LINE_ADMIN_USER_ID;
 
             if (lineToken && adminUserId) {
-                const messageText = `【MIERIS システム通知】\n\nお問い合わせが届きました\n\n種類：${categoryLabels[category] || category}\n会社名：${companyName || '未所属'}\n氏名：${userName || '不明'}\n電話番号：${phoneNumber || '未入力'}\n\n【お問い合わせ内容】\n${message.trim().substring(0, 200)}${message.trim().length > 200 ? '...' : ''}\n\n管理画面でご確認ください。`;
+                const messageText = `【MIERIS システム通知】\n\nお問い合わせが届きました\n\n種類：${CATEGORY_LABELS[category] || category}\n会社名：${companyName}\n氏名：${userName}\n電話番号：${phoneNumber || '未入力'}\n\n【お問い合わせ内容】\n${message.substring(0, 200)}${message.length > 200 ? '...' : ''}\n\n管理画面でご確認ください。`;
 
                 const targetIds = adminUserId.split(',').map((id: string) => id.trim()).filter((id: string) => id);
 
-                await Promise.all(targetIds.map((targetId: string) =>
+                await Promise.allSettled(targetIds.map((targetId: string) =>
                     fetch('https://api.line.me/v2/bot/message/push', {
                         method: 'POST',
                         headers: {
@@ -79,7 +83,7 @@ export async function POST(request: Request) {
                         },
                         body: JSON.stringify({
                             to: targetId,
-                            messages: [{ type: "text", text: messageText }]
+                            messages: [{ type: 'text', text: messageText }]
                         })
                     })
                 ));
@@ -92,7 +96,6 @@ export async function POST(request: Request) {
 
     } catch (e: unknown) {
         console.error('Contact API error:', e);
-        const msg = e instanceof Error ? e.message : 'Unknown error';
-        return NextResponse.json({ error: msg }, { status: 500 });
+        return NextResponse.json({ error: 'お問い合わせの送信中にサーバーエラーが発生しました。' }, { status: 500 });
     }
 }

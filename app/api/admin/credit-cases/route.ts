@@ -1,59 +1,42 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextResponse } from "next/server";
+import { authenticateApiRequest } from "@/lib/apiAuth";
 
-// GET: 管理者用 未払い企業審査一覧
+const CHUNK_SIZE = 1000;
+const MAX_ROWS = 20000;
+
+// GET: 管理者用 未払い企業審査一覧（1,000件上限による取りこぼしを防止するためレンジ分割取得）
 export async function GET(request: Request) {
     try {
-        const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: '認証情報がありません' }, { status: 401 });
-        }
-        const token = authHeader.replace('Bearer ', '');
+        const auth = await authenticateApiRequest(request, { requireAdmin: true });
+        if (!auth.ok) return auth.response;
 
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const { supabaseAdmin } = auth;
 
-        const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
-        });
+        const allCases: any[] = [];
+        for (let from = 0; from < MAX_ROWS; from += CHUNK_SIZE) {
+            const { data: chunk, error } = await supabaseAdmin
+                .from("credit_cases")
+                .select(`
+                    *,
+                    companies:registered_by_company_id ( id, name )
+                `)
+                .order("created_at", { ascending: false })
+                .order("id", { ascending: false })
+                .range(from, from + CHUNK_SIZE - 1);
 
-        const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-        if (userError || !user) {
-            return NextResponse.json({ error: 'ユーザー情報を取得できませんでした' }, { status: 401 });
-        }
+            if (error) {
+                console.error("Admin credit cases DB error:", error);
+                return NextResponse.json({ error: "企業信用データの取得に失敗しました。" }, { status: 500 });
+            }
 
-        const supabaseAdmin = supabaseServiceRoleKey
-            ? createClient(supabaseUrl, supabaseServiceRoleKey)
-            : supabaseUser;
-
-        const { data: appUser } = await supabaseAdmin
-            .from('app_users')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
-        if (appUser?.role !== 'admin') {
-            return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 });
+            if (!chunk || chunk.length === 0) break;
+            allCases.push(...chunk);
+            if (chunk.length < CHUNK_SIZE) break;
         }
 
-        const { data: cases, error } = await supabaseAdmin
-            .from('credit_cases')
-            .select(`
-                *,
-                companies:registered_by_company_id ( id, name )
-            `)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.warn('Admin credit cases warning:', error.message);
-            return NextResponse.json({ cases: [] });
-        }
-
-        return NextResponse.json({ cases: cases || [] });
-
-    } catch (e: any) {
-        console.error('Admin credit cases GET error:', e);
-        return NextResponse.json({ error: e.message || 'Server error' }, { status: 500 });
+        return NextResponse.json({ cases: allCases });
+    } catch (e) {
+        console.error("Admin credit cases GET error:", e);
+        return NextResponse.json({ error: "サーバーエラーが発生しました。" }, { status: 500 });
     }
 }

@@ -7,6 +7,8 @@ import { Search, AlertCircle, UserPlus, ClipboardList, ArrowLeft, Lock } from "l
 import { RequireAuth } from "@/components/RequireAuth";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { usePlan } from "@/contexts/PlanContext";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { formatDateJST, isValidCalendarDate } from "@/lib/dateFormat";
 
 type BlacklistCase = {
   id: string;
@@ -32,59 +34,18 @@ export default function SearchPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [planRestricted, setPlanRestricted] = useState(false);
-  const [planChecked, setPlanChecked] = useState(false);
-  const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
-  const { allowedPlan, isAdmin: isContextAdmin, companyId: contextCompanyId } = usePlan();
+  const { allowedPlan, isAdmin, loading: planLoading } = usePlan();
+  const planChecked = !planLoading;
+  const [apiPlanRestricted, setApiPlanRestricted] = useState(false);
+  const hasWorkAccess = isAdmin || allowedPlan === "full" || allowedPlan === "employment";
+  const planRestricted = !planLoading && (!hasWorkAccess || apiPlanRestricted);
 
-  // リアルタイムプラン情報の同期（管理者がプラン変更した際に即時反映）
+  // プランが変更された際にAPI側の制限フラグもリセット
   useEffect(() => {
-    if (isContextAdmin) {
-      setPlanRestricted(false);
-      setIsAdmin(true);
-    } else {
-      setPlanRestricted(allowedPlan === "credit");
+    if (hasWorkAccess) {
+      setApiPlanRestricted(false);
     }
-    if (contextCompanyId) {
-      setUserCompanyId(contextCompanyId);
-    }
-  }, [allowedPlan, isContextAdmin, contextCompanyId]);
-
-  // Check admin role and get company_id on mount
-  useEffect(() => {
-    const checkRole = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.app_metadata?.role === "admin") {
-          setIsAdmin(true);
-        }
-        if (session?.user) {
-          const { data: appUser } = await supabase
-            .from("app_users")
-            .select("company_id, allowed_plan, role")
-            .eq("id", session.user.id)
-            .maybeSingle();
-
-          if (appUser?.role === "admin") {
-            setIsAdmin(true);
-          }
-
-          if (appUser?.company_id) {
-            setUserCompanyId(appUser.company_id);
-          }
-
-          // クレジット専用プランで管理職以外の場合は就業情報照会を制限
-          if (appUser && appUser.allowed_plan === "credit" && appUser.role !== "admin") {
-            setPlanRestricted(true);
-          }
-        }
-      } finally {
-        setPlanChecked(true);
-      }
-    };
-    checkRole();
-  }, []);
+  }, [hasWorkAccess]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,29 +65,10 @@ export default function SearchPage() {
         throw new Error("照会対象者の生年月日（年・月・日）をすべて入力してください。");
       }
 
-      const yearNum = Number(searchYear);
-      const monthNum = Number(searchMonth);
-      const dayNum = Number(searchDay);
-
-      if (yearNum < 1900 || yearNum > new Date().getFullYear() || monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) {
-        throw new Error("有効な生年月日を入力してください。");
-      }
-
-      // 実在する日付の検証 (うるう年・小の月)
-      const dateObj = new Date(yearNum, monthNum - 1, dayNum);
-      if (
-        dateObj.getFullYear() !== yearNum ||
-        dateObj.getMonth() !== monthNum - 1 ||
-        dateObj.getDate() !== dayNum
-      ) {
-        throw new Error("実在する正しい日付（生年月日）を入力してください。");
-      }
-
-      if (dateObj > new Date()) {
-        throw new Error("未来の日付を生年月日に指定することはできません。");
-      }
-
       const dateQuery = `${searchYear.padStart(4, '0')}-${searchMonth.padStart(2, '0')}-${searchDay.padStart(2, '0')}`;
+      if (!isValidCalendarDate(dateQuery, { allowFuture: false })) {
+        throw new Error("実在する正しい生年月日（本日以前）を入力してください。");
+      }
 
       // サーバーサイドAPI経由の安全な照会実行
       const { data: { session } } = await supabase.auth.getSession();
@@ -147,12 +89,12 @@ export default function SearchPage() {
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         if (res.status === 403 && errData.planRestricted) {
-          setPlanRestricted(true);
+          setApiPlanRestricted(true);
         }
         throw new Error(errData.error || "データの照会に失敗しました。");
       }
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       const fetchedResults = (data.results || []) as BlacklistCase[];
 
       setResults(fetchedResults);
@@ -176,8 +118,8 @@ export default function SearchPage() {
         console.error("Failed to save audit log:", logErr);
       }
 
-    } catch (err: any) {
-      const msg = err.message || "予期せぬエラーが発生しました。";
+    } catch (err: unknown) {
+      const msg = translateErrorMessage(err, "照会処理中にエラーが発生しました。");
       setErrorMsg(msg);
       setToast({ type: "error", text: msg });
     } finally {
@@ -231,7 +173,7 @@ export default function SearchPage() {
                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                 <span>戻る</span>
               </Link>
-              {!planRestricted && (
+              {planChecked && !planRestricted && (
                 <>
                   <Link
                     href="/cases"
@@ -331,7 +273,10 @@ export default function SearchPage() {
                         inputMode="numeric"
                         maxLength={4}
                         value={searchYear}
-                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchYear(e.target.value); }}
+                        onChange={(e) => {
+                          const v = e.target.value.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
+                          if (/^\d*$/.test(v)) setSearchYear(v);
+                        }}
                         className="w-full bg-white border border-slate-200 rounded-xl px-2 sm:px-3 py-3 sm:py-3.5 text-sm sm:text-base text-slate-900 focus:outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10 transition-all text-center font-mono"
                         placeholder="1990"
                       />
@@ -344,7 +289,10 @@ export default function SearchPage() {
                         inputMode="numeric"
                         maxLength={2}
                         value={searchMonth}
-                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchMonth(e.target.value); }}
+                        onChange={(e) => {
+                          const v = e.target.value.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
+                          if (/^\d*$/.test(v)) setSearchMonth(v);
+                        }}
                         className="w-full bg-white border border-slate-200 rounded-xl px-2 sm:px-3 py-3 sm:py-3.5 text-sm sm:text-base text-slate-900 focus:outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10 transition-all text-center font-mono"
                         placeholder="01"
                       />
@@ -357,7 +305,10 @@ export default function SearchPage() {
                         inputMode="numeric"
                         maxLength={2}
                         value={searchDay}
-                        onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSearchDay(e.target.value); }}
+                        onChange={(e) => {
+                          const v = e.target.value.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
+                          if (/^\d*$/.test(v)) setSearchDay(v);
+                        }}
                         className="w-full bg-white border border-slate-200 rounded-xl px-2 sm:px-3 py-3 sm:py-3.5 text-sm sm:text-base text-slate-900 focus:outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10 transition-all text-center font-mono"
                         placeholder="01"
                       />
@@ -396,7 +347,7 @@ export default function SearchPage() {
           </div>
           )}
 
-          {hasSearched && (
+          {!planRestricted && hasSearched && (
             <div className="animate-fade-in delay-200">
               <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                 検索結果
@@ -446,7 +397,7 @@ export default function SearchPage() {
                               <div className="flex items-center gap-3 text-[11px] text-slate-500">
                                 <span>登録元: <strong className="text-slate-700">{regCompanyName || "加盟企業"}</strong></span>
                                 {item.approved_at && (
-                                  <span>承認日: <strong className="text-slate-700 font-mono">{new Date(item.approved_at).toLocaleDateString("ja-JP")}</strong></span>
+                                  <span>承認日: <strong className="text-slate-700 font-mono">{formatDateJST(item.approved_at)}</strong></span>
                                 )}
                               </div>
                             </div>

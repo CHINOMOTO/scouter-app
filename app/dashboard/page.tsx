@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
+import { usePlan } from "@/contexts/PlanContext";
+import { formatDateJST } from "@/lib/dateFormat";
 import { 
   Search, 
   ClipboardList, 
@@ -57,77 +59,40 @@ type Announcement = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [allowedPlan, setAllowedPlan] = useState<string>("full");
-  const [companyName, setCompanyName] = useState<string>("");
-  const [displayName, setDisplayName] = useState<string>("");
+  const { allowedPlan, isAdmin, loading: planLoading } = usePlan();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // お知らせモーダル用 state
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
   const [showAllAnnouncementsModal, setShowAllAnnouncementsModal] = useState(false);
 
   useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const role = user.app_metadata?.role;
-        const isUserAdmin = role === "admin";
-        setIsAdmin(isUserAdmin);
-
-        const { data: appUser } = await supabase
-          .from("app_users")
-          .select("display_name, allowed_plan, role, company_id, companies ( name )")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (appUser) {
-          if (appUser.role === "admin") {
-            setIsAdmin(true);
-          }
-          if (appUser.allowed_plan) {
-            setAllowedPlan(appUser.allowed_plan);
-          }
-          if (appUser.display_name) {
-            setDisplayName(appUser.display_name);
-          }
-          const comp = (appUser.companies as any)?.name;
-          if (comp) {
-            setCompanyName(comp);
-          }
-        }
-      } catch (e) {
-        console.error("Dashboard user fetch error:", e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     const loadAnnouncements = async () => {
       try {
-        const { data } = await supabase
-          .from("announcements")
-          .select("id, title, content, created_at")
-          .eq("is_active", true)
-          .order("created_at", { ascending: false })
-          .limit(5);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) return;
 
-        if (data) {
-          setAnnouncements(data);
+        const res = await fetch("/api/announcements", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        if (Array.isArray(data.announcements)) {
+          setAnnouncements(data.announcements);
         }
       } catch (err) {
         console.error("Announcements fetch error:", err);
       }
     };
 
-    loadUserData();
     loadAnnouncements();
   }, []);
 
-  // プラン権限の判定
+  const isLoading = planLoading;
+
+  // プラン権限の判定（PlanContextのDB最新値にリアルタイム同期）
   const canViewPerson = isAdmin || allowedPlan === "full" || allowedPlan === "employment";
   const canViewCredit = isAdmin || allowedPlan === "full" || allowedPlan === "credit";
 
@@ -172,11 +137,7 @@ export default function DashboardPage() {
                   <span className="text-slate-300 hidden sm:inline">|</span>
                 </div>
                 <span className="text-[11px] font-mono text-slate-400 shrink-0">
-                  {new Date(announcements[0].created_at).toLocaleDateString("ja-JP", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                  })}
+                  {formatDateJST(announcements[0].created_at)}
                 </span>
                 <span className="font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
                   {announcements[0].title}
@@ -341,8 +302,12 @@ export default function DashboardPage() {
                   {/* 公的処分・登録データ一覧 */}
                   <MenuCard
                     title="公的処分・登録データ一覧"
-                    description="国交省・厚労省等の公的確定処分データおよび自社・全登録データを全件一覧・閲覧します。"
-                    badge="全件・公的"
+                    description={
+                      isAdmin
+                        ? "国土交通省・消費者庁等の公的確定処分データおよび加盟企業の全登録データを一覧・管理します。"
+                        : "国土交通省・消費者庁等の公的確定処分データ、および自社が登録申請した企業信用データを一覧・確認します。"
+                    }
+                    badge={isAdmin ? "全件・公的" : "公的・自社"}
                     theme="blue"
                     actionText="一覧を見る"
                     icon={<IcProject className="w-12 h-12" />}
@@ -429,7 +394,7 @@ export default function DashboardPage() {
                 title="アカウント設定"
                 description="パスワード変更やユーザー情報の確認"
                 icon={<IcVariableHours className="w-6 h-6" />}
-                onClick={() => router.push("/settings")}
+                onClick={() => router.push("/profile")}
               />
 
               {/* お問い合わせ */}
@@ -486,11 +451,7 @@ export default function DashboardPage() {
                 <div className="p-5 sm:p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                   <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
                     <span className="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-bold text-slate-600 border border-slate-200">
-                      {new Date(selectedAnnouncement.created_at).toLocaleDateString("ja-JP", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                      })}
+                      {formatDateJST(selectedAnnouncement.created_at)}
                     </span>
                   </div>
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
@@ -532,7 +493,7 @@ export default function DashboardPage() {
                       <Bell className="w-3.5 h-3.5" />
                     </div>
                     <span className="text-sm font-bold text-slate-900">
-                      お知らせ・システム通知一覧（全{announcements.length}件）
+                      お知らせ・システム通知一覧（最新{announcements.length}件）
                     </span>
                   </div>
                   <button
@@ -557,11 +518,7 @@ export default function DashboardPage() {
                     >
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="text-[11px] font-mono text-slate-400">
-                          {new Date(item.created_at).toLocaleDateString("ja-JP", {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                          })}
+                          {formatDateJST(item.created_at)}
                         </span>
                       </div>
                       <h4 className="text-xs sm:text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors mb-1">

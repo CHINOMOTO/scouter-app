@@ -1,3 +1,8 @@
+console.error(
+  '[DEPRECATED] このスクリプト（コード内の固定データ取り込み）は、毎週自動取得できる公式一次ソースではないため廃止されました。実行を中止します。'
+);
+process.exit(1);
+
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
 

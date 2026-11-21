@@ -35,29 +35,36 @@ import {
 export default function Navigation() {
     const pathname = usePathname() || "";
     const router = useRouter();
-    const { allowedPlan: contextPlan, isAdmin: contextAdmin, companyName: contextCompanyName, displayName: contextDisplayName } = usePlan();
+    const {
+        allowedPlan: contextPlan,
+        isAdmin: contextAdmin,
+        isApproved: contextApproved,
+        companyName: contextCompanyName,
+        displayName: contextDisplayName,
+        loading: planLoading,
+    } = usePlan();
     const [session, setSession] = useState<any>(null);
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [userName, setUserName] = useState<string | null>(null);
-    const [companyName, setCompanyName] = useState<string | null>(null);
     const [notificationCount, setNotificationCount] = useState(0);
     const [pendingCaseCount, setPendingCaseCount] = useState(0);
     const [pendingCreditCount, setPendingCreditCount] = useState(0);
-    const [allowedPlan, setAllowedPlan] = useState<string>("full");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     const fetchNotifications = async () => {
         try {
-            const { count: caseCount } = await supabase
-                .from("blacklist_cases")
-                .select("*", { count: "exact", head: true })
-                .eq("status", "pending");
-            const { count: creditCount } = await supabase
-                .from("credit_cases")
-                .select("*", { count: "exact", head: true })
-                .eq("status", "pending");
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (!currentSession?.access_token) return;
 
-            const c = caseCount || 0;
-            const cr = creditCount || 0;
+            const res = await fetch("/api/admin/stats", {
+                headers: {
+                    Authorization: `Bearer ${currentSession.access_token}`,
+                },
+            });
+            if (!res.ok) return;
+            const data = await res.json().catch(() => null);
+            if (!data) return;
+
+            const c = data.pendingCaseCount || 0;
+            const cr = data.pendingCreditCount || 0;
 
             setPendingCaseCount(c);
             setPendingCreditCount(cr);
@@ -66,7 +73,6 @@ export default function Navigation() {
             console.error("fetchNotifications error:", err);
         }
     };
-
 
     // アコーディオンメニューの開閉ステート
     const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
@@ -89,110 +95,40 @@ export default function Navigation() {
             setOpenMenus(prev => ({ ...prev, admin: true }));
         }
 
-        if (isAdmin) {
+        if (contextAdmin && contextApproved) {
             fetchNotifications();
         }
-    }, [pathname, isAdmin]);
+    }, [pathname, contextAdmin, contextApproved]);
 
     const toggleMenu = (key: string) => {
         setOpenMenus(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
     useEffect(() => {
-        
-
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             setSession(session);
-
-            if (session?.user) {
-                const role = session.user.app_metadata?.role;
-                const isUserAdmin = role === 'admin';
-                setIsAdmin(isUserAdmin);
-
-                if (isUserAdmin) {
-                    fetchNotifications();
-                }
-            } else {
-                setIsAdmin(false);
-                setUserName(null);
-                setCompanyName(null);
+            if (!session) {
                 setNotificationCount(0);
+                setPendingCaseCount(0);
+                setPendingCreditCount(0);
             }
         };
 
         checkUser();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             setSession(session);
-            if (event === 'SIGNED_OUT') {
-                setIsAdmin(false);
-                setUserName(null);
-                setCompanyName(null);
+            if (event === "SIGNED_OUT" || !session) {
                 setSession(null);
                 setNotificationCount(0);
-                return;
-            }
-
-            if (session?.user) {
-                const role = session.user.app_metadata?.role;
-                const isUserAdmin = role === 'admin';
-                setIsAdmin(isUserAdmin);
-
-                if (isUserAdmin) {
-                    fetchNotifications();
-                }
-            } else {
-                setIsAdmin(false);
-                setUserName(null);
-                setCompanyName(null);
-                setNotificationCount(0);
+                setPendingCaseCount(0);
+                setPendingCreditCount(0);
             }
         });
 
         return () => subscription.unsubscribe();
-    }, [pathname]);
-
-    // 会社名+登録名および契約プランを取得する
-    useEffect(() => {
-        if (!session?.user?.id) return;
-        let cancelled = false;
-
-        const fetchUserProfile = async () => {
-            try {
-                const { data: appUser } = await supabase
-                    .from("app_users")
-                    .select("display_name, company_id, allowed_plan")
-                    .eq("id", session.user.id)
-                    .maybeSingle();
-                if (cancelled || !appUser) return;
-
-                if (appUser.allowed_plan) {
-                    setAllowedPlan(appUser.allowed_plan);
-                }
-
-                const displayName = (appUser.display_name as string) || "User";
-                setUserName(displayName);
-
-                if (appUser.company_id) {
-                    const { data: company } = await supabase
-                        .from("companies")
-                        .select("name")
-                        .eq("id", appUser.company_id)
-                        .maybeSingle();
-                    if (cancelled) return;
-                    if (company?.name) {
-                        setCompanyName(company.name);
-                    }
-                }
-            } catch {
-                // エラー時は何もしない
-            }
-        };
-
-        fetchUserProfile();
-        return () => { cancelled = true; };
-    }, [session?.user?.id]);
+    }, []);
 
     const handleLogout = async () => {
         try {
@@ -201,30 +137,26 @@ export default function Navigation() {
             console.error("Logout error:", error);
         } finally {
             setSession(null);
-            setIsAdmin(false);
-            setUserName(null);
-            setCompanyName(null);
             window.location.href = "/";
         }
     };
 
-    // ログイン・サインアップ・デモ等の公開ページでは非表示
-    const isPublicPage = 
-        pathname === "/" || 
-        pathname === "/signup" || 
-        pathname === "/login" || 
-        pathname === "/demo" || 
-        pathname === "/forgot-password" || 
-        pathname === "/update-password" || 
+    // ログイン・サインアップ等の公開ページ、または未承認・未読み込み時は非表示
+    const isPublicPage =
+        pathname === "/" ||
+        pathname === "/signup" ||
+        pathname === "/login" ||
+        pathname === "/forgot-password" ||
+        pathname === "/update-password" ||
         pathname === "/pending-approval";
 
-    if (isPublicPage || !session) return null;
+    if (isPublicPage || !session || planLoading || !contextApproved) return null;
 
-    // プラン別の権限判定（リアルタイムContextの値を優先反映）
-    const effectivePlan = contextPlan || allowedPlan;
-    const effectiveIsAdmin = contextAdmin || isAdmin;
-    const effectiveCompanyName = contextCompanyName || companyName;
-    const effectiveUserName = contextDisplayName || userName;
+    // プラン別の権限判定（PlanContextのDB最新値に完全統一）
+    const effectivePlan = contextPlan;
+    const effectiveIsAdmin = contextAdmin;
+    const effectiveCompanyName = contextCompanyName;
+    const effectiveUserName = contextDisplayName;
 
     const canViewPerson = effectiveIsAdmin || effectivePlan === "full" || effectivePlan === "employment";
     const canViewCredit = effectiveIsAdmin || effectivePlan === "full" || effectivePlan === "credit";
@@ -232,10 +164,10 @@ export default function Navigation() {
     // プラン名表示
     const getPlanLabel = () => {
         if (effectiveIsAdmin) return "管理者";
-        if (effectivePlan === "full") return "両方セット";
-        if (effectivePlan === "employment") return "応募者照会";
-        if (effectivePlan === "credit") return "企業信用";
-        return "スタンダード";
+        if (effectivePlan === "full") return "FULLプラン";
+        if (effectivePlan === "employment") return "MIERIS WORK";
+        if (effectivePlan === "credit") return "MIERIS CREDIT";
+        return "プラン未設定";
     };
 
     return (
@@ -356,7 +288,7 @@ export default function Navigation() {
                                         href="/cases"
                                         active={pathname === "/cases"}
                                         icon={<FileText className="w-3.5 h-3.5" />}
-                                        label={isAdmin ? "登録データ一覧（管理者）" : "自社登録トラブル一覧"}
+                                        label={effectiveIsAdmin ? "登録データ一覧（管理者）" : "自社登録トラブル一覧"}
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     />
                                 </AccordionGroup>
@@ -409,7 +341,7 @@ export default function Navigation() {
                     </div>
 
                     {/* 管理者メニュー（管理者のみ） */}
-                    {isAdmin && (
+                    {effectiveIsAdmin && (
                         <div>
                             <div className="px-3 mb-2 text-[10px] font-extrabold text-slate-400 tracking-wider uppercase font-mono">
                                 システム管理

@@ -3,8 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { RequireAdmin } from "@/components/RequireAdmin";
+import { Toast, ToastMessage } from "@/components/Toast";
 import { supabase } from "@/lib/supabaseClient";
-import { Bell, Plus, Trash2, Power, PowerOff, ArrowLeft, ShieldCheck } from "lucide-react";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { formatDateTimeJST } from "@/lib/dateFormat";
+import { Plus, Trash2, ArrowLeft, ShieldCheck } from "lucide-react";
 
 type Announcement = {
     id: string;
@@ -20,20 +23,31 @@ export default function AdminAnnouncements() {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [isPosting, setIsPosting] = useState(false);
+    const [processingId, setProcessingId] = useState<string | null>(null);
+    const [toast, setToast] = useState<ToastMessage | null>(null);
 
     const fetchAnnouncements = async () => {
         setLoading(true);
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                setToast({ type: "error", text: "認証セッションが見つかりません。再度ログインしてください。" });
+                return;
+            }
             const res = await fetch("/api/admin/announcements", {
                 headers: { "Authorization": `Bearer ${session.access_token}` }
             });
-            if (res.ok) {
-                const json = await res.json();
-                setAnnouncements(json.data || []);
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(json.error || "お知らせ一覧の取得に失敗しました。");
             }
+            setAnnouncements(json.data || []);
+        } catch (err) {
+            console.error("fetchAnnouncements error:", err);
+            setToast({ type: "error", text: translateErrorMessage(err, "お知らせ一覧の取得に失敗しました。") });
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     useEffect(() => {
@@ -42,30 +56,45 @@ export default function AdminAnnouncements() {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title.trim() || !content.trim()) return;
+        if (isPosting || !title.trim() || !content.trim()) return;
         setIsPosting(true);
-        
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            await fetch("/api/admin/announcements", {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error("認証セッションが見つかりません。再度ログインしてください。");
+            }
+            const res = await fetch("/api/admin/announcements", {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${session.access_token}`
                 },
-                body: JSON.stringify({ title, content, is_active: true })
+                body: JSON.stringify({ title: title.trim(), content: content.trim(), is_active: true })
             });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(json.error || "お知らせの投稿に失敗しました。");
+            }
             setTitle("");
             setContent("");
-            fetchAnnouncements();
+            setToast({ type: "success", text: "お知らせを投稿しました。" });
+            await fetchAnnouncements();
+        } catch (err) {
+            setToast({ type: "error", text: translateErrorMessage(err, "お知らせの投稿に失敗しました。") });
+        } finally {
+            setIsPosting(false);
         }
-        setIsPosting(false);
     };
 
     const toggleStatus = async (id: string, currentStatus: boolean) => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            await fetch(`/api/admin/announcements/${id}`, {
+        if (processingId) return;
+        setProcessingId(id);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error("認証セッションが見つかりません。再度ログインしてください。");
+            }
+            const res = await fetch(`/api/admin/announcements/${id}`, {
                 method: "PATCH",
                 headers: { 
                     "Content-Type": "application/json",
@@ -73,24 +102,53 @@ export default function AdminAnnouncements() {
                 },
                 body: JSON.stringify({ is_active: !currentStatus })
             });
-            fetchAnnouncements();
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(json.error || "公開ステータスの更新に失敗しました。");
+            }
+            setAnnouncements(prev =>
+                prev.map(item => item.id === id ? { ...item, is_active: !currentStatus } : item)
+            );
+            setToast({
+                type: "success",
+                text: !currentStatus ? "お知らせを公開中にしました。" : "お知らせを非公開にしました。"
+            });
+        } catch (err) {
+            setToast({ type: "error", text: translateErrorMessage(err, "公開ステータスの更新に失敗しました。") });
+        } finally {
+            setProcessingId(null);
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!window.confirm("本当に削除しますか？")) return;
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            await fetch(`/api/admin/announcements/${id}`, {
+        if (processingId) return;
+        if (!window.confirm("本当にこのお知らせを削除しますか？")) return;
+        setProcessingId(id);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error("認証セッションが見つかりません。再度ログインしてください。");
+            }
+            const res = await fetch(`/api/admin/announcements/${id}`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${session.access_token}` }
             });
-            fetchAnnouncements();
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(json.error || "お知らせの削除に失敗しました。");
+            }
+            setAnnouncements(prev => prev.filter(item => item.id !== id));
+            setToast({ type: "success", text: "お知らせを削除しました。" });
+        } catch (err) {
+            setToast({ type: "error", text: translateErrorMessage(err, "お知らせの削除に失敗しました。") });
+        } finally {
+            setProcessingId(null);
         }
     };
 
     return (
         <RequireAdmin>
+            <Toast toast={toast} onClose={() => setToast(null)} />
             <div className="min-h-screen pt-20 md:pt-10 pb-12 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
                 <div className="max-w-4xl w-full space-y-8">
                     {/* ヘッダーエリア */}
@@ -149,7 +207,7 @@ export default function AdminAnnouncements() {
                                         required
                                     />
                                 </div>
-                                <button type="submit" disabled={isPosting} className="btn-primary w-full flex items-center justify-center gap-2">
+                                <button type="submit" disabled={isPosting} className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60">
                                     {isPosting ? "投稿中..." : "お知らせを投稿する"}
                                 </button>
                             </form>
@@ -173,8 +231,8 @@ export default function AdminAnnouncements() {
                                                 <span className={`px-2.5 py-0.5 rounded text-xs font-bold ${item.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
                                                     {item.is_active ? '公開中' : '非公開'}
                                                 </span>
-                                                <span className="text-slate-600 text-sm">
-                                                    {new Date(item.created_at).toLocaleString('ja-JP')}
+                                                <span className="text-slate-600 text-sm font-mono">
+                                                    {formatDateTimeJST(item.created_at)}
                                                 </span>
                                             </div>
                                             <h3 className="text-lg font-bold text-slate-900 mb-1">{item.title}</h3>
@@ -183,13 +241,16 @@ export default function AdminAnnouncements() {
                                         <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
                                             <button 
                                                 onClick={() => toggleStatus(item.id, item.is_active)}
-                                                className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${item.is_active ? 'border-amber-300 text-amber-700 hover:bg-amber-50' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'}`}
+                                                disabled={processingId === item.id}
+                                                className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-sm font-bold border transition-colors disabled:opacity-50 ${item.is_active ? 'border-amber-300 text-amber-700 hover:bg-amber-50' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'}`}
                                             >
-                                                {item.is_active ? '非公開にする' : '公開にする'}
+                                                {processingId === item.id ? '処理中...' : item.is_active ? '非公開にする' : '公開にする'}
                                             </button>
                                             <button 
                                                 onClick={() => handleDelete(item.id)}
-                                                className="px-4 py-2 rounded-xl text-sm font-bold border border-red-500/30 text-red-500 hover:bg-red-500/10 transition-colors"
+                                                disabled={processingId === item.id}
+                                                className="px-4 py-2 rounded-xl text-sm font-bold border border-red-500/30 text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                                                title="削除"
                                             >
                                                 <Trash2 className="w-5 h-5" />
                                             </button>

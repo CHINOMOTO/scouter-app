@@ -44,7 +44,7 @@ export async function POST(request: Request) {
                     let replyText = `あなたのユーザーIDはこちらです：\n\n${sourceId}\n\nこの文字列をコピーして管理者に伝えてください。`;
 
                     if (event.source.type === 'group') {
-                        replyText = `このグループのIDはこちらです：\n\n${sourceId}\n\nこの文字列をコピーしてシステム（Vercel）に登録してください。`;
+                        replyText = `このグループのIDはこちらです：\n\n${sourceId}\n\nこの文字列をコピーして管理システムに登録してください。`;
                     }
 
                     await fetch('https://api.line.me/v2/bot/message/reply', {

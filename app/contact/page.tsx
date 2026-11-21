@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { CheckCircle2, AlertCircle, ArrowLeft, ArrowRight, Send, Edit3 } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
+import { translateErrorMessage } from "@/lib/errorMessage";
 
 const CATEGORIES = [
     { value: "bug", label: "システム不具合の報告" },
@@ -29,21 +30,28 @@ export default function ContactPage() {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data: appUser } = await supabase
-                    .from("app_users")
-                    .select("display_name, phone_number, companies(name)")
-                    .eq("id", user.id)
-                    .single();
-
-                if (appUser) {
-                    setUserName(appUser.display_name || "");
-                    setPhoneNumber(appUser.phone_number || "");
-                    setCompanyName((appUser.companies as any)?.name || "未所属");
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.access_token) {
+                    const res = await fetch("/api/profile", {
+                        headers: {
+                            "Authorization": `Bearer ${session.access_token}`
+                        }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.profile) {
+                            setUserName(data.profile.displayName === "未設定" ? "" : (data.profile.displayName || ""));
+                            setPhoneNumber(data.profile.phoneNumber || "");
+                            setCompanyName(data.profile.companyName || "未所属");
+                        }
+                    }
                 }
+            } catch (err) {
+                console.error("Contact profile fetch error:", err);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
         fetchProfile();
     }, []);
@@ -99,14 +107,14 @@ export default function ContactPage() {
             });
 
             if (!res.ok) {
-                const data = await res.json();
+                const data = await res.json().catch(() => ({}));
                 throw new Error(data.error || "送信に失敗しました。");
             }
 
             setSuccess(true);
             window.scrollTo({ top: 0, behavior: "smooth" });
-        } catch (err: any) {
-            setError(err.message || "予期せぬエラーが発生しました。");
+        } catch (err: unknown) {
+            setError(translateErrorMessage(err, "お問い合わせの送信に失敗しました。時間をおいて再度お試しください。"));
         } finally {
             setIsSending(false);
         }

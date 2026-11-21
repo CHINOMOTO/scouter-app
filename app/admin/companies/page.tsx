@@ -9,11 +9,11 @@ import {
     Plus, 
     Building2, 
     Pencil, 
-    Trash2, 
-    ShieldCheck 
+    Trash2
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { Pagination } from "@/components/Pagination";
+import { translateErrorMessage } from "@/lib/errorMessage";
 
 type Company = {
     id: string;
@@ -30,21 +30,34 @@ export default function AdminCompaniesPage() {
     const [companies, setCompanies] = useState<Company[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
     const [toast, setToast] = useState<ToastMessage | null>(null);
 
     const fetchCompanies = async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from("companies")
-            .select("*")
-            .order("created_at", { ascending: false });
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                setToast({ type: "error", text: "認証セッションが見つかりません。再度ログインしてください。" });
+                return;
+            }
 
-        if (error) {
-            console.error(error);
-        } else {
-            setCompanies((data as any) || []);
+            const res = await fetch("/api/admin/companies", {
+                headers: {
+                    "Authorization": `Bearer ${session.access_token}`
+                }
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || "会社一覧の取得に失敗しました。");
+            }
+            setCompanies(data.companies || []);
+        } catch (err: unknown) {
+            console.error(err);
+            setToast({ type: "error", text: translateErrorMessage(err, "会社一覧の取得に失敗しました。") });
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     useEffect(() => {
@@ -52,20 +65,33 @@ export default function AdminCompaniesPage() {
     }, []);
 
     const handleDelete = async (id: string, name: string) => {
-        if (!confirm(`本当に「${name}」を削除しますか？\n所属するユーザーやデータがある場合、不整合が生じる可能性があります。`)) return;
+        if (deletingId) return;
+        if (!confirm(`本当に「${name}」を削除しますか？\n所属するユーザーやデータがある場合、削除できないことがあります。`)) return;
 
+        setDeletingId(id);
         try {
-            const { error } = await supabase
-                .from("companies")
-                .delete()
-                .eq("id", id);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error("認証セッションが見つかりません。再度ログインしてください。");
+            }
 
-            if (error) throw error;
+            const res = await fetch(`/api/admin/companies/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${session.access_token}`
+                }
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || "会社の削除に失敗しました。");
+            }
 
             setToast({ type: "success", text: "会社を削除しました。" });
-            setCompanies(companies.filter(c => c.id !== id));
-        } catch (err: any) {
-            setToast({ type: "error", text: "削除に失敗しました: " + err.message });
+            setCompanies(prev => prev.filter(c => c.id !== id));
+        } catch (err: unknown) {
+            setToast({ type: "error", text: translateErrorMessage(err, "削除に失敗しました。") });
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -94,7 +120,16 @@ export default function AdminCompaniesPage() {
     };
 
     const totalPages = Math.ceil(companies.length / PAGE_SIZE);
-    const paginatedCompanies = companies.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+    useEffect(() => {
+        const maxPage = Math.max(1, totalPages);
+        if (currentPage > maxPage) {
+            setCurrentPage(maxPage);
+        }
+    }, [currentPage, totalPages]);
+
+    const safePage = Math.min(currentPage, Math.max(1, totalPages));
+    const paginatedCompanies = companies.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
     return (
         <RequireAdmin>
@@ -189,7 +224,8 @@ export default function AdminCompaniesPage() {
                                         </Link>
                                         <button
                                             onClick={() => handleDelete(company.id, company.name)}
-                                            className="inline-flex items-center justify-center p-2 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-lg transition-colors text-xs"
+                                            disabled={deletingId === company.id}
+                                            className="inline-flex items-center justify-center p-2 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-lg transition-colors text-xs disabled:opacity-50"
                                             title="削除"
                                         >
                                             <Trash2 className="w-4 h-4" />

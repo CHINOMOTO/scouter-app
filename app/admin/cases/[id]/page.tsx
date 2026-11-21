@@ -6,6 +6,8 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { FileText, AlertCircle, Edit3, Save, X } from "lucide-react";
 import { RequireAdmin } from "@/components/RequireAdmin";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { formatDateJST } from "@/lib/dateFormat";
 
 type CaseDetail = {
   id: string;
@@ -99,72 +101,43 @@ export default function AdminCaseDetailPage() {
       setLoading(true);
       setFetchError(null);
 
-      const { data, error } = await supabase
-        .from("blacklist_cases")
-        .select(
-          "id, full_name, full_name_kana, gender, birth_date, phone_last4, city, occurrence_date, reason_text, status, created_at, approved_at, rejected_reason, evidence_urls, registered_company_id"
-        )
-        .eq("id", id)
-        .maybeSingle();
-
-      if (error) {
-        setFetchError(error.message || "データの取得に失敗しました。");
-        setLoading(false);
-        return;
-      }
-
-      if (!data) {
-        setFetchError("該当するデータが見つかりません。");
-        setLoading(false);
-        return;
-      }
-
-      setCaseDetail(data as CaseDetail);
-      setEditName(data.full_name || "");
-      setEditNameKana(data.full_name_kana || "");
-      setEditGender(data.gender || "male");
-      setEditBirthDate(data.birth_date || "");
-      setEditPhoneLast4(data.phone_last4 || "");
-      setEditCity(data.city || "");
-      setEditOccurrenceDate(data.occurrence_date || "");
-      setEditReasonText(data.reason_text || "");
-
-      // Fetch Company Name if exists
-      if (data.registered_company_id) {
-        const { data: comp } = await supabase
-          .from("companies")
-          .select("name")
-          .eq("id", data.registered_company_id)
-          .single();
-        if (comp) {
-          setCompanyName(comp.name);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          setFetchError("認証セッションがありません。再度ログインしてください。");
+          return;
         }
-      }
 
-      // 証拠ファイルの署名付きURLを取得
-      if (data.evidence_urls && Array.isArray(data.evidence_urls) && data.evidence_urls.length > 0) {
-        const files: EvidenceFile[] = [];
-        for (const path of data.evidence_urls) {
-          const { data: signedData } = await supabase.storage
-            .from('case-evidence')
-            .createSignedUrl(path, 3600); // 1時間有効
+        const res = await fetch(`/api/cases/${id}`, {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        const resData = await res.json().catch(() => ({}));
 
-          if (signedData) {
-            const isImage = path.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-            files.push({
-              path,
-              signedUrl: signedData.signedUrl,
-              type: isImage ? 'image' : 'other',
-              name: path.split('/').pop() || 'file'
-            });
-          }
+        if (!res.ok || !resData.case) {
+          setFetchError(translateErrorMessage(resData.error, "該当するデータが見つかりません。"));
+          return;
         }
-        setEvidenceFiles(files);
-      } else {
-        setEvidenceFiles([]);
-      }
 
-      setLoading(false);
+        const data = resData.case as CaseDetail;
+        setCaseDetail(data);
+        setEditName(data.full_name || "");
+        setEditNameKana(data.full_name_kana || "");
+        setEditGender(data.gender || "unknown");
+        setEditBirthDate(data.birth_date || "");
+        setEditPhoneLast4(data.phone_last4 || "");
+        setEditCity(data.city || "");
+        setEditOccurrenceDate(data.occurrence_date || "");
+        setEditReasonText(data.reason_text || "");
+        setCompanyName(resData.companyName || null);
+        setEvidenceFiles(Array.isArray(resData.evidenceFiles) ? resData.evidenceFiles : []);
+      } catch (err: unknown) {
+        console.error("Admin case detail fetch error:", err);
+        setFetchError(translateErrorMessage(err, "データの取得に失敗しました。"));
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchDetail();
@@ -204,9 +177,9 @@ export default function AdminCaseDetailPage() {
         }),
       });
 
-      const resData = await res.json();
+      const resData = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(resData.error || "更新に失敗しました");
+        throw new Error(resData.error || "更新に失敗しました。");
       }
 
       setCaseDetail((prev) => prev ? {
@@ -222,9 +195,8 @@ export default function AdminCaseDetailPage() {
       } : null);
 
       setIsEditing(false);
-      alert("投稿内容を更新・保存しました。");
-    } catch (err: any) {
-      setFormError(err.message || "更新エラーが発生しました");
+    } catch (err: unknown) {
+      setFormError(translateErrorMessage(err, "更新エラーが発生しました。"));
     } finally {
       setIsSaving(false);
     }
@@ -256,9 +228,9 @@ export default function AdminCaseDetailPage() {
         body: JSON.stringify({ status: "approved" }),
       });
 
-      const resData = await res.json();
+      const resData = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setFormError(resData.error || "承認に失敗しました。");
+        setFormError(translateErrorMessage(resData.error, "承認に失敗しました。"));
         setIsProcessing(false);
         return;
       }
@@ -268,8 +240,8 @@ export default function AdminCaseDetailPage() {
       setShowApproveModal(false);
       setShowSuccessModal({ type: 'approved' });
 
-    } catch (err: any) {
-      setFormError(err.message || "予期せぬエラーが発生しました。");
+    } catch (err: unknown) {
+      setFormError(translateErrorMessage(err, "予期せぬエラーが発生しました。"));
       setIsProcessing(false);
     }
   };
@@ -309,9 +281,9 @@ export default function AdminCaseDetailPage() {
         }),
       });
 
-      const resData = await res.json();
+      const resData = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setFormError(resData.error || "却下に失敗しました。");
+        setFormError(translateErrorMessage(resData.error, "却下に失敗しました。"));
         setIsProcessing(false);
         return;
       }
@@ -321,8 +293,8 @@ export default function AdminCaseDetailPage() {
       setShowRejectModal(false);
       setShowSuccessModal({ type: 'rejected' });
 
-    } catch (err: any) {
-      setFormError(err.message || "予期せぬエラーが発生しました。");
+    } catch (err: unknown) {
+      setFormError(translateErrorMessage(err, "予期せぬエラーが発生しました。"));
       setIsProcessing(false);
     }
   };
@@ -520,9 +492,7 @@ export default function AdminCaseDetailPage() {
                     <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
                       <span className="text-slate-600">登録日：</span>
                       <span className="text-slate-900">
-                        {caseDetail.created_at
-                          ? new Date(caseDetail.created_at).toLocaleDateString()
-                          : "-"}
+                        {formatDateJST(caseDetail.created_at)}
                       </span>
                     </div>
                     <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr]">
@@ -575,27 +545,31 @@ export default function AdminCaseDetailPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons（現在のステータスに応じて重複実行・二重メール送信を防止） */}
               <div className="flex flex-col sm:flex-row gap-3 mt-8">
-                <button
-                  type="button"
-                  onClick={() => setShowApproveModal(true)}
-                  disabled={isProcessing}
-                  className="flex-1 bg-[#0f172a]/80 hover:bg-[#0f172a] disabled:bg-[#0f172a]/40 text-white font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98]"
-                >
-                  承認する
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormError(null);
-                    setShowRejectModal(true)
-                  }}
-                  disabled={isProcessing}
-                  className="flex-1 bg-red-600 hover:bg-red-500 disabled:bg-red-800/60 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-red-900/20 active:scale-[0.98]"
-                >
-                  却下する
-                </button>
+                {caseDetail.status !== "approved" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowApproveModal(true)}
+                    disabled={isProcessing}
+                    className="flex-1 bg-[#0f172a]/80 hover:bg-[#0f172a] disabled:bg-[#0f172a]/40 text-white font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98]"
+                  >
+                    承認する
+                  </button>
+                )}
+                {caseDetail.status !== "rejected" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormError(null);
+                      setShowRejectModal(true)
+                    }}
+                    disabled={isProcessing}
+                    className="flex-1 bg-red-600 hover:bg-red-500 disabled:bg-red-800/60 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-red-900/20 active:scale-[0.98]"
+                  >
+                    却下する
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -607,16 +581,26 @@ export default function AdminCaseDetailPage() {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4">
               <div className="bg-white border border-slate-300 p-6 sm:p-8 rounded-2xl max-w-sm w-full shadow-xl">
                 <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-3">承認の確認</h3>
-                <p className="text-xs sm:text-sm text-slate-600 mb-6 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 mb-4 leading-relaxed">
                   この就業トラブル申請を承認しますか？<br />
                   <span className="text-[11px] text-slate-500 mt-1 block">
                     承認すると申請者に通知メールが自動送信され、データベースに公開・反映されます。
                   </span>
                 </p>
+                {formError && (
+                  <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{formError}</span>
+                  </div>
+                )}
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setShowApproveModal(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-colors"
+                    onClick={() => {
+                      setFormError(null);
+                      setShowApproveModal(false);
+                    }}
+                    disabled={isProcessing}
+                    className="flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50"
                   >
                     キャンセル
                   </button>

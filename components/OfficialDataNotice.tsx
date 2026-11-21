@@ -22,7 +22,7 @@ export function OfficialDataNotice({ className = "", compact = false }: Official
                     <span>公的オープンデータ・出典および利用規約に関する表記</span>
                 </div>
                 <p>
-                    本システム上の公的記録は、関係各省庁・裁判所が公開する一次公表情報をもとにMIERISが独自に抽出・加工して提供しているものです（政府標準利用規約2.0準拠）。
+                    本システム上の公的記録は、関係各省庁が公開する一次公表情報をもとにMIERISが独自に抽出・加工して提供しているものです（政府標準利用規約2.0準拠）。
                     国・各省庁が本サービスや掲載内容を直接保証・認証したものではありません。最新の処分状況や是正完了の有無等は、各公表元機関へ直接ご確認ください。
                 </p>
             </div>
@@ -66,19 +66,6 @@ export function OfficialDataNotice({ className = "", compact = false }: Official
                 </a>
 
                 <a
-                    href="https://www.mhlw.go.jp/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-100/80 transition-colors flex items-center justify-between group"
-                >
-                    <div className="truncate pr-2">
-                        <span className="font-bold text-slate-800 block truncate">厚生労働省 労働基準関係法令違反公表事案</span>
-                        <span className="text-[10px] text-slate-500 block truncate">各都道府県労働局・労働基準監督署による送検公表記録</span>
-                    </div>
-                    <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
-                </a>
-
-                <a
                     href="https://www.no-trouble.caa.go.jp/action/"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -87,19 +74,6 @@ export function OfficialDataNotice({ className = "", compact = false }: Official
                     <div className="truncate pr-2">
                         <span className="font-bold text-slate-800 block truncate">消費者庁 特定商取引法ガイド（執行状況公表）</span>
                         <span className="text-[10px] text-slate-500 block truncate">住宅リフォーム・屋根外壁工事・設備修繕等における業務停止命令・指示</span>
-                    </div>
-                    <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
-                </a>
-
-                <a
-                    href="https://kanpou.npb.go.jp/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-100/80 transition-colors flex items-center justify-between group"
-                >
-                    <div className="truncate pr-2">
-                        <span className="font-bold text-slate-800 block truncate">国立印刷局「官報」公告 / 管轄地方裁判所・公正取引委員会</span>
-                        <span className="text-[10px] text-slate-500 block truncate">裁判所公認の破産・民事再生手続開始決定および下請法勧告事案</span>
                     </div>
                     <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
                 </a>

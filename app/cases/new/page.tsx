@@ -6,6 +6,10 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { UploadCloud, X, AlertCircle, ArrowLeft, Check, ShieldAlert, Lock } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
+import { usePlan } from "@/contexts/PlanContext";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { isValidCalendarDate } from "@/lib/dateFormat";
+import { validateEvidenceFiles, extractSafeFileExtension } from "@/lib/fileValidation";
 
 type TroubleCategory = {
   id: string;
@@ -113,53 +117,30 @@ export default function NewCasePage() {
   const [agreedLate2, setAgreedLate2] = useState(false);
 
   const [planChecked, setPlanChecked] = useState(false);
+  const { allowedPlan, isAdmin: isContextAdmin, companyId, loading: planLoading } = usePlan();
 
   useEffect(() => {
-    const checkPlan = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: appUser } = await supabase
-            .from("app_users")
-            .select("allowed_plan, role")
-            .eq("id", session.user.id)
-            .maybeSingle();
-
-          const isAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
-          if (!isAdmin && appUser?.allowed_plan === "credit") {
-            setPlanRestricted(true);
-          }
-        }
-      } finally {
-        setPlanChecked(true);
-      }
-    };
-    checkPlan();
-  }, []);
+    if (planLoading) return;
+    setPlanRestricted(!isContextAdmin && allowedPlan !== "full" && allowedPlan !== "employment");
+    setPlanChecked(true);
+  }, [allowedPlan, isContextAdmin, planLoading]);
 
   const currentCategoryObj = TROUBLE_CATEGORIES.find((c) => c.id === selectedCategory);
   const isLateSelected = selectedCategory === "absence" && LATE_SUB_ITEMS.includes(selectedSubItem);
   const isFalsificationSelected = selectedCategory === "falsification";
 
-  // File upload handling
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB default limit for Supabase
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files);
-      const validFiles: File[] = [];
-
-      newFiles.forEach(file => {
-        if (file.size > MAX_FILE_SIZE) {
-          alert(`ファイル「${file.name}」はサイズが大きすぎます (1ファイルあたり最大50MB)`);
-        } else {
-          validFiles.push(file);
-        }
-      });
-
+      const { validFiles, errors } = validateEvidenceFiles(Array.from(e.target.files), selectedFiles.length);
+      if (errors.length > 0) {
+        setErrorMsg(errors.join("\n"));
+      } else {
+        setErrorMsg(null);
+      }
       if (validFiles.length > 0) {
         setSelectedFiles((prev) => [...prev, ...validFiles]);
       }
+      e.target.value = "";
     }
   };
 
@@ -173,25 +154,19 @@ export default function NewCasePage() {
     setErrorMsg(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!session?.access_token || !user) {
         throw new Error("ログインセッションが切れました。再ログインしてください。");
       }
 
-      // ユーザーの会社IDと会社名・プランを取得
-      const { data: appUser } = await supabase
-        .from("app_users")
-        .select("company_id, allowed_plan, role, companies(name)")
-        .eq("id", user.id)
-        .single();
-
-      if (!appUser?.company_id) {
-        throw new Error("所属会社情報が見つかりません。");
+      if (!companyId) {
+        throw new Error("所属会社情報が見つかりません。運営事務局へお問い合わせください。");
       }
 
-      if (appUser.allowed_plan === "credit" && appUser.role !== "admin") {
+      if (!isContextAdmin && allowedPlan !== "full" && allowedPlan !== "employment") {
         setPlanRestricted(true);
-        throw new Error("現在の契約プラン（MIERIS CREDIT）では就業・採用トラブル情報（MIERIS WORK）を登録できません。");
+        throw new Error("現在の契約プランでは就業・採用トラブル情報（MIERIS WORK）を登録できません。");
       }
 
       if (!name.trim()) {
@@ -251,18 +226,11 @@ export default function NewCasePage() {
             ? `【${selectedCatObj?.label}】${selectedSubItem}\n${reason.trim()}`
             : `【${selectedCatObj?.label}】${selectedSubItem}`;
 
-      // 共通の日付バリデーション関数
+      // 共通の日付バリデーション関数（実在日・未来日禁止をJST基準で検証）
       const validateDate = (y: string, m: string, d: string, label: string) => {
-        const yearInt = parseInt(y, 10);
-        const monthInt = parseInt(m, 10);
-        const dayInt = parseInt(d, 10);
-        
-        const dateObj = new Date(yearInt, monthInt - 1, dayInt);
-        if (dateObj.getFullYear() !== yearInt || dateObj.getMonth() + 1 !== monthInt || dateObj.getDate() !== dayInt) {
-          throw new Error(`${label}に存在しない日付（${yearInt}年${monthInt}月${dayInt}日）が入力されています。正しい日付を入力してください。`);
-        }
-        if (yearInt < 1900 || yearInt > 2100) {
-          throw new Error(`${label}の「年」は1900〜2100の範囲で入力してください。`);
+        const iso = `${y.padStart(4, "0")}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+        if (!isValidCalendarDate(iso, { allowFuture: false })) {
+          throw new Error(`${label}に存在しない日付または未来の日付が入力されています。本日以前の正しい日付を入力してください。`);
         }
       };
 
@@ -273,8 +241,11 @@ export default function NewCasePage() {
       const uploadedUrls: string[] = [];
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          const safeExt = extractSafeFileExtension(file.name);
+          if (!safeExt) {
+            throw new Error(`ファイル「${file.name}」は対応していない形式です。画像（JPG/PNG/GIF/WebP）またはPDFを選択してください。`);
+          }
+          const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${safeExt}`;
 
           const { error: uploadError, data: uploadData } = await supabase.storage
             .from('case-evidence')
@@ -282,7 +253,7 @@ export default function NewCasePage() {
 
           if (uploadError) {
             console.error("Upload failed:", uploadError);
-            throw new Error(`ファイルのアップロードに失敗しました (${file.name}): ${uploadError.message}`);
+            throw new Error(`ファイル「${file.name}」のアップロードに失敗しました。${translateErrorMessage(uploadError, "時間をおいて再度お試しください。")}`);
           }
 
           if (uploadData?.path) {
@@ -291,56 +262,41 @@ export default function NewCasePage() {
         }
       }
 
+      const birthDateStr = `${birthYear.padStart(4, '0')}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`;
+      const occurrenceDateStr = `${occurrenceYear.padStart(4, '0')}-${occurrenceMonth.padStart(2, '0')}-${occurrenceDay.padStart(2, '0')}`;
 
-      const { error } = await supabase.from("blacklist_cases").insert([
-        {
-          registered_company_id: appUser.company_id,
-          full_name: name,
-          full_name_kana: nameKana,
-          gender: gender || null, // "male", "female", "other" or null
-          birth_date: (birthYear && birthMonth && birthDay)
-            ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`
-            : null,
-          phone_last4: phoneLast4 || null,
-          city: city || null,
-          occurrence_date: (occurrenceYear && occurrenceMonth && occurrenceDay)
-            ? `${occurrenceYear}-${occurrenceMonth.padStart(2, '0')}-${occurrenceDay.padStart(2, '0')}`
-            : null,
-          reason_text: finalReasonText,
-          evidence_urls: uploadedUrls, // アップロードしたファイルのパス配列
-          status: "pending", // 初期状態は未承認
-          registered_by_user_id: user.id,
+      const res = await fetch('/api/cases', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
-      ]);
+        body: JSON.stringify({
+          fullName: name.trim(),
+          fullNameKana: nameKana.trim(),
+          gender,
+          birthDate: birthDateStr,
+          phoneLast4,
+          city: city.trim(),
+          occurrenceDate: occurrenceDateStr,
+          reasonText: finalReasonText,
+          evidenceUrls: uploadedUrls,
+        }),
+      });
 
-      if (error) throw error;
-
-      // LINE通知APIの呼び出し（失敗しても画面遷移は止めない）
-      try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        await fetch('/api/notify/line', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(currentSession?.access_token ? { 'Authorization': `Bearer ${currentSession.access_token}` } : {}),
-          },
-          body: JSON.stringify({
-            type: 'new_case',
-            data: {
-              targetName: name,
-              company: (appUser?.companies as any)?.name || "不明"
-            }
-          })
-        });
-      } catch (notifyErr) {
-        console.error("Notify Error:", notifyErr);
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (res.status === 403 && resData.planRestricted) {
+          setPlanRestricted(true);
+        }
+        throw new Error(resData.error || "登録申請の送信に失敗しました。");
       }
 
       setLoading(false);
       setIsSubmitted(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setErrorMsg("登録処理中にエラーが発生しました: " + (err.message || "詳細不明"));
+      setErrorMsg(translateErrorMessage(err, "登録処理中にエラーが発生しました。"));
       setLoading(false);
     }
   };
@@ -528,7 +484,10 @@ export default function NewCasePage() {
                               inputMode="numeric"
                               maxLength={4}
                               value={birthYear}
-                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthYear(e.target.value); }}
+                              onChange={(e) => {
+                                const v = e.target.value.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
+                                if (/^\d*$/.test(v)) setBirthYear(v);
+                              }}
                               className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
                               placeholder="1990"
                             />
@@ -540,7 +499,10 @@ export default function NewCasePage() {
                               inputMode="numeric"
                               maxLength={2}
                               value={birthMonth}
-                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthMonth(e.target.value); }}
+                              onChange={(e) => {
+                                const v = e.target.value.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
+                                if (/^\d*$/.test(v)) setBirthMonth(v);
+                              }}
                               className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
                               placeholder="01"
                             />
@@ -552,7 +514,10 @@ export default function NewCasePage() {
                               inputMode="numeric"
                               maxLength={2}
                               value={birthDay}
-                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setBirthDay(e.target.value); }}
+                              onChange={(e) => {
+                                const v = e.target.value.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
+                                if (/^\d*$/.test(v)) setBirthDay(v);
+                              }}
                               className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
                               placeholder="01"
                             />
@@ -586,7 +551,7 @@ export default function NewCasePage() {
                           maxLength={4}
                           value={phoneLast4}
                           onChange={(e) => {
-                            const val = e.target.value;
+                            const val = e.target.value.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
                             if (/^\d*$/.test(val)) {
                               setPhoneLast4(val);
                             }
@@ -614,7 +579,10 @@ export default function NewCasePage() {
                               inputMode="numeric"
                               maxLength={4}
                               value={occurrenceYear}
-                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceYear(e.target.value); }}
+                              onChange={(e) => {
+                                const v = e.target.value.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
+                                if (/^\d*$/.test(v)) setOccurrenceYear(v);
+                              }}
                               className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
                               placeholder="2024"
                             />
@@ -626,7 +594,10 @@ export default function NewCasePage() {
                               inputMode="numeric"
                               maxLength={2}
                               value={occurrenceMonth}
-                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceMonth(e.target.value); }}
+                              onChange={(e) => {
+                                const v = e.target.value.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
+                                if (/^\d*$/.test(v)) setOccurrenceMonth(v);
+                              }}
                               className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
                               placeholder="01"
                             />
@@ -638,7 +609,10 @@ export default function NewCasePage() {
                               inputMode="numeric"
                               maxLength={2}
                               value={occurrenceDay}
-                              onChange={(e) => { if (/^\d*$/.test(e.target.value)) setOccurrenceDay(e.target.value); }}
+                              onChange={(e) => {
+                                const v = e.target.value.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
+                                if (/^\d*$/.test(v)) setOccurrenceDay(v);
+                              }}
                               className="input-field w-full text-center font-mono py-2.5 sm:py-3 text-sm sm:text-base"
                               placeholder="01"
                             />

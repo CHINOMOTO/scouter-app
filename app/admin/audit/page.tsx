@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { Pagination } from "@/components/Pagination";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { formatDateTimeJST } from "@/lib/dateFormat";
 
 type AuditLogItem = {
     id: string;
@@ -63,14 +65,14 @@ export default function AdminAuditPage() {
                     "Authorization": `Bearer ${session.access_token}`
                 }
             });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || data.error) throw new Error(data.error || "監査ログの取得に失敗しました。");
 
             setLogs(data.logs || []);
             if (isManual) setToast({ type: "success", text: "ログを最新状態に更新しました。" });
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(e);
-            setToast({ type: "error", text: "ログ取得失敗: " + e.message });
+            setToast({ type: "error", text: translateErrorMessage(e, "監査ログの取得に失敗しました。") });
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -83,7 +85,7 @@ export default function AdminAuditPage() {
 
     // フィルタリング & ソート
     const filteredAndSortedLogs = useMemo(() => {
-        let result = logs;
+        let result = [...logs];
 
         // アクション種別フィルター
         if (actionFilter !== "all") {
@@ -360,15 +362,7 @@ export default function AdminAuditPage() {
                         <div className="space-y-3 animate-fade-in">
                             {paginatedLogs.map((log) => {
                                 const badge = getActionBadge(log.action_type);
-                                const dateObj = new Date(log.created_at);
-                                const dateFormatted = dateObj.toLocaleString("ja-JP", {
-                                    year: "numeric",
-                                    month: "2-digit",
-                                    day: "2-digit",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    second: "2-digit"
-                                });
+                                const dateFormatted = formatDateTimeJST(log.created_at, { withSeconds: true });
 
                                 return (
                                     <div

@@ -4,12 +4,9 @@ require('dotenv').config({ path: '.env.local' });
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error('[SYNC ERROR] Missing Supabase credentials');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = (supabaseUrl && supabaseKey)
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 // ── 業種判定・除外フィルタ定義（lib/officialSources.ts と同一基準） ──
 const EXCLUDED_INDUSTRY_REGEX =
@@ -49,13 +46,32 @@ function classifyCompanyIndustry(item) {
   return 'excluded';
 }
 
+function hasOfficialGovernmentUrl(item) {
+  const urls = Array.isArray(item && item.evidence_urls) ? item.evidence_urls : [];
+  return urls.some(u => typeof u === 'string' && (/^https?:\/\/[^/]*\.go\.jp(\/|$)/i.test(u) || u.includes('kanpou.npb.go.jp')));
+}
+
 function isOfficialRecord(item) {
+  if (!item) return false;
+  if (item.is_official === true) return true;
+  // 一般ユーザー投稿API（POST /api/credit-cases）はストレージ相対パスのみ許可し外部 https://*.go.jp URL を一切許可しないため、
+  // 政府公式ドメインURLを持つレコードは旧バッチ（is_official カラム追加前）が投入した公的記録として確実に判定できる
+  if (hasOfficialGovernmentUrl(item)) return true;
+  if (item.is_official === false) return false;
   const claim = item.counterparty_claim || '';
-  const urls = Array.isArray(item.evidence_urls) ? item.evidence_urls : [];
-  return (
-    claim.startsWith('【') ||
-    urls.some(u => typeof u === 'string' && (u.includes('.go.jp') || u.includes('kanpou')))
-  );
+  return /^(【厚生労働省|【国土交通省|【東京都知事|【消費者庁|【官報公告|【公正取引委員会|【経済産業省)/.test(claim);
+}
+
+async function insertOfficialCreditCase(recordOrRecords) {
+  const withFlag = Array.isArray(recordOrRecords)
+    ? recordOrRecords.map(r => ({ ...r, is_official: true }))
+    : { ...recordOrRecords, is_official: true };
+
+  let result = await supabase.from('credit_cases').insert(withFlag);
+  if (result.error && result.error.message && result.error.message.includes('is_official')) {
+    result = await supabase.from('credit_cases').insert(recordOrRecords);
+  }
+  return result;
 }
 
 function parseWarekiDate(str) {
@@ -75,21 +91,6 @@ function parseWarekiDate(str) {
     return `${year}-${kanjiMatch[2].padStart(2, '0')}-${kanjiMatch[3].padStart(2, '0')}`;
   }
   return null;
-}
-
-function extractAmount(summary) {
-  if (!summary) return 0;
-  const manMatch = summary.match(/約?([\d,]+)\s*万\s*円/);
-  if (manMatch) {
-    const num = parseInt(manMatch[1].replace(/,/g, ''), 10);
-    return num * 10000;
-  }
-  const yenMatch = summary.match(/約?([\d,]+)\s*円/);
-  if (yenMatch) {
-    const num = parseInt(yenMatch[1].replace(/,/g, ''), 10);
-    if (num > 0) return num;
-  }
-  return 0;
 }
 
 // 1A. 国土交通省ネガティブ情報（建設・指名停止・測量・建設コンサル・地質・宅建・マンション管理・賃貸管理・自動車整備）
@@ -407,102 +408,122 @@ async function fetchCaaTargetIndustryCases() {
   return results;
 }
 
-// 3. 官報（破産・民事再生公告）対象業種確定事案データ
-const TARGET_KANPOU_BANKRUPTCY_CASES = [
-  {
-    company_name: '株式会社スマートデイズ',
-    corporate_number: '4010001148478',
-    location: '東京都中央区銀座一丁目7番10号',
-    invoice_date: '2018-04-09',
-    due_date: '2018-04-09',
-    amount: 6000000000,
-    payment_status: 'unpaid',
-    counterparty_claim: '【官報公告 裁判所公認】東京地裁より破産手続開始決定（不動産サブリース・建築委託代金等未払い）',
-    admin_notes: '【公表日: 2018年4月9日】東京地方裁判所より破産手続開始決定（官報公告事案）。不動産サブリース・シェアハウス運営。オーナーへの賃料および施工業者への建築代金未払いにより破産手続開始（公的登記閉鎖済）。',
-    evidence_urls: ['https://kanpou.npb.go.jp/']
-  },
-  {
-    company_name: '株式会社小野里工業',
-    corporate_number: '3070001001122',
-    location: '群馬県前橋市下小出町二丁目',
-    invoice_date: '2024-05-15',
-    due_date: '2024-05-15',
-    amount: 2100000000,
-    payment_status: 'unpaid',
-    counterparty_claim: '【官報公告 裁判所公認】前橋地裁より破産手続開始決定（総合建設業・下請工事代金未払い）',
-    admin_notes: '【公表日: 2024年5月15日】管轄地方裁判所より破産手続開始決定（官報公告事案）。建築・土木一式総合建設業。資材価格高騰および外注工事費の資金繰り悪化により事業停止、破産手続へ移行。',
-    evidence_urls: ['https://kanpou.npb.go.jp/']
-  },
-  {
-    company_name: '株式会社成建',
-    corporate_number: '5012401015800',
-    location: '東京都立川市錦町一丁目',
-    invoice_date: '2024-06-12',
-    due_date: '2024-06-12',
-    amount: 1450000000,
-    payment_status: 'unpaid',
-    counterparty_claim: '【官報公告 裁判所公認】東京地裁立川支部より破産手続開始決定（木造建築工事業・外注費未払い）',
-    admin_notes: '【公表日: 2024年6月12日】東京地方裁判所立川支部より破産手続開始決定（官報公告事案）。住宅建築・リフォーム工事業。建築資材高騰と職人不足による工期遅延が重なり資金ショート。',
-    evidence_urls: ['https://kanpou.npb.go.jp/']
-  },
-  {
-    company_name: '翔栄運輸株式会社',
-    corporate_number: '8030001045120',
-    location: '埼玉県越谷市流通団地三丁目',
-    invoice_date: '2024-07-08',
-    due_date: '2024-07-08',
-    amount: 580000000,
-    payment_status: 'unpaid',
-    counterparty_claim: '【官報公告 裁判所公認】さいたま地裁越谷支部より破産手続開始決定（一般貨物自動車運送業・傭車費未払い）',
-    admin_notes: '【公表日: 2024年7月8日】さいたま地方裁判所越谷支部より破産手続開始決定（官報公告事案）。一般貨物自動車運送業。燃料費高騰およびドライバー人件費負担増により資金繰り破綻、破産管財手続中。',
-    evidence_urls: ['https://kanpou.npb.go.jp/']
+// ── 毎週自動取得できる公式一次ソース由来レコードの判定（固定データ・旧取り込みデータを除外するためのホワイトリスト） ──
+// 国土交通省 ネガティブ情報（fetchMlitNegaInfCases）/ 自動車運送事業処分（fetchMlitTruckingCases）/ 消費者庁 特商法（fetchCaaTargetIndustryCases）
+const AUTO_SYNC_CLAIM_REGEX =
+  /^【(?:国土交通省 (?:建設業法|工事等指名停止措置|測量法|建設コンサルタント登録規程|地質調査業者登録規程|宅建業法|マンション管理適正化法|賃貸住宅管理業法|道路運送車両法（自動車整備事業）|監督処分)監督処分|国土交通省 自動車運送事業処分|消費者庁 特定商取引法行政処分)】/;
+const AUTO_SYNC_NOTES_REGEX = /^\[公表日: [^\]]*\] (?:処分機関|事業区分|処分行政庁): /;
+
+// 公式側の取得対象期間（国交省ネガティブ情報: 直近2年 / 消費者庁: 当年＋過去2年）を超えた記録は自動削除する
+const OFFICIAL_RETENTION_YEARS = 2;
+
+function isAutoSyncedOfficialRecord(row) {
+  const claim = (row && row.counterparty_claim) || '';
+  const notes = (row && row.admin_notes) || '';
+  return AUTO_SYNC_CLAIM_REGEX.test(claim) && AUTO_SYNC_NOTES_REGEX.test(notes);
+}
+
+async function fetchAllCreditRows(selectWithFlag, selectWithoutFlag) {
+  const collect = async (selectStr) => {
+    const out = [];
+    for (let from = 0; from < 50000; from += 1000) {
+      const { data, error } = await supabase
+        .from('credit_cases')
+        .select(selectStr)
+        .order('id', { ascending: true })
+        .range(from, from + 999);
+      if (error) return { data: null, error };
+      if (!data || data.length === 0) break;
+      out.push(...data);
+      if (data.length < 1000) break;
+    }
+    return { data: out, error: null };
+  };
+
+  let result = await collect(selectWithFlag);
+  if (result.error && result.error.message && result.error.message.includes('is_official')) {
+    result = await collect(selectWithoutFlag);
   }
-];
+  if (result.error) throw new Error(result.error.message || 'credit_cases fetch failed');
+  return result.data || [];
+}
+
+async function deleteCreditRowsByIds(ids) {
+  let deleted = 0;
+  for (let i = 0; i < ids.length; i += 50) {
+    const chunk = ids.slice(i, i + 50);
+    const { error } = await supabase.from('credit_cases').delete().in('id', chunk);
+    if (!error) deleted += chunk.length;
+  }
+  return deleted;
+}
 
 async function syncOfficialData() {
-  console.log('=== [公的データ自動定期同期バッチ（業種拡張＋個人事業主対応版） 開始] ===');
+  if (!supabase) {
+    throw new Error('Supabase の接続設定（環境変数）が不足しているため、公的データの同期を実行できません。');
+  }
+  console.log('=== [公的データ自動定期同期バッチ（国土交通省・消費者庁 公式一次ソース） 開始] ===');
   const startTime = new Date();
 
-  const { data: adminComp } = await supabase.from('companies').select('id').limit(1).single();
+  const { data: adminComp } = await supabase.from('companies').select('id').eq('is_main', true).limit(1).maybeSingle();
   const regCompanyId = adminComp ? adminComp.id : null;
 
   let totalNew = 0;
   let totalSkipped = 0;
   let totalCleaned = 0;
 
-  // 0. 既存DB内の対象外業種（旅行・製薬・飲食・医療等の公的データ）を自動クリーンアップ
-  console.log('\n[0/5] 対象外業種（旅行・製薬・飲食・医療等）の公的データ除外チェック中...');
+  // 0. 既存DB内の公的記録クリーンアップ
+  //    (a) 毎週自動取得できる公式一次ソース以外の公的記録（固定データ・旧取り込みデータ）を削除
+  //    (b) 対象外業種（旅行・製薬・飲食・医療等）を削除
+  //    (c) 公式側の取得対象期間を超えた古い記録を削除
+  //    ※加盟企業の民間申告データ（is_official = false）は一切対象外
+  console.log('\n[0/3] 公的記録のクリーンアップ（固定データ・対象外業種・期間超過）を実行中...');
   try {
-    const { data: allCases } = await supabase
-      .from('credit_cases')
-      .select('id, company_name, counterparty_claim, admin_notes, evidence_urls');
+    const allCases = await fetchAllCreditRows(
+      'id, is_official, company_name, counterparty_claim, admin_notes, evidence_urls, due_date',
+      'id, company_name, counterparty_claim, admin_notes, evidence_urls, due_date'
+    );
 
-    if (allCases && allCases.length > 0) {
-      const idsToDelete = [];
-      for (const row of allCases) {
-        if (isOfficialRecord(row) && classifyCompanyIndustry(row) === 'excluded') {
-          idsToDelete.push(row.id);
-        }
-      }
+    const retentionCutoff = `${new Date().getFullYear() - OFFICIAL_RETENTION_YEARS}-01-01`;
+    const nonAutoIds = [];
+    const excludedIds = [];
+    const expiredIds = [];
+    const fixFlagIds = [];
 
-      if (idsToDelete.length > 0) {
-        const chunkSize = 50;
-        for (let i = 0; i < idsToDelete.length; i += chunkSize) {
-          const chunk = idsToDelete.slice(i, i + chunkSize);
-          const { error: delErr } = await supabase.from('credit_cases').delete().in('id', chunk);
-          if (!delErr) totalCleaned += chunk.length;
-        }
-        console.log(`- 対象外業種データ ${totalCleaned}件 を除外しました。`);
-      } else {
-        console.log('- 対象外業種の公的データは0件です（クリーン状態）。');
+    for (const row of allCases) {
+      if (!isOfficialRecord(row)) continue;
+      if (!isAutoSyncedOfficialRecord(row)) {
+        nonAutoIds.push(row.id);
+      } else if (classifyCompanyIndustry(row) === 'excluded') {
+        excludedIds.push(row.id);
+      } else if (row.due_date && String(row.due_date).slice(0, 10) < retentionCutoff) {
+        expiredIds.push(row.id);
+      } else if (row.is_official === false) {
+        fixFlagIds.push(row.id);
       }
     }
+
+    if (fixFlagIds.length > 0) {
+      for (let i = 0; i < fixFlagIds.length; i += 50) {
+        const chunk = fixFlagIds.slice(i, i + 50);
+        await supabase.from('credit_cases').update({ is_official: true }).in('id', chunk);
+      }
+    }
+
+    const removedNonAuto = await deleteCreditRowsByIds(nonAutoIds);
+    const removedExcluded = await deleteCreditRowsByIds(excludedIds);
+    const removedExpired = await deleteCreditRowsByIds(expiredIds);
+    totalCleaned += removedNonAuto + removedExcluded + removedExpired;
+
+    console.log(`- 自動取得対象外の公的記録（固定データ・旧取り込み）: ${removedNonAuto}件 を削除`);
+    console.log(`- 対象外業種の公的記録: ${removedExcluded}件 を削除`);
+    console.log(`- 取得対象期間（${retentionCutoff} より前）を超えた公的記録: ${removedExpired}件 を削除`);
   } catch (err) {
-    console.warn('[対象外業種クリーンアップ警告]:', err.message);
+    console.warn('[クリーンアップ警告]:', err.message);
   }
 
   // 1A. 国土交通省 ネガティブ情報（建設・指名停止・測量・建設コンサル・地質・宅建・マンション管理・賃貸管理・自動車整備）
-  console.log('\n[1/5] 国土交通省 ネガティブ情報（建設・土木・測量・不動産・自動車整備 全9分野）の同期確認中...');
+  console.log('\n[1/3] 国土交通省 ネガティブ情報（建設・土木・測量・不動産・自動車整備 全9分野）の同期確認中...');
   const mlitCategories = [
     'kensetugyousya',
     'shimeiteishi',
@@ -527,7 +548,7 @@ async function syncOfficialData() {
       const { data: existing } = await query.limit(1);
 
       if (!existing || existing.length === 0) {
-        const { error } = await supabase.from('credit_cases').insert({
+        const { error } = await insertOfficialCreditCase({
           company_name: item.company_name,
           corporate_number: item.corporate_number,
           location: item.address || null,
@@ -553,7 +574,7 @@ async function syncOfficialData() {
   }
 
   // 1B. 国土交通省 トラック・軽貨物運送事業（一般貨物・軽貨物）の行政処分同期
-  console.log('\n[2/5] 国土交通省 貨物自動車運送事業（トラック・軽貨物事業者）の同期確認中...');
+  console.log('\n[2/3] 国土交通省 貨物自動車運送事業（トラック・軽貨物事業者）の同期確認中...');
   const truckCases = await fetchMlitTruckingCases();
   console.log(`- 国交省 [トラック・軽貨物] 取得: ${truckCases.length} 件`);
   for (const item of truckCases) {
@@ -562,7 +583,7 @@ async function syncOfficialData() {
     const { data: existing } = await query.limit(1);
 
     if (!existing || existing.length === 0) {
-      const { error } = await supabase.from('credit_cases').insert({
+      const { error } = await insertOfficialCreditCase({
         company_name: item.company_name,
         corporate_number: item.corporate_number,
         location: item.location,
@@ -586,7 +607,7 @@ async function syncOfficialData() {
   }
 
   // 2. 消費者庁「特定商取引法ガイド 執行状況一覧」（工事・リフォーム・設備・運送系のみ自動抽出）
-  console.log('\n[3/5] 消費者庁 特定商取引法行政処分（建設・リフォーム・住宅設備・運送系）の同期確認中...');
+  console.log('\n[3/3] 消費者庁 特定商取引法行政処分（建設・リフォーム・住宅設備・運送系）の同期確認中...');
   const caaCases = await fetchCaaTargetIndustryCases();
   console.log(`- 消費者庁 対象業種抽出レコード: ${caaCases.length} 件`);
   for (const item of caaCases) {
@@ -597,7 +618,7 @@ async function syncOfficialData() {
       .limit(1);
 
     if (!existing || existing.length === 0) {
-      const { error } = await supabase.from('credit_cases').insert({
+      const { error } = await insertOfficialCreditCase({
         company_name: item.company_name,
         corporate_number: item.corporate_number,
         location: item.location,
@@ -620,114 +641,16 @@ async function syncOfficialData() {
     }
   }
 
-  // 3. 厚生労働省 労働基準関係法令違反データ（対象業種フィルタ適用）
-  console.log('\n[4/5] 厚生労働省 労働基準関係法令違反（建設・運送・不動産・警備・人材系のみ）の同期確認中...');
-  try {
-    const url = 'https://raw.githubusercontent.com/nyampire/jp_labor_act_illegal_list/master/company_list_20180801_to_20180731.tsv';
-    const res = await fetch(url);
-    if (res.ok) {
-      const text = await res.text();
-      const lines = text.trim().split('\n');
-
-      const batchToInsert = [];
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split('\t');
-        if (cols.length < 5) continue;
-
-        const [jurisdiction, updatedAt, companyName, location, publishedDateStr, law, summary, notes] = cols;
-        if (!companyName || !companyName.trim()) continue;
-
-        const cleanName = companyName
-          .trim()
-          .replace(/\uE7C8/g, '﨑')
-          .replace(/\uE8CF/g, '髙')
-          .replace(/\uE824/g, '瀬')
-          .replace(/[\uE000-\uF8FF\uFFFD]/g, '');
-        const candidate = {
-          company_name: cleanName,
-          counterparty_claim: `【厚生労働省 公認送検事案】${jurisdiction}公表（${notes || '送検'}）`,
-          admin_notes: `[公表日: ${publishedDateStr || ''}] 違反法条: ${law || ''}\n事案概要: ${summary || ''}`
-        };
-
-        if (classifyCompanyIndustry(candidate) === 'excluded') {
-          continue;
-        }
-
-        const pubDate = parseWarekiDate(publishedDateStr);
-        const amount = extractAmount(summary);
-        const isWageViolation =
-          (law && (law.includes('24条') || law.includes('最低賃金法') || law.includes('26条'))) ||
-          (summary && (summary.includes('支払わなかった') || summary.includes('賃金')));
-
-        const { data: existing } = await supabase
-          .from('credit_cases')
-          .select('id')
-          .eq('company_name', cleanName)
-          .limit(1);
-
-        if (!existing || existing.length === 0) {
-          batchToInsert.push({
-            company_name: cleanName,
-            corporate_number: null,
-            location: location ? location.trim() : null,
-            invoice_date: pubDate,
-            due_date: pubDate,
-            amount: amount,
-            payment_status: isWageViolation ? 'unpaid' : 'resolved',
-            counterparty_claim: candidate.counterparty_claim,
-            admin_notes: candidate.admin_notes,
-            status: 'approved',
-            registered_by_company_id: regCompanyId,
-            evidence_urls: ['https://www.mhlw.go.jp/']
-          });
-        } else {
-          totalSkipped++;
-        }
-      }
-
-      if (batchToInsert.length > 0) {
-        const chunkSize = 50;
-        for (let i = 0; i < batchToInsert.length; i += chunkSize) {
-          const chunk = batchToInsert.slice(i, i + chunkSize);
-          const { error } = await supabase.from('credit_cases').insert(chunk);
-          if (!error) totalNew += chunk.length;
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('[厚労省同期スキップ/エラー]:', err.message);
-  }
-
-  // 4. 官報・破産公告データ（対象業種のみ）の同期
-  console.log('\n[5/5] 官報公告（建設・不動産・運送業の破産・倒産事案）の同期確認中...');
-  for (const item of TARGET_KANPOU_BANKRUPTCY_CASES) {
-    const { data: existing } = await supabase
-      .from('credit_cases')
-      .select('id')
-      .eq('company_name', item.company_name)
-      .limit(1);
-
-    if (!existing || existing.length === 0) {
-      const { error } = await supabase.from('credit_cases').insert({
-        ...item,
-        status: 'approved',
-        registered_by_company_id: regCompanyId
-      });
-      if (!error) {
-        totalNew++;
-        console.log(`  + [官報・新規追加] ${item.company_name}`);
-      }
-    } else {
-      totalSkipped++;
-    }
-  }
+  // ※以下の旧ソースは、毎週自動取得できる公式一次ソースではないため廃止済み
+  //   - 厚生労働省 労働基準関係法令違反（個人GitHub上の2018年固定TSV）
+  //   - 官報 破産公告（コード内の固定データ）
 
   const { count } = await supabase.from('credit_cases').select('*', { count: 'exact', head: true });
   const duration = ((new Date() - startTime) / 1000).toFixed(2);
 
   console.log('\n=== [公的データ自動定期同期バッチ 完了] ===');
   console.log(`- 処理所要時間: ${duration} 秒`);
-  console.log(`- 対象外業種除外: ${totalCleaned} 件`);
+  console.log(`- クリーンアップ削除: ${totalCleaned} 件`);
   console.log(`- 今回新規同期: ${totalNew} 件`);
   console.log(`- 既存最新維持: ${totalSkipped} 件`);
   console.log(`- データベース現在総件数: ${count} 件`);

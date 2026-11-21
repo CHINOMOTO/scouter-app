@@ -1,47 +1,86 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { Clock } from "lucide-react";
 
 export default function PendingApprovalPage() {
     const router = useRouter();
+    const [checking, setChecking] = useState(true);
+
+    useEffect(() => {
+        let mounted = true;
+        const checkStatus = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.user) {
+                    router.replace("/");
+                    return;
+                }
+                const { data: appUser } = await supabase
+                    .from("app_users")
+                    .select("is_approved")
+                    .eq("id", session.user.id)
+                    .maybeSingle();
+
+                if (appUser?.is_approved === true) {
+                    router.replace("/dashboard");
+                    return;
+                }
+            } finally {
+                if (mounted) setChecking(false);
+            }
+        };
+        checkStatus();
+        return () => {
+            mounted = false;
+        };
+    }, [router]);
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
         router.push("/");
     };
 
-    return (
-        <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="relative w-full max-w-lg glass-panel rounded-2xl p-10 text-center animate-fade-in border-t border-slate-600/50">
+    if (checking) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+                <div className="animate-spin h-8 w-8 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
+            </div>
+        );
+    }
 
-                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 ring-1 ring-[#0f172a]/30">
-                    <span className="text-4xl">⏳</span>
+    return (
+        <div className="min-h-screen flex items-center justify-center p-4 bg-[#f8fafc]">
+            <div className="relative w-full max-w-lg bg-white rounded-2xl p-8 sm:p-10 text-center animate-fade-in border border-slate-200 shadow-sm">
+                <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-amber-200">
+                    <Clock className="w-8 h-8" />
                 </div>
 
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
-                    承認待ちです
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-3 tracking-tight">
+                    現在ご利用いただけません
                 </h1>
 
-                <p className="text-slate-700 mb-8 leading-relaxed">
-                    アカウント登録の申請を受け付けました。<br />
-                    現在、管理者による確認を行っております。
+                <p className="text-slate-600 text-sm mb-7 leading-relaxed">
+                    このアカウントは現在、運営管理者による承認待ち、または一時利用停止の状態です。<br />
+                    利用再開・承認状況につきましては運営事務局までお問い合わせください。
                 </p>
 
-                <div className="bg-white rounded-xl p-6 text-left mb-8 border border-slate-200">
-                    <h3 className="text-xs font-bold text-slate-900 mb-2 uppercase tracking-widest">Next Steps</h3>
-                    <ul className="text-sm text-slate-600 space-y-2 list-disc list-inside">
-                        <li>管理者があなたの所属情報を確認します</li>
-                        <li>確認メールが送られましたので、認証リンクをクリックしてください</li>
-                        <li>承認後、本システムを利用可能になります</li>
+                <div className="bg-slate-50 rounded-xl p-5 text-left mb-7 border border-slate-200">
+                    <h3 className="text-xs font-bold text-slate-900 mb-2.5 tracking-wider">今後のご案内</h3>
+                    <ul className="text-xs sm:text-sm text-slate-600 space-y-2 list-disc list-inside leading-relaxed">
+                        <li>新規発行・承認待ちの場合は、運営事務局にて所属情報・契約内容を確認しています</li>
+                        <li>利用停止中の場合は、解除手続き完了後に再度ログインが可能となります</li>
+                        <li>ご不明な点は運営事務局（mieris0610@uiken.jp）までご連絡ください</li>
                     </ul>
                 </div>
 
                 <button
                     onClick={handleLogout}
-                    className="btn-secondary w-full"
+                    className="btn-secondary w-full py-3 font-bold text-sm"
                 >
-                    一度ログアウトして待機する
+                    ログアウトしてトップへ戻る
                 </button>
             </div>
         </div>

@@ -3,7 +3,14 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-export type AllowedPlan = "full" | "employment" | "credit";
+export type AllowedPlan = "full" | "employment" | "credit" | "none";
+
+const normalizePlan = (plan: unknown, isAdminRole: boolean): AllowedPlan => {
+    if (plan === "full" || plan === "employment" || plan === "credit") {
+        return plan;
+    }
+    return isAdminRole ? "full" : "none";
+};
 
 type PlanContextType = {
     allowedPlan: AllowedPlan;
@@ -17,7 +24,7 @@ type PlanContextType = {
 };
 
 const PlanContext = createContext<PlanContextType>({
-    allowedPlan: "full",
+    allowedPlan: "none",
     isAdmin: false,
     companyId: null,
     companyName: null,
@@ -28,7 +35,7 @@ const PlanContext = createContext<PlanContextType>({
 });
 
 export function PlanProvider({ children }: { children: React.ReactNode }) {
-    const [allowedPlan, setAllowedPlan] = useState<AllowedPlan>("full");
+    const [allowedPlan, setAllowedPlan] = useState<AllowedPlan>("none");
     const [isAdmin, setIsAdmin] = useState(false);
     const [companyId, setCompanyId] = useState<string | null>(null);
     const [companyName, setCompanyName] = useState<string | null>(null);
@@ -38,12 +45,43 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
 
     const fetchCurrentPlan = useCallback(async (userId?: string) => {
         try {
-            const currentUserId = userId || (await supabase.auth.getSession()).data.session?.user?.id;
+            const { data: { session } } = await supabase.auth.getSession();
+            const currentUserId = userId || session?.user?.id;
             if (!currentUserId) {
+                setAllowedPlan("none");
+                setIsAdmin(false);
+                setCompanyId(null);
+                setCompanyName(null);
+                setDisplayName(null);
+                setIsApproved(false);
                 setLoading(false);
                 return;
             }
 
+            // まずサーバーAPI（/api/profile・Service Role経由）で厳格化RLS下でも確実に会社名・プランを取得
+            if (session?.access_token) {
+                const profileRes = await fetch("/api/profile", {
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
+                });
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json().catch(() => null);
+                    const p = profileData?.profile;
+                    if (p) {
+                        const adminFlag = p.role === "admin";
+                        setAllowedPlan(normalizePlan(p.allowedPlan, adminFlag));
+                        setIsAdmin(adminFlag);
+                        setCompanyId(p.companyId || null);
+                        setCompanyName(p.companyName || null);
+                        setDisplayName(p.displayName === "未設定" ? null : (p.displayName || null));
+                        setIsApproved(p.isApproved === true);
+                        return;
+                    }
+                }
+            }
+
+            // 未承認ユーザー（/api/profile が 403）や一時フォールバック時は自身の app_users を参照
             const { data: appUser } = await supabase
                 .from("app_users")
                 .select("allowed_plan, role, company_id, display_name, is_approved")
@@ -51,24 +89,20 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
                 .maybeSingle();
 
             if (appUser) {
-                const plan = (appUser.allowed_plan as AllowedPlan) || "full";
-                setAllowedPlan(plan);
                 const adminFlag = appUser.role === "admin";
+                setAllowedPlan(normalizePlan(appUser.allowed_plan, adminFlag));
                 setIsAdmin(adminFlag);
                 setCompanyId(appUser.company_id || null);
                 setDisplayName(appUser.display_name || null);
-                setIsApproved(appUser.is_approved ?? false);
-
-                if (appUser.company_id) {
-                    const { data: comp } = await supabase
-                        .from("companies")
-                        .select("name")
-                        .eq("id", appUser.company_id)
-                        .maybeSingle();
-                    if (comp?.name) {
-                        setCompanyName(comp.name);
-                    }
-                }
+                setIsApproved(appUser.is_approved === true);
+                setCompanyName(null);
+            } else {
+                setAllowedPlan("none");
+                setIsAdmin(false);
+                setIsApproved(false);
+                setCompanyId(null);
+                setCompanyName(null);
+                setDisplayName(null);
             }
         } catch (err) {
             console.error("fetchCurrentPlan error:", err);
@@ -92,10 +126,9 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
 
         initAuth();
 
-        // 認証状態の変更リスナー
         const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === "SIGNED_OUT") {
-                setAllowedPlan("full");
+            if (event === "SIGNED_OUT" || !session?.user?.id) {
+                setAllowedPlan("none");
                 setIsAdmin(false);
                 setCompanyId(null);
                 setCompanyName(null);
@@ -103,13 +136,14 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
                 setIsApproved(false);
                 activeUserId = null;
                 setLoading(false);
-            } else if (session?.user?.id && session.user.id !== activeUserId) {
+            } else if (session.user.id !== activeUserId) {
                 activeUserId = session.user.id;
+                setLoading(true);
                 await fetchCurrentPlan(session.user.id);
             }
         });
 
-        // Supabase Realtime: 自身の app_users レコードの更新（管理者によるallowed_plan変更・承認等）を即時購読
+        // Supabase Realtime: 自身の app_users レコードの更新（プラン変更・権限変更・利用停止等）を即時購読
         const channel = supabase
             .channel("realtime-app-user-plan")
             .on(
@@ -121,7 +155,6 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
                 },
                 (payload: any) => {
                     if (payload.new && activeUserId && payload.new.id === activeUserId) {
-                        console.log("Realtime: User plan updated by admin:", payload.new.allowed_plan);
                         if (payload.new.allowed_plan) {
                             setAllowedPlan(payload.new.allowed_plan as AllowedPlan);
                         }
@@ -129,7 +162,10 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
                             setIsAdmin(payload.new.role === "admin");
                         }
                         if (payload.new.is_approved !== undefined) {
-                            setIsApproved(payload.new.is_approved);
+                            setIsApproved(payload.new.is_approved === true);
+                        }
+                        if (payload.new.display_name !== undefined) {
+                            setDisplayName(payload.new.display_name || null);
                         }
                     }
                 }

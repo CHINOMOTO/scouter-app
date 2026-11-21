@@ -3,6 +3,7 @@
 import { useEffect, useState, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { usePlan } from "@/contexts/PlanContext";
 import { AlertCircle } from "lucide-react";
 
 type RequireAuthProps = {
@@ -12,90 +13,111 @@ type RequireAuthProps = {
 export function RequireAuth({ children }: RequireAuthProps) {
     const router = useRouter();
     const pathname = usePathname();
+    const { isApproved: contextApproved, loading: planLoading } = usePlan();
     const [checking, setChecking] = useState(true);
     const [isAuthed, setIsAuthed] = useState(false);
     const [authError, setAuthError] = useState<string | null>(null);
 
-    const [statusMessage, setStatusMessage] = useState("認証初期化中...");
+    // リアルタイムで利用停止 (is_approved = false) された場合は即座に遮断
+    useEffect(() => {
+        if (!checking && !planLoading && isAuthed && !contextApproved) {
+            setIsAuthed(false);
+            if (pathname !== "/pending-approval") {
+                router.replace("/pending-approval");
+            }
+        }
+    }, [checking, planLoading, isAuthed, contextApproved, pathname, router]);
 
     useEffect(() => {
         let mounted = true;
-        let timer: NodeJS.Timeout;
+        let resolved = false;
 
-        setStatusMessage("認証イベントリスナーを登録中...");
-
-        // タイムアウト監視（DBアクセスしないので短めでOKだが念のため）
-        timer = setTimeout(() => {
-            if (mounted && checking) {
-                console.error("RequireAuth: Timeout detected.");
-                setAuthError("認証確認がタイムアウトしました。");
+        const timer = setTimeout(() => {
+            if (mounted && !resolved) {
+                setAuthError("認証情報の確認がタイムアウトしました。通信環境をご確認のうえ再読み込みしてください。");
                 setChecking(false);
             }
-        }, 10000);
+        }, 12000);
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        const verifySessionAgainstDb = async (session: any) => {
             if (!mounted) return;
-            console.log(`RequireAuth: Auth Event fired: ${event}`);
-            setStatusMessage(`認証イベント受信: ${event}`);
-
-            if (event === 'SIGNED_OUT' || !session) {
-                setStatusMessage("セッションなし。ログインへ遷移します...");
-                clearTimeout(timer);
-                router.replace("/");
-                return;
-            }
-
-            verifyUserFromClaims(session);
-        });
-
-        supabase.auth.getSession().then(({ data: { session }, error }) => {
-            if (!error && session) {
-                verifyUserFromClaims(session);
-            }
-        });
-
-        // DBを見に行かず、トークンの中身（Claims）だけで判断する高速・安定版
-        const verifyUserFromClaims = (session: any) => {
-            if (!mounted) return;
-            setStatusMessage("ユーザー情報を確認中(Token)...");
-
             try {
-                // app_metadata から権限情報を取得
-                const appMetadata = session.user?.app_metadata || {};
-                const isApproved = appMetadata.is_approved;
+                if (!session?.user?.id) {
+                    resolved = true;
+                    clearTimeout(timer);
+                    setIsAuthed(false);
+                    setChecking(false);
+                    router.replace("/");
+                    return;
+                }
 
-                console.log("RequireAuth: Reviewing claims:", appMetadata);
+                // 必ず DB の最新の is_approved を確認（JWTキャッシュによる利用停止すり抜けを防止）
+                const { data: appUser, error: dbError } = await supabase
+                    .from("app_users")
+                    .select("is_approved")
+                    .eq("id", session.user.id)
+                    .maybeSingle();
 
-                if (isApproved === true) {
-                    // 承認済み
+                if (!mounted) return;
+                if (dbError) {
+                    throw dbError;
+                }
+
+                resolved = true;
+                clearTimeout(timer);
+
+                if (appUser?.is_approved === true) {
                     if (pathname === "/pending-approval") {
                         router.replace("/dashboard");
                     }
                     setIsAuthed(true);
                 } else {
-                    // 未承認（またはデータなし）
+                    setIsAuthed(false);
                     if (pathname !== "/pending-approval") {
                         router.replace("/pending-approval");
                     }
-                    setIsAuthed(false);
                 }
-
                 setChecking(false);
-                clearTimeout(timer);
-
-            } catch (err: any) {
+            } catch (err) {
                 console.error("RequireAuth Error:", err);
-                setAuthError("認証情報の確認中にエラーが発生しました");
-                setChecking(false);
+                if (!mounted) return;
+                resolved = true;
                 clearTimeout(timer);
+                setAuthError("認証情報の確認中にエラーが発生しました。時間をおいて再度お試しください。");
+                setChecking(false);
             }
         };
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (!mounted) return;
+            if (event === "SIGNED_OUT" || !session) {
+                resolved = true;
+                clearTimeout(timer);
+                setIsAuthed(false);
+                setChecking(false);
+                router.replace("/");
+                return;
+            }
+            verifySessionAgainstDb(session);
+        });
+
+        supabase.auth.getSession().then(({ data: { session }, error }) => {
+            if (!mounted) return;
+            if (error || !session) {
+                resolved = true;
+                clearTimeout(timer);
+                setIsAuthed(false);
+                setChecking(false);
+                router.replace("/");
+                return;
+            }
+            verifySessionAgainstDb(session);
+        });
 
         return () => {
             mounted = false;
             clearTimeout(timer);
             subscription.unsubscribe();
-            console.log("RequireAuth: Unsubscribed.");
         };
     }, [router, pathname]);
 
@@ -104,7 +126,6 @@ export function RequireAuth({ children }: RequireAuthProps) {
             <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center flex-col gap-4">
                 <div className="animate-spin h-8 w-8 border-4 border-slate-300 rounded-full border-t-slate-900"></div>
                 <p className="text-sm text-slate-600 font-medium">認証情報を確認しています...</p>
-                <p className="text-xs text-slate-500 font-mono animate-pulse">{statusMessage}</p>
             </div>
         );
     }
@@ -112,17 +133,19 @@ export function RequireAuth({ children }: RequireAuthProps) {
     if (authError) {
         return (
             <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center p-4">
-                <div className="bg-red-950/30 border border-red-500/50 rounded-lg p-6 max-w-md w-full text-center">
-                    <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4"><AlertCircle className="w-6 h-6" /></div>
+                <div className="bg-white border border-red-200 rounded-2xl p-6 max-w-md w-full text-center shadow-sm">
+                    <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="w-6 h-6" />
+                    </div>
                     <h2 className="text-xl font-bold text-red-700 mb-2">認証エラー</h2>
-                    <p className="text-sm text-red-700 mb-6">{authError}</p>
+                    <p className="text-sm text-slate-700 mb-6 leading-relaxed">{authError}</p>
                     <div className="flex flex-col gap-3">
                         <button
                             onClick={async () => {
                                 await supabase.auth.signOut();
                                 window.location.href = "/";
                             }}
-                            className="btn-primary px-6 py-2 w-full"
+                            className="btn-primary px-6 py-2.5 w-full font-bold text-sm"
                         >
                             一度ログアウトする（推奨）
                         </button>
@@ -130,7 +153,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
                     </div>
                 </div>
             </div>
-        )
+        );
     }
 
     if (!isAuthed) {

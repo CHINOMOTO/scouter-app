@@ -1,71 +1,62 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { authenticateApiRequest } from "@/lib/apiAuth";
+import { getClientIp } from "@/lib/rateLimit";
+
+const ALLOWED_ACTION_TYPES = [
+    "SEARCH",
+    "VIEW_CASE",
+    "SEARCH_CREDIT",
+    "VIEW_CREDIT",
+] as const;
 
 export async function POST(request: Request) {
     try {
+        // 1. 認証・承認チェック
+        const auth = await authenticateApiRequest(request);
+        if (!auth.ok) return auth.response;
+
+        const { user, appUser, supabaseAdmin } = auth;
+
         const body = await request.json();
-        const { action_type, target_id } = body;
+        const actionType = typeof body?.action_type === "string" ? body.action_type.trim() : "";
 
-        // 1. Authorizationヘッダーからトークンを取得
-        const authHeader = request.headers.get("Authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ error: "Missing or invalid Authorization header" }, { status: 401 });
-        }
-        const token = authHeader.replace("Bearer ", "");
-
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-        // ユーザー用クライアント（トークン検証用）
-        const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
-        });
-
-        // 管理者権限クライアント（実際のデータ操作用）
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
-
-        // 2. トークンからユーザー情報を取得
-        const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-        if (userError || !user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        // 2. action_type のホワイトリスト検証（監査ログ改ざん・ゴミデータ注入防止）
+        if (!ALLOWED_ACTION_TYPES.includes(actionType as any)) {
+            return NextResponse.json({ error: "不正な操作種別です。" }, { status: 400 });
         }
 
-        const { data: appUser } = await supabaseAdmin
-            .from("app_users")
-            .select("company_id")
-            .eq("id", user.id)
-            .single();
+        const rawTargetId = body?.target_id;
+        const targetId =
+            typeof rawTargetId === "string"
+                ? rawTargetId.replace(/[\r\n]+/g, " ").trim().slice(0, 200)
+                : rawTargetId === null || rawTargetId === undefined
+                    ? null
+                    : String(rawTargetId).replace(/[\r\n]+/g, " ").trim().slice(0, 200);
 
-        if (!appUser) {
-            return NextResponse.json({ error: "User profile not found" }, { status: 403 });
-        }
-
-        // 3. ログの保存
-        // x-forwarded-forヘッダーからIPアドレスを取得（Vercel環境などで有効）
-        const forwardedFor = request.headers.get("x-forwarded-for");
-        const ip_address = forwardedFor ? forwardedFor.split(",")[0] : null;
+        // 3. IPアドレス取得とログ保存
+        const clientIp = getClientIp(request);
+        const ipAddress = clientIp === "unknown" ? null : clientIp.slice(0, 64);
 
         const { error: insertError } = await supabaseAdmin
             .from("audit_logs")
             .insert([{
                 user_id: user.id,
                 company_id: appUser.company_id,
-                action_type: action_type,
-                target_id: target_id,
-                ip_address: ip_address
+                action_type: actionType,
+                target_id: targetId,
+                ip_address: ipAddress,
             }]);
 
         if (insertError) {
             console.error("Audit Log Insert Error:", insertError);
-            // ログの保存失敗でユーザーの画面操作を止めないため、500エラーではなくコンソールに出すだけにする
-            return NextResponse.json({ success: false, error: insertError.message });
+            // ログの保存失敗でユーザーの画面操作を止めないため、500エラーにはせず返す
+            return NextResponse.json({ success: false, error: "監査ログの保存に失敗しました。" });
         }
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Audit log error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "監査ログの記録中にエラーが発生しました。" }, { status: 500 });
     }
 }

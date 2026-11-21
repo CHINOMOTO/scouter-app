@@ -14,41 +14,56 @@ export function RequireAdmin({ children }: RequireAdminProps) {
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
     const check = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
 
-      if (!session) {
-        router.push("/");
-        setChecking(false);
-        return;
-      }
+        if (!session) {
+          router.replace("/");
+          return;
+        }
 
-      // 1. Token内のメタデータで判定
-      let isAdmin = session.user.app_metadata?.role === "admin";
-
-      // 2. Tokenにまだ反映されていない場合、app_usersテーブルでもフォールバック確認
-      if (!isAdmin) {
+        // JWT の古いメタデータではなく、必ず DB の最新 role / is_approved で判定
         const { data: appUser } = await supabase
           .from("app_users")
-          .select("role")
+          .select("role, is_approved")
           .eq("id", session.user.id)
           .maybeSingle();
-        if (appUser?.role === "admin") {
-          isAdmin = true;
+
+        if (!mounted) return;
+
+        if (!appUser || appUser.is_approved !== true) {
+          router.replace("/pending-approval");
+          setAllowed(false);
+          return;
+        }
+
+        if (appUser.role !== "admin") {
+          router.replace("/dashboard");
+          setAllowed(false);
+          return;
+        }
+
+        setAllowed(true);
+      } catch (err) {
+        console.error("RequireAdmin check error:", err);
+        if (mounted) {
+          router.replace("/dashboard");
+          setAllowed(false);
+        }
+      } finally {
+        if (mounted) {
+          setChecking(false);
         }
       }
-
-      if (!isAdmin) {
-        console.warn("Access denied: User is not admin");
-        router.push("/dashboard");
-        setAllowed(false);
-      } else {
-        setAllowed(true);
-      }
-      setChecking(false);
     };
 
     check();
+    return () => {
+      mounted = false;
+    };
   }, [router]);
 
   if (checking) {

@@ -1,3 +1,8 @@
+console.error(
+  '[DEPRECATED] このスクリプト（個人GitHub上の2018年固定TSV取り込み）は、一次ソースではなく公表期間（1年）を大幅に超過しているため廃止されました。実行を中止します。'
+);
+process.exit(1);
+
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
 

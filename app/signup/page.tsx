@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, AlertCircle } from "lucide-react";
+import { translateErrorMessage } from "@/lib/errorMessage";
 
 export default function SignUpPage() {
     const [companyName, setCompanyName] = useState("");
@@ -12,6 +13,7 @@ export default function SignUpPage() {
     const [phoneNumber, setPhoneNumber] = useState("");
     const [planType, setPlanType] = useState<"full" | "employment" | "credit">("full");
     const [notes, setNotes] = useState("");
+    const [website, setWebsite] = useState(""); // ボット対策ハニーポット
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -22,16 +24,23 @@ export default function SignUpPage() {
         setIsSubmitting(true);
         setErrorMsg(null);
 
-        // 電話番号のバリデーション（数字とハイフンのみ）
-        const phoneRegex = /^[0-9-]+$/;
-        if (!phoneRegex.test(phoneNumber.trim())) {
-            setErrorMsg("電話番号は半角数字とハイフンのみで入力してください。");
+        // 電話番号のバリデーション（全角数字・ハイフンを正規化し、10〜11桁の数字を必須化）
+        const normalizedPhone = phoneNumber
+            .trim()
+            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+            .replace(/[ー－―‐]/g, "-");
+        const phoneDigits = normalizedPhone.replace(/[^0-9]/g, "");
+        if (!/^[0-9-]+$/.test(normalizedPhone) || phoneDigits.length < 10 || phoneDigits.length > 11) {
+            setErrorMsg("電話番号は10〜11桁の半角数字（ハイフン可）で正しく入力してください。");
             setIsSubmitting(false);
             return;
         }
 
         // 法人番号のバリデーション（必須・13桁数字）
-        const cleanCorpNum = corporateNumber.trim().replace(/[^0-9]/g, "");
+        const cleanCorpNum = corporateNumber
+            .trim()
+            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+            .replace(/[^0-9]/g, "");
         if (!cleanCorpNum || cleanCorpNum.length !== 13) {
             setErrorMsg("法人番号（13桁の半角数字）を必ず入力してください。");
             setIsSubmitting(false);
@@ -47,21 +56,22 @@ export default function SignUpPage() {
                     corporateNumber: cleanCorpNum,
                     displayName: displayName.trim(),
                     email: email.trim(),
-                    phoneNumber: phoneNumber.trim(),
+                    phoneNumber: normalizedPhone,
                     planType,
                     notes: notes.trim(),
+                    website,
                 }),
             });
 
-            const result = await res.json();
+            const result = await res.json().catch(() => ({}));
             if (!res.ok) {
                 throw new Error(result.error || "お申し込みデータの保存に失敗しました。お手数ですが時間をおいて再度お試しください。");
             }
 
             setIsSuccess(true);
 
-        } catch (err: any) {
-            setErrorMsg(err.message || "お申し込みの送信に失敗しました。");
+        } catch (err: unknown) {
+            setErrorMsg(translateErrorMessage(err, "お申し込みの送信に失敗しました。時間をおいて再度お試しください。"));
         } finally {
             setIsSubmitting(false);
         }
@@ -117,6 +127,19 @@ export default function SignUpPage() {
                     /* フォーム入力画面 */
                     <div className="w-full bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-9 border border-slate-200 shadow-xl shadow-slate-200/50">
                         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+                            {/* ボット対策ハニーポット（視覚的に非表示） */}
+                            <div className="sr-only" aria-hidden="true">
+                                <label htmlFor="signup-website">Website</label>
+                                <input
+                                    id="signup-website"
+                                    type="text"
+                                    name="website"
+                                    tabIndex={-1}
+                                    autoComplete="off"
+                                    value={website}
+                                    onChange={(e) => setWebsite(e.target.value)}
+                                />
+                            </div>
                             
                             {/* プラン選択 */}
                             <div className="space-y-2">
@@ -193,7 +216,11 @@ export default function SignUpPage() {
                                     required
                                     maxLength={13}
                                     value={corporateNumber}
-                                    onChange={(e) => setCorporateNumber(e.target.value.replace(/[^0-9]/g, ""))}
+                                    onChange={(e) => setCorporateNumber(
+                                        e.target.value
+                                            .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+                                            .replace(/[^0-9]/g, "")
+                                    )}
                                     className="input-field font-mono"
                                     placeholder="例: 1234567890123"
                                 />

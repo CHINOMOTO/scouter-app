@@ -1,39 +1,19 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { authenticateApiRequest } from "@/lib/apiAuth";
 
 export async function POST(request: Request) {
     try {
+        const auth = await authenticateApiRequest(request, { requireAdmin: true });
+        if (!auth.ok) return auth.response;
+
+        const { user, supabaseAdmin } = auth;
         const body = await request.json();
-        const { title, content, is_active } = body;
+        const title = typeof body?.title === "string" ? body.title.trim() : "";
+        const content = typeof body?.content === "string" ? body.content.trim() : "";
+        const is_active = typeof body?.is_active === "boolean" ? body.is_active : true;
 
-        const authHeader = request.headers.get("Authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-        const token = authHeader.replace("Bearer ", "");
-
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-        const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
-        });
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
-
-        const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-        if (userError || !user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const { data: appUser } = await supabaseAdmin
-            .from("app_users")
-            .select("role")
-            .eq("id", user.id)
-            .single();
-
-        if (!appUser || appUser.role !== 'admin') {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        if (!title || !content) {
+            return NextResponse.json({ error: "タイトルと本文は必須です。" }, { status: 400 });
         }
 
         const { error: insertError } = await supabaseAdmin
@@ -41,46 +21,23 @@ export async function POST(request: Request) {
             .insert([{ title, content, is_active, created_by: user.id }]);
 
         if (insertError) {
-            return NextResponse.json({ error: insertError.message }, { status: 500 });
+            console.error("Announcement insert error:", insertError);
+            return NextResponse.json({ error: "お知らせの作成に失敗しました。" }, { status: 500 });
         }
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    } catch (error) {
+        console.error("Announcement POST error:", error);
+        return NextResponse.json({ error: "サーバーエラーが発生しました。" }, { status: 500 });
     }
 }
 
 export async function GET(request: Request) {
     try {
-        const authHeader = request.headers.get("Authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-        const token = authHeader.replace("Bearer ", "");
+        const auth = await authenticateApiRequest(request, { requireAdmin: true });
+        if (!auth.ok) return auth.response;
 
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-        const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
-        });
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
-
-        const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-        if (userError || !user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const { data: appUser } = await supabaseAdmin
-            .from("app_users")
-            .select("role")
-            .eq("id", user.id)
-            .single();
-
-        if (!appUser || appUser.role !== 'admin') {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
+        const { supabaseAdmin } = auth;
 
         const { data, error } = await supabaseAdmin
             .from("announcements")
@@ -88,11 +45,13 @@ export async function GET(request: Request) {
             .order("created_at", { ascending: false });
 
         if (error) {
-            return NextResponse.json({ error: error.message }, { status: 500 });
+            console.error("Announcement GET error:", error);
+            return NextResponse.json({ error: "お知らせ一覧の取得に失敗しました。" }, { status: 500 });
         }
 
         return NextResponse.json({ data });
-    } catch (error: any) {
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    } catch (error) {
+        console.error("Announcement GET unexpected error:", error);
+        return NextResponse.json({ error: "サーバーエラーが発生しました。" }, { status: 500 });
     }
 }

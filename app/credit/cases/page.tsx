@@ -37,6 +37,9 @@ import {
     isTargetCreditIndustry
 } from "@/lib/officialSources";
 import { OfficialDataNotice } from "@/components/OfficialDataNotice";
+import { usePlan } from "@/contexts/PlanContext";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { calculateOverdueDaysJST, formatDateJST } from "@/lib/dateFormat";
 
 type CreditCaseItem = {
     id: string;
@@ -78,10 +81,15 @@ const renderRegistryBadge = (status?: string | null, closeCause?: string | null)
                 </span>
             );
         case "active":
-        default:
             return (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     <span>公的登記: 登記中（存続）</span>
+                </span>
+            );
+        default:
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-50 text-slate-500 border border-slate-200">
+                    <span>公的登記: 未確認</span>
                 </span>
             );
     }
@@ -127,10 +135,10 @@ const PAGE_SIZE = 15;
 
 export default function CreditCasesListPage() {
     const router = useRouter();
+    const { allowedPlan, isAdmin: isContextAdmin, loading: planLoading } = usePlan();
     const [cases, setCases] = useState<CreditCaseItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [planRestricted, setPlanRestricted] = useState(false);
+    const [apiPlanRestricted, setApiPlanRestricted] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [prefectureFilter, setPrefectureFilter] = useState<string>("all");
     const [industryFilter, setIndustryFilter] = useState<string>("all");
@@ -142,17 +150,19 @@ export default function CreditCasesListPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [toast, setToast] = useState<ToastMessage | null>(null);
 
-    // 期日超過日数の計算（Null-Safe & NaN防止）
-    const calculateOverdueDays = (dueDateStr?: string | null) => {
-        if (!dueDateStr) return 0;
-        const due = new Date(dueDateStr).getTime();
-        if (isNaN(due)) return 0;
-        const now = new Date().getTime();
-        const diff = Math.floor((now - due) / (1000 * 60 * 60 * 24));
-        return diff > 0 ? diff : 0;
-    };
+    const isAdmin = isContextAdmin;
+    const hasCreditAccess = isAdmin || allowedPlan === "full" || allowedPlan === "credit";
+    const planRestricted = !planLoading && (!hasCreditAccess || apiPlanRestricted);
+
+    // 期日超過日数の計算（JSTカレンダー日付基準）
+    const calculateOverdueDays = (dueDateStr?: string | null) => calculateOverdueDaysJST(dueDateStr);
 
     const fetchCases = async () => {
+        if (planLoading) return;
+        if (!hasCreditAccess) {
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         try {
             const { data: { session } } = await supabase.auth.getSession();
@@ -161,51 +171,46 @@ export default function CreditCasesListPage() {
                 return;
             }
 
-            // ユーザー情報とロール・プラン確認
-            const { data: appUser } = await supabase
-                .from("app_users")
-                .select("role, allowed_plan")
-                .eq("id", session.user.id)
-                .maybeSingle();
-
-            const isUserAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
-            setIsAdmin(isUserAdmin);
-
-            if (!isUserAdmin && appUser?.allowed_plan === "employment") {
-                setPlanRestricted(true);
-                setLoading(false);
-                return;
-            }
-
-            // 管理者以外は一覧垂れ流しを防止（API側で自社登録データのみに制限される）
-            const res = await fetch(isUserAdmin ? "/api/credit-cases?all=true" : "/api/credit-cases", {
+            // 管理者以外は一覧垂れ流しを防止（API側で自社登録＋公的確定処分データに制限される）
+            const res = await fetch(isAdmin ? "/api/credit-cases?all=true" : "/api/credit-cases", {
                 headers: {
                     "Authorization": `Bearer ${session.access_token}`
                 }
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (res.status === 403 && data.planRestricted) {
-                setPlanRestricted(true);
+                setApiPlanRestricted(true);
                 setLoading(false);
                 return;
             }
-            if (data.error) {
-                throw new Error(data.error);
+            if (!res.ok || data.error) {
+                throw new Error(data.error || "データの取得に失敗しました。");
             }
 
             setCases(data.cases || []);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Credit cases fetch error:", err);
-            setToast({ type: "error", text: "データ取得に失敗しました: " + err.message });
+            setToast({ type: "error", text: translateErrorMessage(err, "データの取得に失敗しました。") });
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchCases();
-    }, []);
+        if (!planLoading) {
+            if (hasCreditAccess) {
+                setApiPlanRestricted(false);
+            }
+            fetchCases();
+        }
+    }, [planLoading, isAdmin, allowedPlan]);
+
+    // 対象業種フィルタ済みベース配列（タブ件数集計と一覧の母集団を一致させる）
+    const targetIndustryCases = useMemo(
+        () => cases.filter((c) => isTargetCreditIndustry(c)),
+        [cases]
+    );
 
     // ソート切り替えハンドラー
     const handleSort = (key: string) => {
@@ -218,7 +223,7 @@ export default function CreditCasesListPage() {
 
     // 検索・フィルタリング・ソート
     const filteredCases = useMemo(() => {
-        let result = cases.filter((c) => isTargetCreditIndustry(c));
+        let result = [...targetIndustryCases];
 
         // 業種フィルター（建設・施工・不動産 / 運送・物流・倉庫 / 警備・人材・ビル管理）
         if (industryFilter !== "all") {
@@ -297,7 +302,7 @@ export default function CreditCasesListPage() {
         });
 
         return result;
-    }, [cases, searchTerm, prefectureFilter, industryFilter, statusFilter, sortConfig]);
+    }, [targetIndustryCases, searchTerm, prefectureFilter, industryFilter, statusFilter, sortConfig]);
 
     const totalPages = Math.ceil(filteredCases.length / PAGE_SIZE) || 1;
 
@@ -391,18 +396,20 @@ export default function CreditCasesListPage() {
                             <p className="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
                                 {isAdmin 
                                     ? "共有データベースに登録されている取引先企業の全遅延・未払いデータおよび公的処分一覧です（管理者モード）。"
-                                    : "国土交通省・厚生労働省等の公的確定処分データ、および貴社が登録申請した信用管理データの全件一覧です。"}
+                                    : "国土交通省・消費者庁等の公的確定処分データ、および貴社が登録申請した信用管理データの全件一覧です。"}
                             </p>
                         </div>
-                        <div className="shrink-0 w-full sm:w-auto">
-                            <Link 
-                                href="/credit/new" 
-                                className="btn-primary flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-xs sm:text-sm shadow-xs whitespace-nowrap w-full sm:w-auto"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span>遅延・未払いを新規登録</span>
-                            </Link>
-                        </div>
+                        {!planLoading && !planRestricted && (
+                            <div className="shrink-0 w-full sm:w-auto">
+                                <Link 
+                                    href="/credit/new" 
+                                    className="btn-primary flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 hover:-translate-y-0.5 transition-all rounded-xl font-bold text-xs sm:text-sm shadow-xs whitespace-nowrap w-full sm:w-auto"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    <span>遅延・未払いを新規登録</span>
+                                </Link>
+                            </div>
+                        )}
                     </div>
 
                     {/* 検索・絞り込みコントロール */}
@@ -500,7 +507,7 @@ export default function CreditCasesListPage() {
                                             : "text-slate-600 hover:text-slate-900"
                                     }`}
                                 >
-                                    すべて ({cases.length})
+                                    すべて ({targetIndustryCases.length})
                                 </button>
                                 <button
                                     onClick={() => {
@@ -513,7 +520,7 @@ export default function CreditCasesListPage() {
                                             : "text-slate-600 hover:text-slate-900"
                                     }`}
                                 >
-                                    公的処分 ({cases.filter(c => detectOfficialSource(c).isOfficial).length})
+                                    公的処分 ({targetIndustryCases.filter(c => detectOfficialSource(c).isOfficial).length})
                                 </button>
                                 <button
                                     onClick={() => {
@@ -526,7 +533,7 @@ export default function CreditCasesListPage() {
                                             : "text-slate-600 hover:text-slate-900"
                                     }`}
                                 >
-                                    未払い中 ({cases.filter(c => !detectOfficialSource(c).isOfficial && c.payment_status === "unpaid").length})
+                                    未払い中 ({targetIndustryCases.filter(c => !detectOfficialSource(c).isOfficial && c.payment_status === "unpaid").length})
                                 </button>
                                 <button
                                     onClick={() => {
@@ -539,7 +546,7 @@ export default function CreditCasesListPage() {
                                             : "text-slate-600 hover:text-slate-900"
                                     }`}
                                 >
-                                    解決済み ({cases.filter(c => !detectOfficialSource(c).isOfficial && c.payment_status === "resolved").length})
+                                    解決済み ({targetIndustryCases.filter(c => !detectOfficialSource(c).isOfficial && c.payment_status === "resolved").length})
                                 </button>
                             </div>
                         </div>
@@ -600,6 +607,16 @@ export default function CreditCasesListPage() {
                                                          )}
                                                      </div>
                                                      <div className="flex flex-col items-start sm:items-end gap-1.5 shrink-0 self-start sm:self-auto">
+                                                         {!sourceInfo.isOfficial && c.status === "pending" && (
+                                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                                                 <span>自社申請：審査待ち</span>
+                                                             </span>
+                                                         )}
+                                                         {!sourceInfo.isOfficial && c.status === "rejected" && (
+                                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-300">
+                                                                 <span>自社申請：却下（非公開）</span>
+                                                             </span>
+                                                         )}
                                                          {sourceInfo.isOfficial ? (
                                                              <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
                                                                  <ShieldCheck className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-blue-700" />
@@ -648,10 +665,10 @@ export default function CreditCasesListPage() {
                                                  <div className="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200/80 mb-3 sm:mb-3.5 space-y-1.5 sm:space-y-2 text-xs">
                                                      <div className="flex justify-between items-center">
                                                          <span className="text-slate-500 font-medium">
-                                                              {sourceInfo.isOfficial ? (c.amount > 0 ? "公表不払額" : "処分区分") : "請求金額"}
+                                                              {sourceInfo.isOfficial ? ((c.amount ?? 0) > 0 ? "公表不払額" : "処分区分") : "請求金額"}
                                                           </span>
                                                           <span className="text-slate-900 font-extrabold text-sm sm:text-base font-mono">
-                                                              {sourceInfo.isOfficial && c.amount === 0 ? "行政処分・公認記録" : `¥${(c.amount ?? 0).toLocaleString()}`}
+                                                              {sourceInfo.isOfficial && (!c.amount || c.amount <= 0) ? "行政処分・公認記録" : `¥${(c.amount ?? 0).toLocaleString()}`}
                                                           </span>
                                                      </div>
                                                      <div className="flex justify-between items-center">
@@ -681,7 +698,7 @@ export default function CreditCasesListPage() {
 
                                             {/* フッター */}
                                             <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-                                                <span>登録日: {c.created_at ? new Date(c.created_at).toLocaleDateString() : "-"}</span>
+                                                <span>登録日: {formatDateJST(c.created_at)}</span>
                                                 <Link
                                                     href={`/credit/${c.id}`}
                                                     className="text-blue-600 hover:text-blue-700 font-bold group-hover:translate-x-0.5 transition-all flex items-center gap-1"

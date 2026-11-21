@@ -1,9 +1,27 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createMailTransporter, DEFAULT_FROM_ADDRESS } from "@/lib/mailTransporter";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
   try {
+    // 公開エンドポイントへの連続メール送信・ボット対策（IP単位レート制限）
+    const clientIp = getClientIp(request);
+    const ipRate = checkRateLimit({
+      key: `reset-password:ip:${clientIp}`,
+      limit: 5,
+      windowMs: 10 * 60 * 1000, // 10分あたり5回まで
+    });
+    if (!ipRate.allowed) {
+      return NextResponse.json(
+        { error: "短時間にリクエストが集中しています。しばらく時間をおいてから再度お試しください。" },
+        {
+          status: 429,
+          headers: { "Retry-After": String(ipRate.retryAfterSec) },
+        }
+      );
+    }
+
     const body = await request.json();
     const rawEmail = typeof body?.email === "string" ? body.email.trim() : "";
 
@@ -11,6 +29,22 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "正しいメールアドレス形式を入力してください。" },
         { status: 400 }
+      );
+    }
+
+    // 同一メールアドレス宛ての連続送信対策
+    const emailRate = checkRateLimit({
+      key: `reset-password:email:${rawEmail.toLowerCase()}`,
+      limit: 3,
+      windowMs: 10 * 60 * 1000, // 10分あたり3回まで
+    });
+    if (!emailRate.allowed) {
+      return NextResponse.json(
+        { error: "このメールアドレス宛ての再設定リクエストが連続しています。しばらく時間をおいてから再度お試しください。" },
+        {
+          status: 429,
+          headers: { "Retry-After": String(emailRate.retryAfterSec) },
+        }
       );
     }
 
@@ -72,7 +106,8 @@ ${resetLink}
 ──────────────────────────────
 【MIERIS 運営事務局】
 運営：株式会社ミヤエモン / 開発：株式会社宇井建設
-お問い合わせ: ${appBaseUrl}/contact
+お問い合わせメール: mieris0610@uiken.jp
+TEL: 080-5584-6715（平日 10:00〜18:00）
 公式サイト: ${appBaseUrl}/
 ──────────────────────────────`;
 

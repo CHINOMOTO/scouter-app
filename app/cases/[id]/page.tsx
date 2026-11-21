@@ -6,6 +6,9 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { FileText, AlertCircle, ArrowLeft, Search, UploadCloud, X, Check, ShieldCheck } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { formatDateJST } from "@/lib/dateFormat";
+import { validateEvidenceFiles, extractSafeFileExtension } from "@/lib/fileValidation";
 
 type CaseDetail = {
     id: string;
@@ -87,22 +90,19 @@ export default function CaseDetailPage() {
     const [uploadingEvidence, setUploadingEvidence] = useState(false);
     const [uploadMessage, setUploadMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 1ファイルあたり最大50MB
-
     const handleAdditionalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
-            const newFiles = Array.from(e.target.files);
-            const validFiles: File[] = [];
-            newFiles.forEach((file) => {
-                if (file.size > MAX_FILE_SIZE) {
-                    alert(`ファイル「${file.name}」はサイズが大きすぎます (1ファイルあたり最大50MB)`);
-                } else {
-                    validFiles.push(file);
-                }
-            });
+            const currentTotal = (caseDetail?.evidence_urls?.length || 0) + additionalFiles.length;
+            const { validFiles, errors } = validateEvidenceFiles(Array.from(e.target.files), currentTotal);
+            if (errors.length > 0) {
+                setUploadMessage({ type: "error", text: errors[0] });
+            } else {
+                setUploadMessage(null);
+            }
             if (validFiles.length > 0) {
                 setAdditionalFiles((prev) => [...prev, ...validFiles]);
             }
+            e.target.value = "";
         }
     };
 
@@ -116,67 +116,58 @@ export default function CaseDetailPage() {
         setUploadMessage(null);
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("ログインセッションが切れました。再ログインしてください。");
+            const { data: { session } } = await supabase.auth.getSession();
+            const user = session?.user;
+            if (!session?.access_token || !user) {
+                throw new Error("ログインセッションが切れました。再ログインしてください。");
+            }
 
             const newPaths: string[] = [];
             for (const file of additionalFiles) {
-                const fileExt = file.name.split(".").pop();
-                const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                const safeExt = extractSafeFileExtension(file.name);
+                if (!safeExt) {
+                    throw new Error(`ファイル「${file.name}」は対応していない形式です。画像またはPDFを選択してください。`);
+                }
+                const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${safeExt}`;
 
                 const { error: uploadError, data: uploadData } = await supabase.storage
                     .from("case-evidence")
                     .upload(fileName, file);
 
                 if (uploadError) {
-                    throw new Error(`ファイルのアップロードに失敗しました (${file.name}): ${uploadError.message}`);
+                    throw new Error(`ファイル「${file.name}」のアップロードに失敗しました。${translateErrorMessage(uploadError, "")}`);
                 }
                 if (uploadData?.path) {
                     newPaths.push(uploadData.path);
                 }
             }
 
-            const updatedUrls = [...(caseDetail.evidence_urls || []), ...newPaths];
+            const res = await fetch(`/api/cases/${caseDetail.id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    addedEvidenceUrls: newPaths,
+                }),
+            });
 
-            const isRejectedResubmit = caseDetail.status === "rejected";
-            const updatePayload: any = { evidence_urls: updatedUrls };
-            if (isRejectedResubmit) {
-                updatePayload.status = "pending";
-                updatePayload.rejected_reason = null;
+            const resData = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(resData.error || "追加資料の保存に失敗しました。");
             }
 
-            const { error: updateError } = await supabase
-                .from("blacklist_cases")
-                .update(updatePayload)
-                .eq("id", caseDetail.id);
-
-            if (updateError) {
-                throw new Error(`データ更新に失敗しました: ${updateError.message}`);
-            }
-
-            const addedEvidence: EvidenceFile[] = [];
-            for (const path of newPaths) {
-                const { data: signedData } = await supabase.storage
-                    .from("case-evidence")
-                    .createSignedUrl(path, 3600);
-                if (signedData) {
-                    const isImage = path.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-                    addedEvidence.push({
-                        path,
-                        signedUrl: signedData.signedUrl,
-                        type: isImage ? "image" : "other",
-                        name: path.split("/").pop() || "file",
-                    });
-                }
-            }
-
+            const isRejectedResubmit = Boolean(resData.resubmitted);
             setCaseDetail({
                 ...caseDetail,
-                evidence_urls: updatedUrls,
-                status: isRejectedResubmit ? "pending" : caseDetail.status,
+                evidence_urls: resData.case?.evidence_urls || [...(caseDetail.evidence_urls || []), ...newPaths],
+                status: resData.case?.status || caseDetail.status,
                 rejected_reason: isRejectedResubmit ? null : caseDetail.rejected_reason,
             });
-            setEvidenceFiles((prev) => [...prev, ...addedEvidence]);
+            if (Array.isArray(resData.addedEvidence)) {
+                setEvidenceFiles((prev) => [...prev, ...resData.addedEvidence]);
+            }
             setAdditionalFiles([]);
             setUploadMessage({
                 type: "success",
@@ -184,8 +175,8 @@ export default function CaseDetailPage() {
                     ? "追加資料をアップロードし、再審査を申請しました。"
                     : "追加資料をアップロードしました。",
             });
-        } catch (err: any) {
-            setUploadMessage({ type: "error", text: err.message || "アップロード中にエラーが発生しました。" });
+        } catch (err: unknown) {
+            setUploadMessage({ type: "error", text: translateErrorMessage(err, "アップロード中にエラーが発生しました。") });
         } finally {
             setUploadingEvidence(false);
         }
@@ -198,139 +189,54 @@ export default function CaseDetailPage() {
             setLoading(true);
             setErrorMsg(null);
 
-            // 現在のログインユーザー情報を取得
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                setErrorMsg("認証エラー: ログインしてください。");
-                setLoading(false);
-                return;
-            }
-
-            const { data: currentUser } = await supabase
-                .from("app_users")
-                .select("company_id, role, allowed_plan")
-                .eq("id", user.id)
-                .single();
-
-            if (!currentUser) {
-                setErrorMsg("ユーザー情報の取得に失敗しました。");
-                setLoading(false);
-                return;
-            }
-
-            if (currentUser.allowed_plan === "credit" && currentUser.role !== "admin") {
-                setErrorMsg("現在の契約プラン（MIERIS CREDIT）では就業・採用トラブル情報（MIERIS WORK）を閲覧できません。");
-                setLoading(false);
-                return;
-            }
-
-            const { data, error } = await supabase
-                .from("blacklist_cases")
-                .select(
-                    "id, full_name, full_name_kana, gender, birth_date, phone_last4, city, occurrence_date, reason_text, status, rejected_reason, created_at, approved_at, evidence_urls, registered_company_id, registered_by_user_id, risk_score"
-                )
-                .eq("id", id)
-                .maybeSingle();
-
-            if (error) {
-                setErrorMsg(error.message || "データの取得に失敗しました。");
-                setLoading(false);
-                return;
-            }
-
-            if (!data) {
-                setErrorMsg("該当するデータが見つかりません。");
-                setLoading(false);
-                return;
-            }
-
-            // アクセス権限チェック: 管理者(admin)であるか、自社のデータであるか、またはステータスが「承認済み(approved)」の場合のみ閲覧可能
-            const isOwnCompany = Boolean(data.registered_company_id && data.registered_company_id === currentUser.company_id);
-            const isApproved = data.status === 'approved';
-            const isAdminOrOwner = currentUser.role === 'admin' || isOwnCompany;
-            
-            if (!isAdminOrOwner && !isApproved) {
-                setErrorMsg("アクセス権限がありません。他社の審査中データは閲覧できません。");
-                setLoading(false);
-                return;
-            }
-
-            setCanViewRawEvidence(isAdminOrOwner);
-            setCanUploadEvidence(currentUser.role === 'admin' || (isOwnCompany && data.status !== 'approved'));
-            setCaseDetail(data as CaseDetail);
-
-            // アクセスログの保存
             try {
                 const { data: { session } } = await supabase.auth.getSession();
-                if (session?.access_token) {
+                if (!session?.access_token) {
+                    setErrorMsg("認証エラー: ログインしてください。");
+                    return;
+                }
+
+                const res = await fetch(`/api/cases/${id}`, {
+                    headers: {
+                        "Authorization": `Bearer ${session.access_token}`,
+                    },
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok || !data.case) {
+                    setErrorMsg(translateErrorMessage(data.error, "該当するデータが見つかりません。"));
+                    return;
+                }
+
+                setCaseDetail(data.case as CaseDetail);
+                setCompanyName(data.companyName || null);
+                setRegistrantName(data.registrantName || null);
+                setEvidenceFiles(Array.isArray(data.evidenceFiles) ? data.evidenceFiles : []);
+                setCanViewRawEvidence(Boolean(data.canViewRawEvidence));
+                setCanUploadEvidence(Boolean(data.canUploadEvidence));
+
+                // アクセスログの保存
+                try {
                     await fetch("/api/audit", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            "Authorization": `Bearer ${session.access_token}`
+                            "Authorization": `Bearer ${session.access_token}`,
                         },
                         body: JSON.stringify({
                             action_type: "VIEW_CASE",
-                            target_id: id
-                        })
+                            target_id: id,
+                        }),
                     });
+                } catch (logErr) {
+                    console.error("Failed to save audit log:", logErr);
                 }
-            } catch (logErr) {
-                console.error("Failed to save audit log:", logErr);
+            } catch (err: unknown) {
+                console.error("Case detail fetch error:", err);
+                setErrorMsg(translateErrorMessage(err, "データの取得に失敗しました。"));
+            } finally {
+                setLoading(false);
             }
-
-            // Fetch Company Name if exists
-            if (data.registered_company_id) {
-                const { data: comp } = await supabase
-                    .from("companies")
-                    .select("name")
-                    .eq("id", data.registered_company_id)
-                    .single();
-                if (comp) {
-                    setCompanyName(comp.name);
-                }
-            }
-
-            // 登録者個人名・証拠資料の原本は自社または運営管理者のみ取得・表示（他社には非公開）
-            if (isAdminOrOwner) {
-                if (data.registered_by_user_id) {
-                    const { data: appUser } = await supabase
-                        .from("app_users")
-                        .select("display_name")
-                        .eq("id", data.registered_by_user_id)
-                        .single();
-                    if (appUser) {
-                        setRegistrantName(appUser.display_name);
-                    }
-                }
-
-                if (data.evidence_urls && Array.isArray(data.evidence_urls) && data.evidence_urls.length > 0) {
-                    const files: EvidenceFile[] = [];
-                    for (const path of data.evidence_urls) {
-                        const { data: signedData } = await supabase.storage
-                            .from('case-evidence')
-                            .createSignedUrl(path, 3600); // 1時間有効
-
-                        if (signedData) {
-                            const isImage = path.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-                            files.push({
-                                path,
-                                signedUrl: signedData.signedUrl,
-                                type: isImage ? 'image' : 'other',
-                                name: path.split('/').pop() || 'file'
-                            });
-                        }
-                    }
-                    setEvidenceFiles(files);
-                } else {
-                    setEvidenceFiles([]);
-                }
-            } else {
-                setRegistrantName(null);
-                setEvidenceFiles([]);
-            }
-
-            setLoading(false);
         };
 
         fetchDetail();
@@ -342,6 +248,10 @@ export default function CaseDetailPage() {
                 <div className="max-w-3xl w-full">
 
                     <div className="mb-4 animate-fade-in flex items-center gap-2.5 flex-wrap">
+                        <Link href="/dashboard" className="btn-secondary text-xs inline-flex items-center gap-1.5 px-3.5 h-9 rounded-lg hover:bg-slate-100 transition-colors">
+                            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                            <span>ダッシュボードへ戻る</span>
+                        </Link>
                         <Link href="/search" className="btn-secondary text-xs inline-flex items-center gap-1.5 px-3.5 h-9 rounded-lg hover:bg-slate-100 transition-colors">
                             <Search className="w-3.5 h-3.5 shrink-0" />
                             <span>応募者照会へ戻る</span>
@@ -422,14 +332,14 @@ export default function CaseDetailPage() {
                                             <div className="grid grid-cols-[120px_1fr]">
                                                 <dt className="text-slate-600">登録日</dt>
                                                 <dd className="text-slate-900 font-medium">
-                                                    {caseDetail.created_at ? new Date(caseDetail.created_at).toLocaleDateString("ja-JP") : "-"}
+                                                    {formatDateJST(caseDetail.created_at)}
                                                 </dd>
                                             </div>
                                             {caseDetail.approved_at && (
                                                 <div className="grid grid-cols-[120px_1fr]">
                                                     <dt className="text-slate-600">承認日</dt>
                                                     <dd className="text-slate-900 font-medium">
-                                                        {new Date(caseDetail.approved_at).toLocaleDateString("ja-JP")}
+                                                        {formatDateJST(caseDetail.approved_at)}
                                                     </dd>
                                                 </div>
                                             )}

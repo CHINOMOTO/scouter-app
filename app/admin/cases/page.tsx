@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { Pagination } from "@/components/Pagination";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { formatDateJST } from "@/lib/dateFormat";
 
 type CaseRowAdmin = {
     id: string;
@@ -66,32 +68,25 @@ export default function AdminCaseList() {
     const fetchCases = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from("blacklist_cases")
-                .select(`
-                    id,
-                    full_name,
-                    full_name_kana,
-                    gender,
-                    birth_date,
-                    phone_last4,
-                    occurrence_date,
-                    reason_text,
-                    evidence_urls,
-                    status,
-                    created_at,
-                    registered_company_id,
-                    companies:registered_company_id ( id, name )
-                `)
-                .order("created_at", { ascending: false });
-
-            if (error) {
-                console.error("Fetch admin cases error:", error);
-            } else {
-                setCases((data as any) || []);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                setToast({ type: "error", text: "認証セッションが見つかりません。再度ログインしてください。" });
+                return;
             }
-        } catch (e) {
+
+            const res = await fetch("/api/admin/cases", {
+                headers: {
+                    "Authorization": `Bearer ${session.access_token}`
+                }
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || "案件一覧の取得に失敗しました。");
+            }
+            setCases(data.cases || []);
+        } catch (e: unknown) {
             console.error("Fetch admin cases error:", e);
+            setToast({ type: "error", text: translateErrorMessage(e, "案件一覧の取得に失敗しました。") });
         } finally {
             setLoading(false);
         }
@@ -102,6 +97,7 @@ export default function AdminCaseList() {
     }, []);
 
     const handleUpdateStatus = async (id: string, newStatus: "approved" | "rejected") => {
+        if (actionLoading) return;
         const actionLabel = newStatus === "approved" ? "承認" : "却下";
         let rejectReason: string | null = null;
         if (newStatus === "rejected") {
@@ -134,13 +130,13 @@ export default function AdminCaseList() {
 
             const resData = await res.json().catch(() => ({}));
             if (!res.ok) {
-                setToast({ type: "error", text: "更新失敗: " + (resData.error || "エラーが発生しました") });
+                setToast({ type: "error", text: translateErrorMessage(resData.error, "ステータスの更新に失敗しました。") });
             } else {
                 setToast({ type: "success", text: `ステータスを「${actionLabel}」に更新し、通知を送信しました。` });
                 fetchCases();
             }
-        } catch (err: any) {
-            setToast({ type: "error", text: "エラー: " + err.message });
+        } catch (err: unknown) {
+            setToast({ type: "error", text: translateErrorMessage(err, "更新処理中にエラーが発生しました。") });
         } finally {
             setActionLoading(null);
         }
@@ -178,10 +174,18 @@ export default function AdminCaseList() {
     }, [cases, filterStatus, searchTerm, sortConfig]);
 
     const totalPages = Math.ceil(filteredAndSortedCases.length / PAGE_SIZE) || 1;
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
     const paginatedCases = useMemo(() => {
-        const start = (currentPage - 1) * PAGE_SIZE;
+        const safePage = Math.min(currentPage, totalPages);
+        const start = (safePage - 1) * PAGE_SIZE;
         return filteredAndSortedCases.slice(start, start + PAGE_SIZE);
-    }, [filteredAndSortedCases, currentPage]);
+    }, [filteredAndSortedCases, currentPage, totalPages]);
 
     return (
         <RequireAdmin>
@@ -360,7 +364,7 @@ export default function AdminCaseList() {
                                             {c.occurrence_date && <div>発生日: <span className="font-mono text-slate-800">{c.occurrence_date.replace(/-/g, "/")}</span></div>}
                                             {c.phone_last4 && <div>電話番号: <span className="font-mono text-slate-800">下4桁 {c.phone_last4}</span></div>}
                                             <div>申請企業: <strong className="text-slate-800">{c.companies?.name || "加盟企業"}</strong></div>
-                                            <div>申請日: <span className="text-slate-700">{new Date(c.created_at).toLocaleDateString()}</span></div>
+                                            <div>申請日: <span className="text-slate-700">{formatDateJST(c.created_at)}</span></div>
                                         </div>
 
                                         {c.reason_text && (
@@ -384,16 +388,16 @@ export default function AdminCaseList() {
                                             <>
                                                 <button
                                                     onClick={() => handleUpdateStatus(c.id, "approved")}
-                                                    disabled={actionLoading === c.id}
-                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition-all w-full active:scale-[0.98]"
+                                                    disabled={actionLoading !== null}
+                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs shadow-sm transition-all w-full active:scale-[0.98]"
                                                 >
                                                     <Check className="w-3.5 h-3.5" />
                                                     <span>{actionLoading === c.id ? "更新中..." : "承認する"}</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleUpdateStatus(c.id, "rejected")}
-                                                    disabled={actionLoading === c.id}
-                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition-all w-full active:scale-[0.98]"
+                                                    disabled={actionLoading !== null}
+                                                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 disabled:opacity-50 text-rose-700 font-bold text-xs border border-rose-200 transition-all w-full active:scale-[0.98]"
                                                 >
                                                     <X className="w-3.5 h-3.5" />
                                                     <span>却下する</span>

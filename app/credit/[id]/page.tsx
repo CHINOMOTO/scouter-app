@@ -23,6 +23,10 @@ import {
 import { Toast, ToastMessage } from "@/components/Toast";
 import { detectOfficialSource, OfficialSourceInfo, isCorporateEntityName } from "@/lib/officialSources";
 import { OfficialDataNotice } from "@/components/OfficialDataNotice";
+import { usePlan } from "@/contexts/PlanContext";
+import { translateErrorMessage } from "@/lib/errorMessage";
+import { getDiffDaysFromDueDateJST, formatDateTimeJST } from "@/lib/dateFormat";
+import { validateEvidenceFiles, extractSafeFileExtension } from "@/lib/fileValidation";
 
 type CreditCaseDetail = {
     id: string;
@@ -52,16 +56,26 @@ type CreditCaseDetail = {
     } | null;
 };
 
+type EvidenceFile = {
+    path: string;
+    signedUrl: string;
+    type: "image" | "pdf" | "other";
+    name: string;
+};
+
 export default function CreditCaseDetailPage() {
     const params = useParams();
     const router = useRouter();
     const { id } = params;
 
     const [caseData, setCaseData] = useState<CreditCaseDetail | null>(null);
+    const [evidenceFiles, setEvidenceFiles] = useState<EvidenceFile[]>([]);
     const [loading, setLoading] = useState(true);
-    const [currentCompanyId, setCurrentCompanyId] = useState<string | null>(null);
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [planRestricted, setPlanRestricted] = useState(false);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+    const [apiPlanRestricted, setApiPlanRestricted] = useState(false);
+    const { allowedPlan, isAdmin, companyId: currentCompanyId, loading: planLoading } = usePlan();
+    const hasCreditAccess = isAdmin || allowedPlan === "full" || allowedPlan === "credit";
+    const planRestricted = !planLoading && (!hasCreditAccess || apiPlanRestricted);
 
     // 解決報告モーダル用
     const [showResolveModal, setShowResolveModal] = useState(false);
@@ -73,22 +87,17 @@ export default function CreditCaseDetailPage() {
     const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
     const [uploadingEvidence, setUploadingEvidence] = useState(false);
 
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 1ファイルあたり最大50MB
-
     const handleAdditionalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
-            const newFiles = Array.from(e.target.files);
-            const validFiles: File[] = [];
-            newFiles.forEach((file) => {
-                if (file.size > MAX_FILE_SIZE) {
-                    alert(`ファイル「${file.name}」はサイズが大きすぎます (1ファイルあたり最大50MB)`);
-                } else {
-                    validFiles.push(file);
-                }
-            });
+            const currentTotal = (caseData?.evidence_urls?.length || 0) + additionalFiles.length;
+            const { validFiles, errors } = validateEvidenceFiles(Array.from(e.target.files), currentTotal);
+            if (errors.length > 0) {
+                setToast({ type: "error", text: errors[0] });
+            }
             if (validFiles.length > 0) {
                 setAdditionalFiles((prev) => [...prev, ...validFiles]);
             }
+            e.target.value = "";
         }
     };
 
@@ -102,31 +111,25 @@ export default function CreditCaseDetailPage() {
 
         try {
             const session = (await supabase.auth.getSession()).data.session;
-            if (!session) throw new Error("認証セッションがありません");
+            if (!session) throw new Error("認証セッションがありません。再度ログインしてください。");
 
             const newPaths: string[] = [];
             for (const file of additionalFiles) {
-                const ext = file.name.split(".").pop();
-                const fileName = `credit-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-                const filePath = `credit_evidence/${fileName}`;
+                const safeExt = extractSafeFileExtension(file.name);
+                if (!safeExt) {
+                    throw new Error(`ファイル「${file.name}」は対応していない形式です。画像またはPDFを選択してください。`);
+                }
+                const fileName = `credit-${Date.now()}-${Math.random().toString(36).substring(7)}.${safeExt}`;
+                const filePath = `${session.user.id}/${fileName}`;
 
-                const { error: uploadError } = await supabase.storage
-                    .from("case_attachments")
+                const { error: uploadError, data: uploadData } = await supabase.storage
+                    .from("case-evidence")
                     .upload(filePath, file);
 
-                if (!uploadError) {
-                    newPaths.push(filePath);
-                } else {
-                    const fallbackPath = `${session.user.id}/${fileName}`;
-                    const { error: fallbackError, data: fallbackData } = await supabase.storage
-                        .from("case-evidence")
-                        .upload(fallbackPath, file);
-
-                    if (fallbackError) {
-                        throw new Error(`ファイルのアップロードに失敗しました (${file.name}): ${fallbackError.message}`);
-                    }
-                    newPaths.push(fallbackData?.path || fallbackPath);
+                if (uploadError) {
+                    throw new Error(`ファイル「${file.name}」のアップロードに失敗しました。${translateErrorMessage(uploadError, "")}`);
                 }
+                newPaths.push(uploadData?.path || filePath);
             }
 
             const updatedUrls = [...(caseData.evidence_urls || []), ...newPaths];
@@ -144,9 +147,9 @@ export default function CreditCaseDetailPage() {
                 })
             });
 
+            const resData = await res.json().catch(() => ({}));
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || "更新に失敗しました");
+                throw new Error(resData.error || "更新に失敗しました。");
             }
 
             setAdditionalFiles([]);
@@ -157,35 +160,26 @@ export default function CreditCaseDetailPage() {
                     : "追加資料をアップロードしました。"
             });
             fetchDetail();
-        } catch (err: any) {
-            setToast({ type: "error", text: err.message || "アップロード中にエラーが発生しました。" });
+        } catch (err: unknown) {
+            setToast({ type: "error", text: translateErrorMessage(err, "アップロード中にエラーが発生しました。") });
         } finally {
             setUploadingEvidence(false);
         }
     };
 
     const fetchDetail = async () => {
-        if (!id) return;
+        if (!id || planLoading) return;
+        if (!hasCreditAccess) {
+            setLoading(false);
+            return;
+        }
         setLoading(true);
+        setFetchError(null);
 
         try {
             const session = (await supabase.auth.getSession()).data.session;
-            if (!session) return;
-
-            // ユーザー情報取得
-            const { data: appUser } = await supabase
-                .from("app_users")
-                .select("role, company_id, allowed_plan")
-                .eq("id", session.user.id)
-                .single();
-
-            const isUserAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
-            setCurrentCompanyId(appUser?.company_id || null);
-            setIsAdmin(isUserAdmin);
-
-            if (!isUserAdmin && appUser?.allowed_plan === "employment") {
-                setPlanRestricted(true);
-                setLoading(false);
+            if (!session) {
+                setFetchError("ログインセッションが見つかりません。再度ログインしてください。");
                 return;
             }
 
@@ -195,42 +189,55 @@ export default function CreditCaseDetailPage() {
                 }
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (res.status === 403 && data.planRestricted) {
-                setPlanRestricted(true);
-                setLoading(false);
+                setApiPlanRestricted(true);
                 return;
             }
-            if (data.case) {
-                setCaseData(data.case);
-
-                // アクセス監査ログの保存
-                try {
-                    await fetch("/api/audit", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${session.access_token}`
-                        },
-                        body: JSON.stringify({
-                            action_type: "VIEW_CREDIT",
-                            target_id: data.case.company_name || String(id)
-                        })
-                    });
-                } catch {
-                    // ignore audit error
-                }
+            if (!res.ok || !data.case) {
+                setCaseData(null);
+                setEvidenceFiles([]);
+                setFetchError(translateErrorMessage(data.error, "対象のデータが見つかりませんでした。"));
+                return;
             }
-        } catch (e) {
+
+            setCaseData(data.case);
+            setEvidenceFiles(Array.isArray(data.evidenceFiles) ? data.evidenceFiles : []);
+
+            // アクセス監査ログの保存
+            try {
+                await fetch("/api/audit", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        action_type: "VIEW_CREDIT",
+                        target_id: data.case.company_name || String(id)
+                    })
+                });
+            } catch {
+                // ignore audit error
+            }
+        } catch (e: unknown) {
             console.error("Fetch detail error:", e);
+            setCaseData(null);
+            setEvidenceFiles([]);
+            setFetchError(translateErrorMessage(e, "データの取得中にエラーが発生しました。"));
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchDetail();
-    }, [id]);
+        if (!planLoading) {
+            if (hasCreditAccess) {
+                setApiPlanRestricted(false);
+            }
+            fetchDetail();
+        }
+    }, [id, planLoading, isAdmin, allowedPlan]);
 
     // 入金解決の報告
     const handleResolve = async (e: React.FormEvent) => {
@@ -258,11 +265,11 @@ export default function CreditCaseDetailPage() {
                 setShowResolveModal(false);
                 fetchDetail();
             } else {
-                const err = await res.json();
-                setToast({ type: "error", text: "更新失敗: " + (err.error || "予期せぬエラー") });
+                const err = await res.json().catch(() => ({}));
+                setToast({ type: "error", text: translateErrorMessage(err.error, "解決報告の更新に失敗しました。") });
             }
-        } catch (err: any) {
-            setToast({ type: "error", text: "エラー: " + err.message });
+        } catch (err: unknown) {
+            setToast({ type: "error", text: translateErrorMessage(err, "更新処理中にエラーが発生しました。") });
         } finally {
             setResolving(false);
         }
@@ -310,9 +317,22 @@ export default function CreditCaseDetailPage() {
     if (!caseData) {
         return (
             <RequireAuth>
-                <div className="min-h-screen pt-32 text-center px-4">
-                    <h2 className="text-xl font-bold text-slate-800">データが見つかりませんでした</h2>
-                    <Link href="/credit" className="btn-secondary mt-4 inline-block">一覧へ戻る</Link>
+                <div className="min-h-screen pt-24 text-center px-4 bg-[#f8fafc]">
+                    <div className="max-w-md mx-auto bg-white p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                        <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
+                        <h2 className="text-lg font-bold text-slate-900">データを表示できません</h2>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            {fetchError || "対象のデータが見つかりませんでした。"}
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
+                            <Link href="/credit/cases" className="btn-primary text-xs px-5 py-2.5 rounded-xl font-bold w-full sm:w-auto">
+                                一覧へ戻る
+                            </Link>
+                            <Link href="/credit" className="btn-secondary text-xs px-5 py-2.5 rounded-xl font-bold w-full sm:w-auto">
+                                企業信用照会へ戻る
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </RequireAuth>
         );
@@ -322,18 +342,8 @@ export default function CreditCaseDetailPage() {
     const isResolved = caseData.payment_status === "resolved";
     const sourceInfo = caseData.official_source || detectOfficialSource(caseData) || { isOfficial: false, sourceName: "加盟企業", sourceCategory: "被害申告" };
 
-    // 支払期日からの経過日数（遅延日数）の算出
-    let currentDelayDays = 0;
-    if (caseData.due_date) {
-        const target = new Date(caseData.due_date);
-        if (!isNaN(target.getTime())) {
-            const today = new Date();
-            const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-            const targetDate = new Date(target.getFullYear(), target.getMonth(), target.getDate());
-            const diffTime = todayDate.getTime() - targetDate.getTime();
-            currentDelayDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-        }
-    }
+    // 支払期日からの経過日数（遅延日数）の算出（JSTカレンダー日付基準）
+    const currentDelayDays = getDiffDaysFromDueDateJST(caseData.due_date) ?? 0;
 
     return (
         <RequireAuth>
@@ -359,7 +369,7 @@ export default function CreditCaseDetailPage() {
                                 <span className="whitespace-nowrap">公的処分・信用情報一覧</span>
                             </Link>
                         </div>
-                        {!sourceInfo.isOfficial && isOwner && !isResolved && (
+                        {!sourceInfo.isOfficial && isOwner && !isResolved && caseData.status === "approved" && (
                             <button
                                 onClick={() => {
                                     setDelayDays(String(currentDelayDays > 0 ? currentDelayDays : 0));
@@ -448,10 +458,10 @@ export default function CreditCaseDetailPage() {
                             <div className="p-6 bg-blue-50/50 rounded-xl border border-blue-200/80 my-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <div>
                                     <span className="text-xs font-bold text-blue-700 uppercase tracking-wider block mb-1">
-                                        {caseData.amount > 0 ? "公表不払認定額（概算）" : "処分区分・措置概要"}
+                                        {(caseData.amount ?? 0) > 0 ? "公表不払認定額（概算）" : "処分区分・措置概要"}
                                     </span>
                                     <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">
-                                        {caseData.amount > 0 ? `¥${caseData.amount.toLocaleString()}` : "行政処分・公認記録"}
+                                        {(caseData.amount ?? 0) > 0 ? `¥${(caseData.amount ?? 0).toLocaleString()}` : "行政処分・公認記録"}
                                     </span>
                                 </div>
                                 <div className="text-left sm:text-right">
@@ -495,13 +505,15 @@ export default function CreditCaseDetailPage() {
 
                         {/* 2軸ステータスカード（公的登記ステータス × 相手先の営業実態） */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-6">
-                            {/* 1. 公的登記ステータス（国税庁データ準拠） */}
+                            {/* 1. 公的登記ステータス（国税庁・gBizINFO準拠） */}
                             <div className={`p-4 rounded-xl border ${
                                 caseData.registry_status === "closed"
                                     ? "bg-rose-50/80 border-rose-200"
                                     : caseData.registry_status === "sole_proprietor"
                                     ? "bg-amber-50/80 border-amber-200"
-                                    : "bg-blue-50/80 border-blue-200"
+                                    : caseData.registry_status === "active"
+                                    ? "bg-blue-50/80 border-blue-200"
+                                    : "bg-slate-50 border-slate-200"
                             }`}>
                                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
                                     <span>公的登記ステータス（国税庁準拠）</span>
@@ -517,9 +529,13 @@ export default function CreditCaseDetailPage() {
                                         <div className="text-sm font-extrabold text-amber-800">
                                             個人事業主（法人登記なし）
                                         </div>
-                                    ) : (
+                                    ) : caseData.registry_status === "active" ? (
                                         <div className="text-sm font-extrabold text-blue-800">
                                             法人登記中（存続中）
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm font-extrabold text-slate-700">
+                                            未確認（国税庁サイトで要確認）
                                         </div>
                                     )}
                                 </div>
@@ -528,7 +544,9 @@ export default function CreditCaseDetailPage() {
                                         ? `国税庁データ上、すでに清算結了や解散が行われ法人格が消滅しています${caseData.registry_close_date ? `（閉鎖日: ${caseData.registry_close_date}）` : ""}。`
                                         : caseData.registry_status === "sole_proprietor"
                                         ? "法人番号を持たない個人事業主（屋号等）として登録されています。"
-                                        : "国税庁の法人番号公表サイト上で正常に存続・登記されています。"}
+                                        : caseData.registry_status === "active"
+                                        ? "国税庁・経済産業省gBizINFOの法人情報上で存続・登記が確認されています。"
+                                        : "最新の法人登記ステータスは自動照合されていません。取引前に国税庁法人番号公表サイト等で最新状況をご確認ください。"}
                                 </p>
                             </div>
 
@@ -614,7 +632,13 @@ export default function CreditCaseDetailPage() {
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">公的登記ステータス</span>
                                 <span className="font-bold text-slate-800">
-                                    {caseData.registry_status === "closed" ? "閉鎖（清算結了等）" : caseData.registry_status === "sole_proprietor" ? "個人事業主" : "登記中（存続）"}
+                                    {caseData.registry_status === "closed"
+                                        ? "閉鎖（清算結了等）"
+                                        : caseData.registry_status === "sole_proprietor"
+                                        ? "個人事業主"
+                                        : caseData.registry_status === "active"
+                                        ? "登記中（存続）"
+                                        : "未確認（国税庁サイトで要確認）"}
                                 </span>
                             </div>
                             {sourceInfo.isOfficial ? (
@@ -638,7 +662,11 @@ export default function CreditCaseDetailPage() {
                                 <span className="text-slate-500 font-medium">
                                     {sourceInfo.isOfficial ? "公表日 / 処分日" : "請求日"}
                                 </span>
-                                <span className="font-mono text-slate-800">{caseData.invoice_date?.replace(/-/g, "/") || "-"}</span>
+                                <span className="font-mono text-slate-800">
+                                    {sourceInfo.isOfficial
+                                        ? (caseData.due_date || caseData.invoice_date)?.replace(/-/g, "/") || "-"
+                                        : caseData.invoice_date?.replace(/-/g, "/") || "-"}
+                                </span>
                             </div>
                             <div className="flex justify-between py-2.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">
@@ -692,12 +720,68 @@ export default function CreditCaseDetailPage() {
                             <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
                                 {caseData.counterparty_claim || "特段の登録理由・相手側の主張は記載されていません。"}
                             </p>
-                            {caseData.admin_notes && (sourceInfo.isOfficial || isAdmin || isOwner) && (
+                            {caseData.admin_notes && (sourceInfo.isOfficial || isAdmin || (isOwner && caseData.status === "rejected")) && (
                                 <div className="mt-3 pt-3 border-t border-slate-200/80 text-xs text-slate-600 leading-relaxed font-mono whitespace-pre-wrap">
                                     {caseData.admin_notes}
                                 </div>
                             )}
                         </div>
+
+                        {/* 添付資料・証拠ファイル確認状況（民間登録案件のみ） */}
+                        {!sourceInfo.isOfficial && (
+                            <div className="mt-6 space-y-3">
+                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-200 pb-2">
+                                    添付資料・証拠ファイル確認状況
+                                </h3>
+                                {!(isAdmin || isOwner) ? (
+                                    <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 flex items-center gap-3 text-emerald-900 text-xs sm:text-sm font-medium">
+                                        <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                                        <span>運営事務局にて請求書・契約書等の客観的証拠資料を確認・審査済みです（機密・個人情報保護のため添付原本は非公開）。</span>
+                                    </div>
+                                ) : evidenceFiles.length === 0 ? (
+                                    <p className="text-xs sm:text-sm text-slate-500">添付された証拠ファイルはありません。</p>
+                                ) : (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                        {evidenceFiles.map((file, i) => (
+                                            <a
+                                                key={`${file.path}-${i}`}
+                                                href={file.signedUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="group relative bg-slate-100 rounded-lg overflow-hidden border border-slate-200 hover:border-slate-400 transition-colors block outline-none"
+                                            >
+                                                {file.type === "image" ? (
+                                                    <>
+                                                        <div className="aspect-square relative flex items-center justify-center bg-slate-950">
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img
+                                                                src={file.signedUrl}
+                                                                alt={file.name}
+                                                                className="max-w-full max-h-full object-contain"
+                                                            />
+                                                        </div>
+                                                        <div className="p-2 text-[11px] text-slate-700 truncate text-center group-hover:text-slate-900 bg-white/95 absolute bottom-0 w-full backdrop-blur-sm">
+                                                            {file.name}
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="aspect-square p-4 flex flex-col items-center justify-center gap-2 text-slate-600 group-hover:text-slate-900 bg-white">
+                                                        <FileText className="w-8 h-8 text-slate-500" />
+                                                        <span className="text-[11px] truncate w-full text-center font-medium">
+                                                            {file.name}
+                                                        </span>
+                                                        <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-600 font-semibold">
+                                                            <span>開く</span>
+                                                            <ExternalLink className="w-2.5 h-2.5" />
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </a>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* 自社登録（未承認時）または管理者の場合：追加資料のアップロード */}
                         {!sourceInfo.isOfficial && (isAdmin || (isOwner && caseData.status !== "approved")) && (
@@ -775,8 +859,13 @@ export default function CreditCaseDetailPage() {
 
                         {/* 登録日 & 審査ステータス */}
                         <div className="mt-8 pt-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between items-center">
-                            <span>システム登録日: {new Date(caseData.created_at).toLocaleString()}</span>
-                            {caseData.status === "approved" ? (
+                            <span>システム登録日: {formatDateTimeJST(caseData.created_at)}</span>
+                            {sourceInfo.isOfficial ? (
+                                <span className="flex items-center gap-1 font-semibold text-blue-700">
+                                    <ShieldCheck className="w-4 h-4 text-blue-600" />
+                                    <span>公的機関公表データ（自動同期）</span>
+                                </span>
+                            ) : caseData.status === "approved" ? (
                                 <span className="flex items-center gap-1 font-semibold text-emerald-700">
                                     <ShieldCheck className="w-4 h-4 text-emerald-600" />
                                     <span>運営管理者承認済み</span>
