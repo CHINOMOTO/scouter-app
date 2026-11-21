@@ -425,113 +425,113 @@ export default function CreditCasesListPage() {
                     </div>
 
                     {/* 検索・絞り込みコントロール */}
-                    <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-2xs mb-6 space-y-3 sm:space-y-4 animate-fade-in">
-                        <div className="flex flex-col md:flex-row gap-3 sm:gap-4 justify-between items-center">
-                            
-                            {/* 検索窓 ＋ 都道府県プルダウン */}
-                            <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto flex-1">
-                                <div className="relative w-full sm:w-80 md:w-88">
-                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                    <input
-                                        type="text"
-                                        value={searchTerm}
-                                        onChange={(e) => {
-                                            setSearchTerm(e.target.value);
-                                            setCurrentPage(1);
-                                        }}
-                                        placeholder="企業名・法人番号・登録理由で絞り込み..."
-                                        style={{ paddingLeft: '2.5rem' }}
-                                        className="w-full bg-white border border-slate-200 rounded-xl pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 transition-colors placeholder:text-slate-400"
-                                    />
-                                </div>
-
-                                {/* 都道府県プルダウン */}
-                                <div className="relative w-full sm:w-40 shrink-0">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-                                    <select
-                                        value={prefectureFilter}
-                                        onChange={(e) => {
-                                            setPrefectureFilter(e.target.value);
-                                            setCurrentPage(1);
-                                        }}
-                                        style={{ paddingLeft: '2.1rem' }}
-                                        className="w-full bg-white border border-slate-200 rounded-xl pr-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
-                                    >
-                                        <option value="all">すべての都道府県</option>
-                                        {PREFECTURE_OPTIONS.map((pref) => (
-                                            <option key={pref} value={pref}>
-                                                {pref}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {/* 業種プルダウン */}
-                                <div className="relative w-full sm:w-44 shrink-0">
-                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-                                    <select
-                                        value={industryFilter}
-                                        onChange={(e) => {
-                                            setIndustryFilter(e.target.value);
-                                            setCurrentPage(1);
-                                        }}
-                                        style={{ paddingLeft: '2.1rem' }}
-                                        className="w-full bg-white border border-slate-200 rounded-xl pr-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
-                                    >
-                                        <option value="all">すべての対象業種</option>
-                                        <option value="construction_realestate">建設・施工・不動産</option>
-                                        <option value="transport_logistics">運送・物流・倉庫</option>
-                                        <option value="security_staffing">警備・人材・ビル管理</option>
-                                    </select>
-                                </div>
-
-                                {/* 法人 / 個人事業主フィルター */}
-                                <div className="relative w-full sm:w-40 shrink-0">
-                                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-                                    <select
-                                        value={entityTypeFilter}
-                                        onChange={(e) => {
-                                            setEntityTypeFilter(e.target.value as "all" | "corporate" | "sole_proprietor");
-                                            setCurrentPage(1);
-                                        }}
-                                        style={{ paddingLeft: '2.1rem' }}
-                                        className="w-full bg-white border border-slate-200 rounded-xl pr-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
-                                    >
-                                        <option value="all">すべて（法人・個人）</option>
-                                        <option value="corporate">法人のみ</option>
-                                        <option value="sole_proprietor">個人事業主のみ</option>
-                                    </select>
-                                </div>
-
-                                {/* 並び替えプルダウン */}
-                                <div className="relative w-full sm:w-48 shrink-0">
-                                    <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-                                    <select
-                                        value={`${sortConfig.key}-${sortConfig.direction}`}
-                                        onChange={(e) => {
-                                            const [key, direction] = e.target.value.split("-") as [string, "asc" | "desc"];
-                                            setSortConfig({ key, direction });
-                                            setCurrentPage(1);
-                                        }}
-                                        style={{ paddingLeft: '2.1rem' }}
-                                        className="w-full bg-white border border-slate-200 rounded-xl pr-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
-                                    >
-                                        <option value="due_date-desc">公表日が新しい順</option>
-                                        <option value="priority-desc">関東（一都三県）優先</option>
-                                        <option value="due_date-asc">公表日が古い順</option>
-                                        <option value="company_name-asc">企業名（五十音順）</option>
-                                    </select>
-                                </div>
+                    <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-2xs mb-6 space-y-3 animate-fade-in">
+                        {/* 上段: 検索窓 ＋ 各種フィルター・並び替えプルダウン */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5">
+                            {/* キーワード検索 */}
+                            <div className="relative sm:col-span-2 lg:col-span-4">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    placeholder="企業名・法人番号・登録理由で絞り込み..."
+                                    style={{ paddingLeft: '2.5rem' }}
+                                    className="w-full bg-white border border-slate-200 rounded-xl pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-500 transition-colors placeholder:text-slate-400"
+                                />
                             </div>
 
-                            {/* 種別・支払ステータスタブ */}
-                            <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl w-full md:w-auto text-xs font-bold gap-0.5">
+                            {/* 都道府県プルダウン */}
+                            <div className="relative lg:col-span-2">
+                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                <select
+                                    value={prefectureFilter}
+                                    onChange={(e) => {
+                                        setPrefectureFilter(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    style={{ paddingLeft: '2.1rem' }}
+                                    className="w-full bg-white border border-slate-200 rounded-xl pr-2.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
+                                >
+                                    <option value="all">すべての都道府県</option>
+                                    {PREFECTURE_OPTIONS.map((pref) => (
+                                        <option key={pref} value={pref}>
+                                            {pref}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* 業種プルダウン */}
+                            <div className="relative lg:col-span-2">
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                <select
+                                    value={industryFilter}
+                                    onChange={(e) => {
+                                        setIndustryFilter(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    style={{ paddingLeft: '2.1rem' }}
+                                    className="w-full bg-white border border-slate-200 rounded-xl pr-2.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
+                                >
+                                    <option value="all">すべての対象業種</option>
+                                    <option value="construction_realestate">建設・施工・不動産</option>
+                                    <option value="transport_logistics">運送・物流・倉庫</option>
+                                    <option value="security_staffing">警備・人材・ビル管理</option>
+                                </select>
+                            </div>
+
+                            {/* 法人 / 個人事業主フィルター */}
+                            <div className="relative lg:col-span-2">
+                                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                <select
+                                    value={entityTypeFilter}
+                                    onChange={(e) => {
+                                        setEntityTypeFilter(e.target.value as "all" | "corporate" | "sole_proprietor");
+                                        setCurrentPage(1);
+                                    }}
+                                    style={{ paddingLeft: '2.1rem' }}
+                                    className="w-full bg-white border border-slate-200 rounded-xl pr-2.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
+                                >
+                                    <option value="all">すべて（法人・個人）</option>
+                                    <option value="corporate">法人のみ</option>
+                                    <option value="sole_proprietor">個人事業主のみ</option>
+                                </select>
+                            </div>
+
+                            {/* 並び替えプルダウン */}
+                            <div className="relative lg:col-span-2">
+                                <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                <select
+                                    value={`${sortConfig.key}-${sortConfig.direction}`}
+                                    onChange={(e) => {
+                                        const [key, direction] = e.target.value.split("-") as [string, "asc" | "desc"];
+                                        setSortConfig({ key, direction });
+                                        setCurrentPage(1);
+                                    }}
+                                    style={{ paddingLeft: '2.1rem' }}
+                                    className="w-full bg-white border border-slate-200 rounded-xl pr-2.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
+                                >
+                                    <option value="due_date-desc">公表日が新しい順</option>
+                                    <option value="priority-desc">関東（一都三県）優先</option>
+                                    <option value="due_date-asc">公表日が古い順</option>
+                                    <option value="company_name-asc">企業名（五十音順）</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* 下段: 種別・支払ステータスタブ */}
+                        <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl w-full sm:w-auto text-xs font-bold gap-0.5">
                                 <button
                                     onClick={() => {
                                         setStatusFilter("all");
                                         setCurrentPage(1);
                                     }}
-                                    className={`flex-1 md:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
+                                    className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                                         statusFilter === "all" 
                                             ? "bg-white text-slate-900 shadow-2xs" 
                                             : "text-slate-600 hover:text-slate-900"
@@ -544,7 +544,7 @@ export default function CreditCasesListPage() {
                                         setStatusFilter("official");
                                         setCurrentPage(1);
                                     }}
-                                    className={`flex-1 md:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
+                                    className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                                         statusFilter === "official" 
                                             ? "bg-white text-blue-700 shadow-2xs font-extrabold" 
                                             : "text-slate-600 hover:text-slate-900"
@@ -557,7 +557,7 @@ export default function CreditCasesListPage() {
                                         setStatusFilter("unpaid");
                                         setCurrentPage(1);
                                     }}
-                                    className={`flex-1 md:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
+                                    className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                                         statusFilter === "unpaid" 
                                             ? "bg-white text-rose-700 shadow-2xs font-extrabold" 
                                             : "text-slate-600 hover:text-slate-900"
@@ -570,7 +570,7 @@ export default function CreditCasesListPage() {
                                         setStatusFilter("resolved");
                                         setCurrentPage(1);
                                     }}
-                                    className={`flex-1 md:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
+                                    className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                                         statusFilter === "resolved" 
                                             ? "bg-white text-emerald-700 shadow-2xs font-extrabold" 
                                             : "text-slate-600 hover:text-slate-900"
@@ -579,6 +579,23 @@ export default function CreditCasesListPage() {
                                     解決済み ({targetIndustryCases.filter(c => !detectOfficialSource(c).isOfficial && c.payment_status === "resolved").length})
                                 </button>
                             </div>
+
+                            {(searchTerm || prefectureFilter !== "all" || industryFilter !== "all" || entityTypeFilter !== "all" || statusFilter !== "all") && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearchTerm("");
+                                        setPrefectureFilter("all");
+                                        setIndustryFilter("all");
+                                        setEntityTypeFilter("all");
+                                        setStatusFilter("all");
+                                        setCurrentPage(1);
+                                    }}
+                                    className="text-xs font-semibold text-slate-500 hover:text-slate-800 px-2.5 py-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                                >
+                                    条件をリセット
+                                </button>
+                            )}
                         </div>
                     </div>
 
