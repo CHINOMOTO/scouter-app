@@ -208,7 +208,7 @@ export default function Navigation() {
         }
     };
 
-    // ログイン・サインアップ・デモ等の公開ページ、および3Dテスト画面では非表示
+    // ログイン・サインアップ・デモ等の公開ページでは非表示
     const isPublicPage = 
         pathname === "/" || 
         pathname === "/signup" || 
@@ -216,8 +216,7 @@ export default function Navigation() {
         pathname === "/demo" || 
         pathname === "/forgot-password" || 
         pathname === "/update-password" || 
-        pathname === "/pending-approval" ||
-        pathname.startsWith("/admin/test");
+        pathname === "/pending-approval";
 
     if (isPublicPage || !session) return null;
 
@@ -453,7 +452,7 @@ export default function Navigation() {
                                     />
                                     <SubmenuLink 
                                         href="/admin/users"
-                                        active={pathname.startsWith("/admin/users") || pathname.startsWith("/admin/registered-users")}
+                                        active={pathname.startsWith("/admin/users")}
                                         icon={<Users className="w-3.5 h-3.5" />}
                                         label="ユーザー管理"
                                         onClick={() => setIsMobileMenuOpen(false)}
