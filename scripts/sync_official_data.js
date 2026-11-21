@@ -33,13 +33,19 @@ function classifyCompanyIndustry(item) {
     if (/自動車運送|貨物自動車|自動車整備/.test(claim)) {
       return 'transport_logistics';
     }
+    if (/マンション管理|賃貸住宅管理/.test(claim) || SECURITY_STAFFING_REGEX.test(name)) {
+      return 'security_staffing';
+    }
     return 'construction_realestate';
   }
 
   if (EXCLUDED_INDUSTRY_REGEX.test(fullText)) {
     return 'excluded';
   }
-  if (/宅建|宅地建物|建設業|建築基準|指名停止|測量|建設コンサル|地質調査|マンション管理|賃貸住宅管理/.test(claim)) {
+  if (/マンション管理|賃貸住宅管理|害虫駆除|不用品|清掃|ビル管理|警備/.test(fullText) || SECURITY_STAFFING_REGEX.test(name)) {
+    return 'security_staffing';
+  }
+  if (/宅建|宅地建物|建設業|建築基準|指名停止|測量|建設コンサル|地質調査/.test(claim)) {
     return 'construction_realestate';
   }
   if (/自動車運送|貨物自動車|自動車整備/.test(claim) || TRANSPORT_LOGISTICS_REGEX.test(name) || TRANSPORT_LOGISTICS_REGEX.test(fullText)) {
@@ -377,7 +383,7 @@ async function fetchMlitTruckingCases() {
 //    ※法人だけでなく、個人事業主に対する「業務停止命令」「指示」も取得（役員個人への付随「業務禁止命令」のみ重複除外）
 async function fetchCaaTargetIndustryCases() {
   const caaTargetServiceRegex =
-    /工事|リフォーム|屋根|外壁|塗装|住宅|建築|建設|工務|設備|水道|給湯|配管|電気|解体|修繕|メンテナンス|引越|運送/;
+    /工事|リフォーム|屋根|外壁|塗装|住宅|建築|建設|工務|設備|水道|給湯|配管|電気|解体|修繕|メンテナンス|引越|運送|駆除|害虫|清掃|美装|不用品|廃棄物|産廃|警備|セキュリティ|ビル管理/;
 
   const pages = ['result_currentyear.html', 'result_1year.html', 'result_2year.html'];
   const results = [];

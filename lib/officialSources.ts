@@ -444,11 +444,14 @@ export function classifyCompanyIndustry(item?: {
     const notes = item.admin_notes || '';
     const fullText = `${name} ${claim} ${notes}`;
 
-    // 1. 国土交通省（建設・土木・測量・不動産・指名停止・自動車運送・整備等）の確定処分は常に対象業種
+    // 1. 国土交通省（建設・土木・測量・不動産・指名停止・自動車運送・整備・マンション管理等）の確定処分は常に対象業種
     //    （社名や発注機関名に「食品」「病院」「大学」「ホテル」「冠婚葬祭」等が含まれていても除外しない）
     if (/^【(?:国土交通省|東京都知事)/.test(claim)) {
         if (/自動車運送|貨物自動車|自動車整備/.test(claim)) {
             return 'transport_logistics';
+        }
+        if (/マンション管理|賃貸住宅管理/.test(claim) || SECURITY_STAFFING_REGEX.test(name)) {
+            return 'security_staffing';
         }
         return 'construction_realestate';
     }
@@ -458,8 +461,13 @@ export function classifyCompanyIndustry(item?: {
         return 'excluded';
     }
 
-    // 2. 国交省の建設・土木・測量・不動産・マンション管理処分は「建設・施工・不動産」
-    if (/宅建|宅地建物|建設業|建築基準|指名停止|測量|建設コンサル|地質調査|マンション管理|賃貸住宅管理/.test(claim)) {
+    // 3. 警備・人材・ビル管理（マンション管理・清掃・害虫駆除・不用品回収・メンテナンス等）
+    if (/マンション管理|賃貸住宅管理|害虫駆除|不用品|清掃|ビル管理|警備/.test(fullText) || SECURITY_STAFFING_REGEX.test(name)) {
+        return 'security_staffing';
+    }
+
+    // 4. 国交省の建設・土木・測量・不動産処分は「建設・施工・不動産」
+    if (/宅建|宅地建物|建設業|建築基準|指名停止|測量|建設コンサル|地質調査/.test(claim)) {
         return 'construction_realestate';
     }
 
