@@ -78,6 +78,8 @@ export default function AdminUsersManagementPage() {
     const [companyFilter, setCompanyFilter] = useState<string>("all");
     const [roleFilter, setRoleFilter] = useState<string>("all");
     const [currentPage, setCurrentPage] = useState(1);
+    const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+    const [updatingRoleUserId, setUpdatingRoleUserId] = useState<string | null>(null);
     const [toast, setToast] = useState<ToastMessage | null>(null);
 
     // 所属企業の一覧（重複排除＆五十音ソート）
@@ -121,8 +123,10 @@ export default function AdminUsersManagementPage() {
 
     // ユーザー削除
     const handleDeleteUser = async (userId: string) => {
+        if (deletingUserId) return;
         if (!confirm("本当にこのユーザーを削除しますか？\n※投稿データは保持されますが、ログインできなくなります。\nこの操作は取り消せません。")) return;
 
+        setDeletingUserId(userId);
         try {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
@@ -140,11 +144,14 @@ export default function AdminUsersManagementPage() {
             setToast({ type: "success", text: "ユーザーを削除しました。" });
         } catch (e: any) {
             setToast({ type: "error", text: "削除に失敗しました: " + e.message });
+        } finally {
+            setDeletingUserId(null);
         }
     };
 
     // 権限変更
     const handleToggleRole = async (user: AppUser) => {
+        if (updatingRoleUserId) return;
         if (user.role === 'admin') {
             const adminCount = users.filter(u => u.role === 'admin').length;
             if (adminCount <= 1) {
@@ -156,6 +163,7 @@ export default function AdminUsersManagementPage() {
         const newRole = user.role === 'admin' ? 'viewer' : 'admin';
         if (!confirm(`「${user.display_name}」の権限を【${newRole === 'admin' ? '管理者' : '一般ユーザー'}】に変更しますか？`)) return;
 
+        setUpdatingRoleUserId(user.id);
         try {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
@@ -175,6 +183,8 @@ export default function AdminUsersManagementPage() {
             setToast({ type: "success", text: `権限を「${newRole === 'admin' ? '管理者' : '一般ユーザー'}」に更新しました。` });
         } catch (err: any) {
             setToast({ type: "error", text: "更新に失敗しました: " + err.message });
+        } finally {
+            setUpdatingRoleUserId(null);
         }
     };
 
@@ -413,16 +423,32 @@ export default function AdminUsersManagementPage() {
                                             <div className="flex items-center gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 shrink-0">
                                                 <button
                                                     onClick={() => handleToggleRole(user)}
-                                                    className="flex-1 sm:flex-initial text-center justify-center whitespace-nowrap text-xs text-slate-700 hover:text-slate-900 border border-slate-300 hover:bg-slate-100 bg-white px-3.5 py-2 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors font-medium cursor-pointer"
+                                                    disabled={updatingRoleUserId === user.id || deletingUserId === user.id}
+                                                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-xs text-slate-700 hover:text-slate-900 border border-slate-300 hover:bg-slate-100 bg-white px-3.5 py-2 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                                                     title={user.role === 'admin' ? "一般ユーザーに変更" : "管理者に昇格"}
                                                 >
-                                                    権限変更
+                                                    {updatingRoleUserId === user.id ? (
+                                                        <>
+                                                            <span className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                                                            <span>変更中...</span>
+                                                        </>
+                                                    ) : (
+                                                        <span>権限変更</span>
+                                                    )}
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteUser(user.id)}
-                                                    className="flex-1 sm:flex-initial text-center justify-center whitespace-nowrap text-xs text-rose-600 hover:text-white border border-rose-200 hover:bg-rose-600 bg-rose-50/50 hover:bg-rose-600 px-3.5 py-2 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors font-bold cursor-pointer"
+                                                    disabled={deletingUserId === user.id || updatingRoleUserId === user.id}
+                                                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-xs text-rose-600 hover:text-white border border-rose-200 hover:bg-rose-600 bg-rose-50/50 px-3.5 py-2 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors font-bold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                                                 >
-                                                    削除
+                                                    {deletingUserId === user.id ? (
+                                                        <>
+                                                            <span className="w-3 h-3 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+                                                            <span>削除中...</span>
+                                                        </>
+                                                    ) : (
+                                                        <span>削除</span>
+                                                    )}
                                                 </button>
                                             </div>
                                         </div>
