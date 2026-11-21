@@ -384,12 +384,12 @@ export default function CreditCaseDetailPage() {
                     </div>
 
                     {/* メインカード */}
-                    <div className="bg-white p-7 sm:p-9 rounded-xl border border-slate-200 shadow-2xs">
+                    <div className="bg-white p-5 sm:p-9 rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
 
                         {/* ヘッダー情報 */}
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-slate-100">
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-2 flex-wrap">
                                     <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 uppercase tracking-widest font-mono">
                                         CASE ID: {caseData.id.slice(0, 8)}
                                     </span>
@@ -406,12 +406,12 @@ export default function CreditCaseDetailPage() {
                                         </span>
                                     )}
                                 </div>
-                                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-start sm:items-center gap-2.5">
-                                    <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-slate-700 shrink-0 mt-0.5 sm:mt-0" />
-                                    <span className="break-keep [word-break:keep-all]">{caseData.company_name}</span>
+                                <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-start gap-2.5">
+                                    <Building2 className="w-5 h-5 sm:w-7 sm:h-7 text-slate-700 shrink-0 mt-1 sm:mt-0.5" />
+                                    <span className="min-w-0 break-words leading-snug">{caseData.company_name}</span>
                                 </h1>
                                 {caseData.corporate_number && (
-                                    <p className="text-xs text-slate-500 font-mono mt-1 ml-8 sm:ml-9">
+                                    <p className="text-xs text-slate-500 font-mono mt-1 ml-7 sm:ml-9">
                                         法人番号: {caseData.corporate_number}
                                     </p>
                                 )}
@@ -553,9 +553,9 @@ export default function CreditCaseDetailPage() {
                             {/* 2. 相手方の営業実態（被害企業報告 または 公的処分記録） */}
                             {sourceInfo.isOfficial ? (
                                 <div className="p-4 rounded-xl border bg-blue-50/50 border-blue-200">
-                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
-                                        <span>公的記録ステータス</span>
-                                        <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full border border-blue-300">
+                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
+                                        <span className="shrink-0">公的記録ステータス</span>
+                                        <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full border border-blue-300 self-start sm:self-auto break-words">
                                             公表元: {sourceInfo.sourceName}
                                         </span>
                                     </div>
@@ -618,20 +618,20 @@ export default function CreditCaseDetailPage() {
                         </div>
 
                         {/* 7項目詳細リスト */}
-                        <div className="space-y-4 py-2 text-sm">
-                            <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">対象企業名（商号・屋号）</span>
-                                <span className="font-bold text-slate-900">{caseData.company_name}</span>
+                        <div className="space-y-1 sm:space-y-2 py-2 text-sm">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4 py-2.5 border-b border-slate-100">
+                                <span className="text-xs sm:text-sm text-slate-500 font-medium shrink-0">対象企業名（商号・屋号）</span>
+                                <span className="font-bold text-slate-900 sm:text-right break-words">{caseData.company_name}</span>
                             </div>
-                            <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">法人番号</span>
-                                <span className="font-mono text-slate-800">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4 py-2.5 border-b border-slate-100">
+                                <span className="text-xs sm:text-sm text-slate-500 font-medium shrink-0">法人番号</span>
+                                <span className="font-mono text-slate-800 sm:text-right break-words">
                                     {caseData.corporate_number || (isCorporateEntityName(caseData.company_name) || caseData.registry_status !== "sole_proprietor" ? "公表資料に記載なし（法人）" : "未登録（個人事業主）")}
                                 </span>
                             </div>
-                            <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">公的登記ステータス</span>
-                                <span className="font-bold text-slate-800">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4 py-2.5 border-b border-slate-100">
+                                <span className="text-xs sm:text-sm text-slate-500 font-medium shrink-0">公的登記ステータス</span>
+                                <span className="font-bold text-slate-800 sm:text-right break-words">
                                     {caseData.registry_status === "closed"
                                         ? "閉鎖（清算結了等）"
                                         : caseData.registry_status === "sole_proprietor"
@@ -642,53 +642,53 @@ export default function CreditCaseDetailPage() {
                                 </span>
                             </div>
                             {sourceInfo.isOfficial ? (
-                                <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                    <span className="text-slate-500 font-medium">事案分類（公的記録）</span>
-                                    <span className="font-bold text-blue-900">{sourceInfo.sourceCategory}</span>
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4 py-2.5 border-b border-slate-100">
+                                    <span className="text-xs sm:text-sm text-slate-500 font-medium shrink-0">事案分類（公的記録）</span>
+                                    <span className="font-bold text-blue-900 sm:text-right break-words">{sourceInfo.sourceCategory}</span>
                                 </div>
                             ) : (
-                                <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                    <span className="text-slate-500 font-medium">相手先営業・連絡実態</span>
-                                    <span className="font-bold text-slate-800">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4 py-2.5 border-b border-slate-100">
+                                    <span className="text-xs sm:text-sm text-slate-500 font-medium shrink-0">相手先営業・連絡実態</span>
+                                    <span className="font-bold text-slate-800 sm:text-right break-words">
                                         {caseData.business_status === "unreachable" ? "音信不通" : caseData.business_status === "relocated" ? "事務所引き払い・所在不明" : caseData.business_status === "bankrupt" ? "倒産・破産手続き中" : caseData.business_status === "active" ? "連絡可能（協議中）" : "不明"}
                                     </span>
                                 </div>
                             )}
-                            <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">本社所在地・拠点</span>
-                                <span className="text-slate-800">{caseData.location || "未登録"}</span>
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4 py-2.5 border-b border-slate-100">
+                                <span className="text-xs sm:text-sm text-slate-500 font-medium shrink-0">本社所在地・拠点</span>
+                                <span className="text-slate-800 sm:text-right break-words">{caseData.location || "未登録"}</span>
                             </div>
-                            <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4 py-2.5 border-b border-slate-100">
+                                <span className="text-xs sm:text-sm text-slate-500 font-medium shrink-0">
                                     {sourceInfo.isOfficial ? "公表日 / 処分日" : "請求日"}
                                 </span>
-                                <span className="font-mono text-slate-800">
+                                <span className="font-mono text-slate-800 sm:text-right">
                                     {sourceInfo.isOfficial
                                         ? (caseData.due_date || caseData.invoice_date)?.replace(/-/g, "/") || "-"
                                         : caseData.invoice_date?.replace(/-/g, "/") || "-"}
                                 </span>
                             </div>
-                            <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                <span className="text-slate-500 font-medium">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4 py-2.5 border-b border-slate-100">
+                                <span className="text-xs sm:text-sm text-slate-500 font-medium shrink-0">
                                     {sourceInfo.isOfficial ? "記録の種別・区分" : "入金の有無"}
                                 </span>
                                 {sourceInfo.isOfficial ? (
-                                    <span className="font-bold text-blue-900">
+                                    <span className="font-bold text-blue-900 sm:text-right break-words">
                                         {/破産|民事再生/.test(caseData.counterparty_claim || "")
                                             ? "裁判所公告・法的整理手続記録"
                                             : "行政処分・法令違反公表記録（公表日時点の確定事実）"}
                                     </span>
                                 ) : (
-                                    <span className={`font-bold ${isResolved ? "text-emerald-700" : "text-rose-700"}`}>
+                                    <span className={`font-bold sm:text-right ${isResolved ? "text-emerald-700" : "text-rose-700"}`}>
                                         {isResolved ? "解決済み" : "未払い"}
                                     </span>
                                 )}
                             </div>
                             {sourceInfo.isOfficial ? (
-                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2.5 border-b border-slate-100 gap-1 sm:gap-4">
-                                    <span className="text-slate-500 font-medium shrink-0">公表元・公開機関</span>
-                                    <div className="flex items-center gap-2 flex-wrap justify-end">
-                                        <span className="font-bold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200 text-xs sm:text-sm">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2.5 border-b border-slate-100 gap-1.5 sm:gap-4">
+                                    <span className="text-xs sm:text-sm text-slate-500 font-medium shrink-0">公表元・公開機関</span>
+                                    <div className="flex items-center gap-2 flex-wrap sm:justify-end">
+                                        <span className="font-bold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200 text-xs sm:text-sm break-words">
                                             🏛️ {sourceInfo.sourceName}
                                         </span>
                                         {sourceInfo.sourceUrl && (
@@ -696,7 +696,7 @@ export default function CreditCaseDetailPage() {
                                                 href={sourceInfo.sourceUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline shrink-0"
                                             >
                                                 <span>公表ソース</span>
                                                 <ExternalLink className="w-3 h-3" />
@@ -705,23 +705,23 @@ export default function CreditCaseDetailPage() {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="flex justify-between py-2.5 border-b border-slate-100">
-                                    <span className="text-slate-500 font-medium">登録元企業</span>
-                                    <span className="text-slate-700">{caseData.companies?.name || "加盟企業"}</span>
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4 py-2.5 border-b border-slate-100">
+                                    <span className="text-xs sm:text-sm text-slate-500 font-medium shrink-0">登録元企業</span>
+                                    <span className="text-slate-700 sm:text-right break-words">{caseData.companies?.name || "加盟企業"}</span>
                                 </div>
                             )}
                         </div>
 
                         {/* 登録理由 */}
-                        <div className="mt-6 p-5 bg-slate-50 rounded-xl border border-slate-200">
+                        <div className="mt-6 p-4 sm:p-5 bg-slate-50 rounded-xl border border-slate-200">
                             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
                                 {sourceInfo.isOfficial ? "公的公表概要・処分内容" : "登録理由（未払い・遅延の経緯・相手側の主張）"}
                             </h3>
-                            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
+                            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap break-words">
                                 {caseData.counterparty_claim || "特段の登録理由・相手側の主張は記載されていません。"}
                             </p>
                             {caseData.admin_notes && (sourceInfo.isOfficial || isAdmin || (isOwner && caseData.status === "rejected")) && (
-                                <div className="mt-3 pt-3 border-t border-slate-200/80 text-xs text-slate-600 leading-relaxed font-mono whitespace-pre-wrap">
+                                <div className="mt-3 pt-3 border-t border-slate-200/80 text-xs text-slate-600 leading-relaxed font-mono whitespace-pre-wrap break-all">
                                     {caseData.admin_notes}
                                 </div>
                             )}
@@ -858,7 +858,7 @@ export default function CreditCaseDetailPage() {
                         )}
 
                         {/* 登録日 & 審査ステータス */}
-                        <div className="mt-8 pt-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between items-center">
+                        <div className="mt-8 pt-4 border-t border-slate-100 text-xs text-slate-500 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                             <span>システム登録日: {formatDateTimeJST(caseData.created_at)}</span>
                             {sourceInfo.isOfficial ? (
                                 <span className="flex items-center gap-1 font-semibold text-blue-700">

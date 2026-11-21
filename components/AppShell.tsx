@@ -31,13 +31,13 @@ function AppShellInner({
     }
 
     return (
-        <div className="min-h-screen flex">
+        <div className="min-h-screen flex overflow-x-clip">
             {/* 左サイドバー ＆ モバイルヘッダー */}
             <Navigation />
 
             {/* 右メインコンテンツエリア（サイドバー分インデント） */}
-            <div className="flex-1 flex flex-col min-w-0 md:pl-64">
-                <main className="relative z-10 flex-grow">
+            <div className="flex-1 flex flex-col min-w-0 md:pl-64 overflow-x-clip">
+                <main className="relative z-10 flex-grow min-w-0">
                     {children}
                 </main>
                 <Footer />
