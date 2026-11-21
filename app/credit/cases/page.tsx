@@ -134,7 +134,7 @@ export default function CreditCasesListPage() {
     const [industryFilter, setIndustryFilter] = useState<string>("all");
     const [statusFilter, setStatusFilter] = useState<"all" | "official" | "unpaid" | "resolved">("all");
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" }>({
-        key: "priority",
+        key: "due_date",
         direction: "desc"
     });
     const [currentPage, setCurrentPage] = useState(1);
@@ -251,10 +251,13 @@ export default function CreditCasesListPage() {
             const dir = sortConfig.direction === "asc" ? 1 : -1;
             switch (sortConfig.key) {
                 case "priority": {
-                    // 初期表示：東京都 → 神奈川県 → 埼玉県 → 千葉県 → その他関東 → 全国（同一エリア内は最新順）
+                    // 関東（一都三県）優先：東京都 → 神奈川県 → 埼玉県 → 千葉県 → その他関東 → 全国（同一エリア内は公表日が新しい順）
                     const rankA = getLocationPriorityRank(a.location);
                     const rankB = getLocationPriorityRank(b.location);
                     if (rankA !== rankB) return rankA - rankB;
+                    const dueA = a.due_date ? new Date(a.due_date).getTime() : 0;
+                    const dueB = b.due_date ? new Date(b.due_date).getTime() : 0;
+                    if (dueA !== dueB) return (isNaN(dueB) ? 0 : dueB) - (isNaN(dueA) ? 0 : dueA);
                     const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
                     const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
                     return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
@@ -403,7 +406,7 @@ export default function CreditCasesListPage() {
                                 </div>
 
                                 {/* 業種プルダウン */}
-                                <div className="relative w-full sm:w-48 shrink-0">
+                                <div className="relative w-full sm:w-44 shrink-0">
                                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                                     <select
                                         value={industryFilter}
@@ -418,6 +421,26 @@ export default function CreditCasesListPage() {
                                         <option value="construction_realestate">建設・施工・不動産</option>
                                         <option value="transport_logistics">運送・物流・倉庫</option>
                                         <option value="security_staffing">警備・人材・ビル管理</option>
+                                    </select>
+                                </div>
+
+                                {/* 並び替えプルダウン */}
+                                <div className="relative w-full sm:w-48 shrink-0">
+                                    <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                    <select
+                                        value={`${sortConfig.key}-${sortConfig.direction}`}
+                                        onChange={(e) => {
+                                            const [key, direction] = e.target.value.split("-") as [string, "asc" | "desc"];
+                                            setSortConfig({ key, direction });
+                                            setCurrentPage(1);
+                                        }}
+                                        style={{ paddingLeft: '2.1rem' }}
+                                        className="w-full bg-white border border-slate-200 rounded-xl pr-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
+                                    >
+                                        <option value="due_date-desc">公表日が新しい順</option>
+                                        <option value="priority-desc">関東（一都三県）優先</option>
+                                        <option value="due_date-asc">公表日が古い順</option>
+                                        <option value="company_name-asc">企業名（五十音順）</option>
                                     </select>
                                 </div>
                             </div>

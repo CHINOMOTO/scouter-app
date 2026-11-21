@@ -206,6 +206,9 @@ export async function GET(request: Request) {
         });
 
         enrichedCases.sort((a: any, b: any) => {
+            const dueA = a.due_date ? new Date(a.due_date).getTime() : 0;
+            const dueB = b.due_date ? new Date(b.due_date).getTime() : 0;
+            if (dueA !== dueB) return (isNaN(dueB) ? 0 : dueB) - (isNaN(dueA) ? 0 : dueA);
             const rankA = getLocationPriorityRank(a.location);
             const rankB = getLocationPriorityRank(b.location);
             if (rankA !== rankB) return rankA - rankB;
