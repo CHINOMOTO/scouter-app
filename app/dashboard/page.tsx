@@ -55,17 +55,6 @@ type Announcement = {
   created_at: string;
 };
 
-type PartnerCompanyPR = {
-  id: string;
-  name: string;
-  category: string;
-  tagline: string;
-  websiteUrl: string;
-  location?: string;
-  logoColor?: string;
-  logoSvg?: string;
-};
-
 export default function DashboardPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -73,7 +62,6 @@ export default function DashboardPage() {
   const [companyName, setCompanyName] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [partnerCompanies, setPartnerCompanies] = useState<PartnerCompanyPR[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // お知らせモーダル用 state
@@ -135,85 +123,8 @@ export default function DashboardPage() {
       }
     };
 
-    const loadPartnerCompanies = async () => {
-      try {
-        const dummyPartners: PartnerCompanyPR[] = [
-          {
-            id: "p-1",
-            name: "株式会社宇井建設",
-            category: "荷揚げ・雑工・多能工サポート",
-            tagline: "現場の円滑な進行を支える荷揚げ・雑工のプロフェッショナル",
-            websiteUrl: "https://www.uiken.jp/",
-            logoSvg: "uiken"
-          },
-          {
-            id: "p-2",
-            name: "ネクストライン重機株式会社",
-            category: "建機レンタル・重機輸送",
-            tagline: "現場の安全稼働を支える強力なマシンラインナップ",
-            websiteUrl: "#",
-            logoSvg: "nextline"
-          },
-          {
-            id: "p-3",
-            name: "グランアクシス工営株式会社",
-            category: "設備工事業・プラント設備",
-            tagline: "都市インフラと水まわり設備を支える確かな技術力",
-            websiteUrl: "#",
-            logoSvg: "grandaxis"
-          },
-          {
-            id: "p-4",
-            name: "レクシスロジスティクス株式会社",
-            category: "幹線輸送・資材運送",
-            tagline: "全国ネットワークを結ぶ迅速な現場ロジスティクス",
-            websiteUrl: "#",
-            logoSvg: "lexis"
-          },
-          {
-            id: "p-5",
-            name: "ソリッドアーキテクト株式会社",
-            category: "建築設計・躯体工事",
-            tagline: "堅牢な構造設計を追求するプロフェッショナル集団",
-            websiteUrl: "#",
-            logoSvg: "solid"
-          },
-          {
-            id: "p-6",
-            name: "ヴェルサス電設株式会社",
-            category: "電気通信・受変電設備",
-            tagline: "次世代エネルギーと先端受変電ソリューション",
-            websiteUrl: "#",
-            logoSvg: "versus"
-          },
-          {
-            id: "p-7",
-            name: "プロスパーマテリアル株式会社",
-            category: "建築資材・鉄鋼建材",
-            tagline: "高強度資材の安定供給で現場の工期短縮を実現",
-            websiteUrl: "#",
-            logoSvg: "prosper"
-          },
-          {
-            id: "p-8",
-            name: "フロンティア都市開発株式会社",
-            category: "都市開発・不動産企画",
-            tagline: "持続可能な街づくりをデザインする総合開発",
-            websiteUrl: "#",
-            logoSvg: "frontier"
-          }
-        ];
-
-        // 弁護士提示およびコンプライアンスの観点から、完全な架空企業サンプルで統一
-        setPartnerCompanies(dummyPartners);
-      } catch (err) {
-        console.error("Partner companies fetch error:", err);
-      }
-    };
-
     loadUserData();
     loadAnnouncements();
-    loadPartnerCompanies();
   }, []);
 
   // プラン権限の判定
@@ -230,149 +141,6 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="max-w-5xl w-full animate-fade-in relative z-10">
-
-          {/* 画面上部: 提携・契約企業ロゴスライダー（ユーザー画像仕様: 白背景・本物感のあるコーポレートロゴ） */}
-          <div className="mb-6 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
-            {/* 上部ヘッダー帯 */}
-            <div className="px-4 py-2 border-b border-slate-100 bg-white flex items-center justify-between text-[11px]">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                <span className="font-extrabold text-[10px] sm:text-[11px] text-slate-800 tracking-wider font-mono">
-                  PARTNER COMPANIES
-                </span>
-                <span className="text-slate-300">|</span>
-                <span className="text-slate-600 font-medium text-[11px]">参画・利用企業一覧</span>
-              </div>
-              <Link 
-                href="/contact?category=feature" 
-                className="text-[10px] sm:text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-0.5 transition-colors shrink-0"
-              >
-                <span>掲載について</span>
-                <ExternalLink className="w-2.5 h-2.5" />
-              </Link>
-            </div>
-
-            {/* 白背景で流れるロゴトラック */}
-            <div className="py-3 bg-white overflow-hidden relative group">
-              {/* 左右のフェードグラデーション */}
-              <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
-
-              <div className="animate-marquee flex items-center gap-3 sm:gap-4 pl-4">
-                {[...partnerCompanies, ...partnerCompanies].map((comp, idx) => {
-                  const hasExternalUrl = Boolean(comp.websiteUrl && comp.websiteUrl !== "#");
-                  const cardClass = `h-12 sm:h-14 px-4 sm:px-6 rounded-lg bg-white border border-slate-200/90 hover:border-slate-400 hover:shadow-xs transition-all shrink-0 flex items-center justify-center group/item ${hasExternalUrl ? "cursor-pointer" : "cursor-default"}`;
-                  const innerContent = comp.logoSvg === "uiken" ? (
-                      <div className="flex items-center gap-2 select-none">
-                        <div className="w-5 h-5 rounded bg-slate-900 flex items-center justify-center font-black text-white text-[10px] shrink-0 shadow-2xs">
-                          UI
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">UIKEN</span>
-                          <span className="text-[7px] text-slate-500 font-bold tracking-widest mt-0.5">宇井建設</span>
-                        </div>
-                      </div>
-                    ) : comp.logoSvg === "nextline" ? (
-                      <div className="flex items-center gap-2 select-none">
-                        <div className="w-5 h-5 rounded bg-[#F59E0B] flex items-center justify-center font-black text-slate-950 text-[10px] shrink-0 shadow-2xs">
-                          NL
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">NEXT LINE</span>
-                          <span className="text-[7px] text-amber-700 font-bold tracking-widest mt-0.5">ネクストライン重機</span>
-                        </div>
-                      </div>
-                    ) : comp.logoSvg === "grandaxis" ? (
-                      <div className="flex items-center gap-2 select-none">
-                        <svg className="w-5 h-5 text-sky-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <circle cx="12" cy="12" r="9" />
-                          <circle cx="12" cy="12" r="4" fill="currentColor" />
-                        </svg>
-                        <div className="flex flex-col">
-                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">GRAND AXIS</span>
-                          <span className="text-[7px] text-sky-600 font-bold tracking-widest mt-0.5">グランアクシス工営</span>
-                        </div>
-                      </div>
-                    ) : comp.logoSvg === "lexis" ? (
-                      <div className="flex items-center gap-2 select-none">
-                        <div className="w-5 h-5 rounded bg-emerald-600 flex items-center justify-center text-white shrink-0">
-                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">LEXIS LOGI</span>
-                          <span className="text-[7px] text-emerald-700 font-bold tracking-widest mt-0.5">レクシス運送</span>
-                        </div>
-                      </div>
-                    ) : comp.logoSvg === "solid" ? (
-                      <div className="flex items-center gap-2 select-none">
-                        <svg className="w-5 h-5 text-slate-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                        </svg>
-                        <div className="flex flex-col">
-                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">SOLID ARCH</span>
-                          <span className="text-[7px] text-slate-500 font-bold tracking-widest mt-0.5">ソリッドアーキテクト</span>
-                        </div>
-                      </div>
-                    ) : comp.logoSvg === "versus" ? (
-                      <div className="flex items-center gap-2 select-none">
-                        <div className="w-5 h-5 rounded bg-indigo-600 flex items-center justify-center font-black text-white text-[10px] italic shrink-0">
-                          V
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">VERSUS ELEC</span>
-                          <span className="text-[7px] text-indigo-600 font-bold tracking-widest mt-0.5">ヴェルサス電設</span>
-                        </div>
-                      </div>
-                    ) : comp.logoSvg === "prosper" ? (
-                      <div className="flex items-center gap-2 select-none">
-                        <svg className="w-5 h-5 text-orange-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <polygon points="6 3 18 3 22 9 12 22 2 9" />
-                        </svg>
-                        <div className="flex flex-col">
-                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">PROSPER</span>
-                          <span className="text-[7px] text-orange-700 font-bold tracking-widest mt-0.5">プロスパーマテリアル</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 select-none">
-                        <svg className="w-5 h-5 text-teal-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="4" y="2" width="16" height="20" rx="2" />
-                          <path d="M9 22v-4h6v4M8 6h.01M16 6h.01M8 10h.01M16 10h.01" />
-                        </svg>
-                        <div className="flex flex-col">
-                          <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight leading-none">FRONTIER</span>
-                          <span className="text-[7px] text-teal-700 font-bold tracking-widest mt-0.5">フロンティア都市開発</span>
-                        </div>
-                      </div>
-                    );
-
-                  return hasExternalUrl ? (
-                    <a
-                      key={`${comp.id}-${idx}`}
-                      href={comp.websiteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cardClass}
-                      title={`${comp.name} (${comp.category})`}
-                    >
-                      {innerContent}
-                    </a>
-                  ) : (
-                    <div
-                      key={`${comp.id}-${idx}`}
-                      className={cardClass}
-                      title={`${comp.name} (${comp.category})`}
-                    >
-                      {innerContent}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
 
           {/* ヘッダーエリア */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8 pb-5 sm:pb-6 border-b border-slate-200">
