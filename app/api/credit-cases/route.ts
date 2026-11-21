@@ -293,11 +293,16 @@ export async function GET(request: Request) {
                 }
             }
 
-            if (!registryStatus) {
+            const isSoleProprietorEntity =
+                item.company_name?.includes('個人事業主') ||
+                (!item.corporate_number && !isCorporateEntityName(item.company_name)) ||
+                item.corporate_number?.startsWith('999');
+
+            if (isSoleProprietorEntity) {
+                registryStatus = 'sole_proprietor';
+            } else if (!registryStatus) {
                 if (fullText.includes('閉鎖登記') || fullText.includes('清算結了') || fullText.includes('破産手続開始') || fullText.includes('破産管財')) {
                     registryStatus = 'closed';
-                } else if (item.company_name?.includes('個人事業主') || (!item.corporate_number && !isCorporateEntityName(item.company_name)) || item.corporate_number?.startsWith('999')) {
-                    registryStatus = 'sole_proprietor';
                 } else {
                     // 未照合データを根拠なく「登記中（存続）」と断定しない
                     registryStatus = 'unknown';

@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { Pagination } from "@/components/Pagination";
-import { detectOfficialSource, getCleanOfficialSourceName } from "@/lib/officialSources";
+import { detectOfficialSource, getCleanOfficialSourceName, isCorporateEntityName } from "@/lib/officialSources";
 import { translateErrorMessage } from "@/lib/errorMessage";
 import { formatDateJST } from "@/lib/dateFormat";
 
@@ -51,6 +51,7 @@ export default function AdminCreditCasesPage() {
     const [cases, setCases] = useState<CreditCaseAdmin[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState<"pending" | "approved" | "rejected" | "official" | "all">("pending");
+    const [entityTypeFilter, setEntityTypeFilter] = useState<"all" | "corporate" | "sole_proprietor">("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [sortConfig, setSortConfig] = useState<{ key: "created_at" | "company_name" | "amount" | "due_date"; direction: "asc" | "desc" }>({
         key: "created_at",
@@ -190,6 +191,13 @@ export default function AdminCreditCasesPage() {
             return !isOfficial && c.status === filterStatus;
         });
 
+        if (entityTypeFilter !== "all") {
+            result = result.filter(c => {
+                const isSole = !c.corporate_number && !isCorporateEntityName(c.company_name);
+                return entityTypeFilter === "sole_proprietor" ? isSole : !isSole;
+            });
+        }
+
         if (searchTerm.trim()) {
             const q = searchTerm.trim().toLowerCase();
             result = result.filter(c => {
@@ -219,7 +227,7 @@ export default function AdminCreditCasesPage() {
         });
 
         return result;
-    }, [cases, filterStatus, searchTerm, sortConfig]);
+    }, [cases, filterStatus, entityTypeFilter, searchTerm, sortConfig]);
 
     const totalPages = Math.ceil(filteredAndSortedCases.length / PAGE_SIZE) || 1;
 
@@ -301,8 +309,20 @@ export default function AdminCreditCasesPage() {
                                 />
                             </div>
 
-                            {/* ソート切り替え */}
-                            <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
+                            {/* 法人 / 個人事業主 & ソート切り替え */}
+                            <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2 shrink-0">
+                                <select
+                                    value={entityTypeFilter}
+                                    onChange={(e) => {
+                                        setEntityTypeFilter(e.target.value as "all" | "corporate" | "sole_proprietor");
+                                        setCurrentPage(1);
+                                    }}
+                                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-bold focus:outline-none flex-1 sm:flex-none"
+                                >
+                                    <option value="all">すべて（法人・個人）</option>
+                                    <option value="corporate">法人のみ</option>
+                                    <option value="sole_proprietor">個人事業主のみ</option>
+                                </select>
                                 <span className="text-xs text-slate-500 font-semibold flex items-center gap-1">
                                     <ArrowUpDown className="w-3.5 h-3.5" />
                                     並び順:

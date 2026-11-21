@@ -47,15 +47,18 @@ export async function GET(
         let registryStatus = creditCase.registry_status;
 
         const isCorporate = isCorporateEntityName(creditCase.company_name);
+        const isSoleProprietorEntity =
+            creditCase.company_name?.includes('個人事業主') ||
+            (!creditCase.corporate_number && !isCorporate) ||
+            creditCase.corporate_number?.startsWith('999');
 
         if (isOfficialData) {
             businessStatus = null;
-            // DBに明確な登記ステータスが保存されている場合はそれを尊重し、未照合時は「未確認(unknown)」とする
-            if (!registryStatus || registryStatus === 'unknown') {
+            if (isSoleProprietorEntity) {
+                registryStatus = 'sole_proprietor';
+            } else if (!registryStatus || registryStatus === 'unknown') {
                 if (claim.includes('破産') || claim.includes('清算') || claim.includes('閉鎖登記')) {
                     registryStatus = 'closed';
-                } else if (!creditCase.corporate_number && !isCorporate) {
-                    registryStatus = 'sole_proprietor';
                 } else {
                     registryStatus = 'unknown';
                 }

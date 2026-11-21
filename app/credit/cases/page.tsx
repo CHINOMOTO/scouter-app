@@ -18,7 +18,8 @@ import {
     ExternalLink,
     ShieldCheck,
     MapPin,
-    Lock
+    Lock,
+    Filter
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -142,6 +143,7 @@ export default function CreditCasesListPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [prefectureFilter, setPrefectureFilter] = useState<string>("all");
     const [industryFilter, setIndustryFilter] = useState<string>("all");
+    const [entityTypeFilter, setEntityTypeFilter] = useState<"all" | "corporate" | "sole_proprietor">("all");
     const [statusFilter, setStatusFilter] = useState<"all" | "official" | "unpaid" | "resolved">("all");
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" }>({
         key: "due_date",
@@ -230,6 +232,16 @@ export default function CreditCasesListPage() {
             result = result.filter((c) => classifyCompanyIndustry(c) === industryFilter);
         }
 
+        // 事業形態フィルター（法人 / 個人事業主）
+        if (entityTypeFilter !== "all") {
+            result = result.filter((c) => {
+                const isSole =
+                    c.registry_status === "sole_proprietor" ||
+                    (!c.corporate_number && !isCorporateEntityName(c.company_name));
+                return entityTypeFilter === "sole_proprietor" ? isSole : !isSole;
+            });
+        }
+
         // ステータスフィルター（公的処分 / 民間未払い中 / 民間解決済み）
         if (statusFilter === "official") {
             result = result.filter((c) => detectOfficialSource(c).isOfficial);
@@ -302,7 +314,7 @@ export default function CreditCasesListPage() {
         });
 
         return result;
-    }, [targetIndustryCases, searchTerm, prefectureFilter, industryFilter, statusFilter, sortConfig]);
+    }, [targetIndustryCases, searchTerm, prefectureFilter, industryFilter, entityTypeFilter, statusFilter, sortConfig]);
 
     const totalPages = Math.ceil(filteredCases.length / PAGE_SIZE) || 1;
 
@@ -470,6 +482,24 @@ export default function CreditCasesListPage() {
                                         <option value="construction_realestate">建設・施工・不動産</option>
                                         <option value="transport_logistics">運送・物流・倉庫</option>
                                         <option value="security_staffing">警備・人材・ビル管理</option>
+                                    </select>
+                                </div>
+
+                                {/* 法人 / 個人事業主フィルター */}
+                                <div className="relative w-full sm:w-40 shrink-0">
+                                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                    <select
+                                        value={entityTypeFilter}
+                                        onChange={(e) => {
+                                            setEntityTypeFilter(e.target.value as "all" | "corporate" | "sole_proprietor");
+                                            setCurrentPage(1);
+                                        }}
+                                        style={{ paddingLeft: '2.1rem' }}
+                                        className="w-full bg-white border border-slate-200 rounded-xl pr-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-slate-500 transition-colors cursor-pointer"
+                                    >
+                                        <option value="all">すべて（法人・個人）</option>
+                                        <option value="corporate">法人のみ</option>
+                                        <option value="sole_proprietor">個人事業主のみ</option>
                                     </select>
                                 </div>
 
