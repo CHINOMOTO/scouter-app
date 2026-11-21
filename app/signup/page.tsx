@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function SignUpPage() {
@@ -39,78 +38,24 @@ export default function SignUpPage() {
             return;
         }
 
-        const planLabels: Record<string, string> = {
-            full: "FULLプラン（MIERIS WORK ＋ MIERIS CREDIT / 月額30,000円）",
-            employment: "MIERIS WORK（就業情報・人物信用 / 月額18,000円）",
-            credit: "MIERIS CREDIT（企業信用・未払い防止 / 月額18,000円）"
-        };
-
-        const inquiryMessage = `【新規利用お申し込み】
-希望プラン: ${planLabels[planType]}
-法人番号: ${cleanCorpNum || "未入力"}
-会社名: ${companyName.trim()}
-担当者名: ${displayName.trim()}
-メール: ${email.trim()}
-電話番号: ${phoneNumber.trim()}
-備考・ご質問:
-${notes.trim() || "なし"}`;
-
         try {
-            // お問い合わせ・お申し込みテーブルに保存
-            const { error: insertError } = await supabase
-                .from("contact_inquiries")
-                .insert({
-                    company_name: companyName.trim(),
-                    user_name: displayName.trim(),
+            const res = await fetch("/api/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    companyName: companyName.trim(),
+                    corporateNumber: cleanCorpNum,
+                    displayName: displayName.trim(),
                     email: email.trim(),
-                    phone_number: phoneNumber.trim(),
-                    category: "account",
-                    message: inquiryMessage,
-                    status: "unread"
-                });
+                    phoneNumber: phoneNumber.trim(),
+                    planType,
+                    notes: notes.trim(),
+                }),
+            });
 
-            if (insertError) {
-                console.error("Application insert error:", insertError);
-            }
-
-            // LINE通知の送信（管理者へ通知）
-            let notifyOk = false;
-            try {
-                const notifyRes = await fetch("/api/notify/line", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        type: "signup",
-                        data: {
-                            name: `${displayName.trim()}（希望プラン: ${planType}）`,
-                            company: companyName.trim(),
-                            email: `${email.trim()} / TEL: ${phoneNumber.trim()}`
-                        }
-                    })
-                });
-                notifyOk = notifyRes.ok;
-            } catch (notifyErr) {
-                console.warn("LINE notify skipped or failed:", notifyErr);
-            }
-
-            // 申込者への自動返信メール送信（盲点①対応）
-            try {
-                await fetch("/api/notify/signup-reply", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        email: email.trim(),
-                        displayName: displayName.trim(),
-                        companyName: companyName.trim(),
-                        planType,
-                    })
-                });
-            } catch (replyErr) {
-                console.warn("Signup auto-reply email failed or skipped:", replyErr);
-            }
-
-            if (insertError && !notifyOk) {
-                throw new Error("お申し込みデータの保存に失敗しました。お手数ですが時間をおいて再度お試しください。");
+            const result = await res.json();
+            if (!res.ok) {
+                throw new Error(result.error || "お申し込みデータの保存に失敗しました。お手数ですが時間をおいて再度お試しください。");
             }
 
             setIsSuccess(true);

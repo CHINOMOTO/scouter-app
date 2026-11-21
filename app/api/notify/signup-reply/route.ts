@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { createMailTransporter, DEFAULT_FROM_ADDRESS } from "@/lib/mailTransporter";
+import { authenticateApiRequest } from "@/lib/apiAuth";
 
 export async function POST(request: Request) {
   try {
+    // 外部からのメール踏み台悪用を防止（管理者のみ実行可・通常申込は /api/signup 内で完結）
+    const auth = await authenticateApiRequest(request, { requireAdmin: true });
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const { email, displayName, companyName, planType } = body;
 

@@ -68,20 +68,26 @@ export default function NewCreditCasePage() {
 
     const MAX_FILE_SIZE = 50 * 1024 * 1024; // 1ファイルあたり最大50MB
 
+    const [planChecked, setPlanChecked] = useState(false);
+
     useEffect(() => {
         const checkPlan = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                const { data: appUser } = await supabase
-                    .from("app_users")
-                    .select("allowed_plan, role")
-                    .eq("id", session.user.id)
-                    .maybeSingle();
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    const { data: appUser } = await supabase
+                        .from("app_users")
+                        .select("allowed_plan, role")
+                        .eq("id", session.user.id)
+                        .maybeSingle();
 
-                const isAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
-                if (!isAdmin && appUser?.allowed_plan === "employment") {
-                    setPlanRestricted(true);
+                    const isAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
+                    if (!isAdmin && appUser?.allowed_plan === "employment") {
+                        setPlanRestricted(true);
+                    }
                 }
+            } finally {
+                setPlanChecked(true);
             }
         };
         checkPlan();
@@ -150,7 +156,10 @@ export default function NewCreditCasePage() {
         if (val.trim().length >= 2 && !isSoleProprietor) {
             setIsSearchingGbiz(true);
             try {
-                const res = await fetch(`/api/credit/corporate-lookup?q=${encodeURIComponent(val.trim())}`);
+                const { data: { session } } = await supabase.auth.getSession();
+                const res = await fetch(`/api/credit/corporate-lookup?q=${encodeURIComponent(val.trim())}`, {
+                    headers: session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : undefined
+                });
                 if (res.ok) {
                     const data = await res.json();
                     if (data.candidates && data.candidates.length > 0) {
@@ -187,7 +196,10 @@ export default function NewCreditCasePage() {
         if (cleaned.length === 13) {
             setInvoiceVerification({ checking: true });
             try {
-                const res = await fetch(`/api/credit/invoice-lookup?number=${cleaned}`);
+                const { data: { session } } = await supabase.auth.getSession();
+                const res = await fetch(`/api/credit/invoice-lookup?number=${cleaned}`, {
+                    headers: session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : undefined
+                });
                 if (res.ok) {
                     const data = await res.json();
                     if (data.valid) {
@@ -341,7 +353,10 @@ export default function NewCreditCasePage() {
         setCorporateNumber(clean);
         if (clean.length === 13) {
             try {
-                const res = await fetch(`/api/credit/corporate-lookup?number=${clean}`);
+                const { data: { session } } = await supabase.auth.getSession();
+                const res = await fetch(`/api/credit/corporate-lookup?number=${clean}`, {
+                    headers: session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : undefined
+                });
                 if (res.ok) {
                     const data = await res.json();
                     if (data.found) {
@@ -406,7 +421,11 @@ export default function NewCreditCasePage() {
                         </p>
                     </div>
 
-                    {planRestricted ? (
+                    {!planChecked ? (
+                        <div className="py-20 flex justify-center">
+                            <div className="animate-spin h-8 w-8 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
+                        </div>
+                    ) : planRestricted ? (
                         <div className="bg-white p-6 sm:p-10 rounded-xl border border-slate-200 text-center max-w-xl mx-auto my-8 sm:my-12 shadow-sm animate-fade-in">
                             <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-600 border border-amber-200/60">
                                 <Lock className="w-6 h-6" />

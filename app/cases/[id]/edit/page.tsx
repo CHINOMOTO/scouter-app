@@ -41,6 +41,11 @@ export default function EditCasePage() {
 
         const fetchCase = async () => {
             setLoading(true);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) { setLoading(false); return; }
+            const { data: appUser } = await supabase.from("app_users").select("role").eq("id", session.user.id).maybeSingle();
+            const isUserAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
+            if (!isUserAdmin) { setLoading(false); return; }
             const { data, error } = await supabase
                 .from("blacklist_cases")
                 .select("*")

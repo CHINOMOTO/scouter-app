@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { authenticateApiRequest } from '@/lib/apiAuth';
 
 // 国税庁 法人番号/インボイス番号のモジュラス9/11 チェックディジット検証
 // 法人番号・インボイス番号は「最左端の1桁（検査数字）」＋「基礎番号12桁」で構成
@@ -25,6 +26,10 @@ function verifyCorporateChecksum(num13: string): boolean {
 // GET: インボイス登録番号（T+13桁 または 13桁数字）の有効性検証・公的照会API
 export async function GET(request: Request) {
     try {
+        // 認証・承認・CREDITプランチェック
+        const auth = await authenticateApiRequest(request, { requirePlan: 'credit' });
+        if (!auth.ok) return auth.response;
+
         const { searchParams } = new URL(request.url);
         let rawNumber = (searchParams.get('number') || searchParams.get('invoice_number') || '').trim();
 

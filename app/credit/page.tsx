@@ -250,7 +250,10 @@ export default function CreditSearchPage() {
         if (val.trim().length >= 2) {
             setIsSearchingGbiz(true);
             try {
-                const res = await fetch(`/api/credit/corporate-lookup?q=${encodeURIComponent(val.trim())}`);
+                const { data: { session } } = await supabase.auth.getSession();
+                const res = await fetch(`/api/credit/corporate-lookup?q=${encodeURIComponent(val.trim())}`, {
+                    headers: session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : undefined
+                });
                 if (res.ok) {
                     const data = await res.json();
                     if (data.candidates && data.candidates.length > 0) {
@@ -390,7 +393,10 @@ export default function CreditSearchPage() {
     // 国税庁インボイス登録番号の検証
     const checkInvoiceRegistry = async (corpNum: string) => {
         try {
-            const res = await fetch(`/api/credit/invoice-lookup?number=${corpNum}`);
+            const { data: { session } } = await supabase.auth.getSession();
+            const res = await fetch(`/api/credit/invoice-lookup?number=${corpNum}`, {
+                headers: session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : undefined
+            });
             if (res.ok) {
                 const invData = await res.json();
                 if (invData.valid) {
@@ -413,7 +419,10 @@ export default function CreditSearchPage() {
         try {
             // gBizINFO・公的登記lookupを呼び出して、企業プロファイルと登記ステータスを取得
             try {
-                const lookupRes = await fetch(`/api/credit/corporate-lookup?number=${corpNum}`);
+                const { data: { session } } = await supabase.auth.getSession();
+                const lookupRes = await fetch(`/api/credit/corporate-lookup?number=${corpNum}`, {
+                    headers: session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : undefined
+                });
                 if (lookupRes.ok) {
                     const lookupData = await lookupRes.json();
                     if (lookupData.found) {
@@ -515,7 +524,11 @@ export default function CreditSearchPage() {
                     </div>
 
                     {/* プラン制限の場合の案内 */}
-                    {planRestricted ? (
+                    {loading ? (
+                        <div className="py-20 flex justify-center">
+                            <div className="animate-spin h-8 w-8 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
+                        </div>
+                    ) : planRestricted ? (
                         <div className="bg-white p-6 sm:p-10 rounded-xl border border-slate-200 text-center max-w-xl mx-auto my-8 sm:my-12 shadow-sm animate-fade-in">
                             <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-600 border border-amber-200/60">
                                 <Lock className="w-6 h-6" />

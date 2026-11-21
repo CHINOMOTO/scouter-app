@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { buildCompanyQueryVariants } from '@/lib/officialSources';
+import { authenticateApiRequest, sanitizePostgrestFilterValue } from '@/lib/apiAuth';
 
 // GET: 法人番号または社名から企業情報を検索・取得するAPI（gBizINFO公的オープンデータ連携）
 export async function GET(request: Request) {
     try {
+        // 認証・承認・CREDITプランチェック
+        const auth = await authenticateApiRequest(request, { requirePlan: 'credit' });
+        if (!auth.ok) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const number = (searchParams.get('number') || '').trim().replace(/[^0-9]/g, '');
         const queryName = (searchParams.get('q') || searchParams.get('name') || '').trim();
@@ -56,13 +61,16 @@ export async function GET(request: Request) {
             const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
             const supabase = createClient(supabaseUrl, supabaseKey);
 
-            const qVariants = buildCompanyQueryVariants(queryName);
-            const { data: dbCases } = await supabase
-                .from('credit_cases')
-                .select('corporate_number, company_name, location')
-                .eq('status', 'approved')
-                .or(qVariants.map(v => `company_name.ilike.%${v}%`).join(','))
-                .limit(5);
+            const safeQueryName = sanitizePostgrestFilterValue(queryName);
+            const qVariants = buildCompanyQueryVariants(safeQueryName).map(sanitizePostgrestFilterValue).filter(Boolean);
+            const { data: dbCases } = qVariants.length > 0
+                ? await supabase
+                    .from('credit_cases')
+                    .select('corporate_number, company_name, location')
+                    .eq('status', 'approved')
+                    .or(qVariants.map(v => `company_name.ilike.%${v}%`).join(','))
+                    .limit(5)
+                : { data: [] };
 
             const internalCandidates = (dbCases || [])
                 .filter(c => c.corporate_number)

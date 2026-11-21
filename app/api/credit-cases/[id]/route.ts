@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { detectOfficialSource, isCorporateEntityName } from '@/lib/officialSources';
+import { authenticateApiRequest } from '@/lib/apiAuth';
 
 // GET: 詳細情報取得
 export async function GET(
@@ -149,43 +150,15 @@ export async function PATCH(
         const { id } = await context.params;
         const body = await request.json();
 
-        const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: '認証情報がありません' }, { status: 401 });
-        }
-        const token = authHeader.replace('Bearer ', '');
+        // 認証・承認・CREDITプランチェック
+        const auth = await authenticateApiRequest(request, { requirePlan: 'credit' });
+        if (!auth.ok) return auth.response;
 
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-        const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
-        });
-
-        const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-        if (userError || !user) {
-            return NextResponse.json({ error: 'ユーザー情報を取得できませんでした' }, { status: 401 });
-        }
-
-        const supabaseAdmin = supabaseServiceRoleKey
-            ? createClient(supabaseUrl, supabaseServiceRoleKey)
-            : supabaseUser;
-
-        // ユーザーの権限・所属会社チェック
-        const { data: appUser } = await supabaseAdmin
-            .from('app_users')
-            .select('role, company_id, is_approved')
-            .eq('id', user.id)
-            .single();
-
-        if (!appUser || appUser.is_approved === false) {
-            return NextResponse.json({ error: '承認されたアカウントが必要です' }, { status: 403 });
-        }
+        const { appUser, isAdmin, supabaseAdmin } = auth;
 
         const { data: creditCase, error: fetchErr } = await supabaseAdmin
             .from('credit_cases')
-            .select('company_name, registered_by_company_id, companies:registered_by_company_id ( id, name )')
+            .select('company_name, registered_by_company_id, status, counterparty_claim, admin_notes, evidence_urls, companies:registered_by_company_id ( id, name )')
             .eq('id', id)
             .single();
 
@@ -193,20 +166,66 @@ export async function PATCH(
             return NextResponse.json({ error: '対象データが見つかりません' }, { status: 404 });
         }
 
+        // 公的機関の確定公表記録は一般ユーザーによる更新不可
+        const sourceInfo = detectOfficialSource(creditCase as any);
+        if (!isAdmin && sourceInfo.isOfficial) {
+            return NextResponse.json({ error: '公的機関の公表記録は更新できません' }, { status: 403 });
+        }
+
         // 所有者または管理者のみ更新可能
-        const isAdmin = appUser.role === 'admin';
-        const isOwner = appUser.company_id && creditCase.registered_by_company_id === appUser.company_id;
+        const isOwner = Boolean(appUser.company_id) && creditCase.registered_by_company_id === appUser.company_id;
         if (!isAdmin && !isOwner) {
             return NextResponse.json({ error: '自社が登録した案件のみ更新できます' }, { status: 403 });
         }
 
         const updateData: any = {};
-        if (body.paymentStatus) updateData.payment_status = body.paymentStatus;
-        if (body.resolvedDelayDays !== undefined) updateData.resolved_delay_days = body.resolvedDelayDays;
-        if (body.counterpartyClaim !== undefined) updateData.counterparty_claim = body.counterpartyClaim;
-        if (Array.isArray(body.evidenceUrls)) updateData.evidence_urls = body.evidenceUrls;
-        if (body.resubmit === true) {
-            updateData.status = 'pending';
+
+        // 承認済み案件の場合、一般ユーザーは解決報告（入金完了・遅延日数）のみ許可
+        if (!isAdmin && creditCase.status === 'approved') {
+            if (body.paymentStatus !== 'resolved') {
+                return NextResponse.json(
+                    { error: '承認済み案件は解決報告（入金完了）のみ実行できます' },
+                    { status: 403 }
+                );
+            }
+            updateData.payment_status = 'resolved';
+            if (body.resolvedDelayDays !== undefined) {
+                const days = Number(body.resolvedDelayDays);
+                if (!Number.isFinite(days) || days < 0 || days > 36500) {
+                    return NextResponse.json({ error: '遅延日数が不正です' }, { status: 400 });
+                }
+                updateData.resolved_delay_days = Math.floor(days);
+            }
+        } else {
+            if (body.paymentStatus !== undefined) {
+                if (!['unpaid', 'resolved'].includes(body.paymentStatus)) {
+                    return NextResponse.json({ error: '入金ステータスが不正です' }, { status: 400 });
+                }
+                updateData.payment_status = body.paymentStatus;
+            }
+            if (body.resolvedDelayDays !== undefined) {
+                const days = Number(body.resolvedDelayDays);
+                if (!Number.isFinite(days) || days < 0 || days > 36500) {
+                    return NextResponse.json({ error: '遅延日数が不正です' }, { status: 400 });
+                }
+                updateData.resolved_delay_days = Math.floor(days);
+            }
+            if (body.counterpartyClaim !== undefined) {
+                if (typeof body.counterpartyClaim !== 'string') {
+                    return NextResponse.json({ error: '入力形式が不正です' }, { status: 400 });
+                }
+                updateData.counterparty_claim = body.counterpartyClaim;
+            }
+            if (Array.isArray(body.evidenceUrls)) {
+                updateData.evidence_urls = body.evidenceUrls.filter((u: unknown) => typeof u === 'string');
+            }
+            if (body.resubmit === true) {
+                updateData.status = 'pending';
+            }
+        }
+
+        if (Object.keys(updateData).length === 0) {
+            return NextResponse.json({ error: '更新対象のデータがありません' }, { status: 400 });
         }
 
         const { data: updatedCase, error: updateErr } = await supabaseAdmin

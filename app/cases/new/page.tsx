@@ -112,20 +112,26 @@ export default function NewCasePage() {
   const [agreedLate1, setAgreedLate1] = useState(false);
   const [agreedLate2, setAgreedLate2] = useState(false);
 
+  const [planChecked, setPlanChecked] = useState(false);
+
   useEffect(() => {
     const checkPlan = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: appUser } = await supabase
-          .from("app_users")
-          .select("allowed_plan, role")
-          .eq("id", session.user.id)
-          .maybeSingle();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: appUser } = await supabase
+            .from("app_users")
+            .select("allowed_plan, role")
+            .eq("id", session.user.id)
+            .maybeSingle();
 
-        const isAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
-        if (!isAdmin && appUser?.allowed_plan === "credit") {
-          setPlanRestricted(true);
+          const isAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
+          if (!isAdmin && appUser?.allowed_plan === "credit") {
+            setPlanRestricted(true);
+          }
         }
+      } finally {
+        setPlanChecked(true);
       }
     };
     checkPlan();
@@ -311,9 +317,13 @@ export default function NewCasePage() {
 
       // LINE通知APIの呼び出し（失敗しても画面遷移は止めない）
       try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         await fetch('/api/notify/line', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(currentSession?.access_token ? { 'Authorization': `Bearer ${currentSession.access_token}` } : {}),
+          },
           body: JSON.stringify({
             type: 'new_case',
             data: {
@@ -430,7 +440,11 @@ export default function NewCasePage() {
             </div>
           </div>
 
-          {planRestricted ? (
+          {!planChecked ? (
+            <div className="py-20 flex justify-center">
+              <div className="animate-spin h-8 w-8 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
+            </div>
+          ) : planRestricted ? (
             <div className="bg-white p-6 sm:p-10 rounded-2xl border border-slate-200 text-center max-w-xl mx-auto my-8 sm:my-12 shadow-sm animate-fade-in">
               <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-600 border border-amber-200/60">
                 <Lock className="w-6 h-6" />

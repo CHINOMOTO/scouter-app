@@ -34,6 +34,7 @@ export default function SearchPage() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [planRestricted, setPlanRestricted] = useState(false);
+  const [planChecked, setPlanChecked] = useState(false);
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
   const { allowedPlan, isAdmin: isContextAdmin, companyId: contextCompanyId } = usePlan();
 
@@ -53,29 +54,33 @@ export default function SearchPage() {
   // Check admin role and get company_id on mount
   useEffect(() => {
     const checkRole = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.app_metadata?.role === "admin") {
-        setIsAdmin(true);
-      }
-      if (session?.user) {
-        const { data: appUser } = await supabase
-          .from("app_users")
-          .select("company_id, allowed_plan, role")
-          .eq("id", session.user.id)
-          .maybeSingle();
-
-        if (appUser?.role === "admin") {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.app_metadata?.role === "admin") {
           setIsAdmin(true);
         }
+        if (session?.user) {
+          const { data: appUser } = await supabase
+            .from("app_users")
+            .select("company_id, allowed_plan, role")
+            .eq("id", session.user.id)
+            .maybeSingle();
 
-        if (appUser?.company_id) {
-          setUserCompanyId(appUser.company_id);
-        }
+          if (appUser?.role === "admin") {
+            setIsAdmin(true);
+          }
 
-        // クレジット専用プランで管理職以外の場合は就業情報照会を制限
-        if (appUser && appUser.allowed_plan === "credit" && appUser.role !== "admin") {
-          setPlanRestricted(true);
+          if (appUser?.company_id) {
+            setUserCompanyId(appUser.company_id);
+          }
+
+          // クレジット専用プランで管理職以外の場合は就業情報照会を制限
+          if (appUser && appUser.allowed_plan === "credit" && appUser.role !== "admin") {
+            setPlanRestricted(true);
+          }
         }
+      } finally {
+        setPlanChecked(true);
       }
     };
     checkRole();
@@ -248,7 +253,11 @@ export default function SearchPage() {
           </div>
 
           {/* プラン制限の場合の案内 */}
-          {planRestricted ? (
+          {!planChecked ? (
+            <div className="py-20 flex justify-center">
+              <div className="animate-spin h-8 w-8 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
+            </div>
+          ) : planRestricted ? (
             <div className="bg-white p-6 sm:p-10 rounded-2xl border border-slate-200 text-center max-w-xl mx-auto my-8 sm:my-12 shadow-sm animate-fade-in">
               <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-600 border border-amber-200/60">
                 <Lock className="w-6 h-6" />

@@ -6,7 +6,6 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const rawEmail = typeof body?.email === "string" ? body.email.trim() : "";
-    const rawRedirectTo = typeof body?.redirectTo === "string" ? body.redirectTo.trim() : "";
 
     if (!rawEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
       return NextResponse.json(
@@ -34,8 +33,9 @@ export async function POST(request: Request) {
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
-    const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.m-m-m-mieris0610.com";
-    const redirectTo = rawRedirectTo || `${appBaseUrl}/update-password`;
+    const appBaseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.m-m-m-mieris0610.com").replace(/\/+$/, "");
+    // オープンリダイレクト防止のため、リダイレクト先はサーバー側の固定ドメインに限定
+    const redirectTo = `${appBaseUrl}/update-password`;
 
     // Supabase Admin API でパスワード再設定用の安全なワンタイムリンクを生成
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({

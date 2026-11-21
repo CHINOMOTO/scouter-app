@@ -17,7 +17,8 @@ import {
     ExternalLink,
     FileText,
     UploadCloud,
-    X
+    X,
+    Lock
 } from "lucide-react";
 import { Toast, ToastMessage } from "@/components/Toast";
 import { detectOfficialSource, OfficialSourceInfo, isCorporateEntityName } from "@/lib/officialSources";
@@ -60,6 +61,7 @@ export default function CreditCaseDetailPage() {
     const [loading, setLoading] = useState(true);
     const [currentCompanyId, setCurrentCompanyId] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [planRestricted, setPlanRestricted] = useState(false);
 
     // 解決報告モーダル用
     const [showResolveModal, setShowResolveModal] = useState(false);
@@ -173,12 +175,19 @@ export default function CreditCaseDetailPage() {
             // ユーザー情報取得
             const { data: appUser } = await supabase
                 .from("app_users")
-                .select("role, company_id")
+                .select("role, company_id, allowed_plan")
                 .eq("id", session.user.id)
                 .single();
 
+            const isUserAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
             setCurrentCompanyId(appUser?.company_id || null);
-            setIsAdmin(appUser?.role === "admin");
+            setIsAdmin(isUserAdmin);
+
+            if (!isUserAdmin && appUser?.allowed_plan === "employment") {
+                setPlanRestricted(true);
+                setLoading(false);
+                return;
+            }
 
             const res = await fetch(`/api/credit-cases/${id}`, {
                 headers: {
@@ -187,6 +196,11 @@ export default function CreditCaseDetailPage() {
             });
 
             const data = await res.json();
+            if (res.status === 403 && data.planRestricted) {
+                setPlanRestricted(true);
+                setLoading(false);
+                return;
+            }
             if (data.case) {
                 setCaseData(data.case);
 
@@ -259,6 +273,35 @@ export default function CreditCaseDetailPage() {
             <RequireAuth>
                 <div className="min-h-screen pt-32 flex justify-center">
                     <div className="animate-spin h-10 w-10 border-4 border-slate-200 rounded-full border-t-slate-900"></div>
+                </div>
+            </RequireAuth>
+        );
+    }
+
+    if (planRestricted) {
+        return (
+            <RequireAuth>
+                <div className="min-h-screen pt-20 md:pt-10 pb-16 px-4 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
+                    <div className="max-w-xl w-full my-8 sm:my-12 bg-white p-6 sm:p-10 rounded-xl border border-slate-200 text-center shadow-sm animate-fade-in">
+                        <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-600 border border-amber-200/60">
+                            <Lock className="w-6 h-6" />
+                        </div>
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
+                            MIERIS CREDIT 未加入プランです
+                        </h2>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-6">
+                            現在のアカウントは「MIERIS WORK」のため、企業信用情報の詳細をご利用いただけません。<br />
+                            「MIERIS CREDIT」または「FULLプラン」への変更で、全機能をご利用いただけます。
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <Link href="/contact" className="btn-primary px-6 py-2.5 rounded-lg font-bold text-xs w-full sm:w-auto text-center">
+                                プラン変更をお問い合わせ
+                            </Link>
+                            <Link href="/dashboard" className="btn-secondary px-5 py-2.5 rounded-lg font-bold text-xs w-full sm:w-auto text-center">
+                                ダッシュボードへ戻る
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </RequireAuth>
         );
@@ -649,7 +692,7 @@ export default function CreditCaseDetailPage() {
                             <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
                                 {caseData.counterparty_claim || "特段の登録理由・相手側の主張は記載されていません。"}
                             </p>
-                            {caseData.admin_notes && (
+                            {caseData.admin_notes && (sourceInfo.isOfficial || isAdmin || isOwner) && (
                                 <div className="mt-3 pt-3 border-t border-slate-200/80 text-xs text-slate-600 leading-relaxed font-mono whitespace-pre-wrap">
                                     {caseData.admin_notes}
                                 </div>

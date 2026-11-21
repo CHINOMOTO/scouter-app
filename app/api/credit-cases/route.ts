@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { detectOfficialSource, isCorporateEntityName, getLocationPriorityRank, buildCompanyQueryVariants, isTargetCreditIndustry } from '@/lib/officialSources';
+import { sanitizePostgrestFilterValue } from '@/lib/apiAuth';
 
 // GET: 未払い企業情報の検索・一覧取得
 export async function GET(request: Request) {
@@ -125,7 +126,11 @@ export async function GET(request: Request) {
         if (cleanCorp) {
             query = query.eq('corporate_number', cleanCorp);
         } else if (q.trim()) {
-            query = query.or(buildCompanyQueryVariants(q).map(v => `company_name.ilike.%${v}%`).concat(`location.ilike.%${q.trim()}%`).join(','));
+            const safeQ = sanitizePostgrestFilterValue(q);
+            const safeVariants = buildCompanyQueryVariants(safeQ).map(sanitizePostgrestFilterValue).filter(Boolean);
+            if (safeVariants.length > 0) {
+                query = query.or(safeVariants.map(v => `company_name.ilike.%${v}%`).concat(`location.ilike.%${safeQ}%`).join(','));
+            }
         }
 
         let { data, error } = await query;
@@ -154,7 +159,11 @@ export async function GET(request: Request) {
             if (cleanCorp) {
                 fallbackQuery = fallbackQuery.eq('corporate_number', cleanCorp);
             } else if (q.trim()) {
-                fallbackQuery = fallbackQuery.or(buildCompanyQueryVariants(q).map(v => `company_name.ilike.%${v}%`).concat(`location.ilike.%${q.trim()}%`).join(','));
+                const safeQ = sanitizePostgrestFilterValue(q);
+                const safeVariants = buildCompanyQueryVariants(safeQ).map(sanitizePostgrestFilterValue).filter(Boolean);
+                if (safeVariants.length > 0) {
+                    fallbackQuery = fallbackQuery.or(safeVariants.map(v => `company_name.ilike.%${v}%`).concat(`location.ilike.%${safeQ}%`).join(','));
+                }
             }
             const fallbackResult = await fallbackQuery;
             data = fallbackResult.data as any;
@@ -196,8 +205,13 @@ export async function GET(request: Request) {
                 }
             }
 
+            const isOwner = Boolean(appUser.company_id) && item.companies?.id === appUser.company_id;
+            const isOfficial = detectOfficialSource(item).isOfficial;
+            const safeAdminNotes = (isAdmin || isOwner || isOfficial) ? item.admin_notes : null;
+
             return {
                 ...item,
+                admin_notes: safeAdminNotes,
                 business_status: businessStatus,
                 registry_status: registryStatus,
                 registry_close_date: item.registry_close_date || null,

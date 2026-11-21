@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { authenticateApiRequest } from "@/lib/apiAuth";
 
 export async function DELETE(
     request: Request,
@@ -9,46 +9,16 @@ export async function DELETE(
         const params = await context.params;
         const { id } = params;
 
-        // 1. Authorizationヘッダーからトークンを取得
-        const authHeader = request.headers.get("Authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ error: "Missing or invalid Authorization header" }, { status: 401 });
-        }
-        const token = authHeader.replace("Bearer ", "");
+        // 1. 認証・承認・WORKプランチェック
+        const auth = await authenticateApiRequest(request, { requirePlan: "employment" });
+        if (!auth.ok) return auth.response;
 
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        const { appUser, isAdmin, supabaseAdmin } = auth;
 
-        // ユーザー用クライアント（トークン検証用）
-        const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
-        });
-
-        // 管理者権限クライアント（実際のデータ操作用）
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
-
-        // 2. トークンからユーザー情報を取得
-        const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-        if (userError || !user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        // 3. ユーザーの所属会社と権限を取得
-        const { data: appUser } = await supabaseAdmin
-            .from("app_users")
-            .select("company_id, role")
-            .eq("id", user.id)
-            .single();
-
-        if (!appUser) {
-            return NextResponse.json({ error: "User profile not found" }, { status: 403 });
-        }
-
-        // 4. 削除対象のケースを取得して登録会社を確認
+        // 2. 削除対象のケースを取得して登録会社・ステータスを確認
         const { data: caseDetail } = await supabaseAdmin
             .from("blacklist_cases")
-            .select("registered_company_id")
+            .select("registered_company_id, status")
             .eq("id", id)
             .single();
 
@@ -56,12 +26,21 @@ export async function DELETE(
             return NextResponse.json({ error: "Case not found" }, { status: 404 });
         }
 
-        // 5. 権限チェック: 管理者か、自社が登録したデータのみ削除可能
-        if (appUser.role !== 'admin' && caseDetail.registered_company_id !== appUser.company_id) {
+        // 3. 権限チェック: 管理者か、自社が登録したデータのみ削除可能（null === null 対策含む）
+        const isOwnCompany = Boolean(appUser.company_id) && caseDetail.registered_company_id === appUser.company_id;
+        if (!isAdmin && !isOwnCompany) {
             return NextResponse.json({ error: "Forbidden: You can only delete cases registered by your own company." }, { status: 403 });
         }
 
-        // 6. データの削除
+        // 4. 承認済み案件の削除ガード（一般ユーザーは審査中・却下案件のみ削除可能）
+        if (!isAdmin && caseDetail.status === "approved") {
+            return NextResponse.json(
+                { error: "承認済み（公開中）の案件は削除できません。修正・削除が必要な場合は運営事務局へお問い合わせください。" },
+                { status: 403 }
+            );
+        }
+
+        // 5. データの削除
         const { error: deleteError } = await supabaseAdmin
             .from("blacklist_cases")
             .delete()

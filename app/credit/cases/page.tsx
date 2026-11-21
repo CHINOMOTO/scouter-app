@@ -17,7 +17,8 @@ import {
     FileText, 
     ExternalLink,
     ShieldCheck,
-    MapPin
+    MapPin,
+    Lock
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -129,6 +130,7 @@ export default function CreditCasesListPage() {
     const [cases, setCases] = useState<CreditCaseItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [planRestricted, setPlanRestricted] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [prefectureFilter, setPrefectureFilter] = useState<string>("all");
     const [industryFilter, setIndustryFilter] = useState<string>("all");
@@ -159,15 +161,21 @@ export default function CreditCasesListPage() {
                 return;
             }
 
-            // ユーザー情報とロール確認
+            // ユーザー情報とロール・プラン確認
             const { data: appUser } = await supabase
                 .from("app_users")
-                .select("role")
+                .select("role, allowed_plan")
                 .eq("id", session.user.id)
                 .maybeSingle();
 
-            const isUserAdmin = appUser?.role === "admin";
+            const isUserAdmin = appUser?.role === "admin" || session.user.app_metadata?.role === "admin";
             setIsAdmin(isUserAdmin);
+
+            if (!isUserAdmin && appUser?.allowed_plan === "employment") {
+                setPlanRestricted(true);
+                setLoading(false);
+                return;
+            }
 
             // 管理者以外は一覧垂れ流しを防止（API側で自社登録データのみに制限される）
             const res = await fetch(isUserAdmin ? "/api/credit-cases?all=true" : "/api/credit-cases", {
@@ -177,6 +185,11 @@ export default function CreditCasesListPage() {
             });
 
             const data = await res.json();
+            if (res.status === 403 && data.planRestricted) {
+                setPlanRestricted(true);
+                setLoading(false);
+                return;
+            }
             if (data.error) {
                 throw new Error(data.error);
             }
@@ -308,6 +321,35 @@ export default function CreditCasesListPage() {
             </button>
         );
     };
+
+    if (planRestricted) {
+        return (
+            <RequireAuth>
+                <div className="min-h-screen pt-16 sm:pt-20 md:pt-10 pb-16 px-3.5 sm:px-6 bg-[#f8fafc] flex flex-col items-center">
+                    <div className="max-w-xl w-full my-8 sm:my-12 bg-white p-6 sm:p-10 rounded-xl border border-slate-200 text-center shadow-sm animate-fade-in">
+                        <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-600 border border-amber-200/60">
+                            <Lock className="w-6 h-6" />
+                        </div>
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
+                            MIERIS CREDIT 未加入プランです
+                        </h2>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-6">
+                            現在のアカウントは「MIERIS WORK」のため、企業信用情報・公的処分データ一覧をご利用いただけません。<br />
+                            「MIERIS CREDIT」または「FULLプラン」への変更で、全機能をご利用いただけます。
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <Link href="/contact" className="btn-primary px-6 py-2.5 rounded-lg font-bold text-xs w-full sm:w-auto text-center">
+                                プラン変更をお問い合わせ
+                            </Link>
+                            <Link href="/dashboard" className="btn-secondary px-5 py-2.5 rounded-lg font-bold text-xs w-full sm:w-auto text-center">
+                                ダッシュボードへ戻る
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </RequireAuth>
+        );
+    }
 
     return (
         <RequireAuth>

@@ -1,8 +1,29 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
+        const channelSecret = process.env.LINE_CHANNEL_SECRET;
+        const signature = request.headers.get('x-line-signature');
+        const rawBody = await request.text();
+
+        // LINE Webhook 署名検証（偽装イベントの防止）
+        if (!channelSecret || !signature) {
+            return NextResponse.json({ error: "Unauthorized webhook request" }, { status: 401 });
+        }
+
+        const expectedSignature = crypto
+            .createHmac('sha256', channelSecret)
+            .update(rawBody)
+            .digest('base64');
+
+        const sigBuf = Buffer.from(signature);
+        const expectedBuf = Buffer.from(expectedSignature);
+        if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+            return NextResponse.json({ error: "Invalid LINE signature" }, { status: 401 });
+        }
+
+        const body = JSON.parse(rawBody);
         const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
 
         if (!token) {
@@ -19,9 +40,9 @@ export async function POST(request: Request) {
 
                 if (userMessage === 'ID' || userMessage === 'ＩＤ') {
                     const sourceId = event.source.groupId || event.source.userId;
-                    
+
                     let replyText = `あなたのユーザーIDはこちらです：\n\n${sourceId}\n\nこの文字列をコピーして管理者に伝えてください。`;
-                    
+
                     if (event.source.type === 'group') {
                         replyText = `このグループのIDはこちらです：\n\n${sourceId}\n\nこの文字列をコピーしてシステム（Vercel）に登録してください。`;
                     }
@@ -45,6 +66,6 @@ export async function POST(request: Request) {
 
     } catch (error) {
         console.error("Webhook Error:", error);
-        return NextResponse.json({ success: true, error: "Internal Server Error" });
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
