@@ -132,12 +132,25 @@ export default function Navigation() {
 
     const handleLogout = async () => {
         try {
-            await supabase.auth.signOut();
+            for (const storage of [window.localStorage, window.sessionStorage]) {
+                const keysToRemove: string[] = [];
+                for (let i = 0; i < storage.length; i++) {
+                    const k = storage.key(i);
+                    if (k && (k.startsWith("sb-") || k.includes("supabase") || k.includes("auth-token"))) {
+                        keysToRemove.push(k);
+                    }
+                }
+                keysToRemove.forEach((k) => storage.removeItem(k));
+            }
+            await Promise.race([
+                supabase.auth.signOut({ scope: "local" }),
+                new Promise((resolve) => setTimeout(resolve, 1000)),
+            ]);
         } catch (error) {
             console.error("Logout error:", error);
         } finally {
             setSession(null);
-            window.location.href = "/";
+            window.location.replace("/");
         }
     };
 

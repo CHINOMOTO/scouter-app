@@ -88,6 +88,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
             }
         };
 
+        // 注意: onAuthStateChange 内で直接 supabase クエリを await すると Auth ロック競合が起きるため setTimeout(..., 0) でロック解放後に実行
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (!mounted) return;
             if (event === "SIGNED_OUT" || !session) {
@@ -98,7 +99,11 @@ export function RequireAuth({ children }: RequireAuthProps) {
                 router.replace("/");
                 return;
             }
-            verifySessionAgainstDb(session);
+            setTimeout(() => {
+                if (mounted && !resolved) {
+                    verifySessionAgainstDb(session);
+                }
+            }, 0);
         });
 
         supabase.auth.getSession().then(({ data: { session }, error }) => {
@@ -139,15 +144,42 @@ export function RequireAuth({ children }: RequireAuthProps) {
                     </div>
                     <h2 className="text-xl font-bold text-red-700 mb-2">認証エラー</h2>
                     <p className="text-sm text-slate-700 mb-6 leading-relaxed">{authError}</p>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-2.5">
                         <button
+                            type="button"
                             onClick={async () => {
-                                await supabase.auth.signOut();
-                                window.location.href = "/";
+                                try {
+                                    // Authロック競合時でも確実にセッションを破棄できるようストレージを直接クリア＋タイムアウト付きsignOut
+                                    for (const storage of [window.localStorage, window.sessionStorage]) {
+                                        const keysToRemove: string[] = [];
+                                        for (let i = 0; i < storage.length; i++) {
+                                            const k = storage.key(i);
+                                            if (k && (k.startsWith("sb-") || k.includes("supabase") || k.includes("auth-token"))) {
+                                                keysToRemove.push(k);
+                                            }
+                                        }
+                                        keysToRemove.forEach((k) => storage.removeItem(k));
+                                    }
+                                    await Promise.race([
+                                        supabase.auth.signOut({ scope: "local" }),
+                                        new Promise((resolve) => setTimeout(resolve, 1000)),
+                                    ]);
+                                } catch (e) {
+                                    console.error("Force signOut error:", e);
+                                } finally {
+                                    window.location.replace("/");
+                                }
                             }}
-                            className="btn-primary px-6 py-2.5 w-full font-bold text-sm"
+                            className="btn-primary px-6 py-2.5 w-full font-bold text-sm cursor-pointer"
                         >
                             一度ログアウトする（推奨）
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => window.location.reload()}
+                            className="btn-secondary px-6 py-2.5 w-full font-bold text-xs cursor-pointer"
+                        >
+                            ページを再読み込みする
                         </button>
                         <p className="text-xs text-slate-500">※権限情報を更新するため、再ログインしてください</p>
                     </div>

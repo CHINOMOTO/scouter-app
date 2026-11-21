@@ -39,8 +39,26 @@ export default function PendingApprovalPage() {
     }, [router]);
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
-        router.push("/");
+        try {
+            for (const storage of [window.localStorage, window.sessionStorage]) {
+                const keysToRemove: string[] = [];
+                for (let i = 0; i < storage.length; i++) {
+                    const k = storage.key(i);
+                    if (k && (k.startsWith("sb-") || k.includes("supabase") || k.includes("auth-token"))) {
+                        keysToRemove.push(k);
+                    }
+                }
+                keysToRemove.forEach((k) => storage.removeItem(k));
+            }
+            await Promise.race([
+                supabase.auth.signOut({ scope: "local" }),
+                new Promise((resolve) => setTimeout(resolve, 1000)),
+            ]);
+        } catch (e) {
+            console.error("Logout error:", e);
+        } finally {
+            window.location.replace("/");
+        }
     };
 
     if (checking) {

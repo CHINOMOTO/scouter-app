@@ -43,9 +43,11 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
     const [isApproved, setIsApproved] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    const fetchCurrentPlan = useCallback(async (userId?: string) => {
+    const fetchCurrentPlan = useCallback(async (userId?: string, passedSession?: any) => {
         try {
-            const { data: { session } } = await supabase.auth.getSession();
+            const session = passedSession !== undefined
+                ? passedSession
+                : (await supabase.auth.getSession()).data.session;
             const currentUserId = userId || session?.user?.id;
             if (!currentUserId) {
                 setAllowedPlan("none");
@@ -118,7 +120,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user?.id) {
                 activeUserId = session.user.id;
-                await fetchCurrentPlan(session.user.id);
+                await fetchCurrentPlan(session.user.id, session);
             } else {
                 setLoading(false);
             }
@@ -126,7 +128,9 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
 
         initAuth();
 
-        const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        // 注意: onAuthStateChange コールバックを async にして内部で getSession() を呼ぶと
+        // Supabase Auth の navigator.locks がデッドロックするため、コールバックは同期完了させ setTimeout で非同期実行する
+        const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === "SIGNED_OUT" || !session?.user?.id) {
                 setAllowedPlan("none");
                 setIsAdmin(false);
@@ -139,7 +143,9 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
             } else if (session.user.id !== activeUserId) {
                 activeUserId = session.user.id;
                 setLoading(true);
-                await fetchCurrentPlan(session.user.id);
+                setTimeout(() => {
+                    fetchCurrentPlan(session.user.id, session);
+                }, 0);
             }
         });
 
