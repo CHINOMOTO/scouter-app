@@ -444,7 +444,16 @@ export function classifyCompanyIndustry(item?: {
     const notes = item.admin_notes || '';
     const fullText = `${name} ${claim} ${notes}`;
 
-    // 1. 明確な対象外業種（製薬・旅行・医療・飲食・アパレル等）は最優先で除外
+    // 1. 国土交通省（建設・土木・測量・不動産・指名停止・自動車運送・整備等）の確定処分は常に対象業種
+    //    （社名や発注機関名に「食品」「病院」「大学」「ホテル」「冠婚葬祭」等が含まれていても除外しない）
+    if (/^【(?:国土交通省|東京都知事)/.test(claim)) {
+        if (/自動車運送|貨物自動車|自動車整備/.test(claim)) {
+            return 'transport_logistics';
+        }
+        return 'construction_realestate';
+    }
+
+    // 2. 明確な対象外業種（消費者庁データ等における製薬・旅行・医療・飲食・アパレル等）は除外
     if (EXCLUDED_INDUSTRY_REGEX.test(fullText)) {
         return 'excluded';
     }

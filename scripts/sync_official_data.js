@@ -28,6 +28,14 @@ function classifyCompanyIndustry(item) {
   const notes = item.admin_notes || '';
   const fullText = `${name} ${claim} ${notes}`;
 
+  // 国土交通省の確定処分はすべて対象業種（社名や発注機関名に「食品」「病院」「大学」「冠婚葬祭」等が含まれていても除外しない）
+  if (/^【(?:国土交通省|東京都知事)/.test(claim)) {
+    if (/自動車運送|貨物自動車|自動車整備/.test(claim)) {
+      return 'transport_logistics';
+    }
+    return 'construction_realestate';
+  }
+
   if (EXCLUDED_INDUSTRY_REGEX.test(fullText)) {
     return 'excluded';
   }
@@ -94,7 +102,110 @@ function parseWarekiDate(str) {
 }
 
 // 1A. 国土交通省ネガティブ情報（建設・指名停止・測量・建設コンサル・地質・宅建・マンション管理・賃貸管理・自動車整備）
-//     ※3パターンのHTMLテーブル列順序すべてに対応し、法人・個人事業主とも取得
+//     ※3パターンのHTMLテーブル列順序すべてに対応し、複数ページ（各分野最大15ページ＝最大150件）を取得
+const MLIT_MAX_PAGES_PER_CATEGORY = 15;
+const MLIT_CATEGORY_LABEL_MAP = {
+  kensetugyousya: '建設業法',
+  shimeiteishi: '工事等指名停止措置',
+  sokuryou: '測量法',
+  kensetukonsaru: '建設コンサルタント登録規程',
+  tisitu: '地質調査業者登録規程',
+  takuti: '宅建業法',
+  mansyon: 'マンション管理適正化法',
+  tintai: '賃貸住宅管理業法',
+  jidousyaseibi: '道路運送車両法（自動車整備事業）'
+};
+
+function parseMlitNegaInfHtml(html, category) {
+  const rows = [];
+  const catLabel = MLIT_CATEGORY_LABEL_MAP[category] || '監督処分';
+  const trBlocks = [...html.matchAll(/<tr>([\s\S]*?)<\/tr>/gi)];
+
+  for (const trMatch of trBlocks) {
+    const trInner = trMatch[1];
+    if (!trInner.includes('class="punish"')) continue;
+
+    const tds = [...trInner.matchAll(/<td\s+class="([^"]+)"[^>]*>([\s\S]*?)<\/td>/gi)].map(m => ({
+      cls: m[1].trim(),
+      html: m[2].trim()
+    }));
+    if (tds.length < 4) continue;
+
+    let rawDate = '';
+    let authority = '国土交通省';
+    let rawNameHtml = '';
+    let address = '';
+    let punishType = '';
+    let detailHtml = '';
+
+    // パターンA（kensetugyousya）: name, address, date, name(authority), punish, detail
+    if (tds[0].cls === 'name' && tds[1].cls === 'address') {
+      rawNameHtml = tds[0].html;
+      address = tds[1].html;
+      rawDate = tds[2]?.html || '';
+      authority = tds[3]?.html || '国土交通省';
+      punishType = tds[4]?.html || '';
+      detailHtml = tds[5]?.html || '';
+    }
+    // パターンB（takuti, shimeiteishi, jidousyaseibi）: date, date(authority), name, address, punish, detail
+    else if (tds[0].cls === 'date' && tds[1].cls === 'date') {
+      rawDate = tds[0].html;
+      authority = tds[1].html;
+      rawNameHtml = tds[2]?.html || '';
+      address = tds[3]?.html || '';
+      punishType = tds[4]?.html || '';
+      detailHtml = tds[5]?.html || '';
+    }
+    // パターンC（sokuryou, kensetukonsaru, tisitu, mansyon, tintai）: date, name, address, punish, detail
+    else if (tds[0].cls === 'date' && tds[1].cls === 'name') {
+      rawDate = tds[0].html;
+      rawNameHtml = tds[1].html;
+      address = tds[2]?.html || '';
+      punishType = tds[3]?.html || '';
+      detailHtml = tds[4]?.html || '';
+    } else {
+      continue;
+    }
+
+    const dateMatch = rawDate.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    const pubDate = dateMatch
+      ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
+      : null;
+
+    const corpMatch = rawNameHtml.match(/（(\d{13})）/);
+    const corporateNumber = corpMatch ? corpMatch[1] : null;
+
+    const cleanName = rawNameHtml
+      .replace(/<span>[\s\S]*?<\/span>/gi, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/（\d{13}）/g, '')
+      .replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+      .trim();
+
+    if (!cleanName) continue;
+
+    const overviewMatch = detailHtml.match(/href="([^"]+)"/);
+    const overviewUrl = overviewMatch
+      ? `https://www.mlit.go.jp/nega-inf/cgi-bin/${overviewMatch[1].replace(/&amp;/g, '&')}`
+      : 'https://www.mlit.go.jp/nega-inf/';
+
+    const cleanAddr = address.replace(/<[^>]+>/g, '').replace(/^(東京都|北海道|(?:京都|大阪)府|.{2,3}県)\1+/, '$1').trim();
+
+    rows.push({
+      company_name: cleanName,
+      corporate_number: corporateNumber,
+      pub_date: pubDate,
+      authority: authority.replace(/<[^>]+>/g, '').trim() || '国土交通省',
+      address: cleanAddr,
+      punish_type: punishType.replace(/<[^>]+>/g, '').trim(),
+      overview_url: overviewUrl,
+      category_label: catLabel
+    });
+  }
+
+  return rows;
+}
+
 async function fetchMlitNegaInfCases(category) {
   try {
     const now = new Date();
@@ -125,106 +236,41 @@ async function fetchMlitNegaInfCases(category) {
 
     if (!res.ok) return [];
 
-    const html = await res.text();
-    const rows = [];
-    const categoryLabelMap = {
-      kensetugyousya: '建設業法',
-      shimeiteishi: '工事等指名停止措置',
-      sokuryou: '測量法',
-      kensetukonsaru: '建設コンサルタント登録規程',
-      tisitu: '地質調査業者登録規程',
-      takuti: '宅建業法',
-      mansyon: 'マンション管理適正化法',
-      tintai: '賃貸住宅管理業法',
-      jidousyaseibi: '道路運送車両法（自動車整備事業）'
-    };
+    const firstHtml = await res.text();
+    const allRows = [...parseMlitNegaInfHtml(firstHtml, category)];
 
-    const trBlocks = [...html.matchAll(/<tr>([\s\S]*?)<\/tr>/gi)];
-    for (const trMatch of trBlocks) {
-      const trInner = trMatch[1];
-      if (!trInner.includes('class="punish"')) continue;
+    const pageNums = [...firstHtml.matchAll(/page=(\d+)/g)].map(m => Number(m[1]));
+    const maxPage = pageNums.length > 0 ? Math.min(Math.max(...pageNums), MLIT_MAX_PAGES_PER_CATEGORY) : 1;
 
-      const tds = [...trInner.matchAll(/<td\s+class="([^"]+)"[^>]*>([\s\S]*?)<\/td>/gi)].map(m => ({
-        cls: m[1].trim(),
-        html: m[2].trim()
-      }));
-      if (tds.length < 4) continue;
+    if (maxPage > 1) {
+      const pagesToFetch = [];
+      for (let p = 2; p <= maxPage; p++) pagesToFetch.push(p);
 
-      let rawDate = '';
-      let authority = '国土交通省';
-      let rawNameHtml = '';
-      let address = '';
-      let punishType = '';
-      let detailHtml = '';
-
-      // パターンA（kensetugyousya）: name, address, date, name(authority), punish, detail
-      if (tds[0].cls === 'name' && tds[1].cls === 'address') {
-        rawNameHtml = tds[0].html;
-        address = tds[1].html;
-        rawDate = tds[2]?.html || '';
-        authority = tds[3]?.html || '国土交通省';
-        punishType = tds[4]?.html || '';
-        detailHtml = tds[5]?.html || '';
+      const BATCH_SIZE = 5;
+      for (let i = 0; i < pagesToFetch.length; i += BATCH_SIZE) {
+        const batch = pagesToFetch.slice(i, i + BATCH_SIZE);
+        const pageResults = await Promise.all(
+          batch.map(async (page) => {
+            try {
+              const pageUrl = `${url}?jigyoubunya=${encodeURIComponent(category)}&EID=search&start_year=${startYear}&start_month=1&end_year=${currentYear}&end_month=${currentMonth}&disposal_name1=&disposal_name2=&reason_con=&reason1=&reason2=&reason3=&shobun=&address=&agency=&page=${page}`;
+              const pRes = await fetch(pageUrl, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+              });
+              if (!pRes.ok) return [];
+              const pHtml = await pRes.text();
+              return parseMlitNegaInfHtml(pHtml, category);
+            } catch {
+              return [];
+            }
+          })
+        );
+        for (const r of pageResults) {
+          allRows.push(...r);
+        }
       }
-      // パターンB（takuti, shimeiteishi, jidousyaseibi）: date, date(authority), name, address, punish, detail
-      else if (tds[0].cls === 'date' && tds[1].cls === 'date') {
-        rawDate = tds[0].html;
-        authority = tds[1].html;
-        rawNameHtml = tds[2]?.html || '';
-        address = tds[3]?.html || '';
-        punishType = tds[4]?.html || '';
-        detailHtml = tds[5]?.html || '';
-      }
-      // パターンC（sokuryou, kensetukonsaru, tisitu, mansyon）: date, name, address, punish, detail
-      else if (tds[0].cls === 'date' && tds[1].cls === 'name') {
-        rawDate = tds[0].html;
-        rawNameHtml = tds[1].html;
-        address = tds[2]?.html || '';
-        punishType = tds[3]?.html || '';
-        detailHtml = tds[4]?.html || '';
-      } else {
-        continue;
-      }
-
-      const dateMatch = rawDate.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-      const pubDate = dateMatch
-        ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
-        : null;
-
-      const corpMatch = rawNameHtml.match(/（(\d{13})）/);
-      const corporateNumber = corpMatch ? corpMatch[1] : null;
-
-      const cleanName = rawNameHtml
-        .replace(/<span>[\s\S]*?<\/span>/gi, '')
-        .replace(/<[^>]+>/g, '')
-        .replace(/（\d{13}）/g, '')
-        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
-        .trim();
-
-      if (!cleanName) continue;
-
-      const overviewMatch = detailHtml.match(/href="([^"]+)"/);
-      const overviewUrl = overviewMatch
-        ? `https://www.mlit.go.jp/nega-inf/cgi-bin/${overviewMatch[1].replace(/&amp;/g, '&')}`
-        : 'https://www.mlit.go.jp/nega-inf/';
-
-      const catLabel = categoryLabelMap[category] || '監督処分';
-
-      const cleanAddr = address.replace(/<[^>]+>/g, '').replace(/^(東京都|北海道|(?:京都|大阪)府|.{2,3}県)\1+/, '$1').trim();
-
-      rows.push({
-        company_name: cleanName,
-        corporate_number: corporateNumber,
-        pub_date: pubDate,
-        authority: authority.replace(/<[^>]+>/g, '').trim() || '国土交通省',
-        address: cleanAddr,
-        punish_type: punishType.replace(/<[^>]+>/g, '').trim(),
-        overview_url: overviewUrl,
-        category_label: catLabel
-      });
     }
 
-    return rows;
+    return allRows;
   } catch (err) {
     console.warn(`[MLIT ${category} 同期取得エラー]:`, err.message);
     return [];
@@ -232,9 +278,10 @@ async function fetchMlitNegaInfCases(category) {
 }
 
 // 1B. 国土交通省 貨物自動車運送事業（トラック事業者・軽貨物事業者）の事業停止・許可取消処分取得
-//     ※法人だけでなく個人事業主（屋号・個人名）の貨物運送事業者も取得
+//     ※件数上限（旧15件制限）および社名除外ワード制限を撤廃し、直近2年分を全件取得
 async function fetchMlitTruckingCases() {
   const results = [];
+  const seenKeys = new Set();
   // mode=1: 一般貨物（トラック）, mode=5: 軽貨物 / rui=4: 事業停止処分, rui=5: 許可の取り消し処分
   const queries = [
     { mode: '1', rui: '4', modeLabel: '一般貨物自動車運送事業', punishLabel: '事業停止処分' },
@@ -242,80 +289,84 @@ async function fetchMlitTruckingCases() {
     { mode: '5', rui: '4', modeLabel: '貨物軽自動車運送事業', punishLabel: '事業停止処分' }
   ];
 
-  const currentYear = String(new Date().getFullYear());
+  const currentYear = new Date().getFullYear();
+  const targetYears = [String(currentYear), String(currentYear - 1)];
 
-  for (const q of queries) {
-    try {
-      const params = new URLSearchParams({
-        mode: q.mode,
-        year: currentYear,
-        month: '0',
-        day: '0',
-        ken: '0',
-        rui: q.rui,
-        tensu: '0',
-        gyosya: ''
-      });
-
-      const res = await fetch('https://www.mlit.go.jp/jidosha/anzen/03punishment/cgi-bin/list.cgi', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        },
-        body: params.toString()
-      });
-
-      if (!res.ok) continue;
-
-      const buf = await res.arrayBuffer();
-      const html = new TextDecoder('euc-jp').decode(buf);
-
-      const trMatches = html.matchAll(
-        /<tr><td[^>]*><a href="([^"]+)">詳細<\/a><\/td><td>([^<]+)<\/td><td>([\s\S]*?)<\/td><td>([^<]*)<\/td><td[^>]*>([^<]*)<\/td><td[^>]*>([^<]*)<\/td><\/tr>/gi
-      );
-
-      let countForMode = 0;
-      for (const m of trMatches) {
-        if (countForMode >= 15) break; // 各区分直近上位15件を取り込み
-        const detailRel = m[1].trim();
-        const rawDate = m[2].trim();
-        const rawNameInfo = m[3].replace(/<[^>]+>/g, '').trim();
-        const address = m[4].trim();
-        const points = m[5].trim();
-
-        const pubDate = parseWarekiDate(rawDate);
-        const corpMatch = rawNameInfo.match(/法人番号\s*(\d{13})/);
-        const corporateNumber = corpMatch ? corpMatch[1] : null;
-
-        // 「株式会社カイト（法人番号8430001055703）代表者：志知孝保」から事業者名（法人または個人事業主屋号・氏名）を抽出
-        const cleanName = rawNameInfo
-          .replace(/[（\(]法人番号\s*\d{13}[）\)]/g, '')
-          .replace(/[（\(]法人番号指定なし[）\)]/g, '')
-          .replace(/代表者[:：]?.*$/g, '')
-          .replace(/ｰ/g, 'ー')
-          .trim();
-
-        if (!cleanName || EXCLUDED_INDUSTRY_REGEX.test(cleanName)) continue;
-
-        const numericPoints = parseInt(points, 10);
-        const hasValidPoints = !isNaN(numericPoints) && numericPoints > 0;
-        const pointsSuffix = hasValidPoints ? `（違反点数：${numericPoints}点）` : '';
-        const pointsNote = hasValidPoints ? `（累積違反点数: ${numericPoints}点）` : '';
-
-        results.push({
-          company_name: cleanName,
-          corporate_number: corporateNumber,
-          location: address || null,
-          pub_date: pubDate,
-          counterparty_claim: `【国土交通省 自動車運送事業処分】${q.modeLabel}における${q.punishLabel}${pointsSuffix}`,
-          admin_notes: `[公表日: ${rawDate}] 事業区分: ${q.modeLabel} / 処分種別: ${q.punishLabel}\n事業者情報: ${rawNameInfo}\n所在地: ${address}${pointsNote}`,
-          evidence_urls: [`https://www.mlit.go.jp/jidosha/anzen/03punishment/cgi-bin/${detailRel}`]
+  for (const yearStr of targetYears) {
+    for (const q of queries) {
+      try {
+        const params = new URLSearchParams({
+          mode: q.mode,
+          year: yearStr,
+          month: '0',
+          day: '0',
+          ken: '0',
+          rui: q.rui,
+          tensu: '0',
+          gyosya: ''
         });
-        countForMode++;
+
+        const res = await fetch('https://www.mlit.go.jp/jidosha/anzen/03punishment/cgi-bin/list.cgi', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          },
+          body: params.toString()
+        });
+
+        if (!res.ok) continue;
+
+        const buf = await res.arrayBuffer();
+        const html = new TextDecoder('euc-jp').decode(buf);
+
+        const trMatches = html.matchAll(
+          /<tr><td[^>]*><a href="([^"]+)">詳細<\/a><\/td><td>([^<]+)<\/td><td>([\s\S]*?)<\/td><td>([^<]*)<\/td><td[^>]*>([^<]*)<\/td><td[^>]*>([^<]*)<\/td><\/tr>/gi
+        );
+
+        for (const m of trMatches) {
+          const detailRel = m[1].trim();
+          const rawDate = m[2].trim();
+          const rawNameInfo = m[3].replace(/<[^>]+>/g, '').trim();
+          const address = m[4].trim();
+          const points = m[5].trim();
+
+          const pubDate = parseWarekiDate(rawDate);
+          const corpMatch = rawNameInfo.match(/法人番号\s*(\d{13})/);
+          const corporateNumber = corpMatch ? corpMatch[1] : null;
+
+          // 「株式会社カイト（法人番号8430001055703）代表者：志知孝保」から事業者名（法人または個人事業主屋号・氏名）を抽出
+          const cleanName = rawNameInfo
+            .replace(/[（\(]法人番号\s*\d{13}[）\)]/g, '')
+            .replace(/[（\(]法人番号指定なし[）\)]/g, '')
+            .replace(/代表者[:：]?.*$/g, '')
+            .replace(/ｰ/g, 'ー')
+            .trim();
+
+          if (!cleanName) continue;
+
+          const dedupeKey = `${cleanName}||${pubDate || rawDate}`;
+          if (seenKeys.has(dedupeKey)) continue;
+          seenKeys.add(dedupeKey);
+
+          const numericPoints = parseInt(points, 10);
+          const hasValidPoints = !isNaN(numericPoints) && numericPoints > 0;
+          const pointsSuffix = hasValidPoints ? `（違反点数：${numericPoints}点）` : '';
+          const pointsNote = hasValidPoints ? `（累積違反点数: ${numericPoints}点）` : '';
+
+          results.push({
+            company_name: cleanName,
+            corporate_number: corporateNumber,
+            location: address || null,
+            pub_date: pubDate,
+            counterparty_claim: `【国土交通省 自動車運送事業処分】${q.modeLabel}における${q.punishLabel}${pointsSuffix}`,
+            admin_notes: `[公表日: ${rawDate}] 事業区分: ${q.modeLabel} / 処分種別: ${q.punishLabel}\n事業者情報: ${rawNameInfo}\n所在地: ${address}${pointsNote}`,
+            evidence_urls: [`https://www.mlit.go.jp/jidosha/anzen/03punishment/cgi-bin/${detailRel}`]
+          });
+        }
+      } catch (err) {
+        console.warn(`[MLIT 貨物運送 ${yearStr} ${q.modeLabel} 取得エラー]:`, err.message);
       }
-    } catch (err) {
-      console.warn(`[MLIT 貨物運送 ${q.modeLabel} 取得エラー]:`, err.message);
     }
   }
 
@@ -472,6 +523,10 @@ async function syncOfficialData() {
   let totalSkipped = 0;
   let totalCleaned = 0;
 
+  // 重複判定用インメモリセット（数百回の個別SELECTを廃止してバッチ高速化）
+  const existingDateKeySet = new Set();
+  const existingNameSet = new Set();
+
   // 0. 既存DB内の公的記録クリーンアップ
   //    (a) 毎週自動取得できる公式一次ソース以外の公的記録（固定データ・旧取り込みデータ）を削除
   //    (b) 対象外業種（旅行・製薬・飲食・医療等）を削除
@@ -491,15 +546,27 @@ async function syncOfficialData() {
     const fixFlagIds = [];
 
     for (const row of allCases) {
-      if (!isOfficialRecord(row)) continue;
+      if (!isOfficialRecord(row)) {
+        if (row.company_name) {
+          existingNameSet.add(row.company_name);
+          existingDateKeySet.add(`${row.company_name}||${row.due_date ? String(row.due_date).slice(0, 10) : ''}`);
+        }
+        continue;
+      }
       if (!isAutoSyncedOfficialRecord(row)) {
         nonAutoIds.push(row.id);
       } else if (classifyCompanyIndustry(row) === 'excluded') {
         excludedIds.push(row.id);
       } else if (row.due_date && String(row.due_date).slice(0, 10) < retentionCutoff) {
         expiredIds.push(row.id);
-      } else if (row.is_official === false) {
-        fixFlagIds.push(row.id);
+      } else {
+        if (row.is_official === false) {
+          fixFlagIds.push(row.id);
+        }
+        if (row.company_name) {
+          existingNameSet.add(row.company_name);
+          existingDateKeySet.add(`${row.company_name}||${row.due_date ? String(row.due_date).slice(0, 10) : ''}`);
+        }
       }
     }
 
@@ -522,6 +589,21 @@ async function syncOfficialData() {
     console.warn('[クリーンアップ警告]:', err.message);
   }
 
+  const batchInsertOfficialRecords = async (records) => {
+    let inserted = 0;
+    const CHUNK_SIZE = 100;
+    for (let i = 0; i < records.length; i += CHUNK_SIZE) {
+      const chunk = records.slice(i, i + CHUNK_SIZE);
+      const { error } = await insertOfficialCreditCase(chunk);
+      if (!error) {
+        inserted += chunk.length;
+      } else {
+        console.warn('[一括追加エラー]:', error.message);
+      }
+    }
+    return inserted;
+  };
+
   // 1A. 国土交通省 ネガティブ情報（建設・指名停止・測量・建設コンサル・地質・宅建・マンション管理・賃貸管理・自動車整備）
   console.log('\n[1/3] 国土交通省 ネガティブ情報（建設・土木・測量・不動産・自動車整備 全9分野）の同期確認中...');
   const mlitCategories = [
@@ -536,19 +618,20 @@ async function syncOfficialData() {
     'jidousyaseibi'
   ];
 
+  const mlitToInsert = [];
   for (const cat of mlitCategories) {
     const cases = await fetchMlitNegaInfCases(cat);
     console.log(`- 国交省 [${cat}] 取得: ${cases.length} 件`);
 
     for (const item of cases) {
       if (!item.company_name) continue;
+      const dateKey = `${item.company_name}||${item.pub_date || ''}`;
+      const isDuplicate = item.pub_date ? existingDateKeySet.has(dateKey) : existingNameSet.has(item.company_name);
 
-      let query = supabase.from('credit_cases').select('id').eq('company_name', item.company_name);
-      if (item.pub_date) query = query.eq('due_date', item.pub_date);
-      const { data: existing } = await query.limit(1);
-
-      if (!existing || existing.length === 0) {
-        const { error } = await insertOfficialCreditCase({
+      if (!isDuplicate) {
+        existingDateKeySet.add(dateKey);
+        existingNameSet.add(item.company_name);
+        mlitToInsert.push({
           company_name: item.company_name,
           corporate_number: item.corporate_number,
           location: item.address || null,
@@ -562,28 +645,28 @@ async function syncOfficialData() {
           registered_by_company_id: regCompanyId,
           evidence_urls: [item.overview_url]
         });
-
-        if (!error) {
-          totalNew++;
-          console.log(`  + [国交省(${cat})・新規追加] ${item.company_name}`);
-        }
       } else {
         totalSkipped++;
       }
     }
+  }
+  if (mlitToInsert.length > 0) {
+    totalNew += await batchInsertOfficialRecords(mlitToInsert);
   }
 
   // 1B. 国土交通省 トラック・軽貨物運送事業（一般貨物・軽貨物）の行政処分同期
   console.log('\n[2/3] 国土交通省 貨物自動車運送事業（トラック・軽貨物事業者）の同期確認中...');
   const truckCases = await fetchMlitTruckingCases();
   console.log(`- 国交省 [トラック・軽貨物] 取得: ${truckCases.length} 件`);
+  const truckToInsert = [];
   for (const item of truckCases) {
-    let query = supabase.from('credit_cases').select('id').eq('company_name', item.company_name);
-    if (item.pub_date) query = query.eq('due_date', item.pub_date);
-    const { data: existing } = await query.limit(1);
+    const dateKey = `${item.company_name}||${item.pub_date || ''}`;
+    const isDuplicate = item.pub_date ? existingDateKeySet.has(dateKey) : existingNameSet.has(item.company_name);
 
-    if (!existing || existing.length === 0) {
-      const { error } = await insertOfficialCreditCase({
+    if (!isDuplicate) {
+      existingDateKeySet.add(dateKey);
+      existingNameSet.add(item.company_name);
+      truckToInsert.push({
         company_name: item.company_name,
         corporate_number: item.corporate_number,
         location: item.location,
@@ -597,28 +680,27 @@ async function syncOfficialData() {
         registered_by_company_id: regCompanyId,
         evidence_urls: item.evidence_urls
       });
-      if (!error) {
-        totalNew++;
-        console.log(`  + [国交省(トラック)・新規追加] ${item.company_name}`);
-      }
     } else {
       totalSkipped++;
     }
+  }
+  if (truckToInsert.length > 0) {
+    totalNew += await batchInsertOfficialRecords(truckToInsert);
   }
 
   // 2. 消費者庁「特定商取引法ガイド 執行状況一覧」（工事・リフォーム・設備・運送系のみ自動抽出）
   console.log('\n[3/3] 消費者庁 特定商取引法行政処分（建設・リフォーム・住宅設備・運送系）の同期確認中...');
   const caaCases = await fetchCaaTargetIndustryCases();
   console.log(`- 消費者庁 対象業種抽出レコード: ${caaCases.length} 件`);
+  const caaToInsert = [];
   for (const item of caaCases) {
-    const { data: existing } = await supabase
-      .from('credit_cases')
-      .select('id')
-      .eq('company_name', item.company_name)
-      .limit(1);
+    const dateKey = `${item.company_name}||${item.pub_date || ''}`;
+    const isDuplicate = existingNameSet.has(item.company_name) || existingDateKeySet.has(dateKey);
 
-    if (!existing || existing.length === 0) {
-      const { error } = await insertOfficialCreditCase({
+    if (!isDuplicate) {
+      existingDateKeySet.add(dateKey);
+      existingNameSet.add(item.company_name);
+      caaToInsert.push({
         company_name: item.company_name,
         corporate_number: item.corporate_number,
         location: item.location,
@@ -632,13 +714,12 @@ async function syncOfficialData() {
         registered_by_company_id: regCompanyId,
         evidence_urls: item.evidence_urls
       });
-      if (!error) {
-        totalNew++;
-        console.log(`  + [消費者庁・新規追加] ${item.company_name}`);
-      }
     } else {
       totalSkipped++;
     }
+  }
+  if (caaToInsert.length > 0) {
+    totalNew += await batchInsertOfficialRecords(caaToInsert);
   }
 
   // ※以下の旧ソースは、毎週自動取得できる公式一次ソースではないため廃止済み
