@@ -80,6 +80,7 @@ export default function AdminUsersManagementPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
     const [updatingRoleUserId, setUpdatingRoleUserId] = useState<string | null>(null);
+    const [updatingPlanUserId, setUpdatingPlanUserId] = useState<string | null>(null);
     const [toast, setToast] = useState<ToastMessage | null>(null);
 
     // 所属企業の一覧（重複排除＆五十音ソート）
@@ -185,6 +186,42 @@ export default function AdminUsersManagementPage() {
             setToast({ type: "error", text: "更新に失敗しました: " + err.message });
         } finally {
             setUpdatingRoleUserId(null);
+        }
+    };
+
+    // 個別プラン変更（そのユーザー1人の利用可能プランのみ変更）
+    const handleChangePlan = async (user: AppUser, newPlan: "full" | "employment" | "credit") => {
+        if (updatingPlanUserId) return;
+        const currentPlan = user.allowed_plan || user.companies?.plan_type || "full";
+        if (currentPlan === newPlan) return;
+
+        const planLabel = getPlanName(newPlan);
+        if (!confirm(`「${user.display_name || "このユーザー"}」の利用プランを【${planLabel}】に変更しますか？\n※このユーザー個人の閲覧・利用権限のみ変更されます（会社管理側の契約プランは変更されません）。`)) {
+            return;
+        }
+
+        setUpdatingPlanUserId(user.id);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            const res = await fetch(`/api/admin/users/${user.id}/plan`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ allowedPlan: newPlan })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || "プラン変更に失敗しました");
+
+            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, allowed_plan: newPlan } : u));
+            setToast({ type: "success", text: `「${user.display_name || "ユーザー"}」の利用プランを【${planLabel}】に更新しました。` });
+        } catch (err: any) {
+            setToast({ type: "error", text: "プラン変更に失敗しました: " + err.message });
+        } finally {
+            setUpdatingPlanUserId(null);
         }
     };
 
@@ -420,7 +457,21 @@ export default function AdminUsersManagementPage() {
                                             </div>
 
                                             {/* 操作ボタン */}
-                                            <div className="flex items-center gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 shrink-0">
+                                            <div className="flex flex-wrap items-center gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 shrink-0">
+                                                <select
+                                                    value={user.allowed_plan || user.companies?.plan_type || "full"}
+                                                    onChange={(e) => handleChangePlan(user, e.target.value as "full" | "employment" | "credit")}
+                                                    disabled={updatingPlanUserId === user.id || deletingUserId === user.id}
+                                                    aria-label="利用プランを変更"
+                                                    title="このユーザー個人の利用可能プランを変更"
+                                                    className="text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:border-slate-400 rounded-xl sm:rounded-lg px-2.5 py-2 sm:py-1.5 cursor-pointer focus:outline-none focus:border-slate-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                                                >
+                                                    <option value="full">
+                                                        {updatingPlanUserId === user.id ? "変更中..." : "FULLプラン"}
+                                                    </option>
+                                                    <option value="employment">MIERIS WORK</option>
+                                                    <option value="credit">MIERIS CREDIT</option>
+                                                </select>
                                                 <button
                                                     onClick={() => handleToggleRole(user)}
                                                     disabled={updatingRoleUserId === user.id || deletingUserId === user.id}
